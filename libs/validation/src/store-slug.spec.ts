@@ -9,10 +9,12 @@ describe("store URL slug validation", () => {
     },
   );
 
-  it.each(["", "a", "a-", "-abc", "UPPER", "two spaces", "a--b", "../admin", null, 123])(
-    "rejects invalid input %s",
-    (input) => {
-      expect(isValidStoreSlug(input)).toBe(false);
-    },
-  );
+  it("rejects malformed slugs and non-strings", () => {
+    for (const value of ["", "a", "a-", "-abc", "UPPER", "two spaces", "a--b"]) {
+      expect(isValidStoreSlug(value)).toBe(false);
+    }
+    expect(isValidStoreSlug("../admin")).toBe(false);
+    expect(isValidStoreSlug(null)).toBe(false);
+    expect(isValidStoreSlug(123)).toBe(false);
+  });
 });
