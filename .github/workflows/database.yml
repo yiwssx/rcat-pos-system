@@ -7,6 +7,8 @@ on:
       - 'tests/db/**'
       - '.github/workflows/database.yml'
       - 'apps/api/src/auth/**'
+      - 'apps/api/src/merchant/**'
+      - 'apps/api/src/app.module.ts'
       - 'apps/api/src/database/**'
       - 'apps/api/tsconfig.app.json'
       - 'libs/server-auth/**'
@@ -21,6 +23,8 @@ on:
       - 'tests/db/**'
       - '.github/workflows/database.yml'
       - 'apps/api/src/auth/**'
+      - 'apps/api/src/merchant/**'
+      - 'apps/api/src/app.module.ts'
       - 'apps/api/src/database/**'
       - 'apps/api/tsconfig.app.json'
       - 'libs/server-auth/**'
@@ -74,6 +78,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/auth-memberships.sql
       - name: Provision isolated auth HTTP test roles
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/http-auth-fixtures.sql
+      - name: Verify atomic merchant provisioning and invitation permissions
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/onboarding-functions.sql
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -92,6 +98,7 @@ jobs:
         env:
           CI: 'true'
         run: node scripts/smoke-auth.mjs
-      - name: Confirm test transactions left no audit rows
+      - name: Verify new tenant and invitation audit events
         run: |
-          psql -X -v ON_ERROR_STOP=1 -Atc 'SELECT count(*) FROM rcat.audit_events' | grep -qx '0'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events" | grep -qx '3'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(DISTINCT action) FROM rcat.audit_events WHERE action IN ('tenant.created','staff.invited','staff.invitation.accepted')" | grep -qx '3'

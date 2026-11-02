@@ -13,4 +13,4 @@ GRANT rcat_app TO rcat_app_ci;
 
 UPDATE rcat.users
    SET password_hash='scrypt$32768$BwcHBwcHBwcHBwcHBwcHBw$GPh5l7ryvsz3moUXdclMZoCce85CsHXDH4d5S8oADf8'
- WHERE email='a@test.invalid';
+ WHERE email IN ('a@test.invalid','b@test.invalid');
