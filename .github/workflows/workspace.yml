@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   affected:
-    name: Nx build, tests, types and formatting
+    name: Nx build, tests, types, formatting and smoke
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -44,8 +44,8 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: pnpm exec nx affected -t build typecheck test lint --base="$BASE_SHA" --head=HEAD --parallel=3
+        run: pnpm exec nx affected -t build typecheck test lint smoke --base="$BASE_SHA" --head=HEAD --parallel=3
       - name: Verify all projects on main
         if: github.event_name == 'push'
-        run: pnpm exec nx run-many -t build typecheck test lint --parallel=3
+        run: pnpm exec nx run-many -t build typecheck test lint smoke --parallel=3
 # Security and schema invariant CI jobs will be added with #3 and #10.

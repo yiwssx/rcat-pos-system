@@ -6,7 +6,9 @@
   "targets": {
     "build": {
       "command": "pnpm exec tsc -p apps/api/tsconfig.app.json",
-      "outputs": ["{workspaceRoot}/dist/apps/api"]
+      "outputs": [
+        "{workspaceRoot}/dist/apps/api"
+      ]
     },
     "serve": {
       "command": "pnpm exec tsx watch apps/api/src/main.ts",
@@ -21,6 +23,13 @@
     },
     "lint": {
       "command": "pnpm exec prettier --check 'apps/api/src/**/*.ts'"
+    },
+    "smoke": {
+      "command": "node scripts/smoke-api.mjs",
+      "dependsOn": [
+        "build"
+      ],
+      "cache": false
     }
   }
 }
