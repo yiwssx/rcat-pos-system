@@ -8,10 +8,12 @@ describe("development operator email validation", () => {
     );
   });
 
-  it.each(["", " ", "not-an-email", "x@y", "a@b.c d", "bad\nmail@test.invalid"])(
-    "rejects invalid email %s",
-    (value) => {
-      expect(() => normalizeRegistrationEmail(value)).toThrow();
-    },
-  );
+  it("rejects empty, malformed and unsafe email strings", () => {
+    expect(() => normalizeRegistrationEmail("")).toThrow();
+    expect(() => normalizeRegistrationEmail(" ")).toThrow();
+    expect(() => normalizeRegistrationEmail("not-an-email")).toThrow();
+    expect(() => normalizeRegistrationEmail("x@y")).toThrow();
+    expect(() => normalizeRegistrationEmail("a@b.c d")).toThrow();
+    expect(() => normalizeRegistrationEmail("bad\nmail@test.invalid")).toThrow();
+  });
 });
