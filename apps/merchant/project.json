@@ -6,9 +6,7 @@
   "targets": {
     "build": {
       "command": "pnpm exec ng build merchant",
-      "outputs": [
-        "{workspaceRoot}/dist/apps/merchant"
-      ]
+      "outputs": ["{workspaceRoot}/dist/apps/merchant"]
     },
     "serve": {
       "command": "pnpm exec ng serve merchant --host 127.0.0.1",

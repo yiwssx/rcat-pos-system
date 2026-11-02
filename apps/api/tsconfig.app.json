@@ -10,17 +10,9 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": true,
-    "types": [
-      "node"
-    ],
-    "lib": [
-      "ES2022"
-    ]
+    "types": ["node"],
+    "lib": ["ES2022"]
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "src/**/*.spec.ts"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
 }

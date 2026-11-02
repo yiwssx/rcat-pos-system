@@ -6,9 +6,7 @@
   "targets": {
     "build": {
       "command": "pnpm exec ng build admin",
-      "outputs": [
-        "{workspaceRoot}/dist/apps/admin"
-      ]
+      "outputs": ["{workspaceRoot}/dist/apps/admin"]
     },
     "serve": {
       "command": "pnpm exec ng serve admin --host 127.0.0.1",

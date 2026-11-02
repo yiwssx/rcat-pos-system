@@ -6,9 +6,7 @@
   "targets": {
     "build": {
       "command": "pnpm exec ng build customer",
-      "outputs": [
-        "{workspaceRoot}/dist/apps/customer"
-      ]
+      "outputs": ["{workspaceRoot}/dist/apps/customer"]
     },
     "serve": {
       "command": "pnpm exec ng serve customer --host 127.0.0.1",
