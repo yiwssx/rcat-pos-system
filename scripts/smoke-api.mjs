@@ -5,7 +5,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 const port = 31911;
 const origin = `http://127.0.0.1:${port}`;
 let output = "";
-const server = spawn(process.execPath, ["dist/apps/api/main.js"], {
+const server = spawn(process.execPath, ["dist/apps/api/src/main.js"], {
   cwd: process.cwd(),
   env: { ...process.env, PORT: String(port), CORS_ORIGINS: "" },
   stdio: ["ignore", "pipe", "pipe"],

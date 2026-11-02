@@ -15,7 +15,7 @@
     "lint": "nx run-many -t lint",
     "affected:build": "nx affected -t build",
     "affected:check": "nx affected -t typecheck test build",
-    "start:api": "node dist/apps/api/main.js",
+    "start:api": "node dist/apps/api/src/main.js",
     "dev:customer": "nx serve customer",
     "dev:merchant": "nx serve merchant",
     "dev:admin": "nx serve admin",

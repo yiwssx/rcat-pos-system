@@ -22,13 +22,16 @@ jobs:
           node-version-file: .node-version
       - name: Refresh exact dependency lockfile without lifecycle scripts
         run: pnpm install --ignore-scripts --no-frozen-lockfile
-      - name: Commit pinned lockfile
+      - name: Format new authentication source files
+        run: |
+          pnpm exec prettier --write 'apps/api/src/auth/**/*.ts' 'apps/api/src/database/**/*.ts' apps/api/src/app.module.ts apps/api/tsconfig.app.json apps/api/project.json package.json scripts/smoke-auth.mjs scripts/smoke-api.mjs .github/workflows/database.yml
+      - name: Commit pinned lockfile and source formatting
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          git add pnpm-lock.yaml
+          git add pnpm-lock.yaml apps/api/src/auth apps/api/src/database apps/api/src/app.module.ts apps/api/tsconfig.app.json apps/api/project.json package.json scripts/smoke-auth.mjs scripts/smoke-api.mjs .github/workflows/database.yml
           if git diff --cached --quiet; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
