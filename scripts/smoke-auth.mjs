@@ -125,6 +125,104 @@ try {
     "User from tenant A must not read tenant B",
   );
 
+  // Owner-only creation is atomic; no account or tenant can be impersonated.
+  const noCsrfCreate = await api("/api/tenants", {
+    method: "POST", headers: { ...json, Cookie: cookieHeader },
+    body: JSON.stringify({
+      tenantSlug: "merchant-ci", tenantName: "ร้านทดสอบ",
+      storeSlug: "main-store", storeName: "ร้านหลัก",
+    }),
+  });
+  assert.equal(noCsrfCreate.status, 403);
+  const create = await api("/api/tenants", {
+    method: "POST",
+    headers: { ...json, Cookie: cookieHeader, "X-CSRF-Token": csrfToken },
+    body: JSON.stringify({
+      tenantSlug: "merchant-ci", tenantName: "ร้านทดสอบ",
+      storeSlug: "main-store", storeName: "ร้านหลัก",
+    }),
+  });
+  assert.equal(create.status, 201, await create.clone().text());
+  const made = await create.json();
+  assert.equal(made.role, "owner");
+  assert.ok(made.tenantId && made.storeId);
+
+  const listed = await api(`/api/tenants/${made.tenantId}/stores`, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(listed.status, 200);
+  assert.deepEqual((await listed.json()).stores.map((s) => s.slug), ["main-store"]);
+
+  const duplicate = await api("/api/tenants", {
+    method: "POST", headers: { ...json, Cookie: cookieHeader, "X-CSRF-Token": csrfToken },
+    body: JSON.stringify({
+      tenantSlug: "merchant-ci", tenantName: "Duplicate",
+      storeSlug: "main-store", storeName: "Duplicate",
+    }),
+  });
+  assert.equal(duplicate.status, 409);
+  assert.equal((await api("/api/tenants", {
+    method: "POST", headers: { ...json, Cookie: cookieHeader, "X-CSRF-Token": csrfToken },
+    body: JSON.stringify({
+      tenantSlug: "BAD SLUG", tenantName: "Invalid", storeSlug: "main-store", storeName: "Test",
+    }),
+  })).status, 400);
+
+  const invite = await api(`/api/tenants/${made.tenantId}/invitations`, {
+    method: "POST", headers: { ...json, Cookie: cookieHeader, "X-CSRF-Token": csrfToken },
+    body: JSON.stringify({ email: "b@test.invalid", role: "cashier" }),
+  });
+  assert.equal(invite.status, 201, await invite.clone().text());
+  const invitation = await invite.json();
+  assert.ok(invitation.invitationToken);
+  assert.equal((await api(`/api/tenants/${made.tenantId}/invitations`, {
+    method: "POST", headers: { ...json, Cookie: cookieHeader, "X-CSRF-Token": csrfToken },
+    body: JSON.stringify({ email: "b@test.invalid", role: "owner" }),
+  })).status, 400);
+
+  const wrongRecipient = await api("/api/invitations/accept", {
+    method: "POST", headers: { ...json, Cookie: cookieHeader, "X-CSRF-Token": csrfToken },
+    body: JSON.stringify({ invitationToken: invitation.invitationToken }),
+  });
+  assert.equal(wrongRecipient.status, 404, "Owner must not redeem cashier invite");
+
+  const bLogin = await api("/api/auth/login", {
+    method: "POST", headers: json,
+    body: JSON.stringify({ email: "b@test.invalid", password: "example-password-2026" }),
+  });
+  assert.equal(bLogin.status, 200);
+  const bCookies = bLogin.headers.getSetCookie().map((s) => s.split(";")[0]);
+  const bHeader = bCookies.join("; ");
+  const bCsrf = bCookies.find((s) => s.startsWith("__Host-rcat_csrf="))?.split("=")[1];
+  assert.ok(bCsrf);
+  assert.equal((await api(`/api/tenants/${made.tenantId}/stores`, {
+    headers: { Cookie: bHeader },
+  })).status, 404, "No access before invitation acceptance");
+
+  const accept = await api("/api/invitations/accept", {
+    method: "POST", headers: { ...json, Cookie: bHeader, "X-CSRF-Token": bCsrf },
+    body: JSON.stringify({ invitationToken: invitation.invitationToken }),
+  });
+  assert.equal(accept.status, 200, await accept.clone().text());
+  assert.equal((await accept.json()).role, "cashier");
+  const staffStores = await api(`/api/tenants/${made.tenantId}/stores`, {
+    headers: { Cookie: bHeader },
+  });
+  assert.equal(staffStores.status, 200);
+  assert.equal((await staffStores.json()).role, "cashier");
+  assert.equal((await api("/api/invitations/accept", {
+    method: "POST", headers: { ...json, Cookie: bHeader, "X-CSRF-Token": bCsrf },
+    body: JSON.stringify({ invitationToken: invitation.invitationToken }),
+  })).status, 404, "Single-use invite cannot be redeemed twice");
+  assert.equal((await api(`/api/tenants/${made.tenantId}/invitations`, {
+    method: "POST", headers: { ...json, Cookie: bHeader, "X-CSRF-Token": bCsrf },
+    body: JSON.stringify({ email: "a@test.invalid", role: "manager" }),
+  })).status, 404, "Cashier must not invite staff");
+  assert.equal((await api(`/api/tenants/${made.tenantId}/invitations`, {
+    method: "POST", headers: { ...json, Cookie: bHeader, "X-CSRF-Token": bCsrf },
+    body: JSON.stringify({ email: "a@test.invalid", role: "owner" }),
+  })).status, 400, "Owner invitations forbidden");
+
   assert.equal(
     (
       await api("/api/auth/logout", {
