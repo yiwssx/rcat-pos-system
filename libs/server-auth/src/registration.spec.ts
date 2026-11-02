@@ -14,6 +14,7 @@ describe("development operator email validation", () => {
     expect(() => normalizeRegistrationEmail("not-an-email")).toThrow();
     expect(() => normalizeRegistrationEmail("x@y")).toThrow();
     expect(() => normalizeRegistrationEmail("a@b.c d")).toThrow();
-    expect(() => normalizeRegistrationEmail("bad\nmail@test.invalid")).toThrow();
+    const newlineEmail = "bad\nmail@test.invalid";
+    expect(() => normalizeRegistrationEmail(newlineEmail)).toThrow();
   });
 });
