@@ -70,6 +70,7 @@ export class DatabaseAccess implements OnModuleDestroy {
     if (!pool)
       throw new ServiceUnavailableException("Authentication is disabled");
     const client = await pool.connect();
+    let discardConnection = false;
     try {
       const identity = await client.query<{
         rolsuper: boolean;
@@ -96,11 +97,11 @@ export class DatabaseAccess implements OnModuleDestroy {
       try {
         await client.query("ROLLBACK");
       } catch {
-        // Return the original error; never re-use a broken connection.
+        discardConnection = true;
       }
       throw error;
     } finally {
-      client.release();
+      client.release(discardConnection);
     }
   }
 

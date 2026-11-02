@@ -8,9 +8,11 @@ import {
   Req,
   Res,
   NotFoundException,
+  Header,
 } from "@nestjs/common";
 import {
   createSessionCookie,
+  clearSessionCookie,
   hasMerchantPermission,
 } from "../../../../libs/server-auth/src";
 import { AuthService } from "./auth.service";
@@ -64,14 +66,10 @@ export class AuthController {
     this.auth.requireCsrf(req, session);
     await this.auth.logout(session.token);
     res.setHeader("Cache-Control", "no-store");
-    res.setHeader(
-      "Set-Cookie",
-      ["", ""].map((_, i) =>
-        i === 0
-          ? "__Host-rcat_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0"
-          : this.auth.clearCsrfCookie(),
-      ),
-    );
+    res.setHeader("Set-Cookie", [
+      clearSessionCookie(),
+      this.auth.clearCsrfCookie(),
+    ]);
   }
 }
 
@@ -83,6 +81,7 @@ export class TenantStoreController {
   ) {}
 
   @Get(":tenantId/stores")
+  @Header("Cache-Control", "no-store")
   async stores(@Req() req: ApiRequest, @Param("tenantId") tenantId: string) {
     if (!UUID.test(tenantId)) {
       throw new NotFoundException();
