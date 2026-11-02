@@ -28,7 +28,7 @@ jobs:
               'README.md', 'AGENTS.md', 'SECURITY.md',
               'docs/PRODUCT.md', 'docs/ARCHITECTURE.md',
               'docs/ROADMAP.md', 'docs/TRACKER.md', 'docs/DECISIONS.md',
-              'docs/SKILLS.md', 'docs/skills-manifest.json'
+              'docs/SKILLS.md', 'docs/skills-manifest.json', 'docs/DESIGN-SYSTEM.md'
           ]
           for path in required:
               assert Path(path).is_file(), f'Missing {path}'
@@ -37,7 +37,7 @@ jobs:
           names = {s.parent.name for s in skills}
           assert len(skills) == len(names), 'Duplicate skill directory'
           project_skills = {'angular-frontend', 'nestjs-backend',
-              'payment-integrity', 'tenant-security', 'ci-quality'}
+              'payment-integrity', 'tenant-security', 'ci-quality', 'pos-ux-design'}
           assert project_skills <= names, 'Missing project-specific skills'
 
           manifest = json.loads(Path('docs/skills-manifest.json').read_text())

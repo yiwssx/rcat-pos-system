@@ -59,6 +59,27 @@
       "commit": "d12f250460ffd961f549dbebf7eeb0cf4afd4c2e",
       "license": "Apache-2.0 + OWASP CC BY-SA 4.0",
       "purpose": "High-confidence security review, including API and business-logic flaws"
+    },
+    {
+      "name": "frontend-design",
+      "repo": "anthropics/skills",
+      "commit": "ca45fc496a3436251f191354091d557da31c15b5",
+      "license": "Apache-2.0",
+      "purpose": "Distinctive, intentional frontend visual design, visual direction, typography and layout"
+    },
+    {
+      "name": "web-ui-review",
+      "repo": "vercel-labs/web-interface-guidelines",
+      "commit": "434b7f91364665f2f733b310ec54809bf8f37937",
+      "license": "MIT",
+      "purpose": "Adapted Angular/mobile POS interface audit based on Vercel Web Interface Guidelines"
+    },
+    {
+      "name": "design-system",
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "commit": "3a13158ff1f32156cbe144108de48eda2ecaed9a",
+      "license": "MIT",
+      "purpose": "Adapted Angular POS design-token and component-state architecture with source-pinned reference files"
     }
   ]
 }
