@@ -2,27 +2,32 @@
 
 GitHub is the source of truth. Master tracker: https://github.com/yiwssx/rcat-pos-system/issues/13
 
-## Epics
-| Issue | Area | Priority | State |
-|---|---|---|---|
-| #1 | Product scope and journeys | P0 | Open |
-| #2 | Nx/pnpm Angular/NestJS foundation | P0 | Open |
-| #3 | Multi-tenant auth/data | P0 | Open |
-| #4 | Catalog, tables, QR session | P0 | Open |
-| #5 | Customer ordering UI | P0 | Open |
-| #6 | Orders and bills | P0 | Open |
-| #7 | Payments/refunds/reconciliation | P0 | Open |
-| #8 | Merchant PWA/realtime | P0 | Open |
-| #9 | Reporting/stock | P1 | Open |
-| #10 | Security and quality | P0 | Open |
-| #11 | Hosting/pilot | P1 | Open |
-| #12 | Expansion modules | P2 | Open |
+**Decision:** Payment implementation (#7) is the final functional milestone, with **PromptPay QR/payment request for each Order**. Real-money production launch takes place **after** payment verification and release testing, not before.
 
-Use GitHub Issue state for live progress; this document is only a starting index, not a synced status mirror.
+## Execution order
+| Stage | Issue | Area | Priority | State |
+|---|---|---|---|---|
+| G0 | #1 | Product scope and per-Order QR payment requirements | P0 | Open |
+| G1 | #2 | Nx/pnpm Angular/NestJS foundation | P0 | Open |
+| G1 | #3 | Multi-tenant auth/data | P0 | Open |
+| G2 | #4 | Catalog, tables, ordering QR session | P0 | Open |
+| G2 | #6 | Orders, prices and Bills (payment-ready schema only) | P0 | Open |
+| G2 | #5 | Guest ordering and Order tracking UI | P0 | Open |
+| G3 | #8 | Merchant PWA/realtime (no Payment dependency) | P0 | Open |
+| G3 | #9 | Basic operational reporting/stock (financial reports later) | P1 | Open |
+| G4 | #10 | Ordering security and reliability (continues across release) | P0 | Open |
+| G4 | #11 | Staging/hosting infrastructure preparation (not production release) | P1 | Open |
+| **G5** | **#7** | **Final business feature: per-Order PromptPay QR, verification, reconciliation** | **P0 — Release blocker** | **Open** |
+| G6 | #10 #11 | Integrated security/payment tests, pilot and Production go/no-go | P0/P1 | Open |
+| G7 | #12 | Expansion modules (after pilot) | P2 | Open |
 
-## Prioritization
-P0 = essential for safe MVP; P1 = operational/pilot or near-term; P2 = optional after pilot evidence.
+A high-priority issue can deliberately be scheduled late if it needs mature upstream requirements. No feature issue has been completed by this decision-only update.
+
+## Delivery invariants
+- Every Order has its own payable total and future PromptPay request; a table QR never doubles as the payment QR.
+- A generic personal PromptPay QR with an amount does not prove payment or provide guaranteed unique transaction reference.
+- No bank integration, live QR payment endpoint, payment credentials or false "paid" flags before G5.
+- Issue state in GitHub is authoritative; document table is not a synced progress mirror.
 
 ## Proof of done
-PR linked; appropriate tests pass; state models, permissions and migrations documented; user-facing behavior demonstrated; no secrets; relevant acceptance checklist verified.
-
+Linked PR, relevant tests pass, tenant/permission and transaction invariants verified, relevant docs and rollout updated; never close Payment or Production on the strength of docs-only checks.
