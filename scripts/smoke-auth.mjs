@@ -702,6 +702,69 @@ try {
       body: JSON.stringify({ label: "Wrong tenant" }) },
   )).status, 404);
 
+  // G2 Order Engine: server-side satang pricing, idempotent guest checkout.
+  // Re-enable only the product (one selected add-on remains available).
+  assert.equal((await api(catalogUrl + "/products/" + productId + "/availability", {
+    method: "PATCH", headers: catHeaders,
+    body: JSON.stringify({ available: true }),
+  })).status, 200);
+  const orderPath = "/api/guest/orders";
+  const checkout = (key, body) => api(orderPath, {
+    method: "POST",
+    headers: { ...json, "Idempotency-Key": key },
+    body: JSON.stringify(body),
+  });
+  const cart = {
+    visitToken: secondToken,
+    items: [{ productId, quantity: 2, optionIds: [firstOptionId] }],
+  };
+  assert.equal((await api(orderPath, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Idempotency-Key": "origin-denied-key0001" },
+    body: JSON.stringify(cart),
+  })).status, 403, "Order submission requires approved Origin");
+  assert.equal((await api(orderPath, {
+    method: "POST", headers: json, body: JSON.stringify(cart),
+  })).status, 400, "Order submission requires an idempotency key");
+  assert.equal((await checkout("required-choice-test01", {
+    visitToken: secondToken,
+    items: [{ productId, quantity: 1, optionIds: [] }],
+  })).status, 201, "Optional group may have no selected options");
+  assert.equal((await checkout("unavailable-option-test01", {
+    visitToken: secondToken,
+    items: [{ productId, quantity: 1, optionIds: [discountId] }],
+  })).status, 404, "Disabled add-on may not be purchased");
+  assert.equal((await checkout("duplicated-option-test01", {
+    visitToken: secondToken,
+    items: [{ productId, quantity: 1, optionIds: [firstOptionId, firstOptionId] }],
+  })).status, 400, "Duplicate option ids must be rejected");
+  assert.equal((await checkout("bogus-product-test0001", {
+    visitToken: secondToken,
+    items: [{ productId: "10000000-0000-4000-8000-000000000001", quantity: 1, optionIds: [] }],
+  })).status, 404, "Cannot order a product outside this store");
+  // A double click/retry across multiple pooled connections must create one Order.
+  const replies = await Promise.all(
+    Array.from({ length: 5 }, () => checkout("guest-order-retry-0001", cart)),
+  );
+  assert.ok(replies.every((r) => r.status === 201),
+    "All retry requests should return an existing or new order");
+  const payloads = await Promise.all(replies.map((r) => r.json()));
+  assert.equal(new Set(payloads.map((p) => p.orderId)).size, 1);
+  assert.ok(payloads.every((p) => p.amountSatang === 20800));
+  assert.ok(payloads.every((p) => p.paymentState === "not_requested"));
+  assert.equal(payloads.filter((p) => p.replayed === false).length, 1,
+    "Exactly one retry should insert the order");
+  assert.equal((await checkout("guest-order-retry-0001", {
+    ...cart,
+    items: [{ productId, quantity: 3, optionIds: [firstOptionId] }],
+  })).status, 409, "One idempotency key cannot authorize different carts");
+  const changedVisit = await api(rotateUrl, {
+    method: "POST", headers: catHeaders,
+  });
+  assert.equal(changedVisit.status, 201);
+  assert.equal((await checkout("new-order-after-visit0001", cart)).status, 404,
+    "Old visit cannot submit an order after rotation");
+
   const logout = await api("/api/auth/logout", {
     method: "POST",
     headers: {

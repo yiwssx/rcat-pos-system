@@ -18,6 +18,8 @@ import { TableOrderingController } from "./ordering/table-ordering.controller";
 import { TableOrderingService } from "./ordering/table-ordering.service";
 import { ProductModifiersController } from "./catalog/product-modifiers.controller";
 import { ProductModifiersService } from "./catalog/product-modifiers.service";
+import { GuestOrdersController } from "./orders/guest-orders.controller";
+import { GuestOrdersService } from "./orders/guest-orders.service";
 
 @Module({
   controllers: [
@@ -31,6 +33,7 @@ import { ProductModifiersService } from "./catalog/product-modifiers.service";
     CatalogController,
     TableOrderingController,
     ProductModifiersController,
+    GuestOrdersController,
   ],
   providers: [
     DatabaseAccess,
@@ -43,6 +46,7 @@ import { ProductModifiersService } from "./catalog/product-modifiers.service";
     CatalogService,
     TableOrderingService,
     ProductModifiersService,
+    GuestOrdersService,
   ],
 })
 export class AppModule {}
