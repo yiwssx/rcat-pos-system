@@ -1,0 +1,59 @@
+name: PostgreSQL tenant-isolation tests
+on:
+  pull_request:
+    paths:
+      - 'db/**'
+      - 'scripts/db/**'
+      - 'tests/db/**'
+      - '.github/workflows/database.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'db/**'
+      - 'scripts/db/**'
+      - 'tests/db/**'
+      - '.github/workflows/database.yml'
+permissions:
+  contents: read
+jobs:
+  postgres-rls:
+    name: PostgreSQL 16 migration and RLS integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test-only-ci-password
+          POSTGRES_DB: rcat_ci_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d rcat_ci_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGDATABASE: rcat_ci_test
+      PGPASSWORD: test-only-ci-password
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+      - name: Apply migrations
+        run: bash scripts/db/migrate.sh
+      - name: Confirm repeat-safe checksummed migrations
+        run: bash scripts/db/migrate.sh
+      - name: Verify tenant isolation and app privileges
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/tenant-isolation.sql
+      - name: Confirm test transactions left no audit rows
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -Atc 'SELECT count(*) FROM rcat.audit_events' | grep -qx '0'
