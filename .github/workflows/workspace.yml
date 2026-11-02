@@ -40,6 +40,12 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Display Nx projects
         run: pnpm exec nx show projects
+      - name: Read-only Prettier preview for catalog service
+        if: github.event_name == 'pull_request'
+        run: |
+          echo BEGIN_CATALOG_FORMAT
+          pnpm exec prettier apps/api/src/catalog/catalog.service.ts
+          echo END_CATALOG_FORMAT
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request'
         env:
