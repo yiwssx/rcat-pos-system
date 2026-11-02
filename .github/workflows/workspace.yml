@@ -40,6 +40,15 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Display Nx projects
         run: pnpm exec nx show projects
+      - name: Preview exact staff code format (temporary read-only)
+        if: github.event_name == 'pull_request'
+        run: |
+          echo BEGIN_STAFF_SERVICE
+          pnpm exec prettier apps/api/src/merchant/staff-administration.service.ts
+          echo END_STAFF_SERVICE
+          echo BEGIN_STAFF_CONTROLLER
+          pnpm exec prettier apps/api/src/merchant/staff-administration.controller.ts
+          echo END_STAFF_CONTROLLER
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request'
         env:
