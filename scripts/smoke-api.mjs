@@ -5,13 +5,17 @@ import { setTimeout as sleep } from "node:timers/promises";
 const port = 31911;
 const origin = `http://127.0.0.1:${port}`;
 let output = "";
-const server = spawn(process.execPath, ["dist/apps/api/main.js"], {
+const server = spawn(process.execPath, ["dist/apps/api/src/main.js"], {
   cwd: process.cwd(),
   env: { ...process.env, PORT: String(port), CORS_ORIGINS: "" },
   stdio: ["ignore", "pipe", "pipe"],
 });
-server.stdout.on("data", (chunk) => { output += String(chunk); });
-server.stderr.on("data", (chunk) => { output += String(chunk); });
+server.stdout.on("data", (chunk) => {
+  output += String(chunk);
+});
+server.stderr.on("data", (chunk) => {
+  output += String(chunk);
+});
 
 try {
   let health;
@@ -38,7 +42,11 @@ try {
   assert.equal(health.paymentEnabled, false);
 
   const readiness = await fetch(`${origin}/api/ready`);
-  assert.equal(readiness.status, 503, "Readiness must fail until dependencies exist");
+  assert.equal(
+    readiness.status,
+    503,
+    "Readiness must fail until dependencies exist",
+  );
 
   console.log("NestJS API HTTP smoke passed: health 200, readiness 503");
 } finally {

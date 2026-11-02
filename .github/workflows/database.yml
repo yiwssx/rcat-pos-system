@@ -6,6 +6,13 @@ on:
       - 'scripts/db/**'
       - 'tests/db/**'
       - '.github/workflows/database.yml'
+      - 'apps/api/src/auth/**'
+      - 'apps/api/src/database/**'
+      - 'apps/api/tsconfig.app.json'
+      - 'libs/server-auth/**'
+      - 'scripts/smoke-auth.mjs'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
   push:
     branches: [main]
     paths:
@@ -13,6 +20,13 @@ on:
       - 'scripts/db/**'
       - 'tests/db/**'
       - '.github/workflows/database.yml'
+      - 'apps/api/src/auth/**'
+      - 'apps/api/src/database/**'
+      - 'apps/api/tsconfig.app.json'
+      - 'libs/server-auth/**'
+      - 'scripts/smoke-auth.mjs'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
 permissions:
   contents: read
 jobs:
@@ -58,6 +72,26 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/auth-sessions.sql
       - name: Verify authenticated membership RLS boundary
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/auth-memberships.sql
+      - name: Provision isolated auth HTTP test roles
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/http-auth-fixtures.sql
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+          run_install: false
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Restore frozen workspace dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Compile API and server-only libraries
+        run: pnpm exec tsc -p apps/api/tsconfig.app.json
+      - name: Verify HTTP login, CSRF, session and cross-tenant isolation
+        env:
+          CI: 'true'
+        run: node scripts/smoke-auth.mjs
       - name: Confirm test transactions left no audit rows
         run: |
           psql -X -v ON_ERROR_STOP=1 -Atc 'SELECT count(*) FROM rcat.audit_events' | grep -qx '0'

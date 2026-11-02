@@ -7,7 +7,8 @@
     "build": {
       "command": "pnpm exec tsc -p apps/api/tsconfig.app.json",
       "outputs": [
-        "{workspaceRoot}/dist/apps/api"
+        "{workspaceRoot}/dist/apps/api",
+        "{workspaceRoot}/dist/libs/server-auth"
       ]
     },
     "serve": {
@@ -26,9 +27,7 @@
     },
     "smoke": {
       "command": "node scripts/smoke-api.mjs",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "cache": false
     }
   }
