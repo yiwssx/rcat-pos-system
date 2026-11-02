@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Header,
-  Param,
-  Post,
-  Req,
-} from "@nestjs/common";
+import { Body, Controller, Header, Param, Post, Req } from "@nestjs/common";
 import { ApiRequest, requireAllowedOrigin } from "../auth/request-security";
 import { TableOrderingService } from "./table-ordering.service";
 

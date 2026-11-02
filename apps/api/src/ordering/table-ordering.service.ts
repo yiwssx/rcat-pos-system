@@ -63,9 +63,11 @@ function orderingUrl(token: string): string {
     url.hash ||
     url.search ||
     (url.protocol !== "https:" &&
-      !(process.env["CI"] === "true" &&
+      !(
+        process.env["CI"] === "true" &&
         url.protocol === "http:" &&
-        (url.hostname === "127.0.0.1" || url.hostname === "localhost")))
+        (url.hostname === "127.0.0.1" || url.hostname === "localhost")
+      ))
   ) {
     throw new ServiceUnavailableException("Ordering URL not configured");
   }
@@ -80,12 +82,21 @@ export class TableOrderingService {
     private readonly auth: AuthService,
   ) {}
 
-  async create(req: ApiRequest, tenantId: string, storeId: string, raw: unknown) {
+  async create(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    raw: unknown,
+  ) {
     ids(tenantId, storeId);
     const session = await this.auth.session(req);
     this.auth.requireCsrf(req, session);
     const label = requestObject(raw)["label"];
-    if (typeof label !== "string" || label.trim().length < 1 || label.trim().length > 60) {
+    if (
+      typeof label !== "string" ||
+      label.trim().length < 1 ||
+      label.trim().length > 60
+    ) {
       throw new BadRequestException("Invalid table label");
     }
     try {
