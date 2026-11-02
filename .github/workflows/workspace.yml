@@ -40,15 +40,6 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Display Nx projects
         run: pnpm exec nx show projects
-      - name: Show exact Prettier output for registration files (read-only)
-        if: github.event_name == 'pull_request'
-        run: |
-          echo START_CONTROLLER_FORMAT
-          pnpm exec prettier apps/api/src/auth/email-registration.controller.ts
-          echo END_CONTROLLER_FORMAT
-          echo START_SERVICE_FORMAT
-          pnpm exec prettier apps/api/src/auth/email-registration.service.ts
-          echo END_SERVICE_FORMAT
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request'
         env:

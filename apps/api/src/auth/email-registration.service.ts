@@ -86,10 +86,9 @@ export class EmailRegistrationService {
     }
     try {
       await this.database.auth((client) =>
-        client.query(
-          "SELECT rcat_private.complete_email_registration($1)",
-          [digest],
-        ),
+        client.query("SELECT rcat_private.complete_email_registration($1)", [
+          digest,
+        ]),
       );
     } catch (error) {
       const code =
