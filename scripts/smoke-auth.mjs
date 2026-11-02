@@ -546,6 +546,65 @@ try {
   assert.equal(productResponse.status, 201, await productResponse.clone().text());
   const productId = (await productResponse.json()).productId;
   assert.ok(productId);
+  // Modifier groups/add-ons are tenant-store-product-scoped. Pricing remains
+  // authoritative server-side when Orders are implemented (#6).
+  const modifiersUrl = catalogUrl + "/products/" + productId + "/modifier-groups";
+  assert.equal((await api(modifiersUrl, {
+    method: "POST", headers: { ...json, Cookie: cookieHeader },
+    body: JSON.stringify({
+      slug: "extras", name: "ตัวเลือกเพิ่มเติม", minSelect: 0, maxSelect: 2,
+    }),
+  })).status, 403, "Modifier mutations require CSRF");
+  assert.equal((await api(modifiersUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({
+      slug: "invalid", name: "Invalid", minSelect: 3, maxSelect: 2,
+    }),
+  })).status, 400, "Invalid selection range must be rejected");
+  const groupResponse = await api(modifiersUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({
+      slug: "extras", name: "ตัวเลือกเพิ่มเติม", minSelect: 0, maxSelect: 2,
+    }),
+  });
+  assert.equal(groupResponse.status, 201, await groupResponse.clone().text());
+  const groupId = (await groupResponse.json()).groupId;
+  assert.ok(groupId);
+  assert.equal((await api(modifiersUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({
+      slug: "extras", name: "Duplicate", minSelect: 0, maxSelect: 1,
+    }),
+  })).status, 409, "Duplicate group slug must conflict");
+  const choicesUrl = modifiersUrl + "/" + groupId + "/options";
+  assert.equal((await api(choicesUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ name: "Bad fraction", priceDeltaSatang: 1.5 }),
+  })).status, 400, "Modifier price must be integral satang");
+  const positive = await api(choicesUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ name: "เพิ่มไข่", priceDeltaSatang: 1500 }),
+  });
+  assert.equal(positive.status, 201, await positive.clone().text());
+  const firstOptionId = (await positive.json()).optionId;
+  assert.ok(firstOptionId);
+  const discount = await api(choicesUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ name: "ไม่ใส่ผัก", priceDeltaSatang: -500 }),
+  });
+  assert.equal(discount.status, 201, await discount.clone().text());
+  const discountId = (await discount.json()).optionId;
+  assert.ok(discountId);
+  assert.equal((await api(choicesUrl + "/" + discountId + "/availability", {
+    method: "PATCH", headers: catHeaders,
+    body: JSON.stringify({ available: false }),
+  })).status, 200);
+  assert.equal((await api(choicesUrl, {
+    method: "POST",
+    headers: { ...json, Cookie: bHeader, "X-CSRF-Token": bCsrf },
+    body: JSON.stringify({ name: "Forbidden", priceDeltaSatang: 100 }),
+  })).status, 404, "Removed staff cannot modify add-ons");
+
   const snapshot = await api(catalogUrl, { headers: { Cookie: cookieHeader } });
   assert.equal(snapshot.status, 200);
   const contents = await snapshot.json();
@@ -553,6 +612,16 @@ try {
   assert.equal(contents.products.length, 1);
   assert.equal(contents.products[0].priceSatang, 8900);
   assert.equal(contents.products[0].available, true);
+  assert.equal(contents.modifierGroups.length, 1);
+  assert.equal(contents.modifierGroups[0].maxSelect, 2);
+  assert.equal(contents.modifierOptions.length, 2);
+  assert.equal(
+    contents.modifierOptions.find((o) => o.id === discountId)?.available, false,
+  );
+  assert.equal(
+    contents.modifierOptions.find((o) => o.id === discountId)?.priceDeltaSatang, -500,
+  );
+
   assert.equal((await api(catalogUrl + "/products/" + productId + "/availability", {
     method: "PATCH", headers: catHeaders,
     body: JSON.stringify({ available: false }),
