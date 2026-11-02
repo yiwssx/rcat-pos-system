@@ -44,5 +44,5 @@ jobs:
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'chore(g1): pin resolved dependencies and format generated workspace'
           # Token is only supplied to this isolated push step, never to install scripts.
-          git -c http.https://github.com/.extraheader="AUTHORIZATION: bearer ${GH_TOKEN}" push origin HEAD:refs/heads/feat/g1-angular-nest-workspace
+          git push "https://x-access-token:${GH_TOKEN}@github.com/yiwssx/rcat-pos-system.git" HEAD:refs/heads/feat/g1-angular-nest-workspace
 # Remove this one-time elevated workflow in the same PR after lockfile is committed.
