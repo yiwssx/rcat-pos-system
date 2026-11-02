@@ -376,6 +376,64 @@ try {
     "Original owner must not see the new merchant tenant",
   );
 
+  // Owner-only staff management with immediate permission changes.
+  const staffUrl = `/api/tenants/${made.tenantId}/staff`;
+  const staffList = await api(staffUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(staffList.status, 200);
+  const roster = (await staffList.json()).staff;
+  assert.equal(roster.length, 2);
+  assert.equal(roster.find((s) => s.user_id === "10000000-0000-4000-8000-000000000001")?.role, "owner");
+  assert.equal(roster.find((s) => s.user_id === "10000000-0000-4000-8000-000000000002")?.role, "cashier");
+  assert.equal((await api(staffUrl, {
+    headers: { Cookie: bHeader },
+  })).status, 404, "Cashier cannot list a tenant's roster");
+  const target = `${staffUrl}/10000000-0000-4000-8000-000000000002`;
+  const ownTarget = `${staffUrl}/10000000-0000-4000-8000-000000000001`;
+  const ownerHeaders = { ...json, Cookie: cookieHeader, "X-CSRF-Token": csrfToken };
+  const staffHeaders = { ...json, Cookie: bHeader, "X-CSRF-Token": bCsrf };
+  assert.equal((await api(target, {
+    method: "PATCH", headers: staffHeaders,
+    body: JSON.stringify({ role: "manager" }),
+  })).status, 404, "Cashier cannot elevate role");
+  assert.equal((await api(target, {
+    method: "PATCH", headers: { ...json, Cookie: cookieHeader },
+    body: JSON.stringify({ role: "manager" }),
+  })).status, 403, "Role changes require CSRF");
+  const toKitchen = await api(target, {
+    method: "PATCH", headers: ownerHeaders,
+    body: JSON.stringify({ role: "kitchen" }),
+  });
+  assert.equal(toKitchen.status, 200);
+  assert.equal((await toKitchen.json()).role, "kitchen");
+  assert.equal((await api(`/api/tenants/${made.tenantId}/stores`, {
+    headers: { Cookie: bHeader },
+  })).status, 404, "Kitchen cannot read store management API");
+  const toManager = await api(target, {
+    method: "PATCH", headers: ownerHeaders,
+    body: JSON.stringify({ role: "manager" }),
+  });
+  assert.equal(toManager.status, 200);
+  assert.equal((await api(`/api/tenants/${made.tenantId}/stores`, {
+    headers: { Cookie: bHeader },
+  })).status, 200, "Manager recovers store.read permission");
+  assert.equal((await api(ownTarget, {
+    method: "DELETE", headers: ownerHeaders,
+  })).status, 404, "Owner cannot remove themselves");
+  assert.equal((await api(ownTarget, {
+    method: "DELETE", headers: staffHeaders,
+  })).status, 404, "Manager cannot remove owner");
+  assert.equal((await api(target, {
+    method: "DELETE", headers: ownerHeaders,
+  })).status, 204, "Owner can remove non-owner staff");
+  assert.equal((await api(`/api/tenants/${made.tenantId}/stores`, {
+    headers: { Cookie: bHeader },
+  })).status, 404, "Removed staff immediately loses access");
+  assert.equal((await api(staffUrl, {
+    headers: { Cookie: cookieHeader },
+  })).status, 200, "Owner retains staff roster access");
+
   const logout = await api("/api/auth/logout", {
     method: "POST",
     headers: {
