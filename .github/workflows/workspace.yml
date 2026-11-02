@@ -40,6 +40,15 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Display Nx projects
         run: pnpm exec nx show projects
+      - name: Read-only ordering TypeScript Prettier preview
+        if: github.event_name == 'pull_request'
+        run: |
+          echo BEGIN_ORDERING_CONTROLLER
+          pnpm exec prettier apps/api/src/ordering/table-ordering.controller.ts
+          echo END_ORDERING_CONTROLLER
+          echo BEGIN_ORDERING_SERVICE
+          pnpm exec prettier apps/api/src/ordering/table-ordering.service.ts
+          echo END_ORDERING_SERVICE
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request'
         env:
