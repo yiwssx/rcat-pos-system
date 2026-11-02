@@ -56,6 +56,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/tenant-isolation.sql
       - name: Verify isolated authentication session schema and role grants
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/auth-sessions.sql
+      - name: Verify authenticated membership RLS boundary
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/auth-memberships.sql
       - name: Confirm test transactions left no audit rows
         run: |
           psql -X -v ON_ERROR_STOP=1 -Atc 'SELECT count(*) FROM rcat.audit_events' | grep -qx '0'
