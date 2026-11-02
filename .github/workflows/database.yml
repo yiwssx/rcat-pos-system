@@ -10,6 +10,7 @@ on:
       - 'apps/api/src/merchant/**'
       - 'apps/api/src/catalog/**'
       - 'apps/api/src/ordering/**'
+      - 'apps/api/src/orders/**'
       - 'apps/api/src/app.module.ts'
       - 'apps/api/src/database/**'
       - 'apps/api/tsconfig.app.json'
@@ -29,6 +30,7 @@ on:
       - 'apps/api/src/merchant/**'
       - 'apps/api/src/catalog/**'
       - 'apps/api/src/ordering/**'
+      - 'apps/api/src/orders/**'
       - 'apps/api/src/app.module.ts'
       - 'apps/api/src/database/**'
       - 'apps/api/tsconfig.app.json'
@@ -98,6 +100,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/ordering-visits.sql
       - name: Verify product modifiers, tenant isolation and guest visibility
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/product-modifiers.sql
+      - name: Verify order money, idempotency, snapshots and tenant isolation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/guest-orders.sql
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -124,5 +128,5 @@ jobs:
         run: node scripts/smoke-auth.mjs
       - name: Verify new tenant and invitation audit events
         run: |
-          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events" | grep -qx '17'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events" | grep -qx '19'
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(DISTINCT action) FROM rcat.audit_events WHERE action IN ('tenant.created','staff.invited','staff.invitation.accepted','staff.role.changed','staff.removed')" | grep -qx '5'
