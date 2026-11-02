@@ -1,0 +1,51 @@
+name: Workspace quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workspace-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  affected:
+    name: Nx build, tests, types and formatting
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NX_DAEMON: 'false'
+      NX_SKIP_NX_CACHE: 'true'
+    steps:
+      - name: Checkout (history for Nx affected)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+          run_install: false
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install from committed lockfile
+        run: pnpm install --frozen-lockfile
+      - name: Display Nx projects
+        run: pnpm exec nx show projects
+      - name: Test changed projects in PR
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: pnpm exec nx affected -t build typecheck test lint --base="$BASE_SHA" --head=HEAD --parallel=3
+      - name: Verify all projects on main
+        if: github.event_name == 'push'
+        run: pnpm exec nx run-many -t build typecheck test lint --parallel=3
+# Security and schema invariant CI jobs will be added with #3 and #10.

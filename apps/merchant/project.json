@@ -1,0 +1,26 @@
+{
+  "name": "merchant",
+  "root": "apps/merchant",
+  "sourceRoot": "apps/merchant/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "command": "pnpm exec ng build merchant",
+      "outputs": ["{workspaceRoot}/dist/apps/merchant"]
+    },
+    "serve": {
+      "command": "pnpm exec ng serve merchant --host 127.0.0.1",
+      "continuous": true,
+      "cache": false
+    },
+    "typecheck": {
+      "command": "pnpm exec tsc --noEmit -p apps/merchant/tsconfig.app.json"
+    },
+    "test": {
+      "command": "pnpm exec vitest run apps/merchant/src/app/app.spec.ts"
+    },
+    "lint": {
+      "command": "pnpm exec prettier --check 'apps/merchant/src/**/*.{ts,css,html}'"
+    }
+  }
+}

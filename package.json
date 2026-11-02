@@ -1,0 +1,51 @@
+{
+  "name": "rcat-pos-system",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hardware-free multi-merchant QR ordering platform (payment integration deferred)",
+  "packageManager": "pnpm@10.23.0",
+  "engines": {
+    "node": ">=24.15.0 <25",
+    "pnpm": ">=10.23.0 <11"
+  },
+  "scripts": {
+    "build": "nx run-many -t build",
+    "typecheck": "nx run-many -t typecheck",
+    "test": "nx run-many -t test",
+    "lint": "nx run-many -t lint",
+    "affected:build": "nx affected -t build",
+    "affected:check": "nx affected -t typecheck test build",
+    "start:api": "node dist/apps/api/main.js",
+    "dev:customer": "nx serve customer",
+    "dev:merchant": "nx serve merchant",
+    "dev:admin": "nx serve admin",
+    "dev:api": "nx serve api",
+    "format:check": "prettier --check 'apps/**/*.{ts,html,css,json}' 'libs/**/*.ts' 'nx.json' 'angular.json' 'package.json'"
+  },
+  "dependencies": {
+    "@angular/common": "~22.2.0",
+    "@angular/compiler": "~22.2.0",
+    "@angular/core": "~22.2.0",
+    "@angular/forms": "~22.2.0",
+    "@angular/platform-browser": "~22.2.0",
+    "@angular/router": "~22.2.0",
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/core": "^11.1.0",
+    "@nestjs/platform-express": "^11.1.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@angular/build": "~22.2.0",
+    "@angular/cli": "~22.2.0",
+    "@angular/compiler-cli": "~22.2.0",
+    "@nx/angular": "24.0.3",
+    "@nx/nest": "24.0.3",
+    "@types/node": "^24.0.0",
+    "nx": "24.0.3",
+    "prettier": "^3.6.0",
+    "typescript": "~6.0.0",
+    "vitest": "^4.0.0",
+    "tsx": "^4.20.0"
+  }
+}

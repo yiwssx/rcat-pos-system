@@ -1,0 +1,245 @@
+:root {
+  color-scheme: light;
+  font-family:
+    "Noto Sans Thai",
+    Tahoma,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-synthesis: none;
+  font-size: 16px;
+  background: #f5f7fa;
+  color: #1a2942;
+  --accent: #d97706;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+}
+a {
+  color: inherit;
+}
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  max-width: 1152px;
+  width: 100%;
+  margin: auto;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 1.25rem 1.5rem;
+}
+.brand {
+  font-size: 1.15rem;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.brand-mark {
+  display: inline-grid;
+  place-items: center;
+  background: #14233b;
+  color: white;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 0.6rem;
+  margin-right: 0.4rem;
+}
+.brand-light {
+  color: var(--accent);
+}
+.topbar nav {
+  display: flex;
+  gap: 1.25rem;
+}
+.topbar nav a {
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: #42526b;
+}
+.topbar a:hover,
+.topbar a:focus-visible {
+  color: var(--accent);
+  text-decoration: underline;
+}
+main {
+  flex: 1;
+  width: 100%;
+}
+.hero,
+.section,
+.status-view {
+  max-width: 1104px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+.hero {
+  padding-top: clamp(4rem, 11vw, 9rem);
+  padding-bottom: 5rem;
+}
+.eyebrow {
+  color: var(--accent);
+  letter-spacing: 0.13em;
+  font-size: 0.77rem;
+  font-weight: 800;
+}
+h1 {
+  font-size: clamp(2.4rem, 5vw, 4.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+  max-width: 14ch;
+  margin: 1rem 0 1.15rem;
+}
+.lede {
+  color: #55647d;
+  font-size: clamp(1rem, 1.7vw, 1.22rem);
+  max-width: 46rem;
+  line-height: 1.75;
+}
+.notice {
+  margin: 2rem 0;
+  background: #fff;
+  border: 1px solid #e0e6ed;
+  border-radius: 0.9rem;
+  padding: 1rem;
+  max-width: 44rem;
+  line-height: 1.6;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.92rem;
+}
+.notice-dot {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: #e8a73f;
+  flex: none;
+}
+.primary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  background: #14233b;
+  border-radius: 0.7rem;
+  color: #fff;
+  padding: 0.85rem 1.15rem;
+  font-weight: 700;
+  text-decoration: none;
+  min-height: 44px;
+}
+.primary-link:hover,
+.primary-link:focus-visible {
+  background: var(--accent);
+}
+.section {
+  padding-bottom: 5rem;
+}
+.section-top h2 {
+  margin: 0.45rem 0 1.4rem;
+  font-size: 1.6rem;
+}
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+.tile {
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid #e6eaf0;
+  padding: 1.6rem;
+}
+.tile-id {
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+.tile h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.2rem;
+}
+.tile p {
+  color: #6b788e;
+  line-height: 1.65;
+}
+.status-view {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+.status-card {
+  background: white;
+  border: 1px solid #e5e9f0;
+  padding: 1.3rem;
+  border-radius: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.status-card strong {
+  font-size: 1.1rem;
+}
+.status-card p {
+  color: #627088;
+  margin: 0.3rem 0 0;
+}
+.phase {
+  background: #e7f5ed;
+  color: #22694a;
+  border-radius: 999px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.phase.muted {
+  background: #f0f2f5;
+  color: #66748a;
+}
+.footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid #e3e8ef;
+  color: #6b788e;
+  text-align: center;
+  font-size: 0.8rem;
+}
+@media (max-width: 640px) {
+  .topbar {
+    align-items: start;
+    flex-wrap: wrap;
+  }
+  .hero {
+    padding-top: 3.5rem;
+    padding-bottom: 3.5rem;
+  }
+  .tiles {
+    grid-template-columns: 1fr;
+  }
+  .status-card {
+    align-items: start;
+    flex-direction: column;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .primary-link {
+    transition: background-color 160ms ease;
+  }
+}
