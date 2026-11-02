@@ -1,0 +1,17 @@
+{
+  "name": "ui",
+  "root": "libs/ui",
+  "sourceRoot": "libs/ui/src",
+  "projectType": "library",
+  "targets": {
+    "typecheck": {
+      "command": "pnpm exec tsc --noEmit -p libs/ui/tsconfig.lib.json"
+    },
+    "test": {
+      "command": "pnpm exec vitest run libs/ui/src/status-labels.spec.ts"
+    },
+    "lint": {
+      "command": "pnpm exec prettier --check 'libs/ui/src/**/*.ts'"
+    }
+  }
+}

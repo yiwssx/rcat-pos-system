@@ -1,0 +1,17 @@
+{
+  "name": "validation",
+  "root": "libs/validation",
+  "sourceRoot": "libs/validation/src",
+  "projectType": "library",
+  "targets": {
+    "typecheck": {
+      "command": "pnpm exec tsc --noEmit -p libs/validation/tsconfig.lib.json"
+    },
+    "test": {
+      "command": "pnpm exec vitest run libs/validation/src/store-slug.spec.ts"
+    },
+    "lint": {
+      "command": "pnpm exec prettier --check 'libs/validation/src/**/*.ts'"
+    }
+  }
+}

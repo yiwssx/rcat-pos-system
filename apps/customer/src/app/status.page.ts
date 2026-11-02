@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, signal } from "@angular/core";
+import { FoundationPhaseComponent } from "@rcat/ui";
 
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FoundationPhaseComponent],
   template: ` <section class="status-view" aria-labelledby="status-title">
     <span class="eyebrow">SYSTEM READINESS</span>
     <h1 id="status-title">สถานะการพัฒนา</h1>
@@ -14,7 +16,7 @@ import { ChangeDetectionStrategy, Component, signal } from "@angular/core";
         <strong>Frontend</strong>
         <p>Angular Standalone · TypeScript</p>
       </div>
-      <span class="phase">{{ phase() }}</span>
+      <rcat-foundation-phase [label]="phase()" />
     </div>
     <div class="status-card">
       <div>
