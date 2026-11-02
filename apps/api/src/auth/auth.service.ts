@@ -78,16 +78,15 @@ export class AuthService {
     const csrf = newOpaqueSecret();
     const digest = digestOpaqueSecret(token);
     const csrfDigest = digestOpaqueSecret(csrf);
-    await this.database.auth((client) =>
-      client
-        .query(
-          `INSERT INTO rcat_private.auth_sessions
-         (user_id,token_digest,csrf_digest,expires_at)
-         VALUES ($1,$2,$3,now()+interval '12 hours')`,
-          [account.id, digest, csrfDigest],
-        )
-        .then(() => undefined),
+    const issued = await this.database.auth((client) =>
+      client.query<{ issued: boolean }>(
+        "SELECT rcat_private.issue_session_if_current($1,$2,$3,$4) AS issued",
+        [account.id, account.password_hash, digest, csrfDigest],
+      ),
     );
+    if (!issued.rows[0]?.issued) {
+      throw new UnauthorizedException("Invalid credentials");
+    }
     return { userId: account.id, token, csrf };
   }
 

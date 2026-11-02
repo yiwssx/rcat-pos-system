@@ -20,14 +20,16 @@
       "command": "pnpm exec tsc -p apps/api/tsconfig.app.json --noEmit"
     },
     "test": {
-      "command": "pnpm exec vitest run apps/api/src/health/health-status.spec.ts"
+      "command": "pnpm exec vitest run apps/api/src/health/health-status.spec.ts apps/api/src/auth/email-delivery.service.spec.ts"
     },
     "lint": {
       "command": "pnpm exec prettier --check 'apps/api/src/**/*.ts'"
     },
     "smoke": {
       "command": "node scripts/smoke-api.mjs",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "cache": false
     }
   }
