@@ -13,6 +13,7 @@ on:
       - 'apps/api/tsconfig.app.json'
       - 'libs/server-auth/**'
       - 'scripts/smoke-auth.mjs'
+      - 'scripts/dev/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
   push:
@@ -29,6 +30,7 @@ on:
       - 'apps/api/tsconfig.app.json'
       - 'libs/server-auth/**'
       - 'scripts/smoke-auth.mjs'
+      - 'scripts/dev/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
 permissions:
@@ -94,11 +96,17 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Compile API and server-only libraries
         run: pnpm exec tsc -p apps/api/tsconfig.app.json
+      - name: Provision first development merchant account using stdin
+        env:
+          CI: 'true'
+        run: |
+          printf '%s\n' 'example-password-2026' | pnpm exec tsx scripts/dev/provision-account.ts --email 'newmerchant@test.invalid'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.users WHERE email='newmerchant@test.invalid'" | grep -qx '1'
       - name: Verify HTTP login, CSRF, session and cross-tenant isolation
         env:
           CI: 'true'
         run: node scripts/smoke-auth.mjs
       - name: Verify new tenant and invitation audit events
         run: |
-          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events" | grep -qx '3'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events" | grep -qx '4'
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(DISTINCT action) FROM rcat.audit_events WHERE action IN ('tenant.created','staff.invited','staff.invitation.accepted')" | grep -qx '3'

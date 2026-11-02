@@ -234,6 +234,60 @@ try {
     "Missing CSRF must reject mutation",
   );
 
+  // An operator-provisioned account can create its own new store.
+  const newLogin = await api("/api/auth/login", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify({
+      email: "newmerchant@test.invalid",
+      password: "example-password-2026",
+    }),
+  });
+  assert.equal(newLogin.status, 200);
+  const newCookies = newLogin.headers.getSetCookie().map((s) => s.split(";")[0]);
+  const newCookieHeader = newCookies.join("; ");
+  const newCsrf = newCookies
+    .find((s) => s.startsWith("__Host-rcat_csrf="))
+    ?.split("=")[1];
+  assert.ok(newCsrf);
+  assert.equal(
+    (await api(`/api/tenants/${made.tenantId}/stores`, {
+      headers: { Cookie: newCookieHeader },
+    })).status,
+    404,
+    "New user is not a member of another owner's tenant",
+  );
+  const firstStore = await api("/api/tenants", {
+    method: "POST",
+    headers: {
+      ...json,
+      Cookie: newCookieHeader,
+      "X-CSRF-Token": newCsrf,
+    },
+    body: JSON.stringify({
+      tenantSlug: "fresh-merchant-ci",
+      tenantName: "ร้านใหม่",
+      storeSlug: "first-branch",
+      storeName: "สาขาแรก",
+    }),
+  });
+  assert.equal(firstStore.status, 201, await firstStore.clone().text());
+  const firstMerchant = await firstStore.json();
+  assert.equal(firstMerchant.role, "owner");
+  assert.equal(
+    (await api(`/api/tenants/${firstMerchant.tenantId}/stores`, {
+      headers: { Cookie: newCookieHeader },
+    })).status,
+    200,
+  );
+  assert.equal(
+    (await api(`/api/tenants/${firstMerchant.tenantId}/stores`, {
+      headers: { Cookie: cookieHeader },
+    })).status,
+    404,
+    "Original owner must not see the new merchant tenant",
+  );
+
   const logout = await api("/api/auth/logout", {
     method: "POST",
     headers: {
