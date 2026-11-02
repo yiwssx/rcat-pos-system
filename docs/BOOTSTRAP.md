@@ -1,33 +1,49 @@
-# G1 workspace — first runnable scaffold
+# G1 Workspace — runnable framework foundation
 
-This is a **framework foundation**, not a working ordering or payment product. Tracking: #2. Tenant auth/database is tracked separately under #3.
+The framework shell is runnable and CI-verified. It is **not a working ordering system or payment product**. Tracking: #2. Tenant isolation and database integration are separate work in #3.
 
 ## Requirements
-- Node.js >=24.15.0 and <25 (Angular 22 compatibility)
-- pnpm 10.23.0
+- Node.js 24.15.0 (see `.node-version`)
+- pnpm 10.23.0 (see `package.json`)
 
-## Commands
+## Local commands
+
 ```bash
 corepack enable
 corepack prepare pnpm@10.23.0 --activate
-pnpm install
+pnpm install --frozen-lockfile
 pnpm exec nx show projects
+
 pnpm build
 pnpm typecheck
-pnpm test\npnpm exec nx smoke api
-pnpm dev:customer   # alternate terminal: merchant/admin/api
+pnpm test
+pnpm lint
+pnpm exec nx smoke api
+
+pnpm dev:customer
+# Open separate terminals for merchant, admin and API:
+pnpm dev:merchant
+pnpm dev:admin
+pnpm dev:api
 ```
 
-Angular Customer/Merchant/Admin run using Angular CLI via Nx; NestJS API starts on port 3000 at `/api/health` and `/api/ready`. In this milestone readiness is **process-level only** and must not be treated as database/transaction readiness.
+The Angular frontends are independent applications. The NestJS API serves `/api/health` (200 and explicitly not production ready) and `/api/ready` (HTTP 503 until DB/auth/ordering dependencies are built). The CI smoke target starts the **compiled** NestJS API on a test-only port and verifies both statuses.
 
-## Boundaries
-- No database schema/migrations or real orders yet (#3–#6).
-- No authentication, QR ordering, bank integrations, PromptPay, or real payment state.
-- UI pages show explicit development status and cannot be used for transactions.
-- Do not expose any of these apps as a public production service.
+## Verified work
+- `pnpm-lock.yaml` is committed and used with `--frozen-lockfile` in CI.
+- Nx affected-project build, typecheck, tests and Prettier format checks passed for 7 projects.
+- Shared UI, contracts and validation libraries are present and tested.
+- The API HTTP smoke test passes in GitHub Actions.
 
-## Next steps
-1. Generate and commit `pnpm-lock.yaml` on trusted CI, then enable `--frozen-lockfile` (required before #2 closure).
-2. Complete lint/format and Nx affected CI behavior using actual project graph.
-3. Add PostgreSQL Docker profile and migration baseline under #3.
-4. Add integration and UI tests before implementing financial endpoints.
+## Not implemented
+- PostgreSQL schema, migrations, tenant authentication and RBAC (#3).
+- Catalog, table QR, customer Order creation and Merchant operations (#4–#8).
+- Production, backups and merchant signup (#10–#11).
+- PromptPay/payment (#7) explicitly remains the final functional milestone (G5).
+
+## Remaining quality follow-ups
+- Introduce semantic TypeScript/Angular ESLint beyond the current formatting check.
+- Add database/tenant isolation integration tests and global safety gates with #3/#10.
+- Add Playwright browser E2E flows once real catalog/guest interactions exist.
+
+Do not expose this framework-only environment as a public ordering/payment service.
