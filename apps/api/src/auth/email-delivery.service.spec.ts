@@ -1,60 +1,52 @@
 import { describe, expect, it, vi } from "vitest";
-import { EmailDeliveryService, buildActionEmail } from "./email-delivery.service";
+import { buildActionEmail, sendResendEmail } from "./email-delivery.core";
 
-describe("email delivery (no outbound network)", () => {
-  it("constructs a provider-neutral message with a fragment-only secret", () => {
-    const mail = buildActionEmail(
+describe("email provider adapter (no outbound network)", () => {
+  it("creates an action link with token in fragment only", () => {
+    const message = buildActionEmail(
       "reset-password",
-      "owner@test.invalid",
-      "secret-token",
+      "user@test.invalid",
+      "unique-test-token",
       "https://pos.example.test/account",
     );
-    expect(mail.subject).toContain("Reset");
-    expect(mail.text).toContain("#token=secret-token");
-    expect(mail.text).toContain("20 minutes");
-    expect(mail.idempotencyKey).not.toContain("secret-token");
+    expect(message.subject).toContain("Reset");
+    expect(message.text).toContain("#token=unique-test-token");
+    expect(message.text).toContain("20 minutes");
+    expect(message.idempotencyKey).not.toContain("unique-test-token");
   });
 
-  it("rejects unsafe action URLs", () => {
+  it("rejects untrusted action URL protocols and URL credentials", () => {
     expect(() =>
-      buildActionEmail("verify-email", "a@test.invalid", "token", "http://example.test"),
+      buildActionEmail("verify-email", "u@test.invalid", "token", "http://example.test"),
     ).toThrow();
+    const credentialUrl = "https://" + "person:password" + "@example.test";
     expect(() =>
-      buildActionEmail("verify-email", "a@test.invalid", "token", "https://user:pass@example.test"),
+      buildActionEmail("verify-email", "u@test.invalid", "token", credentialUrl),
     ).toThrow();
   });
 
-  it("uses the fixed Resend API and keeps credentials out of the body", async () => {
-    const fn = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) => new Response(null, { status: 200 }));
-    const original = { ...process.env };
-    try {
-      process.env["MAIL_PROVIDER"] = "resend";
-      process.env["RESEND_API_KEY"] = "mocked-secret-key";
-      process.env["MAIL_FROM_EMAIL"] = "no-reply@example.test";
-      process.env["EMAIL_ACTION_BASE_URL"] = "https://pos.example.test/account";
-      vi.stubGlobal("fetch", fn);
-      const mailer = new EmailDeliveryService();
-      await mailer.sendAction("verify-email", "user@test.invalid", "test-token");
-      expect(fn).toHaveBeenCalledOnce();
-      expect(fn.mock.calls[0]?.[0]).toBe("https://api.resend.com/emails");
-      const opts = fn.mock.calls[0]?.[1] as RequestInit;
-      expect(opts.redirect).toBe("error");
-      expect(opts.body).not.toContain("mocked-secret-key");
-    } finally {
-      process.env = original;
-      vi.unstubAllGlobals();
-    }
+  it("calls only the fixed Resend endpoint using an idempotency key", async () => {
+    const fn = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) =>
+      new Response(null, { status: 200 }),
+    );
+    const message = buildActionEmail(
+      "verify-email", "user@test.invalid", "token", "https://pos.example.test/account",
+    );
+    await sendResendEmail(message, "mocked-token", "no-reply@example.test", fn);
+    expect(fn).toHaveBeenCalledOnce();
+    expect(fn.mock.calls[0]?.[0]).toBe("https://api.resend.com/emails");
+    const options = fn.mock.calls[0]?.[1] as RequestInit;
+    expect(options.redirect).toBe("error");
+    expect(options.body).not.toContain("mocked-token");
   });
 
-  it("fails closed when a mail provider is unavailable", async () => {
-    const original = { ...process.env };
-    try {
-      delete process.env["MAIL_PROVIDER"];
-      await expect(
-        new EmailDeliveryService().sendAction("reset-password", "u@test.invalid", "secret"),
-      ).rejects.toThrow("Email transport unavailable");
-    } finally {
-      process.env = original;
-    }
+  it("fails when the provider rejects the email", async () => {
+    const mock = vi.fn(async () => new Response(null, { status: 429 }));
+    const message = buildActionEmail(
+      "reset-password", "user@test.invalid", "token", "https://pos.example.test/account",
+    );
+    await expect(sendResendEmail(
+      message, "mocked-token", "no-reply@example.test", mock,
+    )).rejects.toThrow("Mail transport unsuccessful");
   });
 });

@@ -43,7 +43,7 @@ jobs:
       - name: Show Prettier-formatted recovery and mail files (temporary read-only)
         if: github.event_name == 'pull_request'
         run: |
-          for f in apps/api/src/auth/email-delivery.service.ts apps/api/src/auth/email-delivery.service.spec.ts apps/api/src/auth/password-recovery.service.ts apps/api/src/auth/password-recovery.controller.ts apps/api/src/auth/email-registration.service.ts apps/api/src/auth/auth.service.ts; do
+          for f in apps/api/src/auth/email-delivery.core.ts apps/api/src/auth/email-delivery.service.ts apps/api/src/auth/email-delivery.service.spec.ts apps/api/src/auth/password-recovery.service.ts apps/api/src/auth/password-recovery.controller.ts apps/api/src/auth/email-registration.service.ts apps/api/src/auth/auth.service.ts; do
             echo "START_PRETTIER:$f"
             pnpm exec prettier "$f"
             echo "END_PRETTIER:$f"

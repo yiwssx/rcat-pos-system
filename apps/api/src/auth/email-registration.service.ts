@@ -71,10 +71,9 @@ export class EmailRegistrationService {
         await this.mail.sendAction("verify-email", email, token);
       } catch {
         await this.database.auth((client) =>
-          client.query(
-            "SELECT rcat_private.cancel_email_registration($1)",
-            [digest],
-          ),
+          client.query("SELECT rcat_private.cancel_email_registration($1)", [
+            digest,
+          ]),
         );
         return { status: "pending_verification" };
       }

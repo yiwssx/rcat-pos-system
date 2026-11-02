@@ -61,10 +61,9 @@ export class PasswordRecoveryService {
         await this.mail.sendAction("reset-password", email, token);
       } catch {
         await this.database.auth((client) =>
-          client.query(
-            "SELECT rcat_private.cancel_password_recovery($1)",
-            [digest],
-          ),
+          client.query("SELECT rcat_private.cancel_password_recovery($1)", [
+            digest,
+          ]),
         );
         // No account enumeration: transport failure yields generic response.
         return { status: "if_account_exists" };
@@ -96,10 +95,10 @@ export class PasswordRecoveryService {
     }
     try {
       await this.database.auth((client) =>
-        client.query(
-          "SELECT rcat_private.complete_password_recovery($1,$2)",
-          [digest, encoded],
-        ),
+        client.query("SELECT rcat_private.complete_password_recovery($1,$2)", [
+          digest,
+          encoded,
+        ]),
       );
     } catch (error) {
       const code =

@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Header,
-  HttpCode,
-  Post,
-  Req,
-} from "@nestjs/common";
+import { Body, Controller, Header, HttpCode, Post, Req } from "@nestjs/common";
 import { ApiRequest, requireAllowedOrigin } from "./request-security";
 import { PasswordRecoveryService } from "./password-recovery.service";
 
