@@ -128,5 +128,9 @@ jobs:
         run: node scripts/smoke-auth.mjs
       - name: Verify new tenant and invitation audit events
         run: |
+          echo "AUDIT_EVENT_COUNT"
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events"
+          echo "AUDIT_ACTION_COUNTS"
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT action, count(*) FROM rcat.audit_events GROUP BY action ORDER BY action"
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events" | grep -qx '18'
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(DISTINCT action) FROM rcat.audit_events WHERE action IN ('tenant.created','staff.invited','staff.invitation.accepted','staff.role.changed','staff.removed')" | grep -qx '5'
