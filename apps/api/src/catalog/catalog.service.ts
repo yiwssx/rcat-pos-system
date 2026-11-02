@@ -26,14 +26,23 @@ function bodyObject(raw: unknown): Record<string, unknown> {
 }
 
 function nameField(raw: unknown, maxLength: number): string {
-  if (typeof raw !== "string" || raw.trim().length < 1 || raw.trim().length > maxLength) {
+  if (
+    typeof raw !== "string" ||
+    raw.trim().length < 1 ||
+    raw.trim().length > maxLength
+  ) {
     throw new BadRequestException("Invalid name");
   }
   return raw.trim();
 }
 
 function slugField(raw: unknown): string {
-  if (typeof raw !== "string" || raw.length < 3 || raw.length > 48 || !SLUG.test(raw)) {
+  if (
+    typeof raw !== "string" ||
+    raw.length < 3 ||
+    raw.length > 48 ||
+    !SLUG.test(raw)
+  ) {
     throw new BadRequestException("Invalid category slug");
   }
   return raw;
@@ -68,10 +77,13 @@ export class CatalogService {
     const session = await this.auth.session(req);
     try {
       const result = await this.database.auth((client) =>
-        client.query<{ snapshot: { categories: unknown[]; products: unknown[] } }>(
-          "SELECT rcat_private.catalog_snapshot($1,$2,$3) AS snapshot",
-          [digestOpaqueSecret(session.token), tenantId, storeId],
-        ),
+        client.query<{
+          snapshot: { categories: unknown[]; products: unknown[] };
+        }>("SELECT rcat_private.catalog_snapshot($1,$2,$3) AS snapshot", [
+          digestOpaqueSecret(session.token),
+          tenantId,
+          storeId,
+        ]),
       );
       return result.rows[0]?.snapshot ?? { categories: [], products: [] };
     } catch (error) {
@@ -79,7 +91,12 @@ export class CatalogService {
     }
   }
 
-  async addCategory(req: ApiRequest, tenantId: string, storeId: string, raw: unknown) {
+  async addCategory(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    raw: unknown,
+  ) {
     validateIds(tenantId, storeId);
     const session = await this.auth.session(req);
     this.auth.requireCsrf(req, session);
@@ -99,7 +116,12 @@ export class CatalogService {
     }
   }
 
-  async addProduct(req: ApiRequest, tenantId: string, storeId: string, raw: unknown) {
+  async addProduct(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    raw: unknown,
+  ) {
     validateIds(tenantId, storeId);
     const session = await this.auth.session(req);
     this.auth.requireCsrf(req, session);
@@ -145,7 +167,8 @@ export class CatalogService {
     raw: unknown,
   ) {
     validateIds(tenantId, storeId);
-    if (!UUID.test(productId)) throw new NotFoundException("Catalog unavailable");
+    if (!UUID.test(productId))
+      throw new NotFoundException("Catalog unavailable");
     const session = await this.auth.session(req);
     this.auth.requireCsrf(req, session);
     const data = bodyObject(raw);
