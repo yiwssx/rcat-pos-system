@@ -17,6 +17,7 @@ const server = spawn(process.execPath, ["dist/apps/api/src/main.js"], {
     NODE_ENV: "test",
     PORT: String(port),
     ENABLE_DEVELOPMENT_AUTH: "true",
+    ENABLE_REGISTRATION_TEST_MODE: "true",
     AUTH_ALLOWED_ORIGINS: origin,
     AUTH_DATABASE_URL:
       "postgres://rcat_auth_ci:ci-auth-only@127.0.0.1:5432/rcat_ci_test",
@@ -53,6 +54,93 @@ try {
   }
   assert.ok(alive, "API did not start: " + output);
   assert.equal((await api("/api/ready")).status, 503);
+
+  // Isolated CI registration: no account exists until proof of email token.
+  const registerBody = {
+    email: "verified-new@test.invalid",
+    password: "verified-new-password-2026",
+  };
+  assert.equal(
+    (await api("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(registerBody),
+    })).status,
+    403,
+    "Missing Origin must reject registration",
+  );
+  const register = await api("/api/auth/register", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify(registerBody),
+  });
+  assert.equal(register.status, 202);
+  const pending = await register.json();
+  assert.equal(pending.status, "pending_verification");
+  assert.equal(pending.testVerificationToken?.length, 43);
+
+  assert.equal(
+    (await api("/api/auth/login", {
+      method: "POST",
+      headers: json,
+      body: JSON.stringify(registerBody),
+    })).status,
+    401,
+    "Unverified email must never log in",
+  );
+
+  const repeated = await api("/api/auth/register", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify(registerBody),
+  });
+  assert.equal(repeated.status, 202);
+  assert.equal(
+    (await repeated.json()).testVerificationToken,
+    undefined,
+    "Cooldown must not issue a second claim token",
+  );
+
+  assert.equal(
+    (await api("/api/auth/verify-email", {
+      method: "POST",
+      headers: json,
+      body: JSON.stringify({ token: "invalid" }),
+    })).status,
+    404,
+  );
+  const verify = await api("/api/auth/verify-email", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify({ token: pending.testVerificationToken }),
+  });
+  assert.equal(verify.status, 200);
+  assert.deepEqual(await verify.json(), { verified: true });
+
+  assert.equal(
+    (await api("/api/auth/verify-email", {
+      method: "POST",
+      headers: json,
+      body: JSON.stringify({ token: pending.testVerificationToken }),
+    })).status,
+    404,
+    "A verification token must be single-use",
+  );
+  const verifiedLogin = await api("/api/auth/login", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify(registerBody),
+  });
+  assert.equal(verifiedLogin.status, 200, "Verified account can sign in");
+  assert.equal(
+    (await api("/api/auth/register", {
+      method: "POST",
+      headers: json,
+      body: JSON.stringify(registerBody),
+    })).status,
+    202,
+    "Existing users receive generic registration response",
+  );
 
   const missingOrigin = await api("/api/auth/login", {
     method: "POST",
