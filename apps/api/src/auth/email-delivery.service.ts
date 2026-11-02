@@ -30,12 +30,7 @@ export class EmailDeliveryService {
     const key = process.env["RESEND_API_KEY"];
     const from = process.env["MAIL_FROM_EMAIL"];
     const base = process.env["EMAIL_ACTION_BASE_URL"];
-    if (
-      !key ||
-      !from ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(from) ||
-      !base
-    ) {
+    if (!key || !from || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(from) || !base) {
       throw new ServiceUnavailableException("Email transport not configured");
     }
     try {

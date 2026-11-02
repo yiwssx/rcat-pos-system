@@ -25,17 +25,25 @@ export function buildActionEmail(
     url.search ||
     url.hash ||
     (url.protocol !== "https:" &&
-      !(process.env["CI"] === "true" && url.origin.startsWith("http://127.0.0.1:")))
+      !(
+        process.env["CI"] === "true" &&
+        url.origin.startsWith("http://127.0.0.1:")
+      ))
   ) {
     throw new Error("An approved email action HTTPS origin is required");
   }
   const path = purpose === "verify-email" ? "verify-email" : "reset-password";
-  const actionUrl = new URL(path, url.href.endsWith("/") ? url.href : url.href + "/");
+  const actionUrl = new URL(
+    path,
+    url.href.endsWith("/") ? url.href : url.href + "/",
+  );
   // Fragment is handled by the customer-facing frontend, not sent to servers or
   // reverse-proxy access logs. Angular must remove it once read.
   actionUrl.hash = `token=${encodeURIComponent(secret)}`;
   const subject =
-    purpose === "verify-email" ? "Verify your RCAT POS email" : "Reset your RCAT POS password";
+    purpose === "verify-email"
+      ? "Verify your RCAT POS email"
+      : "Reset your RCAT POS password";
   const minutes = purpose === "verify-email" ? 30 : 20;
   const text =
     `RCAT POS requested an account action.\n\nOpen this link to continue:\n${actionUrl.toString()}\n\n` +

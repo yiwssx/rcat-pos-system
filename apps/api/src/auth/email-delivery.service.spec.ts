@@ -17,20 +17,34 @@ describe("email provider adapter (no outbound network)", () => {
 
   it("rejects untrusted action URL protocols and URL credentials", () => {
     expect(() =>
-      buildActionEmail("verify-email", "u@test.invalid", "token", "http://example.test"),
+      buildActionEmail(
+        "verify-email",
+        "u@test.invalid",
+        "token",
+        "http://example.test",
+      ),
     ).toThrow();
     const credentialUrl = "https://" + "person:password" + "@example.test";
     expect(() =>
-      buildActionEmail("verify-email", "u@test.invalid", "token", credentialUrl),
+      buildActionEmail(
+        "verify-email",
+        "u@test.invalid",
+        "token",
+        credentialUrl,
+      ),
     ).toThrow();
   });
 
   it("calls only the fixed Resend endpoint using an idempotency key", async () => {
-    const fn = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) =>
-      new Response(null, { status: 200 }),
+    const fn = vi.fn(
+      async (_input: string | URL | Request, _init?: RequestInit) =>
+        new Response(null, { status: 200 }),
     );
     const message = buildActionEmail(
-      "verify-email", "user@test.invalid", "token", "https://pos.example.test/account",
+      "verify-email",
+      "user@test.invalid",
+      "token",
+      "https://pos.example.test/account",
     );
     await sendResendEmail(message, "mocked-token", "no-reply@example.test", fn);
     expect(fn).toHaveBeenCalledOnce();
@@ -43,10 +57,13 @@ describe("email provider adapter (no outbound network)", () => {
   it("fails when the provider rejects the email", async () => {
     const mock = vi.fn(async () => new Response(null, { status: 429 }));
     const message = buildActionEmail(
-      "reset-password", "user@test.invalid", "token", "https://pos.example.test/account",
+      "reset-password",
+      "user@test.invalid",
+      "token",
+      "https://pos.example.test/account",
     );
-    await expect(sendResendEmail(
-      message, "mocked-token", "no-reply@example.test", mock,
-    )).rejects.toThrow("Mail transport unsuccessful");
+    await expect(
+      sendResendEmail(message, "mocked-token", "no-reply@example.test", mock),
+    ).rejects.toThrow("Mail transport unsuccessful");
   });
 });
