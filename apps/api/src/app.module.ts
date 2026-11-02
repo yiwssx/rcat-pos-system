@@ -14,6 +14,8 @@ import { StaffAdministrationController } from "./merchant/staff-administration.c
 import { StaffAdministrationService } from "./merchant/staff-administration.service";
 import { CatalogController } from "./catalog/catalog.controller";
 import { CatalogService } from "./catalog/catalog.service";
+import { TableOrderingController } from "./ordering/table-ordering.controller";
+import { TableOrderingService } from "./ordering/table-ordering.service";
 
 @Module({
   controllers: [
@@ -25,6 +27,7 @@ import { CatalogService } from "./catalog/catalog.service";
     MerchantOnboardingController,
     StaffAdministrationController,
     CatalogController,
+    TableOrderingController,
   ],
   providers: [
     DatabaseAccess,
@@ -35,6 +38,7 @@ import { CatalogService } from "./catalog/catalog.service";
     MerchantOnboardingService,
     StaffAdministrationService,
     CatalogService,
+    TableOrderingService,
   ],
 })
 export class AppModule {}
