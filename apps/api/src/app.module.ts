@@ -16,6 +16,8 @@ import { CatalogController } from "./catalog/catalog.controller";
 import { CatalogService } from "./catalog/catalog.service";
 import { TableOrderingController } from "./ordering/table-ordering.controller";
 import { TableOrderingService } from "./ordering/table-ordering.service";
+import { ProductModifiersController } from "./catalog/product-modifiers.controller";
+import { ProductModifiersService } from "./catalog/product-modifiers.service";
 
 @Module({
   controllers: [
@@ -28,6 +30,7 @@ import { TableOrderingService } from "./ordering/table-ordering.service";
     StaffAdministrationController,
     CatalogController,
     TableOrderingController,
+    ProductModifiersController,
   ],
   providers: [
     DatabaseAccess,
@@ -39,6 +42,7 @@ import { TableOrderingService } from "./ordering/table-ordering.service";
     StaffAdministrationService,
     CatalogService,
     TableOrderingService,
+    ProductModifiersService,
   ],
 })
 export class AppModule {}
