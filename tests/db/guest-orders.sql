@@ -114,11 +114,11 @@ BEGIN
  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
  END;
  IF NOT denied THEN RAISE EXCEPTION 'auth role read order snapshots directly'; END IF;
-END $;
+END $$;
 RESET ROLE;
 -- A privileged CI fixture verifies persisted snapshots. The real API role
 -- deliberately cannot SELECT the private Order tables.
-DO $
+DO $$
 DECLARE v_order uuid:=current_setting('test.order_id')::uuid; v_num integer;
 BEGIN
  SELECT count(*) INTO v_num FROM rcat.orders WHERE id=v_order
@@ -130,7 +130,7 @@ BEGIN
    AND unit_price_satang=9500 AND line_total_satang=19000
    AND jsonb_array_length(option_snapshots)=1;
  IF v_num<>1 THEN RAISE EXCEPTION 'Order line snapshot not immutable'; END IF;
-END $;
+END $$;
 SET LOCAL ROLE rcat_app;
 SELECT set_config('app.tenant_id','00000000-0000-4000-8000-000000000002',true);
 DO $$

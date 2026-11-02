@@ -1,4 +1,9 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { digestOpaqueSecret } from "../../../../libs/server-auth/src";
 import { DatabaseAccess } from "../database/db-access";
 
@@ -7,7 +12,9 @@ const KEY = /^[A-Za-z0-9_-]{16,96}$/;
 
 function parseCart(raw: unknown): {
   visitDigest: Buffer;
-  cart: { items: { productId: string; quantity: number; optionIds: string[] }[] };
+  cart: {
+    items: { productId: string; quantity: number; optionIds: string[] }[];
+  };
 } {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     throw new BadRequestException("Invalid order");
@@ -22,7 +29,11 @@ function parseCart(raw: unknown): {
   } catch {
     throw new NotFoundException("Ordering visit unavailable");
   }
-  if (!Array.isArray(body["items"]) || body["items"].length < 1 || body["items"].length > 20) {
+  if (
+    !Array.isArray(body["items"]) ||
+    body["items"].length < 1 ||
+    body["items"].length > 20
+  ) {
     throw new BadRequestException("Invalid order items");
   }
   let totalQuantity = 0;
@@ -49,7 +60,9 @@ function parseCart(raw: unknown): {
     }
     totalQuantity += quantity;
     const options = optionIds as string[];
-    if (new Set(options.map((id) => id.toLowerCase())).size !== options.length) {
+    if (
+      new Set(options.map((id) => id.toLowerCase())).size !== options.length
+    ) {
       throw new BadRequestException("Duplicate option");
     }
     return {
@@ -74,9 +87,16 @@ function mapOrderFailure(error: unknown): never {
     throw new NotFoundException("Order or visit unavailable");
   }
   if (code === "23505") {
-    throw new ConflictException("Idempotency key already used for another cart");
+    throw new ConflictException(
+      "Idempotency key already used for another cart",
+    );
   }
-  if (code === "22023" || code === "23514" || code === "23503" || code === "22P02") {
+  if (
+    code === "22023" ||
+    code === "23514" ||
+    code === "23503" ||
+    code === "22P02"
+  ) {
     throw new BadRequestException("Invalid order configuration");
   }
   throw error;

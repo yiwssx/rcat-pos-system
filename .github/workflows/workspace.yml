@@ -40,15 +40,6 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Display Nx projects
         run: pnpm exec nx show projects
-      - name: Preview guest order code using Prettier (read only)
-        if: github.event_name == 'pull_request'
-        run: |
-          echo BEGIN_ORDERS_SERVICE
-          pnpm exec prettier apps/api/src/orders/guest-orders.service.ts
-          echo END_ORDERS_SERVICE
-          echo BEGIN_ORDERS_CONTROLLER
-          pnpm exec prettier apps/api/src/orders/guest-orders.controller.ts
-          echo END_ORDERS_CONTROLLER
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request'
         env:
