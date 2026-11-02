@@ -11,6 +11,7 @@ import {
 } from "../../../../libs/server-auth/src";
 import { normalizeRegistrationEmail } from "../../../../libs/server-auth/src/registration";
 import { DatabaseAccess } from "../database/db-access";
+import { EmailDeliveryService } from "./email-delivery.service";
 
 function requireIsolatedTestMode(): void {
   // A real signup endpoint requires configured email delivery + rate limits.
@@ -27,7 +28,10 @@ function requireIsolatedTestMode(): void {
 
 @Injectable()
 export class EmailRegistrationService {
-  constructor(private readonly database: DatabaseAccess) {}
+  constructor(
+    private readonly database: DatabaseAccess,
+    private readonly mail: EmailDeliveryService,
+  ) {}
 
   async register(raw: unknown): Promise<{
     status: "pending_verification";
@@ -62,11 +66,21 @@ export class EmailRegistrationService {
         [email, encoded, digest],
       ),
     );
-    // Token is deliberately only exposed for isolated automated test use.
-    // Normal public/production delivery requires a separate mail transport.
-    return result.rows[0]?.accepted
-      ? { status: "pending_verification", testVerificationToken: token }
-      : { status: "pending_verification" };
+    if (result.rows[0]?.accepted) {
+      try {
+        await this.mail.sendAction("verify-email", email, token);
+      } catch {
+        await this.database.auth((client) =>
+          client.query("SELECT rcat_private.cancel_email_registration($1)", [
+            digest,
+          ]),
+        );
+        return { status: "pending_verification" };
+      }
+      // Verification token is returned ONLY to isolated CI tests.
+      return { status: "pending_verification", testVerificationToken: token };
+    }
+    return { status: "pending_verification" };
   }
 
   async verify(raw: unknown): Promise<{ verified: true }> {

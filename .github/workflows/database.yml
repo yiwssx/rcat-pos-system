@@ -86,6 +86,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/email-registration.sql
       - name: Verify owner-only staff management SQL transactions
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/staff-administration.sql
+      - name: Verify password recovery SQL security
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/password-recovery.sql
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:

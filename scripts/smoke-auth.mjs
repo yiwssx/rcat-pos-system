@@ -18,6 +18,8 @@ const server = spawn(process.execPath, ["dist/apps/api/src/main.js"], {
     PORT: String(port),
     ENABLE_DEVELOPMENT_AUTH: "true",
     ENABLE_REGISTRATION_TEST_MODE: "true",
+    ENABLE_RECOVERY_TEST_MODE: "true",
+    MAIL_PROVIDER: "test",
     AUTH_ALLOWED_ORIGINS: origin,
     AUTH_DATABASE_URL:
       "postgres://rcat_auth_ci:ci-auth-only@127.0.0.1:5432/rcat_ci_test",
@@ -433,6 +435,79 @@ try {
   assert.equal((await api(staffUrl, {
     headers: { Cookie: cookieHeader },
   })).status, 200, "Owner retains staff roster access");
+
+  // Password recovery uses generic response, 20-minute one-time token and
+  // revokes all existing sessions across the account's tenant memberships.
+  assert.equal((await api("/api/auth/password/forgot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "newmerchant@test.invalid" }),
+  })).status, 403);
+  const unknown = await api("/api/auth/password/forgot", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify({ email: "unknown-account@test.invalid" }),
+  });
+  assert.equal(unknown.status, 202);
+  assert.deepEqual(await unknown.json(), { status: "if_account_exists" });
+
+  const requestReset = await api("/api/auth/password/forgot", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify({ email: "newmerchant@test.invalid" }),
+  });
+  assert.equal(requestReset.status, 202);
+  const recovery = await requestReset.json();
+  assert.equal(recovery.status, "if_account_exists");
+  assert.equal(recovery.testRecoveryToken?.length, 43);
+  const cooldown = await api("/api/auth/password/forgot", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify({ email: "newmerchant@test.invalid" }),
+  });
+  assert.deepEqual(await cooldown.json(), { status: "if_account_exists" });
+
+  assert.equal((await api("/api/auth/password/reset", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify({ token: "invalid", newPassword: "replaced-password-2026" }),
+  })).status, 400);
+
+  const reset = await api("/api/auth/password/reset", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify({
+      token: recovery.testRecoveryToken,
+      newPassword: "replaced-password-2026",
+    }),
+  });
+  assert.equal(reset.status, 200, await reset.clone().text());
+  assert.deepEqual(await reset.json(), { reset: true });
+  assert.equal((await api("/api/auth/password/reset", {
+    method: "POST",
+    headers: json,
+    body: JSON.stringify({
+      token: recovery.testRecoveryToken,
+      newPassword: "replaced-password-2026",
+    }),
+  })).status, 404, "Reset token must be consumed once");
+  assert.equal((await api("/api/auth/me", {
+    headers: { Cookie: newCookieHeader },
+  })).status, 401, "All old sessions must be revoked");
+  assert.equal((await api("/api/auth/login", {
+    method: "POST", headers: json,
+    body: JSON.stringify({
+      email: "newmerchant@test.invalid",
+      password: "example-password-2026",
+    }),
+  })).status, 401, "Old password must be invalid");
+  assert.equal((await api("/api/auth/login", {
+    method: "POST", headers: json,
+    body: JSON.stringify({
+      email: "newmerchant@test.invalid",
+      password: "replaced-password-2026",
+    }),
+  })).status, 200, "New password must work");
 
   const logout = await api("/api/auth/logout", {
     method: "POST",

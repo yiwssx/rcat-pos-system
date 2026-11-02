@@ -3,6 +3,9 @@ import { HealthController } from "./health/health.controller";
 import { DatabaseAccess } from "./database/db-access";
 import { AuthController, TenantStoreController } from "./auth/auth.controller";
 import { AuthService } from "./auth/auth.service";
+import { EmailDeliveryService } from "./auth/email-delivery.service";
+import { PasswordRecoveryService } from "./auth/password-recovery.service";
+import { PasswordRecoveryController } from "./auth/password-recovery.controller";
 import { EmailRegistrationController } from "./auth/email-registration.controller";
 import { EmailRegistrationService } from "./auth/email-registration.service";
 import { MerchantOnboardingController } from "./merchant/merchant-onboarding.controller";
@@ -15,6 +18,7 @@ import { StaffAdministrationService } from "./merchant/staff-administration.serv
     HealthController,
     AuthController,
     EmailRegistrationController,
+    PasswordRecoveryController,
     TenantStoreController,
     MerchantOnboardingController,
     StaffAdministrationController,
@@ -23,6 +27,8 @@ import { StaffAdministrationService } from "./merchant/staff-administration.serv
     DatabaseAccess,
     AuthService,
     EmailRegistrationService,
+    PasswordRecoveryService,
+    EmailDeliveryService,
     MerchantOnboardingService,
     StaffAdministrationService,
   ],
