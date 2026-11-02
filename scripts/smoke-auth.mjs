@@ -509,6 +509,64 @@ try {
     }),
   })).status, 200, "New password must work");
 
+  // G2 catalog: authenticated tenant owner controls categories/products only
+  // inside the owned store; customer/order/payment endpoints do not exist yet.
+  const catalogUrl = `/api/tenants/${made.tenantId}/stores/${made.storeId}/catalog`;
+  const catHeaders = { ...json, Cookie: cookieHeader, "X-CSRF-Token": csrfToken };
+  assert.equal((await api(catalogUrl)).status, 401);
+  assert.equal((await api(catalogUrl, { headers: { Cookie: bHeader } })).status, 404);
+  assert.equal((await api(catalogUrl + "/categories", {
+    method: "POST", headers: { ...json, Cookie: cookieHeader },
+    body: JSON.stringify({ slug: "thai-food", name: "อาหารไทย" }),
+  })).status, 403, "Catalog writes require CSRF");
+  const categoryResponse = await api(catalogUrl + "/categories", {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ slug: "thai-food", name: "อาหารไทย" }),
+  });
+  assert.equal(categoryResponse.status, 201, await categoryResponse.clone().text());
+  const categoryId = (await categoryResponse.json()).categoryId;
+  assert.ok(categoryId);
+  assert.equal((await api(catalogUrl + "/categories", {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ slug: "thai-food", name: "duplicate" }),
+  })).status, 409);
+  assert.equal((await api(catalogUrl + "/products", {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ categoryId, name: "Invalid", priceSatang: 89.5 }),
+  })).status, 400, "Fractional satang must be rejected");
+  assert.equal((await api(catalogUrl + "/products", {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ categoryId, name: "Invalid", priceSatang: -1 }),
+  })).status, 400);
+  const productResponse = await api(catalogUrl + "/products", {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ categoryId, name: "ข้าวผัด", priceSatang: 8900 }),
+  });
+  assert.equal(productResponse.status, 201, await productResponse.clone().text());
+  const productId = (await productResponse.json()).productId;
+  assert.ok(productId);
+  const snapshot = await api(catalogUrl, { headers: { Cookie: cookieHeader } });
+  assert.equal(snapshot.status, 200);
+  const contents = await snapshot.json();
+  assert.equal(contents.categories.length, 1);
+  assert.equal(contents.products.length, 1);
+  assert.equal(contents.products[0].priceSatang, 8900);
+  assert.equal(contents.products[0].available, true);
+  assert.equal((await api(catalogUrl + "/products/" + productId + "/availability", {
+    method: "PATCH", headers: catHeaders,
+    body: JSON.stringify({ available: false }),
+  })).status, 200);
+  const soldOut = await api(catalogUrl, { headers: { Cookie: cookieHeader } });
+  assert.equal((await soldOut.json()).products[0].available, false);
+  assert.equal((await api(
+    "/api/tenants/00000000-0000-4000-8000-000000000002/stores/20000000-0000-4000-8000-000000000002/catalog",
+    { headers: { Cookie: cookieHeader } },
+  )).status, 404, "Tenant A must never see Tenant B catalog");
+  assert.equal((await api(catalogUrl + "/products", {
+    method: "POST", headers: { ...json, Cookie: bHeader, "X-CSRF-Token": bCsrf },
+    body: JSON.stringify({ categoryId, name: "Unauthorized", priceSatang: 1000 }),
+  })).status, 404, "Removed staff must not modify catalog");
+
   const logout = await api("/api/auth/logout", {
     method: "POST",
     headers: {
