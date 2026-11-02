@@ -1,0 +1,17 @@
+{
+  "name": "contracts",
+  "root": "libs/contracts",
+  "sourceRoot": "libs/contracts/src",
+  "projectType": "library",
+  "targets": {
+    "typecheck": {
+      "command": "pnpm exec tsc --noEmit -p libs/contracts/tsconfig.lib.json"
+    },
+    "test": {
+      "command": "pnpm exec vitest run libs/contracts/src/money.spec.ts"
+    },
+    "lint": {
+      "command": "pnpm exec prettier --check 'libs/contracts/src/**/*.ts'"
+    }
+  }
+}

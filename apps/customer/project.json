@@ -1,0 +1,28 @@
+{
+  "name": "customer",
+  "root": "apps/customer",
+  "sourceRoot": "apps/customer/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "command": "pnpm exec ng build customer",
+      "outputs": [
+        "{workspaceRoot}/dist/apps/customer"
+      ]
+    },
+    "serve": {
+      "command": "pnpm exec ng serve customer --host 127.0.0.1",
+      "continuous": true,
+      "cache": false
+    },
+    "typecheck": {
+      "command": "pnpm exec tsc --noEmit -p apps/customer/tsconfig.app.json"
+    },
+    "test": {
+      "command": "pnpm exec vitest run apps/customer/src/app/app.spec.ts"
+    },
+    "lint": {
+      "command": "pnpm exec prettier --check 'apps/customer/src/**/*.{ts,css,html}'"
+    }
+  }
+}

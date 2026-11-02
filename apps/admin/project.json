@@ -1,0 +1,28 @@
+{
+  "name": "admin",
+  "root": "apps/admin",
+  "sourceRoot": "apps/admin/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "command": "pnpm exec ng build admin",
+      "outputs": [
+        "{workspaceRoot}/dist/apps/admin"
+      ]
+    },
+    "serve": {
+      "command": "pnpm exec ng serve admin --host 127.0.0.1",
+      "continuous": true,
+      "cache": false
+    },
+    "typecheck": {
+      "command": "pnpm exec tsc --noEmit -p apps/admin/tsconfig.app.json"
+    },
+    "test": {
+      "command": "pnpm exec vitest run apps/admin/src/app/app.spec.ts"
+    },
+    "lint": {
+      "command": "pnpm exec prettier --check 'apps/admin/src/**/*.{ts,css,html}'"
+    }
+  }
+}

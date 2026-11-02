@@ -1,0 +1,48 @@
+name: One-time G1 lockfile and format bootstrap
+
+on:
+  push:
+    branches: [feat/g1-angular-nest-workspace]
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap-lockfile:
+    if: github.repository == 'yiwssx/rcat-pos-system' && github.actor == 'yiwssx'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Resolve dependencies and generate lockfile
+        run: pnpm install --ignore-scripts --no-frozen-lockfile
+      - name: Format source and configuration
+        run: |
+          pnpm exec prettier --write 'apps/**/*.{ts,html,css,json}' 'libs/**/*.ts' 'nx.json' 'angular.json' 'package.json' 'tsconfig.base.json' 'tsconfig.json'
+      - name: Commit generated lockfile and formatting to trusted feature branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet && [ -f pnpm-lock.yaml ]; then
+            echo "Working tree already up to date"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json pnpm-lock.yaml angular.json nx.json tsconfig.base.json tsconfig.json apps libs
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'chore(g1): pin resolved dependencies and format generated workspace'
+          # Token is only supplied to this isolated push step, never to install scripts.
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: bearer ${GH_TOKEN}" push origin HEAD:refs/heads/feat/g1-angular-nest-workspace
+# Remove this one-time elevated workflow in the same PR after lockfile is committed.
