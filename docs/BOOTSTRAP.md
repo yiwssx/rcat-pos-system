@@ -14,7 +14,7 @@ pnpm install
 pnpm exec nx show projects
 pnpm build
 pnpm typecheck
-pnpm test
+pnpm test\npnpm exec nx smoke api
 pnpm dev:customer   # alternate terminal: merchant/admin/api
 ```
 
