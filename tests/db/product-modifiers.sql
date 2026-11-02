@@ -82,7 +82,7 @@ BEGIN
    decode(repeat('d9',32),'hex'),
    '00000000-0000-4000-8000-000000000001',
    '20000000-0000-4000-8000-000000000001',
-   product,grp,'Fractional isn't accepted in SQL',100000001);
+   product,grp,'Over maximum allowed',100000001);
  EXCEPTION WHEN invalid_parameter_value THEN denied:=true;
  END;
  IF NOT denied THEN RAISE EXCEPTION 'Over-range modifier delta allowed'; END IF;
