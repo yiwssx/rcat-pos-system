@@ -21,6 +21,7 @@ const server = spawn(process.execPath, ["dist/apps/api/src/main.js"], {
     ENABLE_RECOVERY_TEST_MODE: "true",
     MAIL_PROVIDER: "test",
     AUTH_ALLOWED_ORIGINS: origin,
+    GUEST_ORDER_BASE_URL: origin + "/order",
     AUTH_DATABASE_URL:
       "postgres://rcat_auth_ci:ci-auth-only@127.0.0.1:5432/rcat_ci_test",
     TENANT_DATABASE_URL:
@@ -566,6 +567,71 @@ try {
     method: "POST", headers: { ...json, Cookie: bHeader, "X-CSRF-Token": bCsrf },
     body: JSON.stringify({ categoryId, name: "Unauthorized", priceSatang: 1000 }),
   })).status, 404, "Removed staff must not modify catalog");
+
+  // Ordering QR URLs are table VISIT links; not bank or PromptPay QR codes.
+  const tableUrl = `/api/tenants/${made.tenantId}/stores/${made.storeId}/tables`;
+  assert.equal((await api(tableUrl, {
+    method: "POST", headers: { ...json, Cookie: cookieHeader },
+    body: JSON.stringify({ label: "โต๊ะ 1" }),
+  })).status, 403, "Table creation requires CSRF");
+  const tableResponse = await api(tableUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ label: "โต๊ะ 1" }),
+  });
+  assert.equal(tableResponse.status, 201, await tableResponse.clone().text());
+  const tableId = (await tableResponse.json()).tableId;
+  assert.ok(tableId);
+  assert.equal((await api(tableUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ label: "โต๊ะ 1" }),
+  })).status, 409, "Duplicate table labels must be blocked");
+  const rotateUrl = tableUrl + "/" + tableId + "/rotate";
+  const firstRotate = await api(rotateUrl, {
+    method: "POST", headers: catHeaders,
+  });
+  assert.equal(firstRotate.status, 201, await firstRotate.clone().text());
+  const firstVisit = await firstRotate.json();
+  assert.ok(firstVisit.visitId);
+  const url = new URL(firstVisit.orderingUrl);
+  assert.equal(url.pathname, "/order");
+  assert.equal(url.search, "", "Ordering secret must not enter URL query");
+  assert.ok(url.hash.startsWith("#token="));
+  const firstToken = decodeURIComponent(url.hash.slice("#token=".length));
+  assert.equal(firstToken.length, 43);
+  const publicResolve = async (token) =>
+    api("/api/guest/ordering-visit/resolve", {
+      method: "POST", headers: json, body: JSON.stringify({ token }),
+    });
+  const active = await publicResolve(firstToken);
+  assert.equal(active.status, 201, await active.clone().text());
+  const menu = await active.json();
+  assert.equal(menu.visitId, firstVisit.visitId);
+  assert.equal(menu.tableLabel, "โต๊ะ 1");
+  assert.equal(menu.products.length, 0, "Sold-out item must not appear on guest menu");
+  assert.equal(menu.categories.length, 1);
+  assert.equal((await publicResolve("forged-secret")).status, 404);
+  const secondRotate = await api(rotateUrl, {
+    method: "POST", headers: catHeaders,
+  });
+  assert.equal(secondRotate.status, 201);
+  const secondVisit = await secondRotate.json();
+  const secondToken = decodeURIComponent(
+    new URL(secondVisit.orderingUrl).hash.slice("#token=".length),
+  );
+  assert.notEqual(secondVisit.visitId, firstVisit.visitId);
+  assert.equal((await publicResolve(firstToken)).status, 404,
+    "Rotated-out table QR may never authorize old guests");
+  assert.equal((await publicResolve(secondToken)).status, 201);
+  assert.equal((await api(tableUrl, {
+    method: "POST",
+    headers: { ...json, Cookie: bHeader, "X-CSRF-Token": bCsrf },
+    body: JSON.stringify({ label: "Unauthorized" }),
+  })).status, 404, "Removed staff cannot create tables");
+  assert.equal((await api(
+    "/api/tenants/00000000-0000-4000-8000-000000000002/stores/20000000-0000-4000-8000-000000000002/tables",
+    { method: "POST", headers: catHeaders,
+      body: JSON.stringify({ label: "Wrong tenant" }) },
+  )).status, 404);
 
   const logout = await api("/api/auth/logout", {
     method: "POST",
