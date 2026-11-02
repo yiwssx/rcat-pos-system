@@ -32,7 +32,7 @@ DO $$
 BEGIN
  IF (SELECT tenant_id FROM rcat.tenant_memberships LIMIT 1) <>
      '00000000-0000-4000-8000-000000000002'::uuid THEN
-   RAISE EXCEPTION 'RLS failure: other user's membership leaked';
+   RAISE EXCEPTION 'RLS failure: another user membership leaked';
  END IF;
 END $$;
 ROLLBACK;
