@@ -1,0 +1,46 @@
+name: Foundation checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-docs-and-skills:
+    name: Validate planning docs and repository skills
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify required files and skill metadata
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          required = [
+              'README.md', 'AGENTS.md', 'SECURITY.md',
+              'docs/PRODUCT.md', 'docs/ARCHITECTURE.md',
+              'docs/ROADMAP.md', 'docs/TRACKER.md', 'docs/DECISIONS.md',
+          ]
+          for name in required:
+              assert Path(name).is_file(), f'Missing {name}'
+          skills = sorted(Path('.agents/skills').glob('*/SKILL.md'))
+          assert len(skills) >= 5, 'Expected core project skills'
+          for skill in skills:
+              lines = skill.read_text(encoding='utf-8').splitlines()
+              assert lines and lines[0] == '---', f'Invalid metadata start: {skill}'
+              assert '---' in lines[1:], f'Invalid metadata end: {skill}'
+              end = lines[1:].index('---') + 1
+              meta = lines[1:end]
+              assert any(line.startswith('name: ') for line in meta), f'Missing name: {skill}'
+              assert any(line.startswith('description: ') for line in meta), f'Missing description: {skill}'
+          print(f'Validated {len(required)} documents and {len(skills)} skills')
+          PY
+# Project build, affected tests, security and migrations are added in EPIC-02/10.
+# This workflow does not imply application tests have passed.
+

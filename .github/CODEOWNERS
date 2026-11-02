@@ -1,0 +1,6 @@
+# Repository ownership; effective required review needs a branch ruleset.
+* @yiwssx
+/.agents/ @yiwssx
+/.github/ @yiwssx
+/docs/ @yiwssx
+
