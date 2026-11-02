@@ -1,0 +1,32 @@
+name: Bug report
+description: Report a reproducible functional or security bug (do not disclose secrets).
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior and steps
+      description: Do not include live payment data, credentials or private customer records.
+    validations:
+      required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Affected area
+      options:
+        - Customer
+        - Merchant
+        - Admin
+        - API
+        - Database
+        - Infrastructure
+    validations:
+      required: true
+
