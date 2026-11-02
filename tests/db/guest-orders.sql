@@ -96,15 +96,7 @@ BEGIN
  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
  END;
  IF NOT denied THEN RAISE EXCEPTION 'Sold out product ordered'; END IF;
- SELECT count(*) INTO v_num FROM rcat.orders WHERE id=v_order
-  AND amount_satang=19000 AND payment_state='not_requested'
-  AND status='submitted';
- IF v_num<>1 THEN RAISE EXCEPTION 'Persisted order mutated after catalog change'; END IF;
- SELECT count(*) INTO v_num FROM rcat.order_items WHERE order_id=v_order
-   AND product_name='ข้าวผัด' AND quantity=2 AND base_price_satang=8000
-   AND unit_price_satang=9500 AND line_total_satang=19000
-   AND jsonb_array_length(option_snapshots)=1;
- IF v_num<>1 THEN RAISE EXCEPTION 'Order line snapshot not immutable'; END IF;
+ PERFORM set_config('test.order_id',v_order::text,true);
  PERFORM rcat_private.rotate_ordering_visit(
   decode(repeat('d5',32),'hex'),'00000000-0000-4000-8000-000000000001',
   '20000000-0000-4000-8000-000000000001',
@@ -122,8 +114,23 @@ BEGIN
  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
  END;
  IF NOT denied THEN RAISE EXCEPTION 'auth role read order snapshots directly'; END IF;
-END $$;
+END $;
 RESET ROLE;
+-- A privileged CI fixture verifies persisted snapshots. The real API role
+-- deliberately cannot SELECT the private Order tables.
+DO $
+DECLARE v_order uuid:=current_setting('test.order_id')::uuid; v_num integer;
+BEGIN
+ SELECT count(*) INTO v_num FROM rcat.orders WHERE id=v_order
+  AND amount_satang=19000 AND payment_state='not_requested'
+  AND status='submitted';
+ IF v_num<>1 THEN RAISE EXCEPTION 'Persisted order mutated after catalog change'; END IF;
+ SELECT count(*) INTO v_num FROM rcat.order_items WHERE order_id=v_order
+   AND product_name='ข้าวผัด' AND quantity=2 AND base_price_satang=8000
+   AND unit_price_satang=9500 AND line_total_satang=19000
+   AND jsonb_array_length(option_snapshots)=1;
+ IF v_num<>1 THEN RAISE EXCEPTION 'Order line snapshot not immutable'; END IF;
+END $;
 SET LOCAL ROLE rcat_app;
 SELECT set_config('app.tenant_id','00000000-0000-4000-8000-000000000002',true);
 DO $$
