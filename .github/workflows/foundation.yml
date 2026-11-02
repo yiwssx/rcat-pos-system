@@ -17,30 +17,51 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Verify required files and skill metadata
+      - name: Verify required files, metadata, license and source pins
         shell: bash
         run: |
           python3 - <<'PY'
+          import json
           from pathlib import Path
+
           required = [
               'README.md', 'AGENTS.md', 'SECURITY.md',
               'docs/PRODUCT.md', 'docs/ARCHITECTURE.md',
               'docs/ROADMAP.md', 'docs/TRACKER.md', 'docs/DECISIONS.md',
+              'docs/SKILLS.md', 'docs/skills-manifest.json'
           ]
-          for name in required:
-              assert Path(name).is_file(), f'Missing {name}'
-          skills = sorted(Path('.agents/skills').glob('*/SKILL.md'))
-          assert len(skills) >= 5, 'Expected core project skills'
-          for skill in skills:
-              lines = skill.read_text(encoding='utf-8').splitlines()
-              assert lines and lines[0] == '---', f'Invalid metadata start: {skill}'
-              assert '---' in lines[1:], f'Invalid metadata end: {skill}'
-              end = lines[1:].index('---') + 1
-              meta = lines[1:end]
-              assert any(line.startswith('name: ') for line in meta), f'Missing name: {skill}'
-              assert any(line.startswith('description: ') for line in meta), f'Missing description: {skill}'
-          print(f'Validated {len(required)} documents and {len(skills)} skills')
-          PY
-# Project build, affected tests, security and migrations are added in EPIC-02/10.
-# This workflow does not imply application tests have passed.
+          for path in required:
+              assert Path(path).is_file(), f'Missing {path}'
 
+          skills = sorted(Path('.agents/skills').glob('*/SKILL.md'))
+          names = {s.parent.name for s in skills}
+          assert len(skills) == len(names), 'Duplicate skill directory'
+          project_skills = {'angular-frontend', 'nestjs-backend',
+              'payment-integrity', 'tenant-security', 'ci-quality'}
+          assert project_skills <= names, 'Missing project-specific skills'
+
+          manifest = json.loads(Path('docs/skills-manifest.json').read_text())
+          vendor_skills = {entry['name'] for entry in manifest['upstream']}
+          assert len(vendor_skills) == len(manifest['upstream']), 'Duplicate pinned skill'
+          assert names == project_skills | vendor_skills, f'Unexpected skills: {names ^ (project_skills | vendor_skills)}'
+
+          for s in skills:
+              lines = s.read_text(encoding='utf-8').splitlines()
+              assert lines and lines[0] == '---', f'Invalid frontmatter: {s}'
+              assert '---' in lines[1:], f'Missing frontmatter end: {s}'
+              marker = lines[1:].index('---') + 1
+              meta = lines[1:marker]
+              assert any(line.strip() == f'name: {s.parent.name}' for line in meta), f'Wrong name: {s}'
+              assert any(line.startswith('description: ') for line in meta), f'Missing description: {s}'
+              assert not s.is_symlink(), f'Unexpected skill symlink: {s}'
+
+          for entry in manifest['upstream']:
+              d = Path('.agents/skills') / entry['name']
+              attribution = d / 'UPSTREAM.md'
+              assert (d / 'LICENSE').is_file(), f'Missing license: {d}'
+              assert attribution.is_file() and entry['commit'] in attribution.read_text(), f'Pin mismatch: {d}'
+              assert len(entry['commit']) == 40, f'Unpinned revision: {d}'
+
+          print(f'Validated {len(required)} docs, {len(project_skills)} local and {len(vendor_skills)} upstream skills')
+          PY
+# Application tests will be added under issue #2; this workflow is docs-and-skills validation only.

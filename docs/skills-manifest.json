@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "generated_at": "2026-11-02",
+  "installed_path": ".agents/skills",
+  "installation_type": "source-pinned documentation vendored into repository; no npm packages or executable scripts installed",
+  "upstream": [
+    {
+      "name": "angular-developer",
+      "repo": "angular/skills",
+      "commit": "2a2b801eb9bf3304424ddedfa1ace347e1fff6a6",
+      "license": "MIT",
+      "purpose": "Angular architecture, Signals, routing, forms, UI and SSR"
+    },
+    {
+      "name": "angular-new-app",
+      "repo": "angular/skills",
+      "commit": "2a2b801eb9bf3304424ddedfa1ace347e1fff6a6",
+      "license": "MIT",
+      "purpose": "Angular app scaffolding (coordinate with Nx generators)"
+    },
+    {
+      "name": "nx-workspace",
+      "repo": "nrwl/nx-ai-agents-config",
+      "commit": "13282936b5f6aa53e3d41ba589a4a2dc0d6f5786",
+      "license": "MIT",
+      "purpose": "Monorepo project graph and affected analysis"
+    },
+    {
+      "name": "nx-run-tasks",
+      "repo": "nrwl/nx-ai-agents-config",
+      "commit": "13282936b5f6aa53e3d41ba589a4a2dc0d6f5786",
+      "license": "MIT",
+      "purpose": "Nx build/test/lint tasks"
+    },
+    {
+      "name": "nx-generate",
+      "repo": "nrwl/nx-ai-agents-config",
+      "commit": "13282936b5f6aa53e3d41ba589a4a2dc0d6f5786",
+      "license": "MIT",
+      "purpose": "Nx application and library generators"
+    },
+    {
+      "name": "supabase-postgres-best-practices",
+      "repo": "supabase/agent-skills",
+      "commit": "c9be0e931b7930f7d02126d04774d904c381e7d7",
+      "license": "MIT",
+      "purpose": "PostgreSQL schema, indexing, migrations, RLS and transactions"
+    },
+    {
+      "name": "playwright-cli",
+      "repo": "microsoft/playwright-cli",
+      "commit": "c2d8d199459d1480491bebf0a6b3587136b673fa",
+      "license": "Apache-2.0",
+      "purpose": "Browser-based end-to-end workflow testing"
+    },
+    {
+      "name": "security-review",
+      "repo": "getsentry/skills",
+      "commit": "d12f250460ffd961f549dbebf7eeb0cf4afd4c2e",
+      "license": "Apache-2.0 + OWASP CC BY-SA 4.0",
+      "purpose": "High-confidence security review, including API and business-logic flaws"
+    }
+  ]
+}
