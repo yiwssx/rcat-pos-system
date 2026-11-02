@@ -13,16 +13,17 @@ import { ApiRequest, requireAllowedOrigin } from "../auth/request-security";
 import { StaffAdministrationService } from "./staff-administration.service";
 
 @Controller("tenants/:tenantId/staff")
-@Header("Cache-Control", "no-store")
 export class StaffAdministrationController {
   constructor(private readonly staff: StaffAdministrationService) {}
 
   @Get()
+  @Header("Cache-Control", "no-store")
   async list(@Req() req: ApiRequest, @Param("tenantId") tenantId: string) {
     return this.staff.list(req, tenantId);
   }
 
   @Patch(":userId")
+  @Header("Cache-Control", "no-store")
   async changeRole(
     @Req() req: ApiRequest,
     @Param("tenantId") tenantId: string,
@@ -34,6 +35,7 @@ export class StaffAdministrationController {
   }
 
   @Delete(":userId")
+  @Header("Cache-Control", "no-store")
   @HttpCode(204)
   async remove(
     @Req() req: ApiRequest,

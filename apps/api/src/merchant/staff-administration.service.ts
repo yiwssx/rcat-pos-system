@@ -8,8 +8,7 @@ import { AuthService } from "../auth/auth.service";
 import { ApiRequest } from "../auth/request-security";
 import { DatabaseAccess } from "../database/db-access";
 
-const UUID =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type StaffRole = "owner" | "manager" | "cashier" | "kitchen";
 
 function validId(value: string): void {
