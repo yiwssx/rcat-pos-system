@@ -12,6 +12,8 @@ import { MerchantOnboardingController } from "./merchant/merchant-onboarding.con
 import { MerchantOnboardingService } from "./merchant/merchant-onboarding.service";
 import { StaffAdministrationController } from "./merchant/staff-administration.controller";
 import { StaffAdministrationService } from "./merchant/staff-administration.service";
+import { CatalogController } from "./catalog/catalog.controller";
+import { CatalogService } from "./catalog/catalog.service";
 
 @Module({
   controllers: [
@@ -22,6 +24,7 @@ import { StaffAdministrationService } from "./merchant/staff-administration.serv
     TenantStoreController,
     MerchantOnboardingController,
     StaffAdministrationController,
+    CatalogController,
   ],
   providers: [
     DatabaseAccess,
@@ -31,6 +34,7 @@ import { StaffAdministrationService } from "./merchant/staff-administration.serv
     EmailDeliveryService,
     MerchantOnboardingService,
     StaffAdministrationService,
+    CatalogService,
   ],
 })
 export class AppModule {}

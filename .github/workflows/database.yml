@@ -8,6 +8,7 @@ on:
       - '.github/workflows/database.yml'
       - 'apps/api/src/auth/**'
       - 'apps/api/src/merchant/**'
+      - 'apps/api/src/catalog/**'
       - 'apps/api/src/app.module.ts'
       - 'apps/api/src/database/**'
       - 'apps/api/tsconfig.app.json'
@@ -25,6 +26,7 @@ on:
       - '.github/workflows/database.yml'
       - 'apps/api/src/auth/**'
       - 'apps/api/src/merchant/**'
+      - 'apps/api/src/catalog/**'
       - 'apps/api/src/app.module.ts'
       - 'apps/api/src/database/**'
       - 'apps/api/tsconfig.app.json'
@@ -88,6 +90,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/staff-administration.sql
       - name: Verify password recovery SQL security
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/password-recovery.sql
+      - name: Verify catalog scope, satang integrity and RLS using PostgreSQL
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/catalog.sql
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -114,5 +118,5 @@ jobs:
         run: node scripts/smoke-auth.mjs
       - name: Verify new tenant and invitation audit events
         run: |
-          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events" | grep -qx '7'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events" | grep -qx '10'
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(DISTINCT action) FROM rcat.audit_events WHERE action IN ('tenant.created','staff.invited','staff.invitation.accepted','staff.role.changed','staff.removed')" | grep -qx '5'

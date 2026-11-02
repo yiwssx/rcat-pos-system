@@ -1,0 +1,64 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  Param,
+  Patch,
+  Post,
+  Req,
+} from "@nestjs/common";
+import { ApiRequest, requireAllowedOrigin } from "../auth/request-security";
+import { CatalogService } from "./catalog.service";
+
+@Controller("tenants/:tenantId/stores/:storeId/catalog")
+export class CatalogController {
+  constructor(private readonly catalog: CatalogService) {}
+
+  @Get()
+  @Header("Cache-Control", "no-store")
+  snapshot(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+  ) {
+    return this.catalog.snapshot(req, tenantId, storeId);
+  }
+
+  @Post("categories")
+  @Header("Cache-Control", "no-store")
+  addCategory(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.catalog.addCategory(req, tenantId, storeId, body);
+  }
+
+  @Post("products")
+  @Header("Cache-Control", "no-store")
+  addProduct(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.catalog.addProduct(req, tenantId, storeId, body);
+  }
+
+  @Patch("products/:productId/availability")
+  @Header("Cache-Control", "no-store")
+  availability(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("productId") productId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.catalog.availability(req, tenantId, storeId, productId, body);
+  }
+}
