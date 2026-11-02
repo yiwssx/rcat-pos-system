@@ -27,9 +27,7 @@
     },
     "smoke": {
       "command": "node scripts/smoke-api.mjs",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "cache": false
     }
   }

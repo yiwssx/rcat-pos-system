@@ -1,5 +1,12 @@
 import {
-  Body, Controller, Get, HttpCode, Param, Post, Req, Res,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Req,
+  Res,
   NotFoundException,
 } from "@nestjs/common";
 import {
@@ -7,9 +14,7 @@ import {
   hasMerchantPermission,
 } from "../../../../libs/server-auth/src";
 import { AuthService } from "./auth.service";
-import {
-  ApiRequest, requireAllowedOrigin,
-} from "./request-security";
+import { ApiRequest, requireAllowedOrigin } from "./request-security";
 import { DatabaseAccess } from "../database/db-access";
 
 interface CookieResponse {
@@ -39,7 +44,10 @@ export class AuthController {
   }
 
   @Get("me")
-  async me(@Req() req: ApiRequest, @Res({passthrough:true}) res: CookieResponse) {
+  async me(
+    @Req() req: ApiRequest,
+    @Res({ passthrough: true }) res: CookieResponse,
+  ) {
     const session = await this.auth.session(req);
     res.setHeader("Cache-Control", "no-store");
     return { authenticated: true, userId: session.userId };
@@ -49,18 +57,21 @@ export class AuthController {
   @HttpCode(204)
   async logout(
     @Req() req: ApiRequest,
-    @Res({passthrough:true}) res: CookieResponse,
+    @Res({ passthrough: true }) res: CookieResponse,
   ): Promise<void> {
     requireAllowedOrigin(req);
     const session = await this.auth.session(req);
     this.auth.requireCsrf(req, session);
     await this.auth.logout(session.token);
     res.setHeader("Cache-Control", "no-store");
-    res.setHeader("Set-Cookie", [
-      "",""
-    ].map((_,i) => i === 0
-      ? "__Host-rcat_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0"
-      : this.auth.clearCsrfCookie()));
+    res.setHeader(
+      "Set-Cookie",
+      ["", ""].map((_, i) =>
+        i === 0
+          ? "__Host-rcat_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0"
+          : this.auth.clearCsrfCookie(),
+      ),
+    );
   }
 }
 
@@ -82,7 +93,7 @@ export class TenantStoreController {
       throw new NotFoundException();
     }
     const result = await this.database.tenant(tenantId, (client) =>
-      client.query<{id:string;slug:string;display_name:string}>(
+      client.query<{ id: string; slug: string; display_name: string }>(
         "SELECT id,slug,display_name FROM rcat.stores ORDER BY slug",
       ),
     );

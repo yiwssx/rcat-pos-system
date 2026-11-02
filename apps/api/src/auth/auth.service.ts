@@ -12,7 +12,14 @@ import {
   constantTimeDigestMatch,
 } from "../../../../libs/server-auth/src";
 import { DatabaseAccess } from "../database/db-access";
-import { ApiRequest, cookie, header, loginThrottle, CSRF_COOKIE, SESSION_COOKIE } from "./request-security";
+import {
+  ApiRequest,
+  cookie,
+  header,
+  loginThrottle,
+  CSRF_COOKIE,
+  SESSION_COOKIE,
+} from "./request-security";
 
 type Account = { id: string; password_hash: string; is_active: boolean };
 type ActiveSession = { user_id: string; csrf_digest: Buffer };
@@ -37,7 +44,10 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials");
     }
     const body = input as Record<string, unknown>;
-    const email = typeof body["email"] === "string" ? body["email"].toLowerCase().trim() : "";
+    const email =
+      typeof body["email"] === "string"
+        ? body["email"].toLowerCase().trim()
+        : "";
     const password = body["password"];
     if (
       email.length > 254 ||
@@ -69,12 +79,14 @@ export class AuthService {
     const digest = digestOpaqueSecret(token);
     const csrfDigest = digestOpaqueSecret(csrf);
     await this.database.auth((client) =>
-      client.query(
-        `INSERT INTO rcat_private.auth_sessions
+      client
+        .query(
+          `INSERT INTO rcat_private.auth_sessions
          (user_id,token_digest,csrf_digest,expires_at)
          VALUES ($1,$2,$3,now()+interval '12 hours')`,
-        [account.id, digest, csrfDigest],
-      ).then(() => undefined),
+          [account.id, digest, csrfDigest],
+        )
+        .then(() => undefined),
     );
     return { userId: account.id, token, csrf };
   }
@@ -106,7 +118,7 @@ export class AuthService {
     return { userId: row.user_id, csrfDigest: row.csrf_digest, token };
   }
 
-  requireCsrf(req: ApiRequest, session: {csrfDigest: Buffer}): void {
+  requireCsrf(req: ApiRequest, session: { csrfDigest: Buffer }): void {
     const headerToken = header(req, "x-csrf-token");
     const cookieToken = cookie(req, CSRF_COOKIE);
     if (
@@ -128,13 +140,21 @@ export class AuthService {
     });
   }
 
-  async membership(userId: string, tenantId: string): Promise<"owner" | "manager" | "cashier" | "kitchen" | null> {
-    const rows = await this.database.authForUser(userId, async (client: PoolClient) => {
-      return client.query<{role: "owner" | "manager" | "cashier" | "kitchen"}>(
-        "SELECT role FROM rcat.tenant_memberships WHERE tenant_id=$1 AND user_id=$2 LIMIT 1",
-        [tenantId, userId],
-      );
-    });
+  async membership(
+    userId: string,
+    tenantId: string,
+  ): Promise<"owner" | "manager" | "cashier" | "kitchen" | null> {
+    const rows = await this.database.authForUser(
+      userId,
+      async (client: PoolClient) => {
+        return client.query<{
+          role: "owner" | "manager" | "cashier" | "kitchen";
+        }>(
+          "SELECT role FROM rcat.tenant_memberships WHERE tenant_id=$1 AND user_id=$2 LIMIT 1",
+          [tenantId, userId],
+        );
+      },
+    );
     return rows.rows[0]?.role ?? null;
   }
 
@@ -150,6 +170,12 @@ export class AuthService {
   }
 
   clearCsrfCookie(): string {
-    return [`${CSRF_COOKIE}=`, "Secure", "SameSite=Lax", "Path=/", "Max-Age=0"].join("; ");
+    return [
+      `${CSRF_COOKIE}=`,
+      "Secure",
+      "SameSite=Lax",
+      "Path=/",
+      "Max-Age=0",
+    ].join("; ");
   }
 }

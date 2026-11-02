@@ -34,7 +34,10 @@ const failures = new Map<string, Limit>();
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
-export function loginThrottle(req: ApiRequest, email: string): {
+export function loginThrottle(
+  req: ApiRequest,
+  email: string,
+): {
   succeeded(): void;
   failed(): void;
 } {

@@ -1,4 +1,8 @@
-import { Injectable, OnModuleDestroy, ServiceUnavailableException } from "@nestjs/common";
+import {
+  Injectable,
+  OnModuleDestroy,
+  ServiceUnavailableException,
+} from "@nestjs/common";
 import { Pool, PoolClient } from "pg";
 
 type Role = "rcat_auth" | "rcat_app";
@@ -39,10 +43,9 @@ export class DatabaseAccess implements OnModuleDestroy {
     fn: (client: PoolClient) => Promise<T>,
   ): Promise<T> {
     return this.auth(async (client) => {
-      await client.query(
-        "SELECT set_config('app.auth_user_id',$1,true)",
-        [verifiedUserId],
-      );
+      await client.query("SELECT set_config('app.auth_user_id',$1,true)", [
+        verifiedUserId,
+      ]);
       return fn(client);
     });
   }
@@ -52,10 +55,9 @@ export class DatabaseAccess implements OnModuleDestroy {
     fn: (client: PoolClient) => Promise<T>,
   ): Promise<T> {
     return this.withRole("rcat_app", this.tenantPool, async (client) => {
-      await client.query(
-        "SELECT set_config('app.tenant_id',$1,true)",
-        [verifiedTenantId],
-      );
+      await client.query("SELECT set_config('app.tenant_id',$1,true)", [
+        verifiedTenantId,
+      ]);
       return fn(client);
     });
   }
@@ -65,7 +67,8 @@ export class DatabaseAccess implements OnModuleDestroy {
     pool: Pool | undefined,
     fn: (client: PoolClient) => Promise<T>,
   ): Promise<T> {
-    if (!pool) throw new ServiceUnavailableException("Authentication is disabled");
+    if (!pool)
+      throw new ServiceUnavailableException("Authentication is disabled");
     const client = await pool.connect();
     try {
       const identity = await client.query<{
