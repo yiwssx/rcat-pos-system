@@ -4,7 +4,10 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { digestOpaqueSecret, newOpaqueSecret } from "../../../../libs/server-auth/src";
+import {
+  digestOpaqueSecret,
+  newOpaqueSecret,
+} from "../../../../libs/server-auth/src";
 import { DatabaseAccess } from "../database/db-access";
 import { AuthService } from "../auth/auth.service";
 import { ApiRequest } from "../auth/request-security";
@@ -72,9 +75,10 @@ function inviteForm(raw: unknown): InvitationForm {
 }
 
 function mapDbError(error: unknown): never {
-  const code = error && typeof error === "object" && "code" in error
-    ? (error as { code: unknown }).code
-    : undefined;
+  const code =
+    error && typeof error === "object" && "code" in error
+      ? (error as { code: unknown }).code
+      : undefined;
   if (code === "23505") throw new ConflictException("Resource already exists");
   if (code === "22023" || code === "23514") {
     throw new BadRequestException("Request cannot be processed");
@@ -151,7 +155,8 @@ export class MerchantOnboardingService {
     this.auth.requireCsrf(req, session);
     const body = inputObject(raw);
     const token = body["invitationToken"];
-    if (typeof token !== "string") throw new NotFoundException("Invitation unavailable");
+    if (typeof token !== "string")
+      throw new NotFoundException("Invitation unavailable");
     let digest: Buffer;
     try {
       digest = digestOpaqueSecret(token);
