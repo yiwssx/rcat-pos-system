@@ -24,6 +24,14 @@ Read the relevant SKILL.md under .agents/skills/:
 - payment-integrity: payment confirmation, refunds and ledger.
 - tenant-security: tenant boundaries, auth and RBAC.
 - ci-quality: affected CI, tests and secure releases.
+- pos-ux-design: QR ordering customer journeys, tablet operations, recovery and payment-status UX.
+
+## Design guidelines
+- Read docs/DESIGN-SYSTEM.md before any UI/UX or component work.
+- frontend-design: distinct visual direction without copying ThaiQROrder visuals.
+- design-system: adapted Angular-friendly design tokens, component variants and states.
+- web-ui-review: adapted Vercel web accessibility and interaction review.
+- pos-ux-design is the domain-specific authority for safe ordering/payment UX; functionality and safety outweigh aesthetics.
 
 ## Source-pinned upstream skills
 - angular-developer and angular-new-app: official Angular reference guidance.
