@@ -9,7 +9,11 @@ export type MerchantPermission =
   | "staff.manage"
   | "audit.read";
 
-const PERMISSIONS: Readonly<Record<MerchantRole, readonly MerchantPermission[]>> = {
+type RolePermissionMap = Readonly<
+  Record<MerchantRole, readonly MerchantPermission[]>
+>;
+
+const PERMISSIONS: RolePermissionMap = {
   owner: [
     "store.read",
     "store.manage",
