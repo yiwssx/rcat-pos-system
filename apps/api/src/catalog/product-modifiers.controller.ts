@@ -10,7 +10,9 @@ import {
 import { ApiRequest, requireAllowedOrigin } from "../auth/request-security";
 import { ProductModifiersService } from "./product-modifiers.service";
 
-@Controller("tenants/:tenantId/stores/:storeId/catalog/products/:productId/modifier-groups")
+@Controller(
+  "tenants/:tenantId/stores/:storeId/catalog/products/:productId/modifier-groups",
+)
 export class ProductModifiersController {
   constructor(private readonly modifiers: ProductModifiersService) {}
 
@@ -38,7 +40,14 @@ export class ProductModifiersController {
     @Body() body: unknown,
   ) {
     requireAllowedOrigin(req);
-    return this.modifiers.addOption(req, tenantId, storeId, productId, groupId, body);
+    return this.modifiers.addOption(
+      req,
+      tenantId,
+      storeId,
+      productId,
+      groupId,
+      body,
+    );
   }
 
   @Patch(":groupId/options/:optionId/availability")
@@ -54,7 +63,13 @@ export class ProductModifiersController {
   ) {
     requireAllowedOrigin(req);
     return this.modifiers.availability(
-      req, tenantId, storeId, productId, groupId, optionId, body,
+      req,
+      tenantId,
+      storeId,
+      productId,
+      groupId,
+      optionId,
+      body,
     );
   }
 }

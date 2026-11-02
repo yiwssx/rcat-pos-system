@@ -40,12 +40,6 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Display Nx projects
         run: pnpm exec nx show projects
-      - name: Preview modifier controller using Prettier read-only
-        if: github.event_name == 'pull_request'
-        run: |
-          echo BEGIN_MODIFIER_CONTROLLER
-          pnpm exec prettier apps/api/src/catalog/product-modifiers.controller.ts
-          echo END_MODIFIER_CONTROLLER
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request'
         env:
