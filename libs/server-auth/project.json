@@ -1,0 +1,17 @@
+{
+  "name": "server-auth",
+  "root": "libs/server-auth",
+  "sourceRoot": "libs/server-auth/src",
+  "projectType": "library",
+  "targets": {
+    "typecheck": {
+      "command": "pnpm exec tsc --noEmit -p libs/server-auth/tsconfig.lib.json"
+    },
+    "test": {
+      "command": "pnpm exec vitest run libs/server-auth/src"
+    },
+    "lint": {
+      "command": "pnpm exec prettier --check 'libs/server-auth/src/**/*.ts'"
+    }
+  }
+}
