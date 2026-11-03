@@ -760,7 +760,7 @@ try {
   })).status, 409, "One idempotency key cannot authorize different carts");
   // Merchant fulfilment: Order inbox requires a session, and state writes
   // require Origin + CSRF. Only the merchant can see its Order snapshots.
-  const merchantOrdersUrl = "/api/tenants/00000000-0000-4000-8000-000000000001/stores/20000000-0000-4000-8000-000000000001/orders";
+  const merchantOrdersUrl = `/api/tenants/${made.tenantId}/stores/${made.storeId}/orders`;
   const singleOrderUrl = merchantOrdersUrl + "/" + payloads[0].orderId + "/status";
   assert.equal((await api(merchantOrdersUrl)).status, 401,
     "Anonymous visitor cannot access merchant Orders");
