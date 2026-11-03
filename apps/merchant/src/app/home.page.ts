@@ -1,39 +1,152 @@
-import { ChangeDetectionStrategy, Component } from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+  signal,
+} from "@angular/core";
 import { RouterLink } from "@angular/router";
+import { HttpErrorResponse } from "@angular/common/http";
+import { MerchantStore, ROLE_LABEL } from "./order-board.domain";
+import { MerchantOrderApi } from "./merchant-order.api";
 
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
-  template: ` <section class="hero" aria-labelledby="hero-title">
-      <span class="eyebrow">MERCHANT / PWA</span>
-      <h1 id="hero-title">จัดการออร์เดอร์และร้านค้า</h1>
-      <p class="lede">ควบคุมงานหน้าร้านจากมือถือ แท็บเล็ต หรือคอมพิวเตอร์</p>
-      <div class="notice" role="status">
-        <span class="notice-dot"></span>หน้าจัดการร้านเป็นเพียง Foundation
-        ยังไม่เปิดรับออร์เดอร์จริง
+  template: `<section class="hero merchant-home" aria-labelledby="hero-title">
+    <span class="eyebrow">MERCHANT / OPERATIONS</span>
+    <h1 id="hero-title">จัดการออเดอร์หน้าร้าน</h1>
+    <p class="lede">
+      ตรวจสอบออเดอร์ใหม่ รับรายการ เตรียมอาหาร และติดตามเหตุการณ์ย้อนหลัง
+      ได้จากมือถือ แท็บเล็ต หรือคอมพิวเตอร์
+    </p>
+    <p class="notice">
+      <span class="notice-dot"></span>
+      ระบบอยู่ระหว่างพัฒนา · ยังไม่มีการรับชำระเงิน PromptPay
+      และยังไม่เปิดใช้งาน Production
+    </p>
+    <div class="section-top">
+      <span class="eyebrow">YOUR STORES</span>
+      <h2 id="stores-title">ร้านค้าที่บัญชีนี้เข้าถึงได้</h2>
+    </div>
+    @if (loading()) {
+      <p role="status">กำลังตรวจสอบสิทธิ์ร้านค้า...</p>
+    } @else if (error()) {
+      <div class="store-message" role="alert">
+        {{ error() }}
+        <button type="button" (click)="loadStores()">ลองอีกครั้ง</button>
       </div>
-      <a class="primary-link" routerLink="/status"
-        >ดูสถานะการพัฒนา <span aria-hidden="true">↗</span></a
-      >
-    </section>
-    <section class="section" aria-labelledby="upcoming-title">
-      <div class="section-top">
-        <span class="eyebrow">ROADMAP</span>
-        <h2 id="upcoming-title">ฟังก์ชันที่จะพัฒนา</h2>
+    } @else if (stores().length === 0) {
+      <p class="store-message" role="status">
+        ยังไม่มีร้านค้าที่บัญชีนี้ได้รับสิทธิ์
+        โปรดติดต่อเจ้าของร้านหรือผู้ดูแลระบบ
+      </p>
+    } @else {
+      <div class="store-grid">
+        @for (store of stores(); track store.tenantId + store.storeId) {
+          <article class="store-card">
+            <span class="store-role">{{ roleLabel[store.role] }}</span>
+            <h3>{{ store.storeName }}</h3>
+            <p>{{ store.tenantName }}</p>
+            <a
+              class="primary-link"
+              [routerLink]="['/orders', store.tenantId, store.storeId]"
+              >เปิดกระดานออเดอร์</a
+            >
+          </article>
+        }
       </div>
-      <div class="tiles">
-        <article class="tile">
-          <span class="tile-id">01</span>
-          <h3>รายการออร์เดอร์ใหม่</h3>
-          <p>กำลังเตรียมโครงสร้างและข้อกำหนดการใช้งาน</p>
-        </article>
-        <article class="tile">
-          <span class="tile-id">02</span>
-          <h3>จัดการเมนูและโต๊ะ</h3>
-          <p>เชื่อมต่อกับ Backend และความปลอดภัยในระยะถัดไป</p>
-        </article>
-      </div>
-    </section>`,
+    }
+    <p class="home-help">
+      ต้องมี Session พนักงานที่ยังไม่หมดอายุบนโดเมนเดียวกับ API ระบบ Google
+      Sign-in และการใช้งานจริงยังอยู่ในแผนพัฒนาถัดไป
+    </p>
+  </section>`,
+  styles: [
+    `
+      .merchant-home {
+        padding-top: clamp(2.5rem, 7vw, 5.5rem);
+      }
+      .merchant-home h1 {
+        max-width: 20ch;
+      }
+      .store-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 285px), 1fr));
+        gap: 1rem;
+      }
+      .store-card {
+        border: 1px solid #e0e7f0;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        background: #fff;
+      }
+      .store-card h3 {
+        margin: 0.8rem 0 0.3rem;
+        font-size: 1.25rem;
+      }
+      .store-card p {
+        color: #55647d;
+        margin-bottom: 1.4rem;
+      }
+      .store-role {
+        color: #245d71;
+        background: #e5f3f7;
+        border-radius: 0.5rem;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+      .store-message {
+        padding: 1.5rem;
+        border: 1px solid #d6e0ea;
+        background: #fff;
+        border-radius: 0.85rem;
+        line-height: 1.7;
+      }
+      .store-message button {
+        min-height: 44px;
+        margin-left: 0.75rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+      }
+      .home-help {
+        color: #62718b;
+        line-height: 1.7;
+        font-size: 0.86rem;
+        margin-top: 1.5rem;
+      }
+    `,
+  ],
 })
-export class HomePage {}
+export class HomePage implements OnInit {
+  private readonly api = inject(MerchantOrderApi);
+  readonly stores = signal<MerchantStore[]>([]);
+  readonly error = signal("");
+  readonly loading = signal(true);
+  readonly roleLabel = ROLE_LABEL;
+
+  ngOnInit(): void {
+    void this.loadStores();
+  }
+
+  async loadStores(): Promise<void> {
+    this.error.set("");
+    this.loading.set(true);
+    try {
+      const { stores } = await this.api.stores();
+      this.stores.set(stores);
+    } catch (error) {
+      this.stores.set([]);
+      this.error.set(
+        error instanceof HttpErrorResponse && error.status === 401
+          ? "กรุณาเข้าสู่ระบบด้วยบัญชีพนักงานก่อนเข้าใช้งาน"
+          : "ไม่สามารถตรวจสอบสิทธิ์ร้านค้าได้ โปรดลองใหม่",
+      );
+    } finally {
+      this.loading.set(false);
+    }
+  }
+}
