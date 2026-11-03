@@ -796,6 +796,30 @@ try {
   assert.ok(!Object.hasOwn(initialStatus, "trackingToken"),
     "Read endpoint must never echo bearer secret");
 
+  // A guest can read ONLY this Order's status events with its own bearer.
+  const guestHistoryUrl = orderPath + "/" + payloads[0].orderId + "/history";
+  assert.equal((await track(guestHistoryUrl)).status, 404,
+    "Order UUID is not sufficient to read history");
+  assert.equal((await track(guestHistoryUrl, "A".repeat(43))).status, 404,
+    "Forged capability cannot read Order history");
+  assert.equal((await track(
+    orderPath + "/" + otherOrder.orderId + "/history",
+    payloads[0].trackingToken,
+  )).status, 404, "Another Order's history must be private");
+  const initialHistoryResponse = await track(
+    guestHistoryUrl, payloads[0].trackingToken,
+  );
+  assert.equal(initialHistoryResponse.status, 200);
+  assert.equal(initialHistoryResponse.headers.get("cache-control"), "no-store");
+  const initialHistory = await initialHistoryResponse.json();
+  assert.equal(initialHistory.status, "submitted");
+  assert.equal(initialHistory.paymentState, "not_requested");
+  assert.deepEqual(initialHistory.events.map((event) => event.status), [
+    "submitted",
+  ]);
+  assert.ok(!Object.hasOwn(initialHistory.events[0], "actorUserId"),
+    "Guest timeline must never expose staff identities");
+
   // Merchant fulfilment: Order inbox requires a session, and state writes
   // require Origin + CSRF. Only the merchant can see its Order snapshots.
   const merchantOrdersUrl = `/api/tenants/${made.tenantId}/stores/${made.storeId}/orders`;
@@ -820,6 +844,20 @@ try {
     row.paymentState === "not_requested" &&
     row.items.length === 1),
     "Merchant inbox should show immutable product snapshots");
+
+  const merchantHistoryUrl = merchantOrdersUrl + "/" +
+    payloads[0].orderId + "/history";
+  assert.equal((await api(merchantHistoryUrl)).status, 401,
+    "Merchant history must require staff session");
+  assert.equal((await api(
+    "/api/tenants/00000000-0000-4000-8000-000000000002/stores/20000000-0000-4000-8000-000000000002/orders/" +
+      payloads[0].orderId + "/history",
+    { headers: { Cookie: cookieHeader } },
+  )).status, 404, "Merchant history may not cross tenant boundary");
+  assert.equal((await api(
+    merchantOrdersUrl + "/11111111-1111-4111-8111-111111111111/history",
+    { headers: { Cookie: cookieHeader } },
+  )).status, 404, "Unknown merchant Order history is not exposed");
 
   const changeOrder = (expectedStatus, nextStatus, headers = catHeaders) =>
     api(singleOrderUrl, {
@@ -848,6 +886,37 @@ try {
   assert.equal(fulfilled.status, 200);
   assert.equal((await fulfilled.json()).status, "served",
     "Guest tracking reflects the latest merchant fulfilment state");
+  const guestHistoryAfter = await track(
+    guestHistoryUrl, payloads[0].trackingToken,
+  );
+  assert.equal(guestHistoryAfter.status, 200);
+  const guestTimeline = await guestHistoryAfter.json();
+  assert.equal(guestTimeline.status, "served");
+  assert.equal(guestTimeline.paymentState, "not_requested");
+  assert.deepEqual(guestTimeline.events.map((event) => event.status), [
+    "submitted", "accepted", "preparing", "served",
+  ], "Failed stale transitions must not append a history event");
+  assert.ok(guestTimeline.events.every((event) =>
+    !Object.hasOwn(event, "actorUserId") &&
+    !Object.hasOwn(event, "metadata")),
+    "No staff identifiers or audit payloads may reach the guest");
+
+  const merchantHistoryResponse = await api(merchantHistoryUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(merchantHistoryResponse.status, 200);
+  assert.equal(merchantHistoryResponse.headers.get("cache-control"), "no-store");
+  const merchantTimeline = await merchantHistoryResponse.json();
+  assert.deepEqual(merchantTimeline.events.map((event) => event.status),
+    guestTimeline.events.map((event) => event.status));
+  assert.ok(merchantTimeline.events.slice(1).every(
+    (event) => typeof event.actorUserId === "string"),
+    "Merchant timeline must attribute every staff transition");
+  assert.ok(merchantTimeline.events.slice(1).every(
+    (event, index, items) =>
+      index === 0 || items[index - 1].eventId < event.eventId),
+    "Merchant status history needs monotonic durable event identifiers");
+
   // G2 operational Bill groups Orders for ONE table visit; it never
   // combines their independent payment obligations or marks money received.
   const billUrl = `/api/tenants/${made.tenantId}/stores/${made.storeId}/bills`;
@@ -941,6 +1010,17 @@ try {
   );
   assert.equal(cancelledOrderResponse.status, 200,
     await cancelledOrderResponse.clone().text());
+  const cancelledGuestHistory = await track(
+    orderPath + "/" + otherOrder.orderId + "/history",
+    otherOrder.trackingToken,
+  );
+  assert.equal(cancelledGuestHistory.status, 200);
+  const cancelledTimeline = await cancelledGuestHistory.json();
+  assert.deepEqual(cancelledTimeline.events.map((event) => event.status), [
+    "submitted", "cancelled",
+  ], "Cancellation must be retained as a separate Order history event");
+  assert.equal(cancelledTimeline.paymentState, "not_requested");
+
   const afterCancelResponse = await api(billDetailUrl, {
     headers: { Cookie: cookieHeader },
   });
@@ -976,6 +1056,15 @@ try {
     "Rotating to a new table Visit must not merge operational Bills");
   assert.equal(oldBillSnapshot.visitId, secondVisit.visitId);
   assert.notEqual(oldBillSnapshot.visitId, (await changedVisit.json()).visitId);
+  const historyAfterRotation = await track(
+    guestHistoryUrl, payloads[0].trackingToken,
+  );
+  assert.equal(historyAfterRotation.status, 200);
+  assert.deepEqual(
+    (await historyAfterRotation.json()).events.map((event) => event.status),
+    ["submitted", "accepted", "preparing", "served"],
+    "Table QR rotation must not remove existing Order history");
+
   const logout = await api("/api/auth/logout", {
     method: "POST",
     headers: {
