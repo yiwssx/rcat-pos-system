@@ -32,4 +32,11 @@ export class GuestOrdersController {
   status(@Req() req: ApiRequest, @Param("orderId") orderId: string) {
     return this.orders.status(orderId, header(req, "authorization"));
   }
+
+  @Get(":orderId/history")
+  @Header("Cache-Control", "no-store")
+  history(@Req() req: ApiRequest, @Param("orderId") orderId: string) {
+    return this.orders.history(orderId, header(req, "authorization"));
+  }
+
 }
