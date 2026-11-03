@@ -39,7 +39,8 @@ import { MerchantOrderApi } from "./merchant-order.api";
       </div>
     } @else if (stores().length === 0) {
       <p class="store-message" role="status">
-        ยังไม่มีร้านค้าที่บัญชีนี้ได้รับสิทธิ์ โปรดติดต่อเจ้าของร้านหรือผู้ดูแลระบบ
+        ยังไม่มีร้านค้าที่บัญชีนี้ได้รับสิทธิ์
+        โปรดติดต่อเจ้าของร้านหรือผู้ดูแลระบบ
       </p>
     } @else {
       <div class="store-grid">
@@ -48,73 +49,77 @@ import { MerchantOrderApi } from "./merchant-order.api";
             <span class="store-role">{{ roleLabel[store.role] }}</span>
             <h3>{{ store.storeName }}</h3>
             <p>{{ store.tenantName }}</p>
-            <a class="primary-link" [routerLink]="[
-              '/orders', store.tenantId, store.storeId
-            ]">เปิดกระดานออเดอร์</a>
+            <a
+              class="primary-link"
+              [routerLink]="['/orders', store.tenantId, store.storeId]"
+              >เปิดกระดานออเดอร์</a
+            >
           </article>
         }
       </div>
     }
     <p class="home-help">
-      ต้องมี Session พนักงานที่ยังไม่หมดอายุบนโดเมนเดียวกับ API
-      ระบบ Google Sign-in และการใช้งานจริงยังอยู่ในแผนพัฒนาถัดไป
+      ต้องมี Session พนักงานที่ยังไม่หมดอายุบนโดเมนเดียวกับ API ระบบ Google
+      Sign-in และการใช้งานจริงยังอยู่ในแผนพัฒนาถัดไป
     </p>
   </section>`,
-  styles: [`
-    .merchant-home {
-      padding-top: clamp(2.5rem, 7vw, 5.5rem);
-    }
-    .merchant-home h1 {
-      max-width: 20ch;
-    }
-    .store-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 285px), 1fr));
-      gap: 1rem;
-    }
-    .store-card {
-      border: 1px solid #e0e7f0;
-      border-radius: 1rem;
-      padding: 1.5rem;
-      background: #fff;
-    }
-    .store-card h3 {
-      margin: 0.8rem 0 0.3rem;
-      font-size: 1.25rem;
-    }
-    .store-card p {
-      color: #55647d;
-      margin-bottom: 1.4rem;
-    }
-    .store-role {
-      color: #245d71;
-      background: #e5f3f7;
-      border-radius: 0.5rem;
-      padding: 0.3rem 0.6rem;
-      font-size: 0.78rem;
-      font-weight: 700;
-    }
-    .store-message {
-      padding: 1.5rem;
-      border: 1px solid #d6e0ea;
-      background: #fff;
-      border-radius: 0.85rem;
-      line-height: 1.7;
-    }
-    .store-message button {
-      min-height: 44px;
-      margin-left: 0.75rem;
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-    }
-    .home-help {
-      color: #62718b;
-      line-height: 1.7;
-      font-size: 0.86rem;
-      margin-top: 1.5rem;
-    }
-  `],
+  styles: [
+    `
+      .merchant-home {
+        padding-top: clamp(2.5rem, 7vw, 5.5rem);
+      }
+      .merchant-home h1 {
+        max-width: 20ch;
+      }
+      .store-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 285px), 1fr));
+        gap: 1rem;
+      }
+      .store-card {
+        border: 1px solid #e0e7f0;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        background: #fff;
+      }
+      .store-card h3 {
+        margin: 0.8rem 0 0.3rem;
+        font-size: 1.25rem;
+      }
+      .store-card p {
+        color: #55647d;
+        margin-bottom: 1.4rem;
+      }
+      .store-role {
+        color: #245d71;
+        background: #e5f3f7;
+        border-radius: 0.5rem;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+      .store-message {
+        padding: 1.5rem;
+        border: 1px solid #d6e0ea;
+        background: #fff;
+        border-radius: 0.85rem;
+        line-height: 1.7;
+      }
+      .store-message button {
+        min-height: 44px;
+        margin-left: 0.75rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+      }
+      .home-help {
+        color: #62718b;
+        line-height: 1.7;
+        font-size: 0.86rem;
+        margin-top: 1.5rem;
+      }
+    `,
+  ],
 })
 export class HomePage implements OnInit {
   private readonly api = inject(MerchantOrderApi);
