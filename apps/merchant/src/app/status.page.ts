@@ -21,12 +21,12 @@ import { FoundationPhaseComponent } from "@rcat/ui";
     <div class="status-card">
       <div>
         <strong>คำสั่งซื้อและ Payment</strong>
-        <p>ยังไม่มีบริการรับออร์เดอร์หรือรับชำระเงิน</p>
+        <p>Backend รับออเดอร์และแสดงกระดานพนักงานได้แล้ว แต่ยังไม่มีระบบชำระเงินจริง</p>
       </div>
       <span class="phase muted">Not available</span>
     </div>
   </section>`,
 })
 export class StatusPage {
-  readonly phase = signal("G1 — Foundation");
+  readonly phase = signal("G3 — Merchant Order Board");
 }
