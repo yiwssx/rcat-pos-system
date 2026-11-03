@@ -111,9 +111,7 @@ describe("durable outbox projection", () => {
       [latest, order("newer")],
       [historical, order("older")],
     );
-    expect(merged.map((o) => o.orderId)).toEqual([
-      "repeat", "newer", "older",
-    ]);
+    expect(merged.map((o) => o.orderId)).toEqual(["repeat", "newer", "older"]);
     expect(merged[0]?.status).toBe("served");
     expect(merged.every((o) => o.paymentState === "not_requested")).toBe(true);
   });
