@@ -131,4 +131,26 @@ export class MerchantOrdersService {
       safeError(error);
     }
   }
+
+  async history(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    orderId: string,
+  ) {
+    validateIds(tenantId, storeId, orderId);
+    const session = await this.auth.session(req);
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.merchant_order_history($1,$2,$3,$4) AS data",
+          [digestOpaqueSecret(session.token), tenantId, storeId, orderId],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      safeError(error);
+    }
+  }
+
 }
