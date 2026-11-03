@@ -48,6 +48,7 @@ function failureText(error: unknown): string {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
+  styleUrls: ["./order-board.css"],
   template: `
     <section class="board" aria-labelledby="board-title">
       <div class="board-head">
