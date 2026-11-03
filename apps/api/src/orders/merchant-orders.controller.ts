@@ -23,8 +23,9 @@ export class MerchantOrdersController {
     @Param("storeId") storeId: string,
     @Query("status") status: unknown,
     @Query("limit") limit: unknown,
+    @Query("cursor") cursor: unknown,
   ) {
-    return this.orders.inbox(req, tenantId, storeId, status, limit);
+    return this.orders.inbox(req, tenantId, storeId, status, limit, cursor);
   }
 
   @Patch(":orderId/status")

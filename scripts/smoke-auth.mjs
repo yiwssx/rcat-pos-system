@@ -857,6 +857,50 @@ try {
   });
   assert.equal(inboxResponse.status, 200);
   const inbox = await inboxResponse.json();
+
+  // G3: validated keyset pagination must not skip, duplicate or expose an
+  // unrelated Order, even with multiple creation timestamp ties.
+  assert.equal((await api(merchantOrdersUrl + "?cursor=invalid", {
+    headers: { Cookie: cookieHeader },
+  })).status, 400, "Malformed Order Inbox cursor must be rejected");
+  assert.equal((await api(merchantOrdersUrl +
+    "?cursor=2026-02-30T00:00:00.123456Z_11111111-1111-4111-8111-111111111111", {
+    headers: { Cookie: cookieHeader },
+  })).status, 400, "Impossible cursor timestamp must be rejected");
+  assert.equal(inbox.hasMore, false);
+  assert.equal(inbox.nextCursor, null);
+  const fullInboxResponse = await api(merchantOrdersUrl + "?limit=50", {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(fullInboxResponse.status, 200);
+  const fullInbox = await fullInboxResponse.json();
+  const pagedIds = [];
+  let inboxCursor;
+  for (let i = 0; i < 10; i += 1) {
+    const params = "?limit=1" + (inboxCursor ?
+      "&cursor=" + encodeURIComponent(inboxCursor) : "");
+    const pageResponse = await api(merchantOrdersUrl + params, {
+      headers: { Cookie: cookieHeader },
+    });
+    assert.equal(pageResponse.status, 200, await pageResponse.clone().text());
+    const page = await pageResponse.json();
+    assert.equal(page.orders.length, 1);
+    assert.equal(page.orders[0].paymentState, "not_requested");
+    pagedIds.push(page.orders[0].orderId);
+    if (!page.hasMore) {
+      assert.equal(page.nextCursor, null);
+      break;
+    }
+    assert.match(page.nextCursor,
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z_[0-9a-f-]{36}$/);
+    inboxCursor = page.nextCursor;
+  }
+  assert.deepEqual(pagedIds, fullInbox.orders.map((order) => order.orderId),
+    "Walking keyset pages must exactly match one full Inbox snapshot");
+  assert.equal(new Set(pagedIds).size, pagedIds.length,
+    "No Order ID may appear on two keyset pages");
+
+
   assert.ok(inbox.orders.some((row) =>
     row.orderId === payloads[0].orderId &&
     row.amountSatang === 20800 &&
@@ -992,6 +1036,14 @@ try {
   assert.equal(fulfilled.status, 200);
   assert.equal((await fulfilled.json()).status, "served",
     "Guest tracking reflects the latest merchant fulfilment state");
+  const servedOnly = await api(merchantOrdersUrl + "?status=served&limit=50", {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(servedOnly.status, 200);
+  const servedFiltered = await servedOnly.json();
+  assert.deepEqual(servedFiltered.orders.map((o) => o.orderId),
+    [payloads[0].orderId], "Order Inbox status filter must preserve keyset correctness");
+
   const guestHistoryAfter = await track(
     guestHistoryUrl, payloads[0].trackingToken,
   );

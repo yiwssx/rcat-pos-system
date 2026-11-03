@@ -10,6 +10,8 @@ import { ApiRequest } from "../auth/request-security";
 import { DatabaseAccess } from "../database/db-access";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ORDER_CURSOR =
+  /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z)_([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 const STATUSES = new Set([
   "submitted",
   "accepted",
@@ -35,7 +37,12 @@ function safeError(error: unknown): never {
   if (code === "P0001") {
     throw new ConflictException("Order status has changed");
   }
-  if (code === "22023" || code === "22P02") {
+  if (
+    code === "22023" ||
+    code === "22P02" ||
+    code === "22007" ||
+    code === "22008"
+  ) {
     throw new BadRequestException("Invalid order operation");
   }
   throw error;
@@ -54,6 +61,7 @@ export class MerchantOrdersService {
     storeId: string,
     rawStatus: unknown,
     rawLimit: unknown,
+    rawCursor: unknown,
   ) {
     validateIds(tenantId, storeId);
     const status = rawStatus === undefined ? null : rawStatus;
@@ -74,15 +82,50 @@ export class MerchantOrdersService {
     ) {
       throw new BadRequestException("Invalid order limit");
     }
+    const cursor =
+      rawCursor === undefined
+        ? null
+        : typeof rawCursor === "string"
+          ? ORDER_CURSOR.exec(rawCursor)
+          : null;
+    if (
+      rawCursor !== undefined &&
+      (!cursor ||
+        Number.isNaN(Date.parse(cursor[1] ?? "")) ||
+        new Date(cursor[1] ?? "").toISOString().slice(0, 19) !==
+          cursor[1]?.slice(0, 19))
+    ) {
+      throw new BadRequestException("Invalid Order page cursor");
+    }
     const session = await this.auth.session(req);
     try {
       const result = await this.database.auth((client) =>
-        client.query<{ data: { orders: unknown[] } }>(
-          "SELECT rcat_private.merchant_order_inbox($1,$2,$3,$4,$5) AS data",
-          [digestOpaqueSecret(session.token), tenantId, storeId, status, limit],
+        client.query<{
+          data: {
+            orders: unknown[];
+            hasMore: boolean;
+            nextCursor: string | null;
+          };
+        }>(
+          "SELECT rcat_private.merchant_order_inbox_page($1,$2,$3,$4,$5,$6,$7) AS data",
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            status,
+            limit,
+            cursor?.[1] ?? null,
+            cursor?.[2] ?? null,
+          ],
         ),
       );
-      return result.rows[0]?.data ?? { orders: [] };
+      return (
+        result.rows[0]?.data ?? {
+          orders: [],
+          hasMore: false,
+          nextCursor: null,
+        }
+      );
     } catch (error) {
       safeError(error);
     }

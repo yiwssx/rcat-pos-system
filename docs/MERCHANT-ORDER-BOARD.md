@@ -23,7 +23,7 @@ These screens are an **increment** toward issue #8, not a Production release.
 
 ## Staff workflow
 
-- Board loads the authoritative latest 50 Orders from the staff-scoped Order
+- Board loads the authoritative first 50 Orders per page from the staff-scoped Order
   Inbox and then polls the **transactional Outbox** every 10 seconds when
   visible/online. It recovers on `online`, window focus and tab visibility.
   The Orders list is the only source of truth; event envelopes are advisory.
@@ -57,10 +57,10 @@ persisted per-user acknowledgment cursor. On each refresh:
    storage of session cookies, CSRF tokens or order details. Event IDs use
    strings/BigInt and are never converted to unsafe JS numbers.
 
-**Important limitations:** The Inbox is limited to 50 latest Orders and
-is not yet cursor-paginated. If a backlog contains older Orders outside the
-current Inbox, the board deliberately **does not acknowledge them** and
-raises a warning. Thus durable event persistence is in place but full
+**Important limitations:** The Inbox uses keyset pagination with 50 Orders per page. The board checks
+up to 20 pages (1,000 Orders) on each refresh/replay; if older Orders lie
+outside that explicit bounded recovery window, it deliberately **does not
+acknowledge them** and raises a warning. Thus durable event persistence is in place but full
 high-volume recovery is still blocked until a paginated authoritative
 Orders endpoint is added. Multiple devices signed in as the same staff user
 share the server acknowledgment cursor; another device always re-fetches
@@ -101,3 +101,44 @@ tablet/desktop screenreader/keyboard audit, paginated Inbox for large
 backlogs, configurable store/tenant selection for very large organizations,
 real staff Google OAuth and realtime push on top of the durable Outbox.
 Payment/PromptPay remains the last business feature at G5 (#7).
+
+## G3 keyset-paginated Order Inbox (migration 018)
+
+`GET /api/tenants/:tenantId/stores/:storeId/orders?limit=50&cursor=...`
+remains session/tenant/store scoped, supports the existing optional
+`status=submitted|accepted|preparing|served|cancelled` filter and returns:
+
+```json
+{
+  "orders": ["... immutable Order snapshots ..."],
+  "hasMore": true,
+  "nextCursor": "2026-11-03T07:32:54.123456Z_00000000-0000-4000-8000-000000000001"
+}
+```
+
+A cursor is **not a capability** or secret. It encodes the immutable
+`created_at` timestamp with the **full PostgreSQL microsecond precision**
+and its tie-breaking UUID. The SQL query uses the strict composite
+`(created_at,id) < (cursor_time,cursor_uuid)`, ordered descending, with a
+supporting `(tenant_id,store_id,created_at DESC,id DESC)` index. This
+avoids duplicate/missing rows when multiple Orders share a timestamp or
+new Orders are inserted at the front. Both cursor fields are required
+together. Invalid cursors, malformed dates and limits outside 1–50 are
+rejected. The final page returns `hasMore:false,nextCursor:null`.
+
+**Merchant frontend:** The operator can load 50 older Orders at a time
+using the "โหลดออเดอร์เก่า" control. At every reconnect the board re-fetches
+the number of pages selected. For each Outbox batch, it reads authoritative
+Order pages until all referenced Order IDs are covered; **only then** does
+it acknowledge that event batch. If 20 pages do not cover an event, it
+shows a warning and leaves the Outbox cursor unacknowledged for retry rather
+than pretending that the missing Order was processed. Loaded-card counters
+are explicitly for loaded Orders, not a store-wide report.
+
+**Further hardening:** The 20-page/1,000-Order per-refresh bound is a
+safety limit, **not** full historical recovery at arbitrary volume. A
+server-side batched Order-by-ID lookup or dedicated worker / store-level
+read model, dynamic scanning budgets, and load/performance testing are
+recommended before public Production. The 10-second polling is not
+push delivery; SSE/WebSocket remains a separate increment. No Payment
+state was changed; G5 PromptPay per Order remains LAST.

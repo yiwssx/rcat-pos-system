@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 import {
-  MerchantOrder,
+  OrderInboxPage,
   MerchantStore,
   OrderEventPage,
   OrderHistory,
@@ -42,12 +42,15 @@ export class MerchantOrderApi {
   orders(
     tenantId: string,
     storeId: string,
-  ): Promise<{ orders: MerchantOrder[] }> {
+    cursor?: string,
+  ): Promise<OrderInboxPage> {
+    let params = new HttpParams().set("limit", "50");
+    if (cursor !== undefined) params = params.set("cursor", cursor);
     return firstValueFrom(
-      this.http.get<{ orders: MerchantOrder[] }>(
-        scopePath(tenantId, storeId) + "/orders",
-        { params: new HttpParams().set("limit", "50"), withCredentials: true },
-      ),
+      this.http.get<OrderInboxPage>(scopePath(tenantId, storeId) + "/orders", {
+        params,
+        withCredentials: true,
+      }),
     );
   }
 

@@ -30,6 +30,26 @@ export interface MerchantOrder {
   items: readonly OrderItem[];
 }
 
+export interface OrderInboxPage {
+  orders: MerchantOrder[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
+// Preserve the first (most recently fetched) authoritative snapshot for each
+// Order; historical pages must never overwrite newer observed states.
+export function appendOrderPage(
+  newer: readonly MerchantOrder[],
+  older: readonly MerchantOrder[],
+): MerchantOrder[] {
+  const seen = new Set<string>();
+  return [...newer, ...older].filter((order) => {
+    if (seen.has(order.orderId)) return false;
+    seen.add(order.orderId);
+    return true;
+  });
+}
+
 export interface OrderEvent {
   eventId: string;
   eventType: "order.submitted" | "order.status.changed";

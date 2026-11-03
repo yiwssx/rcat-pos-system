@@ -11,6 +11,7 @@ import {
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { HttpErrorResponse } from "@angular/common/http";
 import {
+  appendOrderPage,
   formatSatang,
   hasEventCoverage,
   mergeEvents,
@@ -29,6 +30,7 @@ import { MerchantOrderApi } from "./merchant-order.api";
 
 const POLL_MS = 10_000;
 const MAX_CATCHUP_PAGES = 6;
+const MAX_INBOX_PAGES = 20; // Explicit bounded recovery; retain outbox until complete.
 
 function failureText(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
@@ -146,12 +148,10 @@ function failureText(error: unknown): string {
             <option value="cancelled">ยกเลิก</option>
           </select>
         </div>
-        @if (orders().length === 50) {
-          <p class="board-warning" role="status">
-            แสดงได้สูงสุด 50 ออเดอร์ล่าสุด
-            หากมีมากกว่านี้ต้องใช้รายงานหรือระบบแบ่งหน้า
-          </p>
-        }
+        <p class="board-connection" role="status">
+          กำลังแสดง {{ orders().length }} ออเดอร์ที่โหลด ·
+          สรุปด้านบนคำนวณจากรายการที่โหลดเท่านั้น
+        </p>
         @if (visibleOrders().length === 0) {
           <p class="board-empty" role="status">
             {{
@@ -265,6 +265,30 @@ function failureText(error: unknown): string {
           </div>
         }
 
+        @if (hasMoreOrders()) {
+          <div class="board-more">
+            <button
+              type="button"
+              (click)="loadOlderOrders()"
+              [disabled]="
+                refreshing() || !connected() || loadedPages() >= maxInboxPages
+              "
+            >
+              {{
+                loadedPages() >= maxInboxPages
+                  ? "ถึงขีดจำกัดโหลดต่อรอบ"
+                  : "โหลดออเดอร์เก่าเพิ่มอีก 50 รายการ"
+              }}
+            </button>
+            @if (loadedPages() >= maxInboxPages) {
+              <p role="status">
+                ยังมีรายการเก่ากว่านี้
+                ต้องใช้การค้นหาและรายงานย้อนหลังในระยะถัดไป
+              </p>
+            }
+          </div>
+        }
+
         <section class="board-events" aria-labelledby="events-title">
           <div class="board-controls">
             <h2 id="events-title">เหตุการณ์ล่าสุด</h2>
@@ -305,6 +329,9 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
 
   readonly store = signal<MerchantStore | null>(null);
   readonly orders = signal<MerchantOrder[]>([]);
+  readonly hasMoreOrders = signal(false);
+  readonly loadedPages = signal(1);
+  readonly maxInboxPages = MAX_INBOX_PAGES;
   readonly events = signal<OrderEvent[]>([]);
   readonly error = signal("");
   readonly warning = signal("");
@@ -419,6 +446,55 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
         });
   }
 
+  // Load keyset pages until either a) the operator's requested history is
+  // visible or b) each Outbox event being acknowledged is covered by an
+  // authoritative Order snapshot. A bounded scan leaves older events unacked.
+  private async authoritativePages(
+    requiredOrderIds: ReadonlySet<string>,
+    minimumPages: number,
+  ): Promise<{
+    orders: MerchantOrder[];
+    hasMore: boolean;
+    pages: number;
+    covered: boolean;
+  }> {
+    let response = await this.api.orders(this.tenantId, this.storeId);
+    let orders = response.orders;
+    let pages = 1;
+    const covered = () =>
+      [...requiredOrderIds].every((id) =>
+        orders.some((order) => order.orderId === id),
+      );
+    while (
+      !this.disposed &&
+      response.hasMore &&
+      response.nextCursor &&
+      pages < MAX_INBOX_PAGES &&
+      (pages < minimumPages || !covered())
+    ) {
+      const cursor = response.nextCursor;
+      const next = await this.api.orders(this.tenantId, this.storeId, cursor);
+      if (next.orders.length === 0) {
+        throw new Error("Cursor ออเดอร์ไม่สอดคล้องกับข้อมูลร้าน");
+      }
+      orders = appendOrderPage(orders, next.orders);
+      pages += 1;
+      response = next;
+    }
+    return { orders, hasMore: response.hasMore, pages, covered: covered() };
+  }
+
+  async loadOlderOrders(): Promise<void> {
+    if (
+      this.refreshing() ||
+      !this.hasMoreOrders() ||
+      this.loadedPages() >= MAX_INBOX_PAGES
+    )
+      return;
+    this.loadedPages.update((pages) => pages + 1);
+    await this.refresh();
+  }
+
   async refresh(): Promise<void> {
     if (this.disposed || this.inFlight || !this.store() || !this.connected()) {
       return;
@@ -427,11 +503,15 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     this.refreshing.set(true);
     this.error.set("");
     try {
-      // Order Inbox is authoritative. An advisory notification never mutates
-      // order status directly or grants itself permission to change orders.
-      const initial = await this.api.orders(this.tenantId, this.storeId);
+      // Never acknowledge from a cached client list. Read current statuses
+      // from the server and fetch further keyset pages as necessary.
+      let snapshot = await this.authoritativePages(
+        new Set<string>(),
+        this.loadedPages(),
+      );
       if (this.disposed) return;
-      this.orders.set(initial.orders);
+      this.orders.set(snapshot.orders);
+      this.hasMoreOrders.set(snapshot.hasMore);
       let after: string | undefined;
       let exhausted = false;
       for (let page = 0; page < MAX_CATCHUP_PAGES; page += 1) {
@@ -445,20 +525,28 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
           exhausted = true;
           break;
         }
-        // Re-fetch after reading the outbox so a newly submitted order is
-        // never acknowledged before becoming visible in the merchant inbox.
-        const current = await this.api.orders(this.tenantId, this.storeId);
+        // Outbox IDs are commit ordered per store. Fetch the matching Orders
+        // with precise keyset pagination AFTER receiving this batch.
+        snapshot = await this.authoritativePages(
+          new Set(batch.events.map((event) => event.orderId)),
+          this.loadedPages(),
+        );
         if (this.disposed) return;
-        this.orders.set(current.orders);
-        if (!hasEventCoverage(batch.events, current.orders)) {
+        this.orders.set(snapshot.orders);
+        this.hasMoreOrders.set(snapshot.hasMore);
+        this.loadedPages.update((count) => Math.max(count, snapshot.pages));
+        if (
+          !snapshot.covered ||
+          !hasEventCoverage(batch.events, snapshot.orders)
+        ) {
           this.warning.set(
-            "มีเหตุการณ์เก่าที่อยู่นอก 50 ออเดอร์ล่าสุด ระบบยังไม่ยืนยันรับทราบ กรุณาตรวจสอบรายการย้อนหลัง",
+            "ออเดอร์ย้อนหลังเกินขีดจำกัดการกู้คืนรอบนี้ เหตุการณ์ยังไม่ถูกยืนยันรับทราบ",
           );
           break;
         }
         this.events.update((seen) => mergeEvents(seen, batch.events));
-        // Ack only after the source-of-truth Order list has been refreshed.
-        // Failed ack leaves the event retryable from the durable outbox.
+        // Ack follows committed, authoritative display only. Retry on any
+        // network/CSRF failure; monotonic server cursors deduplicate.
         await this.api.acknowledge(
           this.tenantId,
           this.storeId,
