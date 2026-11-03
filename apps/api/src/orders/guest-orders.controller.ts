@@ -1,4 +1,13 @@
-import { Body, Controller, Header, HttpCode, Post, Req } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  HttpCode,
+  Param,
+  Post,
+  Req,
+} from "@nestjs/common";
 import {
   ApiRequest,
   header,
@@ -16,5 +25,11 @@ export class GuestOrdersController {
   async place(@Req() req: ApiRequest, @Body() body: unknown) {
     requireAllowedOrigin(req);
     return this.orders.place(body, header(req, "Idempotency-Key"));
+  }
+
+  @Get(":orderId/status")
+  @Header("Cache-Control", "no-store")
+  status(@Req() req: ApiRequest, @Param("orderId") orderId: string) {
+    return this.orders.status(orderId, header(req, "authorization"));
   }
 }

@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import {
   BadRequestException,
   ConflictException,
@@ -12,6 +13,7 @@ const KEY = /^[A-Za-z0-9_-]{16,96}$/;
 
 function parseCart(raw: unknown): {
   visitDigest: Buffer;
+  visitToken: string;
   cart: {
     items: { productId: string; quantity: number; optionIds: string[] }[];
   };
@@ -75,7 +77,11 @@ function parseCart(raw: unknown): {
     throw new BadRequestException("Too many products");
   }
   // Never accept client prices, state, tenant_id or payment fields as authority.
-  return { visitDigest: digest, cart: { items } };
+  return {
+    visitDigest: digest,
+    visitToken: body["visitToken"],
+    cart: { items },
+  };
 }
 
 function mapOrderFailure(error: unknown): never {
@@ -110,12 +116,60 @@ export class GuestOrdersService {
     if (!key || !KEY.test(key)) {
       throw new BadRequestException("Invalid Idempotency-Key");
     }
-    const { visitDigest, cart } = parseCart(raw);
+    const { visitDigest, visitToken, cart } = parseCart(raw);
+    // The table-visit secret AND unpredictable retry-stable checkout key are
+    // required to derive an order-only bearer. No new server-wide key and no
+    // raw tracking secrets are stored in the database.
+    const trackingToken = createHmac(
+      "sha256",
+      Buffer.from(visitToken, "base64url"),
+    )
+      .update("rcat-pos-order-tracking:v1\\0")
+      .update(key)
+      .digest("base64url");
+    const trackingDigest = digestOpaqueSecret(trackingToken);
+    try {
+      const data = await this.database.auth(async (client) => {
+        const result = await client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.place_guest_order($1,$2,$3::jsonb) AS data",
+          [visitDigest, key, JSON.stringify(cart)],
+        );
+        const order = result.rows[0]?.data;
+        if (!order || typeof order["orderId"] !== "string") {
+          throw new Error("Checkout did not return an Order ID");
+        }
+        // Same transaction as checkout; failure rolls the entire Order back.
+        await client.query(
+          "SELECT rcat_private.bind_guest_order_tracking($1,$2,$3,$4)",
+          [order["orderId"], visitDigest, key, trackingDigest],
+        );
+        return order;
+      });
+      return { ...data, trackingToken };
+    } catch (error) {
+      mapOrderFailure(error);
+    }
+  }
+
+  async status(orderId: string, authorization: string | undefined) {
+    if (!UUID.test(orderId)) {
+      throw new NotFoundException("Order unavailable");
+    }
+    const token = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(authorization ?? "")?.[1];
+    if (!token) {
+      throw new NotFoundException("Order unavailable");
+    }
+    let trackingDigest: Buffer;
+    try {
+      trackingDigest = digestOpaqueSecret(token);
+    } catch {
+      throw new NotFoundException("Order unavailable");
+    }
     try {
       const result = await this.database.auth((client) =>
         client.query<{ data: Record<string, unknown> }>(
-          "SELECT rcat_private.place_guest_order($1,$2,$3::jsonb) AS data",
-          [visitDigest, key, JSON.stringify(cart)],
+          "SELECT rcat_private.guest_order_status($1,$2) AS data",
+          [orderId, trackingDigest],
         ),
       );
       return result.rows[0]?.data;

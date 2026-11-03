@@ -758,6 +758,44 @@ try {
     ...cart,
     items: [{ productId, quantity: 3, optionIds: [firstOptionId] }],
   })).status, 409, "One idempotency key cannot authorize different carts");
+  // Guest tracks ONLY their own Order with a separate checkout capability.
+  assert.ok(
+    payloads.every((p) =>
+      typeof p.trackingToken === "string" && p.trackingToken.length === 43),
+    "Each checkout response must return a 256-bit tracking capability",
+  );
+  assert.equal(new Set(payloads.map((p) => p.trackingToken)).size, 1,
+    "All checkout retries must recover the same tracking capability");
+  const trackUrl = orderPath + "/" + payloads[0].orderId + "/status";
+  const track = (url, token) => api(url, {
+    headers: token ? { Authorization: "Bearer " + token } : {},
+  });
+  assert.equal((await track(trackUrl)).status, 404,
+    "Order ID alone cannot authorize tracking");
+  assert.equal((await track(trackUrl, "A".repeat(43))).status, 404,
+    "Invalid order capability must not expose its existence");
+  assert.equal((await track(
+    orderPath + "/11111111-1111-4111-8111-111111111111/status",
+    payloads[0].trackingToken,
+  )).status, 404, "A valid capability cannot enumerate Orders");
+  const otherResponse = await checkout("guest-order-different-0001", cart);
+  assert.equal(otherResponse.status, 201);
+  const otherOrder = await otherResponse.json();
+  assert.notEqual(otherOrder.trackingToken, payloads[0].trackingToken);
+  assert.equal((await track(
+    orderPath + "/" + otherOrder.orderId + "/status",
+    payloads[0].trackingToken,
+  )).status, 404, "Table visit must not reveal another checkout");
+  const initialTrack = await track(trackUrl, payloads[0].trackingToken);
+  assert.equal(initialTrack.status, 200);
+  const initialStatus = await initialTrack.json();
+  assert.equal(initialTrack.headers.get("cache-control"), "no-store");
+  assert.equal(initialStatus.status, "submitted");
+  assert.equal(initialStatus.paymentState, "not_requested");
+  assert.equal(initialStatus.amountSatang, 20800);
+  assert.ok(!Object.hasOwn(initialStatus, "trackingToken"),
+    "Read endpoint must never echo bearer secret");
+
   // Merchant fulfilment: Order inbox requires a session, and state writes
   // require Origin + CSRF. Only the merchant can see its Order snapshots.
   const merchantOrdersUrl = `/api/tenants/${made.tenantId}/stores/${made.storeId}/orders`;
@@ -806,6 +844,10 @@ try {
   assert.equal((await changeOrder("preparing", "served")).status, 200);
   assert.equal((await changeOrder("served", "cancelled")).status, 404,
     "Served Orders are terminal for this workflow");
+  const fulfilled = await track(trackUrl, payloads[0].trackingToken);
+  assert.equal(fulfilled.status, 200);
+  assert.equal((await fulfilled.json()).status, "served",
+    "Guest tracking reflects the latest merchant fulfilment state");
   const changedVisit = await api(rotateUrl, {
     method: "POST", headers: catHeaders,
   });
@@ -813,6 +855,10 @@ try {
   assert.equal((await checkout("new-order-after-visit0001", cart)).status, 404,
     "Old visit cannot submit an order after rotation");
 
+  const afterRotation = await track(trackUrl, payloads[0].trackingToken);
+  assert.equal(afterRotation.status, 200);
+  assert.equal((await afterRotation.json()).status, "served",
+    "Rotating the table visit must not revoke existing Order tracking");
   const logout = await api("/api/auth/logout", {
     method: "POST",
     headers: {
