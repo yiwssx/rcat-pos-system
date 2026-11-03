@@ -77,7 +77,11 @@ function parseCart(raw: unknown): {
     throw new BadRequestException("Too many products");
   }
   // Never accept client prices, state, tenant_id or payment fields as authority.
-  return { visitDigest: digest, visitToken: body["visitToken"], cart: { items } };
+  return {
+    visitDigest: digest,
+    visitToken: body["visitToken"],
+    cart: { items },
+  };
 }
 
 function mapOrderFailure(error: unknown): never {
@@ -173,5 +177,4 @@ export class GuestOrdersService {
       mapOrderFailure(error);
     }
   }
-
 }
