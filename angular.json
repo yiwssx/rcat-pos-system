@@ -75,6 +75,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "apps/merchant/proxy.conf.json"
+          },
           "configurations": {
             "production": {
               "buildTarget": "merchant:build:production"
