@@ -21,7 +21,10 @@ import { FoundationPhaseComponent } from "@rcat/ui";
     <div class="status-card">
       <div>
         <strong>คำสั่งซื้อและ Payment</strong>
-        <p>Backend รับออเดอร์และแสดงกระดานพนักงานได้แล้ว แต่ยังไม่มีระบบชำระเงินจริง</p>
+        <p>
+          Backend รับออเดอร์และแสดงกระดานพนักงานได้แล้ว
+          แต่ยังไม่มีระบบชำระเงินจริง
+        </p>
       </div>
       <span class="phase muted">Not available</span>
     </div>
