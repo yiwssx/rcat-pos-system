@@ -177,4 +177,32 @@ export class GuestOrdersService {
       mapOrderFailure(error);
     }
   }
+
+  async history(orderId: string, authorization: string | undefined) {
+    if (!UUID.test(orderId)) {
+      throw new NotFoundException("Order unavailable");
+    }
+    const token = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(authorization ?? "")?.[1];
+    if (!token) {
+      throw new NotFoundException("Order unavailable");
+    }
+    let trackingDigest: Buffer;
+    try {
+      trackingDigest = digestOpaqueSecret(token);
+    } catch {
+      throw new NotFoundException("Order unavailable");
+    }
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.guest_order_history($1,$2) AS data",
+          [orderId, trackingDigest],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      mapOrderFailure(error);
+    }
+  }
+
 }
