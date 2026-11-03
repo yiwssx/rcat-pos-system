@@ -149,8 +149,8 @@ function failureText(error: unknown): string {
           </select>
         </div>
         <p class="board-connection" role="status">
-          กำลังแสดง {{ orders().length }} ออเดอร์ที่โหลด
-          · สรุปด้านบนคำนวณจากรายการที่โหลดเท่านั้น
+          กำลังแสดง {{ orders().length }} ออเดอร์ที่โหลด ·
+          สรุปด้านบนคำนวณจากรายการที่โหลดเท่านั้น
         </p>
         @if (visibleOrders().length === 0) {
           <p class="board-empty" role="status">
@@ -267,14 +267,24 @@ function failureText(error: unknown): string {
 
         @if (hasMoreOrders()) {
           <div class="board-more">
-            <button type="button" (click)="loadOlderOrders()"
-              [disabled]="refreshing() || !connected() || loadedPages() >= maxInboxPages">
-              {{ loadedPages() >= maxInboxPages
+            <button
+              type="button"
+              (click)="loadOlderOrders()"
+              [disabled]="
+                refreshing() || !connected() || loadedPages() >= maxInboxPages
+              "
+            >
+              {{
+                loadedPages() >= maxInboxPages
                   ? "ถึงขีดจำกัดโหลดต่อรอบ"
-                  : "โหลดออเดอร์เก่าเพิ่มอีก 50 รายการ" }}
+                  : "โหลดออเดอร์เก่าเพิ่มอีก 50 รายการ"
+              }}
             </button>
             @if (loadedPages() >= maxInboxPages) {
-              <p role="status">ยังมีรายการเก่ากว่านี้ ต้องใช้การค้นหาและรายงานย้อนหลังในระยะถัดไป</p>
+              <p role="status">
+                ยังมีรายการเก่ากว่านี้
+                ต้องใช้การค้นหาและรายงานย้อนหลังในระยะถัดไป
+              </p>
             }
           </div>
         }
@@ -475,8 +485,12 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
   }
 
   async loadOlderOrders(): Promise<void> {
-    if (this.refreshing() || !this.hasMoreOrders() ||
-        this.loadedPages() >= MAX_INBOX_PAGES) return;
+    if (
+      this.refreshing() ||
+      !this.hasMoreOrders() ||
+      this.loadedPages() >= MAX_INBOX_PAGES
+    )
+      return;
     this.loadedPages.update((pages) => pages + 1);
     await this.refresh();
   }
@@ -492,7 +506,8 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
       // Never acknowledge from a cached client list. Read current statuses
       // from the server and fetch further keyset pages as necessary.
       let snapshot = await this.authoritativePages(
-        new Set<string>(), this.loadedPages(),
+        new Set<string>(),
+        this.loadedPages(),
       );
       if (this.disposed) return;
       this.orders.set(snapshot.orders);
@@ -520,8 +535,10 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
         this.orders.set(snapshot.orders);
         this.hasMoreOrders.set(snapshot.hasMore);
         this.loadedPages.update((count) => Math.max(count, snapshot.pages));
-        if (!snapshot.covered ||
-          !hasEventCoverage(batch.events, snapshot.orders)) {
+        if (
+          !snapshot.covered ||
+          !hasEventCoverage(batch.events, snapshot.orders)
+        ) {
           this.warning.set(
             "ออเดอร์ย้อนหลังเกินขีดจำกัดการกู้คืนรอบนี้ เหตุการณ์ยังไม่ถูกยืนยันรับทราบ",
           );
