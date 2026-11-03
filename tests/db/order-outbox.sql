@@ -172,7 +172,7 @@ BEGIN
  v_paged:=rcat_private.merchant_order_notifications(
    v_owner,v_tenant,v_store,NULL,50);
  IF jsonb_array_length(v_paged->'events')<>6 THEN
-   RAISE EXCEPTION 'Cashier ack incorrectly advanced owner's cursor'; END IF;
+   RAISE EXCEPTION 'Cashier ack incorrectly advanced owner cursor'; END IF;
 
  v_paged:=rcat_private.merchant_order_notifications(
    v_owner,v_tenant,v_other_store,NULL,50);
