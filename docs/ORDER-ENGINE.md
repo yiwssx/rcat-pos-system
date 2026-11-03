@@ -91,8 +91,7 @@ remain tenant/store scoped. These development APIs must not be enabled for
 real customers before production auth, throttling and operational gates.
 
 **Still open in Issue #6:** exceptional cancellation workflow,
-per-Order future payment obligation design, merchant notifications,
-outbox/realtime, operational recovery and full role-specific UIs.
+per-Order future payment obligation design, realtime notification delivery, operational recovery and full role-specific UIs.
 **Payment QR per Order remains G5 / Issue #7.**
 
 ## Guest Order Tracking (third G2 increment)
@@ -213,3 +212,68 @@ events. No notification channel, retention/archival policy, mandatory
 distributed throttling, browser UI, real-money provider or public Production
 readiness is introduced. Real per-Order PromptPay stays in last business
 milestone G5 (#7).
+
+## Transactional Outbox and durable merchant notifications (G3 increment)
+
+Migration `016_order_outbox.sql` creates an **append-only**
+`rcat.order_outbox_events` table with constrained, tenant/store-scoped
+`order.submitted` and `order.status.changed` events. PostgreSQL
+`AFTER INSERT` and `AFTER UPDATE OF status` triggers enqueue in the
+**same transaction** as the Order. If the checkout, price calculation,
+tracking-token binding, or fulfilment transition rolls back, the event
+rolls back with it. A valid repeated Idempotency-Key never inserts a second
+Order/event. A rejected or stale status transition never inserts an event.
+
+A store row is locked **FOR UPDATE before allocating the event sequence
+number**, and held until transaction commit. This ensures that for each
+store, a higher committed `eventId` cannot overtake an uncommitted lower
+event and become visible first. This matters because a raw PostgreSQL
+sequence alone is **not** ordered by commit time: a cursor of `id > N`
+would otherwise risk missing slower commits. The tradeoff is one
+serialized outbox write lane **per store**; measure high-load throughput
+before production. Different stores remain independent. The payload
+contains only `eventId`, `eventType`, `orderId`, `tableId`, `status`,
+`previousStatus`, `occurredAt`—**no guest tokens, menu data, personal
+information or payment claims**. Fetch the authoritative scoped Order
+inbox to retrieve up-to-date amounts/items.
+
+**Merchant polling API:**
+
+- `GET /api/tenants/:tenantId/stores/:storeId/notifications?after=0&limit=25`
+  requires a verified owner/manager/cashier/kitchen session. `after` is
+  an optional decimal `bigint` **string** (0 starts from the first event);
+  `limit` is 1–50. Omit `after` to resume after the last explicitly
+  acknowledged event for **this staff user in this store** (0 if absent).
+  Response: `{events, nextCursor, acknowledgedCursor, hasMore}`.
+  Event IDs and cursors are strings to avoid JavaScript IEEE-754 integer
+  precision loss. Events are sorted ascending by ID; `hasMore` signals
+  additional committed records. Empty polls do not change the cursor.
+- `POST /api/tenants/:tenantId/stores/:storeId/notifications/ack` with
+  JSON `{"eventId":"<decimal-string>"}` requires session, approved
+  Origin and CSRF cookie/header. Only an **existing committed event from
+  this exact store** can be acknowledged. The persisted per-user cursor is
+  monotonic: repeat/stale acknowledgements do not move it backward.
+  Reading/long-polling does **not** auto-ack; the UI should ack only after
+  successfully handling/displaying each event, then retain its
+  `nextCursor` for pagination. This intentionally provides at-least-once
+  delivery/replay rather than impossible exactly-once client presentation.
+
+**Reconnect algorithm:** Poll with `after` omitted to resume from persisted
+ack; handle events in ID order, deduplicate by `eventId`, use `nextCursor`
+to fetch subsequent pages, and acknowledge after application-side processing.
+For catch-up after device sleep, first refresh the authoritative Order inbox
+(current state) and then resume the event stream (historical changes).
+An explicit `after=0` replays all retained events, even those already
+acknowledged. Staff cursors are shared across devices signed into the same
+account/store; separate staff accounts have independent cursors.
+
+**Boundaries:** Outbox persistence and replay are implemented; **no
+WebSocket, SSE, email/SMS/push adapter, background delivery worker, or
+production notification service is deployed here**. Future delivery
+adapters must be idempotent and treat this outbox as their source of truth.
+Orders predating migration 016 have no historical outbox event: the
+merchant inbox remains the authoritative recovery snapshot. Retention,
+purging/cursor expiry, operational monitoring, distributed throttling,
+high-volume load testing, offline device UX and production Auth are
+separate release gates. Payment remains `not_requested`; **PromptPay per
+Order is G5 (#7), not a notification type or proof of payment**.
