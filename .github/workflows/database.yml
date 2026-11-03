@@ -112,6 +112,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-status-history.sql
       - name: Verify durable Order outbox, rollback, replay, and tenant-scoped acknowledgements
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-outbox.sql
+      - name: Verify authenticated merchant store discovery and kitchen permissions
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/merchant-store-scopes.sql
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
