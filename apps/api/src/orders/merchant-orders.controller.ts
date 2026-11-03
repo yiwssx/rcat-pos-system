@@ -50,5 +50,4 @@ export class MerchantOrdersController {
   ) {
     return this.orders.history(req, tenantId, storeId, orderId);
   }
-
 }
