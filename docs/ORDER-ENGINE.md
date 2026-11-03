@@ -1,6 +1,6 @@
 # Guest Order Engine — G2 / Issue #6 (first transactional slice)
 
-**This implementation creates Orders, not Bills or payments.** Every Order represents a separate future payable obligation; its `paymentState` is a database-constrained **`not_requested`** placeholder. No PromptPay, payments, settlement, bank account information, webhooks or invoices are implemented.
+**The system creates independent Orders and operational Bills, but no payments.** Each Order remains a separate future payment obligation, and its `paymentState` is constrained to **`not_requested`**. Bills group Orders for the merchant only; no PromptPay, settlement, bank account information, webhooks or invoices are implemented.
 
 ## Guest API
 
@@ -91,7 +91,7 @@ remain tenant/store scoped. These development APIs must not be enabled for
 real customers before production auth, throttling and operational gates.
 
 **Still open in Issue #6:** full status history read endpoint,
-Bills/payment obligations as separate entities, merchant notifications,
+per-Order future payment obligation design, merchant notifications,
 outbox/realtime, operational recovery and full role-specific UIs.
 **Payment QR per Order remains G5 / Issue #7.**
 
@@ -134,3 +134,48 @@ cryptographic key generator, distributed throttling, retention/revocation
 policy and same-device browser E2E must be reviewed before public deployment.
 Guest status is not a payment receipt: `paymentState` remains
 `not_requested` until the final G5 Payment module is implemented.
+
+## Operational Bills: one Table Visit, many independent Orders (G2 increment four)
+
+Migration `014_operational_bills.sql` introduces `rcat.bills` with a strict
+composite reference to a single `table_ordering_visits` row. One visit can
+have at most one Bill. An Order is associated **by its original, immutable
+`visit_id`**, not by adding a mutable Bill assignment or changing its amount.
+Later Orders placed during the same visit appear in that Bill automatically;
+an old Bill never absorbs Orders from the next rotated table visit.
+
+Merchant session endpoints (development-gated):
+
+- `POST /api/tenants/:tenantId/stores/:storeId/bills`: body
+  `{"visitId":"<UUID>"}`. Only owner, manager and cashier may create a
+  Bill, and only for a visit that already has an Order. Requires allowed
+  `Origin`, session cookie and CSRF header/cookie. Concurrent repeats
+  return the **same** `billId` and `created:false`; only the first
+  creation writes a `bill.operational.created` audit event.
+- `GET /api/tenants/:tenantId/stores/:storeId/bills/:billId?limit=50`:
+  owner, manager, cashier and kitchen may view. Returns `billId`,
+  `tableId`, `visitId`, `orderCount`, `orders`, `hasMore`,
+  `currency:THB`, `createdAt`, and two separately computed numbers:
+  `operationalTotalSatang` (non-cancelled Orders) and
+  `cancelledTotalSatang` (excluded Orders). The bounded list
+  (1–50 items) may be truncated; aggregate totals and `orderCount`
+  always cover **all** Orders in the visit.
+
+Merchant Order inbox now includes `visitId` on each entry for identifying
+the correct Bill. The server recomputes Bill aggregates from immutable
+Order snapshots without accepting a client-entered price or altering
+Order payment states. The Bill does **not** have a payment state or a
+bill-wide payment QR. A cancelled Order's amount is separated only for
+operational reporting; this is neither a refund nor proof of settlement.
+**Each Order still owns its future PromptPay payment request at G5.**
+
+Rights are enforced by PostgreSQL security-definer functions and
+`bills` FORCE RLS. The authentication role cannot insert directly;
+unauthorized or foreign visits/Bills return generic 404 responses.
+Creating Bills does not deactivate visits, close tables, take payment,
+or freeze additional same-visit Orders. A Bill can therefore change as
+new Orders arrive or statuses move. Cursor pagination, bill closure,
+table release, order-level financial obligations and merchant realtime
+remain separate follow-up work. Database/HTTP tests exercise role and
+tenant isolation, idempotent concurrent creation, cancellation, RLS and
+preservation after QR visit rotation. Production remains blocked.

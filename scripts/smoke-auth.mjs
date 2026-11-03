@@ -848,6 +848,114 @@ try {
   assert.equal(fulfilled.status, 200);
   assert.equal((await fulfilled.json()).status, "served",
     "Guest tracking reflects the latest merchant fulfilment state");
+  // G2 operational Bill groups Orders for ONE table visit; it never
+  // combines their independent payment obligations or marks money received.
+  const billUrl = `/api/tenants/${made.tenantId}/stores/${made.storeId}/bills`;
+  assert.equal((await api(billUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ visitId: "11111111-1111-4111-8111-111111111111" }),
+  })).status, 404, "Unrecognized table visit must not create a Bill");
+  assert.equal((await api(billUrl, {
+    method: "POST", headers: { ...json, Cookie: cookieHeader },
+    body: JSON.stringify({ visitId: secondVisit.visitId }),
+  })).status, 403, "Bill creation requires CSRF");
+  assert.equal((await api(billUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ visitId: "not-a-uuid" }),
+  })).status, 404, "Bill creation must reject invalid visit IDs");
+  assert.equal((await api(billUrl, {
+    method: "POST", headers: { ...catHeaders, Origin: undefined },
+    body: JSON.stringify({ visitId: secondVisit.visitId }),
+  })).status, 403, "Bill creation requires approved Origin");
+  assert.equal((await api(
+    `/api/tenants/00000000-0000-4000-8000-000000000002/stores/20000000-0000-4000-8000-000000000002/bills`,
+    { method: "POST", headers: catHeaders,
+      body: JSON.stringify({ visitId: secondVisit.visitId }) },
+  )).status, 404, "Bill creation cannot cross tenant boundaries");
+
+  const makeBill = () => api(billUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ visitId: secondVisit.visitId }),
+  });
+  const billReplies = await Promise.all(Array.from({ length: 5 }, makeBill));
+  assert.ok(billReplies.every((r) => r.status === 201),
+    "Concurrent Bill retries must be harmless");
+  const billCreations = await Promise.all(billReplies.map((r) => r.json()));
+  assert.equal(new Set(billCreations.map((b) => b.billId)).size, 1,
+    "Five concurrent Bill requests must create one Bill ID");
+  assert.equal(billCreations.filter((b) => b.created).length, 1,
+    "Only the initial Bill creation may emit an audit event");
+  const billId = billCreations[0].billId;
+  const billDetailUrl = billUrl + "/" + billId;
+  assert.equal((await api(billDetailUrl)).status, 401);
+  assert.equal((await api(billDetailUrl + "?limit=51", {
+    headers: { Cookie: cookieHeader },
+  })).status, 400, "Bill snapshot must enforce bounded list");
+  assert.equal((await api(
+    `/api/tenants/00000000-0000-4000-8000-000000000002/stores/20000000-0000-4000-8000-000000000002/bills/${billId}`,
+    { headers: { Cookie: cookieHeader } },
+  )).status, 404, "Bill snapshot must not cross tenant boundaries");
+
+  const billBeforeResponse = await api(billDetailUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(billBeforeResponse.status, 200,
+    await billBeforeResponse.clone().text());
+  assert.equal(billBeforeResponse.headers.get("cache-control"), "no-store");
+  const billBefore = await billBeforeResponse.json();
+  const sameVisitOrders = inbox.orders.filter(
+    (o) => o.visitId === secondVisit.visitId,
+  );
+  assert.ok(sameVisitOrders.length >= 3,
+    "Merchant inbox should expose visit IDs for Bill creation");
+  assert.equal(billBefore.visitId, secondVisit.visitId);
+  assert.equal(billBefore.orderCount, sameVisitOrders.length);
+  assert.equal(
+    billBefore.operationalTotalSatang,
+    sameVisitOrders.reduce((sum, o) => sum + o.amountSatang, 0),
+    "Bill aggregates come from independent server-priced Orders",
+  );
+  assert.equal(billBefore.cancelledTotalSatang, 0);
+  assert.ok(billBefore.orders.every((o) => o.paymentState === "not_requested"));
+  assert.ok(!Object.hasOwn(billBefore, "paymentState") &&
+    !Object.hasOwn(billBefore, "paid"),
+    "Operational Bill must not claim a settled payment");
+  const oneOrderResponse = await api(billDetailUrl + "?limit=1", {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(oneOrderResponse.status, 200);
+  const singlePage = await oneOrderResponse.json();
+  assert.equal(singlePage.orders.length, 1);
+  assert.equal(singlePage.hasMore, true);
+  assert.equal(singlePage.operationalTotalSatang,
+    billBefore.operationalTotalSatang,
+    "Pagination must not undercount the complete Bill");
+
+  const cancelledOrderResponse = await api(
+    merchantOrdersUrl + "/" + otherOrder.orderId + "/status", {
+      method: "PATCH", headers: catHeaders,
+      body: JSON.stringify({
+        expectedStatus: "submitted", nextStatus: "cancelled",
+      }),
+    },
+  );
+  assert.equal(cancelledOrderResponse.status, 200,
+    await cancelledOrderResponse.clone().text());
+  const afterCancelResponse = await api(billDetailUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(afterCancelResponse.status, 200);
+  const billAfterCancel = await afterCancelResponse.json();
+  assert.equal(billAfterCancel.orderCount, billBefore.orderCount);
+  assert.equal(billAfterCancel.operationalTotalSatang,
+    billBefore.operationalTotalSatang - otherOrder.amountSatang,
+    "Cancellation must exclude Order from operational aggregate");
+  assert.equal(billAfterCancel.cancelledTotalSatang,
+    otherOrder.amountSatang, "Cancellation must remain visible separately");
+  assert.equal(billAfterCancel.orders.find(
+    (o) => o.orderId === otherOrder.orderId,
+  )?.paymentState, "not_requested", "Cancellation is not a refund");
+
   const changedVisit = await api(rotateUrl, {
     method: "POST", headers: catHeaders,
   });
@@ -859,6 +967,15 @@ try {
   assert.equal(afterRotation.status, 200);
   assert.equal((await afterRotation.json()).status, "served",
     "Rotating the table visit must not revoke existing Order tracking");
+  const oldBillAfterRotation = await api(billDetailUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(oldBillAfterRotation.status, 200);
+  const oldBillSnapshot = await oldBillAfterRotation.json();
+  assert.equal(oldBillSnapshot.orderCount, billBefore.orderCount,
+    "Rotating to a new table Visit must not merge operational Bills");
+  assert.equal(oldBillSnapshot.visitId, secondVisit.visitId);
+  assert.notEqual(oldBillSnapshot.visitId, (await changedVisit.json()).visitId);
   const logout = await api("/api/auth/logout", {
     method: "POST",
     headers: {

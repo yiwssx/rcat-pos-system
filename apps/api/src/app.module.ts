@@ -22,6 +22,8 @@ import { GuestOrdersController } from "./orders/guest-orders.controller";
 import { GuestOrdersService } from "./orders/guest-orders.service";
 import { MerchantOrdersController } from "./orders/merchant-orders.controller";
 import { MerchantOrdersService } from "./orders/merchant-orders.service";
+import { OperationalBillsController } from "./orders/operational-bills.controller";
+import { OperationalBillsService } from "./orders/operational-bills.service";
 
 @Module({
   controllers: [
@@ -37,6 +39,7 @@ import { MerchantOrdersService } from "./orders/merchant-orders.service";
     ProductModifiersController,
     GuestOrdersController,
     MerchantOrdersController,
+    OperationalBillsController,
   ],
   providers: [
     DatabaseAccess,
@@ -51,6 +54,7 @@ import { MerchantOrdersService } from "./orders/merchant-orders.service";
     ProductModifiersService,
     GuestOrdersService,
     MerchantOrdersService,
+    OperationalBillsService,
   ],
 })
 export class AppModule {}
