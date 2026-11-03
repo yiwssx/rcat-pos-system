@@ -39,4 +39,15 @@ export class MerchantOrdersController {
     requireAllowedOrigin(req);
     return this.orders.transition(req, tenantId, storeId, orderId, body);
   }
+
+  @Get(":orderId/history")
+  @Header("Cache-Control", "no-store")
+  history(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("orderId") orderId: string,
+  ) {
+    return this.orders.history(req, tenantId, storeId, orderId);
+  }
 }
