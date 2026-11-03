@@ -20,6 +20,8 @@ import { ProductModifiersController } from "./catalog/product-modifiers.controll
 import { ProductModifiersService } from "./catalog/product-modifiers.service";
 import { GuestOrdersController } from "./orders/guest-orders.controller";
 import { GuestOrdersService } from "./orders/guest-orders.service";
+import { MerchantOrdersController } from "./orders/merchant-orders.controller";
+import { MerchantOrdersService } from "./orders/merchant-orders.service";
 
 @Module({
   controllers: [
@@ -34,6 +36,7 @@ import { GuestOrdersService } from "./orders/guest-orders.service";
     TableOrderingController,
     ProductModifiersController,
     GuestOrdersController,
+    MerchantOrdersController,
   ],
   providers: [
     DatabaseAccess,
@@ -47,6 +50,7 @@ import { GuestOrdersService } from "./orders/guest-orders.service";
     TableOrderingService,
     ProductModifiersService,
     GuestOrdersService,
+    MerchantOrdersService,
   ],
 })
 export class AppModule {}
