@@ -84,7 +84,8 @@ export class MerchantOrdersService {
       rawCursor !== undefined &&
       (!cursor ||
         Number.isNaN(Date.parse(cursor[1] ?? "")) ||
-        cursor[1]?.slice(0, 10) === "0000-00-00")
+        new Date(cursor[1] ?? "").toISOString().slice(0, 19) !==
+          cursor[1]?.slice(0, 19))
     ) {
       throw new BadRequestException("Invalid Order page cursor");
     }
