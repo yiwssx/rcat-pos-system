@@ -102,6 +102,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/product-modifiers.sql
       - name: Verify order money, idempotency, snapshots and tenant isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/guest-orders.sql
+      - name: Verify merchant Order inbox, authorized transitions and audit
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-fulfilment.sql
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -128,5 +130,5 @@ jobs:
         run: node scripts/smoke-auth.mjs
       - name: Verify new tenant and invitation audit events
         run: |
-          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events" | grep -qx '19'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events" | grep -qx '22'
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(DISTINCT action) FROM rcat.audit_events WHERE action IN ('tenant.created','staff.invited','staff.invitation.accepted','staff.role.changed','staff.removed')" | grep -qx '5'
