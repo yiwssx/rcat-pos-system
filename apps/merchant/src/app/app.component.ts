@@ -19,7 +19,8 @@ import { RouterLink, RouterOutlet } from "@angular/router";
     </header>
     <main id="main"><router-outlet /></main>
     <footer class="footer">
-      RCAT POS · G3 Merchant Operations · ยังไม่เปิดรับชำระเงินหรือใช้งาน Production
+      RCAT POS · G3 Merchant Operations · ยังไม่เปิดรับชำระเงินหรือใช้งาน
+      Production
     </footer>
   </div>`,
 })
