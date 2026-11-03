@@ -24,6 +24,8 @@ import { MerchantOrdersController } from "./orders/merchant-orders.controller";
 import { MerchantOrdersService } from "./orders/merchant-orders.service";
 import { OperationalBillsController } from "./orders/operational-bills.controller";
 import { OperationalBillsService } from "./orders/operational-bills.service";
+import { MerchantNotificationsController } from "./orders/merchant-notifications.controller";
+import { MerchantNotificationsService } from "./orders/merchant-notifications.service";
 
 @Module({
   controllers: [
@@ -40,6 +42,7 @@ import { OperationalBillsService } from "./orders/operational-bills.service";
     GuestOrdersController,
     MerchantOrdersController,
     OperationalBillsController,
+    MerchantNotificationsController,
   ],
   providers: [
     DatabaseAccess,
@@ -55,6 +58,7 @@ import { OperationalBillsService } from "./orders/operational-bills.service";
     GuestOrdersService,
     MerchantOrdersService,
     OperationalBillsService,
+    MerchantNotificationsService,
   ],
 })
 export class AppModule {}

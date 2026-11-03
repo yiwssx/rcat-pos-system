@@ -859,6 +859,93 @@ try {
     { headers: { Cookie: cookieHeader } },
   )).status, 404, "Unknown merchant Order history is not exposed");
 
+  // Durable transactional Order event outbox: pagination, explicit per-user
+  // acknowledgement, replay, Origin/CSRF and strict tenant/store isolation.
+  const notificationsUrl =
+    `/api/tenants/${made.tenantId}/stores/${made.storeId}/notifications`;
+  assert.equal((await api(notificationsUrl)).status, 401,
+    "Anonymous client cannot read merchant notifications");
+  assert.equal((await api(notificationsUrl + "?limit=100", {
+    headers: { Cookie: cookieHeader },
+  })).status, 400, "Notification limit must be bounded");
+  assert.equal((await api(notificationsUrl + "?after=-1", {
+    headers: { Cookie: cookieHeader },
+  })).status, 400, "Negative event cursor cannot be accepted");
+  assert.equal((await api(notificationsUrl + "?after=9223372036854775808", {
+    headers: { Cookie: cookieHeader },
+  })).status, 400, "Cursor overflow must be rejected");
+  assert.equal((await api(
+    "/api/tenants/00000000-0000-4000-8000-000000000002/stores/20000000-0000-4000-8000-000000000002/notifications",
+    { headers: { Cookie: cookieHeader } },
+  )).status, 404, "Notifications must never cross tenant boundaries");
+  const notificationFeed = await api(notificationsUrl + "?after=0", {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(notificationFeed.status, 200,
+    await notificationFeed.clone().text());
+  assert.equal(notificationFeed.headers.get("cache-control"), "no-store");
+  const feed = await notificationFeed.json();
+  assert.equal(feed.acknowledgedCursor, "0");
+  assert.equal(feed.events.length, 3,
+    "Exactly three successful new Orders must be enqueued once");
+  assert.ok(feed.events.every((event) =>
+    event.eventType === "order.submitted" &&
+    event.status === "submitted" &&
+    event.previousStatus === null &&
+    typeof event.eventId === "string" &&
+    !Object.hasOwn(event, "trackingToken") &&
+    !Object.hasOwn(event, "amountSatang")));
+  assert.ok(feed.events.some((event) => event.orderId === payloads[0].orderId));
+  assert.ok(feed.events.some((event) => event.orderId === otherOrder.orderId));
+  const firstFeedPage = await api(notificationsUrl + "?after=0&limit=1", {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(firstFeedPage.status, 200);
+  const firstNotificationPage = await firstFeedPage.json();
+  assert.equal(firstNotificationPage.events.length, 1);
+  assert.equal(firstNotificationPage.hasMore, true);
+  const firstEventId = firstNotificationPage.events[0].eventId;
+  assert.equal(firstNotificationPage.nextCursor, firstEventId);
+  const resumedPage = await api(
+    notificationsUrl + "?after=" + firstEventId, {
+      headers: { Cookie: cookieHeader },
+    },
+  );
+  assert.equal(resumedPage.status, 200);
+  assert.equal((await resumedPage.json()).events.length, 2,
+    "Cursor replay after network disconnect must not skip committed events");
+  const ackNotification = (eventId, headers = catHeaders) =>
+    api(notificationsUrl + "/ack", {
+      method: "POST", headers,
+      body: JSON.stringify({ eventId }),
+    });
+  assert.equal((await ackNotification(firstEventId, {
+    ...json, Cookie: cookieHeader,
+  })).status, 403, "Explicit acknowledgement requires CSRF");
+  assert.equal((await ackNotification(firstEventId, {
+    ...catHeaders, Origin: undefined,
+  })).status, 403, "Explicit acknowledgement requires approved Origin");
+  assert.equal((await ackNotification("9223372036854775808")).status, 400,
+    "Acknowledgement cannot overflow bigint");
+  assert.equal((await ackNotification("0")).status, 400,
+    "Zero is not a valid event acknowledgement");
+  assert.equal((await ackNotification("999999999999999999")).status, 404,
+    "Cannot acknowledge nonexistent or future events");
+  assert.equal((await api(
+    "/api/tenants/00000000-0000-4000-8000-000000000002/stores/20000000-0000-4000-8000-000000000002/notifications/ack",
+    { method: "POST", headers: catHeaders,
+      body: JSON.stringify({ eventId: firstEventId }) },
+  )).status, 404, "Cannot acknowledge another tenant's notifications");
+  const ackResponse = await ackNotification(firstEventId);
+  assert.equal(ackResponse.status, 201, await ackResponse.clone().text());
+  assert.equal((await ackResponse.json()).acknowledgedCursor, firstEventId);
+  const resumedAck = await api(notificationsUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(resumedAck.status, 200);
+  assert.equal((await resumedAck.json()).events.length, 2,
+    "Saved acknowledgement must allow lossless reconnect");
+
   const changeOrder = (expectedStatus, nextStatus, headers = catHeaders) =>
     api(singleOrderUrl, {
       method: "PATCH",
@@ -916,6 +1003,21 @@ try {
     (event, index, items) =>
       index === 0 || items[index - 1].eventId < event.eventId),
     "Merchant status history needs monotonic durable event identifiers");
+
+  const afterFulfilmentResponse = await api(notificationsUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(afterFulfilmentResponse.status, 200);
+  const afterFulfilment = await afterFulfilmentResponse.json();
+  assert.equal(afterFulfilment.events.length, 5,
+    "Unacknowledged Orders and all three accepted states survive reconnect");
+  assert.deepEqual(
+    afterFulfilment.events.filter((event) =>
+      event.orderId === payloads[0].orderId &&
+      event.eventType === "order.status.changed"
+    ).map((event) => event.status),
+    ["accepted", "preparing", "served"],
+    "Rejected/stale status changes must not emit notifications");
 
   // G2 operational Bill groups Orders for ONE table visit; it never
   // combines their independent payment obligations or marks money received.
@@ -1035,6 +1137,37 @@ try {
   assert.equal(billAfterCancel.orders.find(
     (o) => o.orderId === otherOrder.orderId,
   )?.paymentState, "not_requested", "Cancellation is not a refund");
+
+  const afterCancellationResponse = await api(notificationsUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(afterCancellationResponse.status, 200);
+  const afterCancellation = await afterCancellationResponse.json();
+  assert.equal(afterCancellation.events.length, 6,
+    "Cancellation must emit one additional durable outbox event");
+  assert.equal(afterCancellation.events.find((event) =>
+    event.orderId === otherOrder.orderId &&
+    event.eventType === "order.status.changed"
+  )?.status, "cancelled");
+  const latestEventId = afterCancellation.nextCursor;
+  assert.equal((await ackNotification(latestEventId)).status, 201);
+  const staleAck = await ackNotification(firstEventId);
+  assert.equal(staleAck.status, 201);
+  assert.equal((await staleAck.json()).acknowledgedCursor, latestEventId,
+    "Out-of-order ack may never move cursor backward");
+  const currentNotifications = await api(notificationsUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(currentNotifications.status, 200);
+  const currentFeed = await currentNotifications.json();
+  assert.equal(currentFeed.acknowledgedCursor, latestEventId);
+  assert.equal(currentFeed.events.length, 0);
+  const fullReplay = await api(notificationsUrl + "?after=0", {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(fullReplay.status, 200);
+  assert.equal((await fullReplay.json()).events.length, 7,
+    "Explicit replay must retain append-only notification history");
 
   const changedVisit = await api(rotateUrl, {
     method: "POST", headers: catHeaders,
