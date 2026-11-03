@@ -758,6 +758,54 @@ try {
     ...cart,
     items: [{ productId, quantity: 3, optionIds: [firstOptionId] }],
   })).status, 409, "One idempotency key cannot authorize different carts");
+  // Merchant fulfilment: Order inbox requires a session, and state writes
+  // require Origin + CSRF. Only the merchant can see its Order snapshots.
+  const merchantOrdersUrl = `/api/tenants/${made.tenantId}/stores/${made.storeId}/orders`;
+  const singleOrderUrl = merchantOrdersUrl + "/" + payloads[0].orderId + "/status";
+  assert.equal((await api(merchantOrdersUrl)).status, 401,
+    "Anonymous visitor cannot access merchant Orders");
+  assert.equal((await api(merchantOrdersUrl + "?limit=100", {
+    headers: { Cookie: cookieHeader },
+  })).status, 400, "Order inbox must cap result size");
+  assert.equal((await api(
+    "/api/tenants/00000000-0000-4000-8000-000000000002/stores/20000000-0000-4000-8000-000000000002/orders",
+    { headers: { Cookie: cookieHeader } },
+  )).status, 404, "Order inbox cannot cross tenant boundary");
+  const inboxResponse = await api(merchantOrdersUrl + "?status=submitted&limit=25", {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(inboxResponse.status, 200);
+  const inbox = await inboxResponse.json();
+  assert.ok(inbox.orders.some((row) =>
+    row.orderId === payloads[0].orderId &&
+    row.amountSatang === 20800 &&
+    row.paymentState === "not_requested" &&
+    row.items.length === 1),
+    "Merchant inbox should show immutable product snapshots");
+
+  const changeOrder = (expectedStatus, nextStatus, headers = catHeaders) =>
+    api(singleOrderUrl, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ expectedStatus, nextStatus }),
+    });
+  assert.equal((await changeOrder("submitted", "accepted", {
+    ...json, Cookie: cookieHeader,
+  })).status, 403, "Order status change requires CSRF");
+  assert.equal((await changeOrder("submitted", "accepted", {
+    ...catHeaders, Origin: undefined,
+  })).status, 403, "Order status change requires approved Origin");
+  assert.equal((await changeOrder("submitted", "served")).status, 404,
+    "Cannot skip kitchen workflow");
+  const accepted = await changeOrder("submitted", "accepted");
+  assert.equal(accepted.status, 200, await accepted.clone().text());
+  assert.equal((await accepted.json()).paymentState, "not_requested");
+  assert.equal((await changeOrder("submitted", "cancelled")).status, 409,
+    "Stale expected state must fail without changing Order");
+  assert.equal((await changeOrder("accepted", "preparing")).status, 200);
+  assert.equal((await changeOrder("preparing", "served")).status, 200);
+  assert.equal((await changeOrder("served", "cancelled")).status, 404,
+    "Served Orders are terminal for this workflow");
   const changedVisit = await api(rotateUrl, {
     method: "POST", headers: catHeaders,
   });

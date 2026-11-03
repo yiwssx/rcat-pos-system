@@ -53,3 +53,44 @@ Real PostgreSQL and HTTP integration tests exercise required modifier groups, du
 - Strict release guard remains: development Authentication cannot run in production and `/api/ready` stays 503.
 
 **Ordering QR** is a table visit token. **PromptPay QR per Order** remains the final G5 milestone (#7).
+
+## Merchant fulfilment API (second G2 increment)
+
+This development-gated API provides a durable merchant Order inbox and
+role-authorized status transitions, **not real-time delivery or payments**.
+
+- `GET /api/tenants/:tenantId/stores/:storeId/orders?status=submitted&limit=25`
+  uses a valid merchant session (owner, manager, cashier or kitchen).
+  It returns the latest 1–50 Orders and their immutable priced item/option
+  snapshots. The optional `status` filter accepts `submitted`, `accepted`,
+  `preparing`, `served` or `cancelled`. Cursor pagination, notifications and
+  guest tracking are not implemented yet.
+- `PATCH /api/tenants/:tenantId/stores/:storeId/orders/:orderId/status`
+  requires an allowed Origin, session cookie and matching CSRF cookie/header.
+  Request body: `{"expectedStatus":"submitted","nextStatus":"accepted"}`.
+  A stale expected status produces HTTP 409, an unauthorized, foreign or
+  invalid state transition produces HTTP 404. No direct Order write grants
+  are given to application or authentication roles.
+
+Allowed state changes:
+
+| From | To | Authorized roles |
+|---|---|---|
+| submitted | accepted, cancelled | owner, manager, cashier |
+| accepted | preparing | owner, manager, kitchen |
+| accepted | cancelled | owner, manager, cashier |
+| preparing | served | owner, manager, kitchen |
+
+`served` and `cancelled` are terminal in this increment; cancelling a
+preparing/served Order requires a separately designed exceptional workflow.
+The SQL function takes a row lock, compares the expected state, updates one
+Order and appends an actor-attributed `order.status.changed` audit event
+within the same transaction. Neither the amount, immutable items nor
+`payment_state='not_requested'` may change. All Order and table identifiers
+remain tenant/store scoped. These development APIs must not be enabled for
+real customers before production auth, throttling and operational gates.
+
+**Still open in Issue #6:** guest tracking, status history read endpoint,
+Bills/payment obligations as separate entities, merchant notifications,
+outbox/realtime, operational recovery and full role-specific UIs.
+**Payment QR per Order remains G5 / Issue #7.**
