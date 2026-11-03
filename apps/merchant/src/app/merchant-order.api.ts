@@ -47,10 +47,10 @@ export class MerchantOrderApi {
     let params = new HttpParams().set("limit", "50");
     if (cursor !== undefined) params = params.set("cursor", cursor);
     return firstValueFrom(
-      this.http.get<OrderInboxPage>(
-        scopePath(tenantId, storeId) + "/orders",
-        { params, withCredentials: true },
-      ),
+      this.http.get<OrderInboxPage>(scopePath(tenantId, storeId) + "/orders", {
+        params,
+        withCredentials: true,
+      }),
     );
   }
 
