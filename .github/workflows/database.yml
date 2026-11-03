@@ -110,6 +110,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/operational-bills.sql
       - name: Verify merchant/guest Order history, audit ordering and privacy
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-status-history.sql
+      - name: Verify durable Order outbox, rollback, replay, and tenant-scoped acknowledgements
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-outbox.sql
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
