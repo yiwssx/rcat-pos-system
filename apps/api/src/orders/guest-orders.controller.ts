@@ -38,5 +38,4 @@ export class GuestOrdersController {
   history(@Req() req: ApiRequest, @Param("orderId") orderId: string) {
     return this.orders.history(orderId, header(req, "authorization"));
   }
-
 }
