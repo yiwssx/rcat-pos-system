@@ -204,5 +204,4 @@ export class GuestOrdersService {
       mapOrderFailure(error);
     }
   }
-
 }
