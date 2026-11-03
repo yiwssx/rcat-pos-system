@@ -152,5 +152,4 @@ export class MerchantOrdersService {
       safeError(error);
     }
   }
-
 }
