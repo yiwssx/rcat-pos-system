@@ -892,7 +892,7 @@ try {
       break;
     }
     assert.match(page.nextCursor,
-      /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z_[0-9a-f-]{36}$/);
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z_[0-9a-f-]{36}$/);
     inboxCursor = page.nextCursor;
   }
   assert.deepEqual(pagedIds, fullInbox.orders.map((order) => order.orderId),
