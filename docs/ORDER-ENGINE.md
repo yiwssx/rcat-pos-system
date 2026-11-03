@@ -28,7 +28,8 @@ Response (HTTP 201 for new and repeated submissions):
   "currency": "THB",
   "status": "submitted",
   "paymentState": "not_requested",
-  "replayed": false
+  "replayed": false,
+  "trackingToken": "<256-bit order-scoped bearer token>"
 }
 ```
 
@@ -39,7 +40,7 @@ Response (HTTP 201 for new and repeated submissions):
 - A unique index on `(visit_id,idempotency_key)` serializes simultaneous retries across replicas. The same normalized cart returns the existing Order; a changed cart with the same key returns HTTP 409.
 - PostgreSQL selects active product, option and group rows under read locks, enforces per-group min/max cardinality, disallows duplicate/wrong-store/disabled options and unavailable products, calculates signed integer-satang unit totals and line totals, rejects nonpositive and excessive totals, then inserts snapshots and aggregate total in one transaction. Any validation failure rolls the entire Order back.
 - Roles `rcat_auth` and `rcat_app` do not gain direct Order mutation grants. `rcat_app` has tenant-scoped read-only RLS; Guest API can only call the specific scoped SQL routine.
-- Exposed order status is `submitted`; no merchant accept/prepare/serve transitions yet. No guest status token or order listing endpoint yet.
+- Merchant fulfilment and Guest Tracking are separate authenticated/capability-scoped increments; no automatic payment confirmation or guest order-listing endpoint is available.
 
 ## Verified in CI
 
@@ -47,8 +48,8 @@ Real PostgreSQL and HTTP integration tests exercise required modifier groups, du
 
 ## Release blockers / next Issue #6 increments
 
-- Merchant order inbox, authorized state transitions and role-specific acceptance/preparing/served/cancellation with audited event log.
-- Separate Bill model/aggregate and independent Order obligations, status history, guest status access, conflict handling and reliable notifications.
+- Merchant inbox and basic transitions are available in development; merchant realtime, exceptional cancellation workflow and recoverable notifications remain pending.
+- Separate Bill model/aggregate and independent Order obligations, full status-event history, conflict handling and reliable notifications.
 - Distributed abuse/throttling protections for Guest endpoints, checkout replay retention/expiry policies, operational monitoring and E2E with mobile clients.
 - Strict release guard remains: development Authentication cannot run in production and `/api/ready` stays 503.
 
@@ -63,8 +64,7 @@ role-authorized status transitions, **not real-time delivery or payments**.
   uses a valid merchant session (owner, manager, cashier or kitchen).
   It returns the latest 1–50 Orders and their immutable priced item/option
   snapshots. The optional `status` filter accepts `submitted`, `accepted`,
-  `preparing`, `served` or `cancelled`. Cursor pagination, notifications and
-  guest tracking are not implemented yet.
+  `preparing`, `served` or `cancelled`. Cursor pagination and notifications are not implemented yet.
 - `PATCH /api/tenants/:tenantId/stores/:storeId/orders/:orderId/status`
   requires an allowed Origin, session cookie and matching CSRF cookie/header.
   Request body: `{"expectedStatus":"submitted","nextStatus":"accepted"}`.
@@ -90,7 +90,47 @@ within the same transaction. Neither the amount, immutable items nor
 remain tenant/store scoped. These development APIs must not be enabled for
 real customers before production auth, throttling and operational gates.
 
-**Still open in Issue #6:** guest tracking, status history read endpoint,
+**Still open in Issue #6:** full status history read endpoint,
 Bills/payment obligations as separate entities, merchant notifications,
 outbox/realtime, operational recovery and full role-specific UIs.
 **Payment QR per Order remains G5 / Issue #7.**
+
+## Guest Order Tracking (third G2 increment)
+
+Every new checkout now returns `trackingToken` alongside the Order ID and
+server-calculated amount. It is a separate, 256-bit **bearer capability for
+one Order only**, not a table QR or payment QR. Use a cryptographically
+random, retry-stable `Idempotency-Key` for **each** intentional checkout
+(e.g., `crypto.randomUUID()` in the Angular client). This key must remain
+private; low-entropy values weaken tracking security if a table visit secret
+is shared. The backend derives a deterministic HMAC-SHA256 tracking capability
+from the visit secret and idempotency key. Concurrent/repeated checkout calls
+receive the *same* capability. Only SHA-256 of the decoded capability is
+stored in `orders.tracking_token_digest`; neither raw guest credentials nor
+table visit tokens are stored there.
+
+**Read status:** `GET /api/guest/orders/:orderId/status`
+
+Send `Authorization: Bearer <trackingToken>` (not cookies, URL query, URL
+fragment, or table QR token). The endpoint returns only
+`orderId`, `status`, `paymentState`, `amountSatang`, `currency`,
+`createdAt`, and `updatedAt` with `Cache-Control: no-store`.
+A missing/incorrect token or another Order's ID returns the same HTTP 404.
+The token remains valid for that Order when the table visit is rotated,
+and does not permit new checkout or access to a different Order.
+
+The backend calls `place_guest_order` and
+`bind_guest_order_tracking` in the **same DB transaction**. The digest
+bind is write-once and idempotent; an incompatible bind aborts the
+transaction. Historical Orders submitted before migration 013 have no
+capability; they cannot be read from this endpoint unless the original
+checkout is replayed while its visit is still active. No backfill creates
+weakened guest tracking rights.
+
+**Security / release blockers:** The capability is sensitive. The guest UI
+must keep it out of URLs, logs, analytics, screenshots and localStorage; use
+in-memory state or carefully designed session-scoped recovery. A client-side
+cryptographic key generator, distributed throttling, retention/revocation
+policy and same-device browser E2E must be reviewed before public deployment.
+Guest status is not a payment receipt: `paymentState` remains
+`not_requested` until the final G5 Payment module is implemented.
