@@ -57,14 +57,17 @@ export class MerchantOrdersService {
   ) {
     validateIds(tenantId, storeId);
     const status = rawStatus === undefined ? null : rawStatus;
-    if (status !== null && (typeof status !== "string" || !STATUSES.has(status))) {
+    if (
+      status !== null &&
+      (typeof status !== "string" || !STATUSES.has(status))
+    ) {
       throw new BadRequestException("Invalid order status filter");
     }
-    const limit =
-      rawLimit === undefined ? 25 : Number(rawLimit);
+    const limit = rawLimit === undefined ? 25 : Number(rawLimit);
     if (
       (rawLimit !== undefined &&
-        (typeof rawLimit !== "string" || !/^(?:[1-9]|[1-4][0-9]|50)$/.test(rawLimit))) ||
+        (typeof rawLimit !== "string" ||
+          !/^(?:[1-9]|[1-4][0-9]|50)$/.test(rawLimit))) ||
       !Number.isInteger(limit) ||
       limit < 1 ||
       limit > 50
