@@ -90,7 +90,7 @@ within the same transaction. Neither the amount, immutable items nor
 remain tenant/store scoped. These development APIs must not be enabled for
 real customers before production auth, throttling and operational gates.
 
-**Still open in Issue #6:** full status history read endpoint,
+**Still open in Issue #6:** exceptional cancellation workflow,
 per-Order future payment obligation design, merchant notifications,
 outbox/realtime, operational recovery and full role-specific UIs.
 **Payment QR per Order remains G5 / Issue #7.**
@@ -179,3 +179,37 @@ table release, order-level financial obligations and merchant realtime
 remain separate follow-up work. Database/HTTP tests exercise role and
 tenant isolation, idempotent concurrent creation, cancellation, RLS and
 preservation after QR visit rotation. Production remains blocked.
+
+## Order Event History (fifth G2 increment, migration 015)
+
+Every Order has a deterministic status timeline: a synthetic initial
+`submitted` event at `orders.created_at` followed by committed, actor-attributed
+`order.status.changed` audit entries. No new event table, duplicated state
+transition writes or historical backfill is needed. A rejected or stale
+transition rolls back, so it adds no history. Events are returned in durable
+audit ID order rather than timestamp-only order (ties and clock skew cannot
+change ordering). The database index scopes the history read by tenant,
+Order ID and action. Money and `payment_state='not_requested'` remain
+unchanged by all history reads.
+
+**Guest:** `GET /api/guest/orders/:orderId/history`, with
+`Authorization: Bearer <trackingToken>` issued by that exact checkout.
+Like the guest status endpoint, missing, invalid, unbound or other-Order
+tokens return HTTP 404. A guest sees `orderId`, current `status`,
+`paymentState` and `events: [{eventId,status,fromStatus,occurredAt}]`.
+The initial event has a null `eventId` and `fromStatus`.
+Guest payloads **never** include staff names, actor IDs, audit metadata
+or any other Order. The token continues to work after table QR rotation.
+
+**Merchant:** `GET /api/tenants/:tenantId/stores/:storeId/orders/:orderId/history`
+requires a valid owner/manager/cashier/kitchen session. A cross-tenant,
+cross-store or non-existent Order returns HTTP 404. The same event sequence
+is returned, but later status-change events also include an
+`actorUserId` for internal traceability (which is not a public guest
+field). Both GET endpoints set `Cache-Control: no-store`.
+
+**Scope:** Ordering/fulfilment history only, not payment receipts or settlement
+events. No notification channel, retention/archival policy, mandatory
+distributed throttling, browser UI, real-money provider or public Production
+readiness is introduced. Real per-Order PromptPay stays in last business
+milestone G5 (#7).
