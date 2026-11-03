@@ -32,7 +32,8 @@ const MAX_CATCHUP_PAGES = 6;
 
 function failureText(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
-    if (error.status === 0) return "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ต";
+    if (error.status === 0)
+      return "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ต";
     if (error.status === 401) return "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่";
     if (error.status === 403 || error.status === 404) {
       return "ไม่มีสิทธิ์เข้าถึงร้านหรือดำเนินรายการนี้";
@@ -41,7 +42,9 @@ function failureText(error: unknown): string {
       return "ออเดอร์ถูกเปลี่ยนจากอีกอุปกรณ์แล้ว กำลังโหลดสถานะล่าสุด";
     }
   }
-  return error instanceof Error ? error.message : "เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่";
+  return error instanceof Error
+    ? error.message
+    : "เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่";
 }
 
 @Component({
@@ -63,8 +66,12 @@ function failureText(error: unknown): string {
             }
           </p>
         </div>
-        <button type="button" class="primary-link board-refresh"
-          [disabled]="refreshing()" (click)="refresh()">
+        <button
+          type="button"
+          class="primary-link board-refresh"
+          [disabled]="refreshing()"
+          (click)="refresh()"
+        >
           {{ refreshing() ? "กำลังซิงก์..." : "รีเฟรชออเดอร์" }}
         </button>
       </div>
@@ -74,10 +81,19 @@ function failureText(error: unknown): string {
       </p>
 
       <div class="board-connection" role="status" aria-live="polite">
-        <span class="connection-indicator" [class.is-offline]="!connected()"></span>
-        {{ connected() ? "เชื่อมต่ออยู่ · ตรวจออเดอร์ทุก 10 วินาที" : "ออฟไลน์ · รอเชื่อมต่ออีกครั้ง" }}
+        <span
+          class="connection-indicator"
+          [class.is-offline]="!connected()"
+        ></span>
+        {{
+          connected()
+            ? "เชื่อมต่ออยู่ · ตรวจออเดอร์ทุก 10 วินาที"
+            : "ออฟไลน์ · รอเชื่อมต่ออีกครั้ง"
+        }}
         @if (lastSynced()) {
-          <span>· ซิงก์ล่าสุด {{ lastSynced()!.toLocaleTimeString("th-TH") }}</span>
+          <span
+            >· ซิงก์ล่าสุด {{ lastSynced()!.toLocaleTimeString("th-TH") }}</span
+          >
         }
       </div>
 
@@ -94,19 +110,33 @@ function failureText(error: unknown): string {
       }
 
       @if (!store() && !error()) {
-        <p class="board-empty" role="status">กำลังตรวจสอบข้อมูลร้านและสิทธิ์พนักงาน...</p>
+        <p class="board-empty" role="status">
+          กำลังตรวจสอบข้อมูลร้านและสิทธิ์พนักงาน...
+        </p>
       } @else if (store()) {
         <div class="board-metrics" aria-label="สรุปออเดอร์ที่แสดง">
-          <div><strong>{{ pendingCount() }}</strong><span>รอรับออเดอร์</span></div>
-          <div><strong>{{ preparingCount() }}</strong><span>รับแล้ว / กำลังเตรียม</span></div>
-          <div><strong>{{ servedCount() }}</strong><span>เสิร์ฟแล้ว</span></div>
+          <div>
+            <strong>{{ pendingCount() }}</strong
+            ><span>รอรับออเดอร์</span>
+          </div>
+          <div>
+            <strong>{{ preparingCount() }}</strong
+            ><span>รับแล้ว / กำลังเตรียม</span>
+          </div>
+          <div>
+            <strong>{{ servedCount() }}</strong
+            ><span>เสิร์ฟแล้ว</span>
+          </div>
         </div>
 
         <div class="board-controls">
           <h2>รายการออเดอร์</h2>
           <label for="order-filter">กรองสถานะ</label>
-          <select id="order-filter" [value]="filter()"
-            (change)="changeFilter($event)">
+          <select
+            id="order-filter"
+            [value]="filter()"
+            (change)="changeFilter($event)"
+          >
             <option value="active">ออเดอร์ที่กำลังดำเนินงาน</option>
             <option value="all">ทั้งหมดที่โหลด</option>
             <option value="submitted">รอรับ</option>
@@ -118,25 +148,40 @@ function failureText(error: unknown): string {
         </div>
         @if (orders().length === 50) {
           <p class="board-warning" role="status">
-            แสดงได้สูงสุด 50 ออเดอร์ล่าสุด หากมีมากกว่านี้ต้องใช้รายงานหรือระบบแบ่งหน้า
+            แสดงได้สูงสุด 50 ออเดอร์ล่าสุด
+            หากมีมากกว่านี้ต้องใช้รายงานหรือระบบแบ่งหน้า
           </p>
         }
         @if (visibleOrders().length === 0) {
           <p class="board-empty" role="status">
-            {{ refreshing() ? "กำลังเรียกข้อมูลออเดอร์..." : "ไม่มีออเดอร์ในสถานะนี้" }}
+            {{
+              refreshing()
+                ? "กำลังเรียกข้อมูลออเดอร์..."
+                : "ไม่มีออเดอร์ในสถานะนี้"
+            }}
           </p>
         } @else {
           <div class="order-grid">
             @for (order of visibleOrders(); track order.orderId) {
-              <article class="order-card" [class.is-submitted]="order.status === 'submitted'"
-                [attr.aria-label]="'ออเดอร์ ' + order.orderId.slice(0, 8)">
+              <article
+                class="order-card"
+                [class.is-submitted]="order.status === 'submitted'"
+                [attr.aria-label]="'ออเดอร์ ' + order.orderId.slice(0, 8)"
+              >
                 <div class="order-card-head">
                   <div>
-                    <span class="order-number">#{{ order.orderId.slice(0, 8) }}</span>
-                    <p class="order-meta">โต๊ะ {{ order.tableId.slice(0, 8) }} ·
-                      {{ time(order.createdAt) }}</p>
+                    <span class="order-number"
+                      >#{{ order.orderId.slice(0, 8) }}</span
+                    >
+                    <p class="order-meta">
+                      โต๊ะ {{ order.tableId.slice(0, 8) }} ·
+                      {{ time(order.createdAt) }}
+                    </p>
                   </div>
-                  <span class="order-state" [class]="'order-state state-' + order.status">
+                  <span
+                    class="order-state"
+                    [class]="'order-state state-' + order.status"
+                  >
                     {{ statusLabel[order.status] }}
                   </span>
                 </div>
@@ -144,9 +189,13 @@ function failureText(error: unknown): string {
                   @for (item of order.items; track $index) {
                     <li>
                       <div class="item-top">
-                        <span><strong>{{ item.quantity }}×</strong>
-                          {{ item.productName }}</span>
-                        <span class="money">{{ money(item.lineTotalSatang) }} ฿</span>
+                        <span
+                          ><strong>{{ item.quantity }}×</strong>
+                          {{ item.productName }}</span
+                        >
+                        <span class="money"
+                          >{{ money(item.lineTotalSatang) }} ฿</span
+                        >
                       </div>
                       @if (item.options.length) {
                         <p class="order-options">
@@ -160,25 +209,46 @@ function failureText(error: unknown): string {
                 </ul>
                 <div class="order-total">
                   <span>ยอดออเดอร์ (ยังไม่ชำระเงิน)</span>
-                  <strong class="money">{{ money(order.amountSatang) }} ฿</strong>
+                  <strong class="money"
+                    >{{ money(order.amountSatang) }} ฿</strong
+                  >
                 </div>
                 <div class="order-actions">
-                  @for (action of actions(order.status); track action.nextStatus) {
-                    <button type="button"
+                  @for (
+                    action of actions(order.status);
+                    track action.nextStatus
+                  ) {
+                    <button
+                      type="button"
                       [class.danger]="action.destructive"
                       [disabled]="busyId() !== null || !connected()"
-                      (click)="transition(order, action)">
-                      {{ busyId() === order.orderId ? "กำลังบันทึก..." : action.label }}
+                      (click)="transition(order, action)"
+                    >
+                      {{
+                        busyId() === order.orderId
+                          ? "กำลังบันทึก..."
+                          : action.label
+                      }}
                     </button>
                   }
-                  <button type="button" class="subtle"
+                  <button
+                    type="button"
+                    class="subtle"
                     [disabled]="historyLoadingId() === order.orderId"
-                    (click)="showHistory(order)">
-                    {{ historyLoadingId() === order.orderId ? "กำลังโหลด..." : "ดูประวัติ" }}
+                    (click)="showHistory(order)"
+                  >
+                    {{
+                      historyLoadingId() === order.orderId
+                        ? "กำลังโหลด..."
+                        : "ดูประวัติ"
+                    }}
                   </button>
                 </div>
                 @if (selectedHistoryId() === order.orderId && history()) {
-                  <section class="order-history" aria-label="ประวัติการเปลี่ยนสถานะ">
+                  <section
+                    class="order-history"
+                    aria-label="ประวัติการเปลี่ยนสถานะ"
+                  >
                     <h3>ประวัติออเดอร์</h3>
                     <ol>
                       @for (entry of history()!.events; track $index) {
@@ -201,12 +271,16 @@ function failureText(error: unknown): string {
             <span>มาจาก Outbox ที่บันทึกในฐานข้อมูล</span>
           </div>
           @if (events().length === 0) {
-            <p class="board-empty">ยังไม่มีเหตุการณ์ใหม่ที่รับจาก Outbox ในหน้าจอนี้</p>
+            <p class="board-empty">
+              ยังไม่มีเหตุการณ์ใหม่ที่รับจาก Outbox ในหน้าจอนี้
+            </p>
           } @else {
             <ol class="event-list">
               @for (event of events(); track event.eventId) {
                 <li>
-                  <span class="event-type">{{ statusLabel[event.status] }}</span>
+                  <span class="event-type">{{
+                    statusLabel[event.status]
+                  }}</span>
                   <span>ออเดอร์ #{{ event.orderId.slice(0, 8) }}</span>
                   <time>{{ time(event.occurredAt) }}</time>
                 </li>
@@ -339,7 +413,10 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     const date = new Date(value);
     return Number.isNaN(date.getTime())
       ? "—"
-      : date.toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" });
+      : date.toLocaleString("th-TH", {
+          dateStyle: "short",
+          timeStyle: "short",
+        });
   }
 
   async refresh(): Promise<void> {
@@ -396,9 +473,7 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
       if (!this.disposed) {
         if (exhausted) this.warning.set("");
         if (!exhausted && !this.warning()) {
-          this.warning.set(
-            "มีเหตุการณ์สะสมจำนวนมาก ระบบจะทยอยโหลดรอบถัดไป",
-          );
+          this.warning.set("มีเหตุการณ์สะสมจำนวนมาก ระบบจะทยอยโหลดรอบถัดไป");
         }
         this.lastSynced.set(new Date());
       }
