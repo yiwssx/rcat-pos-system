@@ -238,6 +238,25 @@ try {
   assert.equal(made.role, "owner");
   assert.ok(made.tenantId && made.storeId);
 
+  // Store discovery is scoped to the actual logged-in member. Frontend
+  // never trusts arbitrary IDs or assumes kitchen has store.manage.
+  assert.equal((await api("/api/auth/merchant-stores")).status, 401);
+  const scopeList = await api("/api/auth/merchant-stores", {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(scopeList.status, 200, await scopeList.clone().text());
+  assert.equal(scopeList.headers.get("cache-control"), "no-store");
+  const discovered = await scopeList.json();
+  assert.ok(discovered.stores.some((scope) =>
+    scope.tenantId === made.tenantId &&
+    scope.storeId === made.storeId &&
+    scope.role === "owner" &&
+    scope.storeName === "ร้านหลัก"),
+    "An owner should discover their own store without manually entering IDs");
+  assert.ok(discovered.stores.every((scope) =>
+    scope.tenantId !== "00000000-0000-4000-8000-000000000002"),
+    "Store discovery cannot list an unauthorized other tenant");
+
   const listed = await api(`/api/tenants/${made.tenantId}/stores`, {
     headers: { Cookie: cookieHeader },
   });
@@ -1211,6 +1230,10 @@ try {
     (await api("/api/auth/me", { headers: { Cookie: cookieHeader } })).status,
     401,
   );
+
+  assert.equal((await api("/api/auth/merchant-stores", {
+    headers: { Cookie: cookieHeader },
+  })).status, 401, "Revoked session may not discover stores");
 
   console.log(
     "PASS: real HTTP login/session/CSRF/logout and tenant A/B restrictions",
