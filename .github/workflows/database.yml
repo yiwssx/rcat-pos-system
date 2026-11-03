@@ -109,7 +109,7 @@ jobs:
       - name: Verify single-visit Bill aggregation, idempotency, audit and RLS
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/operational-bills.sql
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 10.23.0
           run_install: false
