@@ -1,0 +1,42 @@
+name: Temporary Order Inbox cursor formatting preview
+on:
+  pull_request:
+    paths:
+      - 'apps/api/src/orders/merchant-orders.service.ts'
+      - 'apps/merchant/src/app/**'
+      - '.github/workflows/order-inbox-format-preview.yml'
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Canonical Prettier output for modified TypeScript files
+        shell: bash
+        run: |
+          files=(
+            apps/api/src/orders/merchant-orders.service.ts
+            apps/merchant/src/app/app.spec.ts
+            apps/merchant/src/app/merchant-order.api.ts
+            apps/merchant/src/app/order-board.page.ts
+          )
+          pnpm exec prettier --write "${files[@]}"
+          for f in "${files[@]}"; do
+            echo "RCAT_FMT_BEGIN:$f"
+            base64 -w0 "$f"
+            echo
+            echo "RCAT_FMT_END:$f"
+          done
