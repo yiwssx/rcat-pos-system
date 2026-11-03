@@ -1,4 +1,19 @@
-import { Body, Controller, Header, HttpCode, Post, Req } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  HttpCode,
+  Param,
+  Post,
+  Req,
+  @Get(":orderId/status")
+  @Header("Cache-Control", "no-store")
+  status(@Req() req: ApiRequest, @Param("orderId") orderId: string) {
+    return this.orders.status(orderId, header(req, "authorization"));
+  }
+}
+ from "@nestjs/common";
 import {
   ApiRequest,
   header,
