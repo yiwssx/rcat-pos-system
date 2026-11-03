@@ -188,7 +188,7 @@ BEGIN
  denied:=false;
  BEGIN
   PERFORM rcat_private.merchant_order_notifications(
-    v_cashier,'00000000-0000-4000-8000-000000000002',
+    v_owner,'00000000-0000-4000-8000-000000000002',
     '20000000-0000-4000-8000-000000000002',NULL,25);
  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
  END;
