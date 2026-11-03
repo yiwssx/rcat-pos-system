@@ -1,10 +1,6 @@
 export type MerchantRole = "owner" | "manager" | "cashier" | "kitchen";
 export type OrderStatus =
-  | "submitted"
-  | "accepted"
-  | "preparing"
-  | "served"
-  | "cancelled";
+  "submitted" | "accepted" | "preparing" | "served" | "cancelled";
 
 export interface MerchantStore {
   tenantId: string;
@@ -94,7 +90,11 @@ export function orderActions(
     return mayManage || role === "cashier"
       ? [
           { label: "รับออเดอร์", nextStatus: "accepted" },
-          { label: "ยกเลิกออเดอร์", nextStatus: "cancelled", destructive: true },
+          {
+            label: "ยกเลิกออเดอร์",
+            nextStatus: "cancelled",
+            destructive: true,
+          },
         ]
       : [];
   }
