@@ -37,7 +37,12 @@ function safeError(error: unknown): never {
   if (code === "P0001") {
     throw new ConflictException("Order status has changed");
   }
-  if (code === "22023" || code === "22P02" || code === "22007" || code === "22008") {
+  if (
+    code === "22023" ||
+    code === "22P02" ||
+    code === "22007" ||
+    code === "22008"
+  ) {
     throw new BadRequestException("Invalid order operation");
   }
   throw error;
@@ -78,8 +83,11 @@ export class MerchantOrdersService {
       throw new BadRequestException("Invalid order limit");
     }
     const cursor =
-      rawCursor === undefined ? null :
-      typeof rawCursor === "string" ? ORDER_CURSOR.exec(rawCursor) : null;
+      rawCursor === undefined
+        ? null
+        : typeof rawCursor === "string"
+          ? ORDER_CURSOR.exec(rawCursor)
+          : null;
     if (
       rawCursor !== undefined &&
       (!cursor ||
@@ -93,18 +101,31 @@ export class MerchantOrdersService {
     try {
       const result = await this.database.auth((client) =>
         client.query<{
-          data: { orders: unknown[]; hasMore: boolean; nextCursor: string | null };
+          data: {
+            orders: unknown[];
+            hasMore: boolean;
+            nextCursor: string | null;
+          };
         }>(
           "SELECT rcat_private.merchant_order_inbox_page($1,$2,$3,$4,$5,$6,$7) AS data",
           [
-            digestOpaqueSecret(session.token), tenantId, storeId, status,
-            limit, cursor?.[1] ?? null, cursor?.[2] ?? null,
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            status,
+            limit,
+            cursor?.[1] ?? null,
+            cursor?.[2] ?? null,
           ],
         ),
       );
-      return result.rows[0]?.data ?? {
-        orders: [], hasMore: false, nextCursor: null,
-      };
+      return (
+        result.rows[0]?.data ?? {
+          orders: [],
+          hasMore: false,
+          nextCursor: null,
+        }
+      );
     } catch (error) {
       safeError(error);
     }
