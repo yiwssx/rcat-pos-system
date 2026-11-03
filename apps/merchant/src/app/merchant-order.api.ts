@@ -39,7 +39,10 @@ export class MerchantOrderApi {
     );
   }
 
-  orders(tenantId: string, storeId: string): Promise<{ orders: MerchantOrder[] }> {
+  orders(
+    tenantId: string,
+    storeId: string,
+  ): Promise<{ orders: MerchantOrder[] }> {
     return firstValueFrom(
       this.http.get<{ orders: MerchantOrder[] }>(
         scopePath(tenantId, storeId) + "/orders",
