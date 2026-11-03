@@ -29,21 +29,22 @@ describe("merchant operations routes", () => {
 describe("merchant fulfilment permissions", () => {
   it("matches the server role-specific transition policy", () => {
     expect(orderActions("submitted", "kitchen")).toEqual([]);
-    expect(orderActions("submitted", "cashier").map((x) => x.nextStatus)).toEqual(
-      ["accepted", "cancelled"],
-    );
-    expect(orderActions("accepted", "kitchen").map((x) => x.nextStatus)).toEqual(
-      ["preparing"],
-    );
-    expect(orderActions("accepted", "cashier").map((x) => x.nextStatus)).toEqual(
-      ["cancelled"],
-    );
-    expect(orderActions("accepted", "owner").map((x) => x.nextStatus)).toEqual(
-      ["preparing", "cancelled"],
-    );
-    expect(orderActions("preparing", "kitchen").map((x) => x.nextStatus)).toEqual(
-      ["served"],
-    );
+    expect(
+      orderActions("submitted", "cashier").map((x) => x.nextStatus),
+    ).toEqual(["accepted", "cancelled"]);
+    expect(
+      orderActions("accepted", "kitchen").map((x) => x.nextStatus),
+    ).toEqual(["preparing"]);
+    expect(
+      orderActions("accepted", "cashier").map((x) => x.nextStatus),
+    ).toEqual(["cancelled"]);
+    expect(orderActions("accepted", "owner").map((x) => x.nextStatus)).toEqual([
+      "preparing",
+      "cancelled",
+    ]);
+    expect(
+      orderActions("preparing", "kitchen").map((x) => x.nextStatus),
+    ).toEqual(["served"]);
     expect(orderActions("served", "owner")).toEqual([]);
     expect(orderActions("cancelled", "manager")).toEqual([]);
   });
@@ -97,15 +98,13 @@ describe("durable outbox projection", () => {
         [order("visible")],
       ),
     ).toBe(false);
-    expect(
-      hasEventCoverage([event("10", "visible")], [order("visible")]),
-    ).toBe(true);
+    expect(hasEventCoverage([event("10", "visible")], [order("visible")])).toBe(
+      true,
+    );
   });
 
   it("bounds the recent activity feed to 30 events", () => {
-    const events = Array.from({ length: 75 }, (_, i) =>
-      event(String(i + 1)),
-    );
+    const events = Array.from({ length: 75 }, (_, i) => event(String(i + 1)));
     const out = mergeEvents([], events);
     expect(out).toHaveLength(30);
     expect(out[0]?.eventId).toBe("75");
