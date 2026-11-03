@@ -57,8 +57,8 @@ BEGIN
         split_part(v_cursor,'_',1)::timestamptz,
         split_part(v_cursor,'_',2)::uuid);
     END IF;
-    IF jsonb_array_length(v_page->'orders')<>
-      CASE WHEN v_step=3 THEN 15 ELSE 25 END THEN
+    IF (v_step=3 AND jsonb_array_length(v_page->'orders')<>15)
+       OR (v_step<>3 AND jsonb_array_length(v_page->'orders')<>25) THEN
       RAISE EXCEPTION 'Keyset page % has wrong size',v_step;
     END IF;
     v_expected:=v_step<3;
