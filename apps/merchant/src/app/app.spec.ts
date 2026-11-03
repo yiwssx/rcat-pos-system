@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { routes } from "./app.routes";
 import {
+  appendOrderPage,
   formatSatang,
   hasEventCoverage,
   mergeEvents,
@@ -101,6 +102,31 @@ describe("durable outbox projection", () => {
     expect(hasEventCoverage([event("10", "visible")], [order("visible")])).toBe(
       true,
     );
+  });
+
+  it("deduplicates overlapping keyset pages without overwriting newer statuses", () => {
+    const latest = { ...order("repeat"), status: "served" as const };
+    const historical = { ...order("repeat"), status: "submitted" as const };
+    const merged = appendOrderPage(
+      [latest, order("newer")],
+      [historical, order("older")],
+    );
+    expect(merged.map((o) => o.orderId)).toEqual([
+      "repeat", "newer", "older",
+    ]);
+    expect(merged[0]?.status).toBe("served");
+    expect(merged.every((o) => o.paymentState === "not_requested")).toBe(true);
+  });
+
+  it("recognizes outbox coverage when paged Orders span beyond the first 50", () => {
+    const older = event("100", "older");
+    const recent = event("101", "recent");
+    expect(hasEventCoverage([older, recent], [order("recent")])).toBe(false);
+    const recovered = appendOrderPage(
+      [order("recent")],
+      [order("older"), order("recent")],
+    );
+    expect(hasEventCoverage([older, recent], recovered)).toBe(true);
   });
 
   it("bounds the recent activity feed to 30 events", () => {
