@@ -14,6 +14,7 @@ import {
   createSessionCookie,
   clearSessionCookie,
   hasMerchantPermission,
+  digestOpaqueSecret,
 } from "../../../../libs/server-auth/src";
 import { AuthService } from "./auth.service";
 import { ApiRequest, requireAllowedOrigin } from "./request-security";
@@ -26,7 +27,10 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly database: DatabaseAccess,
+  ) {}
 
   @Post("login")
   @HttpCode(200)
@@ -53,6 +57,19 @@ export class AuthController {
     const session = await this.auth.session(req);
     res.setHeader("Cache-Control", "no-store");
     return { authenticated: true, userId: session.userId };
+  }
+
+  @Get("merchant-stores")
+  @Header("Cache-Control", "no-store")
+  async merchantStores(@Req() req: ApiRequest) {
+    const session = await this.auth.session(req);
+    const result = await this.database.auth((client) =>
+      client.query<{ data: { stores: unknown[] } }>(
+        "SELECT rcat_private.merchant_store_scopes($1) AS data",
+        [digestOpaqueSecret(session.token)],
+      ),
+    );
+    return result.rows[0]?.data ?? { stores: [] };
   }
 
   @Post("logout")
