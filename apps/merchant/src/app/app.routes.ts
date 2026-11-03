@@ -7,6 +7,11 @@ export const routes: Routes = [
     loadComponent: () => import("./home.page").then((m) => m.HomePage),
   },
   {
+    path: "orders/:tenantId/:storeId",
+    loadComponent: () =>
+      import("./order-board.page").then((m) => m.MerchantOrderBoardPage),
+  },
+  {
     path: "status",
     loadComponent: () => import("./status.page").then((m) => m.StatusPage),
   },
