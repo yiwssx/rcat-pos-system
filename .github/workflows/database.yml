@@ -104,6 +104,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/guest-orders.sql
       - name: Verify merchant Order inbox, authorized transitions and audit
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-fulfilment.sql
+      - name: Verify Order-scoped guest tracking tokens, isolation and rotation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/guest-order-tracking.sql
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
