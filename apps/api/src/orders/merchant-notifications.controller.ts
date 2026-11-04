@@ -10,7 +10,11 @@ import {
   Res,
 } from "@nestjs/common";
 import { ServerResponse } from "node:http";
-import { ApiRequest, header, requireAllowedOrigin } from "../auth/request-security";
+import {
+  ApiRequest,
+  header,
+  requireAllowedOrigin,
+} from "../auth/request-security";
 import { MerchantNotificationsService } from "./merchant-notifications.service";
 import { MerchantNotificationStreamService } from "./merchant-notification-stream.service";
 
