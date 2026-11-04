@@ -33,6 +33,7 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": { "proxyConfig": "apps/customer/proxy.conf.json" },
           "configurations": {
             "production": {
               "buildTarget": "customer:build:production"
