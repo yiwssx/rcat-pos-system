@@ -26,7 +26,8 @@ function explain(error: unknown): string {
     if (error.status === 403 || error.status === 404) {
       return "ไม่มีสิทธิ์จัดการบุคลากร หรือรายการไม่พร้อมใช้งาน";
     }
-    if (error.status === 400) return "ข้อมูลไม่ถูกต้อง หรือเกินจำนวนคำเชิญที่อนุญาต";
+    if (error.status === 400)
+      return "ข้อมูลไม่ถูกต้อง หรือเกินจำนวนคำเชิญที่อนุญาต";
     if (error.status === 409) return "บัญชีหรือคำเชิญนี้มีอยู่แล้ว";
     if (error.status === 0) return "เครือข่ายขัดข้อง กรุณาลองใหม่";
   }
@@ -43,7 +44,9 @@ function explain(error: unknown): string {
       <a routerLink="/" class="owner-back">← กลับหน้าบริหารร้าน</a>
       <span class="eyebrow">ROLE BASED ACCESS CONTROL</span>
       <h1 id="staff-heading">จัดการสิทธิ์บุคลากร</h1>
-      <p class="owner-muted">Tenant: {{ tenantId }} · เฉพาะเจ้าของร้านที่ได้รับสิทธิ์</p>
+      <p class="owner-muted">
+        Tenant: {{ tenantId }} · เฉพาะเจ้าของร้านที่ได้รับสิทธิ์
+      </p>
       <p class="owner-alert" role="note">
         การเชิญหรือเปลี่ยนสิทธิ์มีผลต่อการเข้าถึงออเดอร์และข้อมูลร้านค้า
         ทุกคำสั่งต้องผ่าน Session/CSRF และ RBAC ใน PostgreSQL
@@ -54,7 +57,9 @@ function explain(error: unknown): string {
       @if (error()) {
         <div class="owner-error" role="alert">
           {{ error() }}
-          <button type="button" (click)="reload()" [disabled]="pending()">ลองใหม่</button>
+          <button type="button" (click)="reload()" [disabled]="pending()">
+            ลองใหม่
+          </button>
         </div>
       }
       @if (notice()) {
@@ -65,17 +70,25 @@ function explain(error: unknown): string {
           <section class="owner-panel" aria-labelledby="invite-heading">
             <h2 id="invite-heading">เชิญพนักงาน</h2>
             <p class="owner-muted">
-              เชิญเฉพาะผู้มีบัญชี @rcat.ac.th ที่ได้รับอนุมัติแล้ว
-              ระบบออก Token ใช้ครั้งเดียว อายุ 72 ชั่วโมง
+              เชิญเฉพาะผู้มีบัญชี @rcat.ac.th ที่ได้รับอนุมัติแล้ว ระบบออก Token
+              ใช้ครั้งเดียว อายุ 72 ชั่วโมง
             </p>
             <form class="owner-form" (submit)="invite($event)">
-              <label>อีเมลบุคลากร
-                <input type="email" name="email"
-                  autocomplete="email" inputmode="email"
+              <label
+                >อีเมลบุคลากร
+                <input
+                  type="email"
+                  name="email"
+                  autocomplete="email"
+                  inputmode="email"
                   placeholder="staff@rcat.ac.th"
-                  [value]="email()" (input)="onEmail($event)" required>
+                  [value]="email()"
+                  (input)="onEmail($event)"
+                  required
+                />
               </label>
-              <label>บทบาท
+              <label
+                >บทบาท
                 <select [value]="inviteRole()" (change)="onInviteRole($event)">
                   <option value="manager">ผู้จัดการ</option>
                   <option value="cashier">แคชเชียร์</option>
@@ -87,7 +100,10 @@ function explain(error: unknown): string {
               </button>
             </form>
             @if (issuedToken()) {
-              <div class="owner-secret" aria-labelledby="invitation-secret-heading">
+              <div
+                class="owner-secret"
+                aria-labelledby="invitation-secret-heading"
+              >
                 <h3 id="invitation-secret-heading">รหัสคำเชิญครั้งเดียว</h3>
                 <p class="owner-muted">
                   คัดลอกเพื่อส่งทางช่องทางส่วนตัวที่ปลอดภัย
@@ -95,10 +111,18 @@ function explain(error: unknown): string {
                   เมื่อออกจากหน้านี้จะไม่แสดงรหัสซ้ำ
                 </p>
                 <code>{{ issuedToken() }}</code>
-                <button type="button" [disabled]="pending()" (click)="copyToken()">
+                <button
+                  type="button"
+                  [disabled]="pending()"
+                  (click)="copyToken()"
+                >
                   คัดลอกรหัสคำเชิญ
                 </button>
-                <button type="button" class="owner-subtle" (click)="dismissToken()">
+                <button
+                  type="button"
+                  class="owner-subtle"
+                  (click)="dismissToken()"
+                >
                   ซ่อนรหัสคำเชิญ
                 </button>
               </div>
@@ -108,7 +132,11 @@ function explain(error: unknown): string {
           <section class="owner-panel" aria-labelledby="members-heading">
             <div class="owner-headline">
               <h2 id="members-heading">บุคลากรที่มีสิทธิ์</h2>
-              <button type="button" (click)="reload()" [disabled]="pending() || loading()">
+              <button
+                type="button"
+                (click)="reload()"
+                [disabled]="pending() || loading()"
+              >
                 โหลดข้อมูลใหม่
               </button>
             </div>
@@ -124,28 +152,49 @@ function explain(error: unknown): string {
                     </div>
                     @if (member.role !== "owner") {
                       <div class="owner-staff-controls">
-                        <label [attr.for]="'role-' + member.user_id">เปลี่ยนบทบาท</label>
-                        <select [id]="'role-' + member.user_id"
-                          [disabled]="pending()" [value]="roleFor(member)"
-                          (change)="selectRole($event, member.user_id)">
+                        <label [attr.for]="'role-' + member.user_id"
+                          >เปลี่ยนบทบาท</label
+                        >
+                        <select
+                          [id]="'role-' + member.user_id"
+                          [disabled]="pending()"
+                          [value]="roleFor(member)"
+                          (change)="selectRole($event, member.user_id)"
+                        >
                           <option value="manager">ผู้จัดการ</option>
                           <option value="cashier">แคชเชียร์</option>
                           <option value="kitchen">พนักงานครัว</option>
                         </select>
-                        <button type="button" [disabled]="pending() || roleFor(member) === member.role"
-                          (click)="changeRole(member)">บันทึกสิทธิ์</button>
-                        <button type="button" class="owner-danger" [disabled]="pending()"
-                          (click)="remove(member)">นำออกจากร้าน</button>
+                        <button
+                          type="button"
+                          [disabled]="
+                            pending() || roleFor(member) === member.role
+                          "
+                          (click)="changeRole(member)"
+                        >
+                          บันทึกสิทธิ์
+                        </button>
+                        <button
+                          type="button"
+                          class="owner-danger"
+                          [disabled]="pending()"
+                          (click)="remove(member)"
+                        >
+                          นำออกจากร้าน
+                        </button>
                       </div>
                     } @else {
-                      <p class="owner-muted">ไม่สามารถเปลี่ยนหรือลบเจ้าของร้านผ่านหน้านี้</p>
+                      <p class="owner-muted">
+                        ไม่สามารถเปลี่ยนหรือลบเจ้าของร้านผ่านหน้านี้
+                      </p>
                     }
                   </li>
                 }
               </ul>
             }
             <p class="owner-muted">
-              รายการแสดงรหัส User ID แบบย่อ เนื่องจาก API ไม่เปิดเผยอีเมลผู้ใช้งานอื่น
+              รายการแสดงรหัส User ID แบบย่อ เนื่องจาก API
+              ไม่เปิดเผยอีเมลผู้ใช้งานอื่น
               โปรดตรวจสอบรายชื่อจริงจากระบบสิทธิ์ที่ได้รับอนุมัติ
             </p>
           </section>
@@ -181,10 +230,14 @@ export class StaffPage implements OnInit, OnDestroy {
   }
 
   onEmail(event: Event): void {
-    if (event.target instanceof HTMLInputElement) this.email.set(event.target.value);
+    if (event.target instanceof HTMLInputElement)
+      this.email.set(event.target.value);
   }
   onInviteRole(event: Event): void {
-    if (event.target instanceof HTMLSelectElement && validInviteRole(event.target.value)) {
+    if (
+      event.target instanceof HTMLSelectElement &&
+      validInviteRole(event.target.value)
+    ) {
       this.inviteRole.set(event.target.value);
     }
   }
@@ -197,8 +250,10 @@ export class StaffPage implements OnInit, OnDestroy {
     }
   }
   roleFor(member: StaffMember): InvitableRole {
-    return this.chosenRoles()[member.user_id] ??
-      (member.role === "owner" ? "manager" : member.role);
+    return (
+      this.chosenRoles()[member.user_id] ??
+      (member.role === "owner" ? "manager" : member.role)
+    );
   }
 
   async reload(): Promise<void> {
@@ -209,7 +264,11 @@ export class StaffPage implements OnInit, OnDestroy {
     try {
       if (!validScopeId(this.tenantId)) throw new Error("Tenant ID ไม่ถูกต้อง");
       const { stores } = await this.api.stores();
-      if (!stores.some((store) => store.tenantId === this.tenantId && store.role === "owner")) {
+      if (
+        !stores.some(
+          (store) => store.tenantId === this.tenantId && store.role === "owner",
+        )
+      ) {
         throw new Error("บัญชีนี้ไม่ได้รับสิทธิ์เจ้าของร้านของ Tenant นี้");
       }
       const result = await this.api.staff(this.tenantId);
@@ -237,7 +296,11 @@ export class StaffPage implements OnInit, OnDestroy {
     this.notice.set("");
     this.issuedToken.set("");
     try {
-      const result = await this.api.invite(this.tenantId, email, this.inviteRole());
+      const result = await this.api.invite(
+        this.tenantId,
+        email,
+        this.inviteRole(),
+      );
       if (!result.invitationToken) throw new Error("Backend ไม่คืนรหัสคำเชิญ");
       this.issuedToken.set(result.invitationToken);
       this.email.set("");
@@ -271,8 +334,13 @@ export class StaffPage implements OnInit, OnDestroy {
     const role = this.roleFor(member);
     if (role === member.role || !validInviteRole(role)) return;
     const ok = this.document.defaultView?.confirm(
-      "ยืนยันเปลี่ยนสิทธิ์ของ " + shortStaffId(member.user_id) +
-        " จาก " + STAFF_ROLE_LABEL[member.role] + " เป็น " + STAFF_ROLE_LABEL[role] + " ?",
+      "ยืนยันเปลี่ยนสิทธิ์ของ " +
+        shortStaffId(member.user_id) +
+        " จาก " +
+        STAFF_ROLE_LABEL[member.role] +
+        " เป็น " +
+        STAFF_ROLE_LABEL[role] +
+        " ?",
     );
     if (!ok) return;
     this.pending.set(true);
@@ -293,8 +361,9 @@ export class StaffPage implements OnInit, OnDestroy {
   async remove(member: StaffMember): Promise<void> {
     if (this.pending() || member.role === "owner") return;
     const ok = this.document.defaultView?.confirm(
-      "ยืนยันนำพนักงาน " + shortStaffId(member.user_id) +
-      " ออกจากร้าน? การเข้าถึงออเดอร์ของ Tenant นี้จะถูกยกเลิก",
+      "ยืนยันนำพนักงาน " +
+        shortStaffId(member.user_id) +
+        " ออกจากร้าน? การเข้าถึงออเดอร์ของ Tenant นี้จะถูกยกเลิก",
     );
     if (!ok) return;
     this.pending.set(true);
