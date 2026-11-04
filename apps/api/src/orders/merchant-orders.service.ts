@@ -34,6 +34,16 @@ function safeError(error: unknown): never {
   if (code === "42501" || code === "28000") {
     throw new NotFoundException("Order unavailable");
   }
+  if (code === "P0004") {
+    throw new ConflictException(
+      "Insufficient tracked stock; review inventory and retry after replenishment",
+    );
+  }
+  if (code === "P0005") {
+    throw new ConflictException(
+      "Tracked product recipe is incomplete; review inventory configuration",
+    );
+  }
   if (code === "P0001") {
     throw new ConflictException("Order status has changed");
   }
