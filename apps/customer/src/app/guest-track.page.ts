@@ -25,7 +25,10 @@ const TRACK_INTERVAL_MS = 15_000;
   imports: [RouterLink],
   styleUrls: ["./guest-order.css"],
   template: `
-    <section class="guest-shell guest-tracking" aria-labelledby="tracking-title">
+    <section
+      class="guest-shell guest-tracking"
+      aria-labelledby="tracking-title"
+    >
       <a routerLink="/order" class="guest-track-link">← กลับไปหน้าเมนู</a>
       <span class="eyebrow">ORDER TRACKING</span>
       <h1 id="tracking-title">ติดตามคำสั่งซื้อ</h1>
@@ -38,8 +41,8 @@ const TRACK_INTERVAL_MS = 15_000;
 
       @if (!session.tracking()) {
         <div class="guest-status" role="status">
-          ไม่พบคำสั่งซื้อที่ติดตามได้ในแท็บนี้
-          โปรดเปิดหน้าเมนูจาก QR และส่งคำสั่งซื้อก่อน
+          ไม่พบคำสั่งซื้อที่ติดตามได้ในแท็บนี้ โปรดเปิดหน้าเมนูจาก QR
+          และส่งคำสั่งซื้อก่อน
         </div>
       } @else {
         <div class="guest-track-card">
@@ -47,11 +50,16 @@ const TRACK_INTERVAL_MS = 15_000;
             หมายเลขออเดอร์ #{{ session.tracking()!.orderId.slice(0, 8) }}
           </p>
           @if (status()) {
-            <span class="guest-order-state" [class.is-finished]="status()!.status === 'served'">
+            <span
+              class="guest-order-state"
+              [class.is-finished]="status()!.status === 'served'"
+            >
               {{ statusLabel[status()!.status] }}
             </span>
             <h2 class="guest-amount">{{ money(status()!.amountSatang) }} ฿</h2>
-            <p class="guest-context">ยอดที่ร้านบันทึกไว้ · ยังไม่ใช่ยอดชำระแล้ว</p>
+            <p class="guest-context">
+              ยอดที่ร้านบันทึกไว้ · ยังไม่ใช่ยอดชำระแล้ว
+            </p>
             <p class="guest-track-time">
               อัปเดตล่าสุด {{ formatDate(status()!.updatedAt) }}
             </p>
@@ -73,10 +81,12 @@ const TRACK_INTERVAL_MS = 15_000;
             </ol>
           }
           <div class="guest-track-actions">
-            <button type="button" [disabled]="loading()"
-              (click)="refresh()">{{ loading() ? "กำลังโหลด..." : "ตรวจสถานะล่าสุด" }}</button>
-            <button type="button" class="guest-subtle"
-              (click)="clear()">ล้างข้อมูลติดตามจากแท็บนี้</button>
+            <button type="button" [disabled]="loading()" (click)="refresh()">
+              {{ loading() ? "กำลังโหลด..." : "ตรวจสถานะล่าสุด" }}
+            </button>
+            <button type="button" class="guest-subtle" (click)="clear()">
+              ล้างข้อมูลติดตามจากแท็บนี้
+            </button>
           </div>
           <p class="guest-privacy">
             เก็บรหัสติดตามไว้ในแท็บนี้ชั่วคราวเท่านั้น ไม่ส่งผ่าน URL
@@ -104,8 +114,11 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.session.recoverTracking();
     this.interval = setInterval(() => {
-      if (this.document.visibilityState === "visible" &&
-          (this.window?.navigator.onLine ?? true)) void this.refresh();
+      if (
+        this.document.visibilityState === "visible" &&
+        (this.window?.navigator.onLine ?? true)
+      )
+        void this.refresh();
     }, TRACK_INTERVAL_MS);
     this.window?.addEventListener("focus", this.onResume);
     this.window?.addEventListener("online", this.onResume);
@@ -129,7 +142,10 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     const date = new Date(value);
     return Number.isNaN(date.valueOf())
       ? "—"
-      : date.toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" });
+      : date.toLocaleString("th-TH", {
+          dateStyle: "short",
+          timeStyle: "short",
+        });
   }
 
   async refresh(): Promise<void> {
@@ -138,20 +154,28 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     this.loading.set(true);
     this.error.set("");
     try {
-      const latest = await this.api.status(tracked.orderId, tracked.trackingToken);
+      const latest = await this.api.status(
+        tracked.orderId,
+        tracked.trackingToken,
+      );
       if (this.destroyed) return;
       this.status.set(latest);
-      const timeline = await this.api.history(tracked.orderId, tracked.trackingToken);
+      const timeline = await this.api.history(
+        tracked.orderId,
+        tracked.trackingToken,
+      );
       if (!this.destroyed) this.history.set(timeline);
     } catch (error) {
       if (this.destroyed) return;
-      this.error.set(error instanceof HttpErrorResponse
-        ? error.status === 404
-          ? "ออเดอร์นี้ไม่พร้อมให้ติดตามหรือรหัสหมดอายุ"
-          : error.status === 0
-            ? "เครือข่ายไม่พร้อม กรุณาลองอีกครั้ง"
-            : "โหลดสถานะไม่สำเร็จ โปรดลองใหม่"
-        : "โหลดสถานะไม่สำเร็จ");
+      this.error.set(
+        error instanceof HttpErrorResponse
+          ? error.status === 404
+            ? "ออเดอร์นี้ไม่พร้อมให้ติดตามหรือรหัสหมดอายุ"
+            : error.status === 0
+              ? "เครือข่ายไม่พร้อม กรุณาลองอีกครั้ง"
+              : "โหลดสถานะไม่สำเร็จ โปรดลองใหม่"
+          : "โหลดสถานะไม่สำเร็จ",
+      );
     } finally {
       if (!this.destroyed) this.loading.set(false);
     }
