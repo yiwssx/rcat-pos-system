@@ -13,14 +13,20 @@ bootstrapApplication(AppComponent, {
 if (
   typeof navigator !== "undefined" &&
   "serviceWorker" in navigator &&
-  (location.protocol === "https:" || location.hostname === "localhost" ||
+  (location.protocol === "https:" ||
+    location.hostname === "localhost" ||
     location.hostname === "127.0.0.1")
 ) {
-  window.addEventListener("load", () => {
-    void navigator.serviceWorker.register("/sw.js", { scope: "/" })
-      .catch(() => {
-        // PWA caching is optional. The live Order Board and secure HTTP
-        // fallback must continue working when SW installation fails.
-      });
-  }, { once: true });
+  window.addEventListener(
+    "load",
+    () => {
+      void navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
+        .catch(() => {
+          // PWA caching is optional. The live Order Board and secure HTTP
+          // fallback must continue working when SW installation fails.
+        });
+    },
+    { once: true },
+  );
 }
