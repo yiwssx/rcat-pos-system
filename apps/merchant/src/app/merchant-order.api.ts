@@ -5,6 +5,7 @@ import { firstValueFrom } from "rxjs";
 import {
   OrderInboxPage,
   MerchantStore,
+  MerchantOrder,
   OrderEventPage,
   OrderHistory,
   OrderStatus,
@@ -51,6 +52,25 @@ export class MerchantOrderApi {
         params,
         withCredentials: true,
       }),
+    );
+  }
+
+  lookupOrders(
+    tenantId: string,
+    storeId: string,
+    ids: readonly string[],
+  ): Promise<{ orders: MerchantOrder[] }> {
+    if (ids.length < 1 || ids.length > 50) {
+      throw new Error("Invalid targeted recovery request");
+    }
+    return firstValueFrom(
+      this.http.get<{ orders: MerchantOrder[] }>(
+        scopePath(tenantId, storeId) + "/orders/lookup",
+        {
+          params: new HttpParams().set("ids", ids.join(",")),
+          withCredentials: true,
+        },
+      ),
     );
   }
 
