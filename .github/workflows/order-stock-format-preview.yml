@@ -1,0 +1,23 @@
+name: Temporary stock formatter
+on: [pull_request]
+permissions: {contents: read}
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: {version: 10.23.0, run_install: false}
+      - uses: actions/setup-node@v4
+        with: {node-version-file: .node-version, cache: pnpm}
+      - run: pnpm install --frozen-lockfile
+      - run: |
+          files=(apps/api/src/inventory/*.ts apps/api/src/orders/merchant-orders.service.ts apps/merchant/src/app/inventory*.ts apps/merchant/src/app/order-board.page.ts)
+          pnpm exec prettier --write "${files[@]}"
+          for f in "${files[@]}"; do
+            echo "RCAT_STOCK_FMT_BEGIN:$f"
+            base64 -w0 "$f"
+            echo
+            echo "RCAT_STOCK_FMT_END:$f"
+          done
