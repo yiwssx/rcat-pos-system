@@ -5,7 +5,11 @@ const OAUTH_MAX_AGE = 5 * 60;
 
 function cookieHeader(name: string, value: string, ageSeconds: number): string {
   return [
-    `${name}=${value}`, "HttpOnly", "Secure", "SameSite=Lax", "Path=/",
+    `${name}=${value}`,
+    "HttpOnly",
+    "Secure",
+    "SameSite=Lax",
+    "Path=/",
     `Max-Age=${ageSeconds}`,
   ].join("; ");
 }
@@ -22,9 +26,7 @@ export function googleOauthCookies(
   ];
 }
 export function clearGoogleOauthCookies(): string[] {
-  return [
-    GOOGLE_STATE_COOKIE,
-    GOOGLE_NONCE_COOKIE,
-    GOOGLE_VERIFIER_COOKIE,
-  ].map((name) => cookieHeader(name, "", 0));
+  return [GOOGLE_STATE_COOKIE, GOOGLE_NONCE_COOKIE, GOOGLE_VERIFIER_COOKIE].map(
+    (name) => cookieHeader(name, "", 0),
+  );
 }
