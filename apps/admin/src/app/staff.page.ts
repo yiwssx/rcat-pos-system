@@ -189,8 +189,11 @@ export class StaffPage implements OnInit, OnDestroy {
     }
   }
   selectRole(event: Event, userId: string): void {
-    if (event.target instanceof HTMLSelectElement && validInviteRole(event.target.value)) {
-      this.chosenRoles.update((roles) => ({ ...roles, [userId]: event.target instanceof HTMLSelectElement ? event.target.value as InvitableRole : "cashier" }));
+    if (event.target instanceof HTMLSelectElement) {
+      const role = event.target.value;
+      if (validInviteRole(role)) {
+        this.chosenRoles.update((roles) => ({ ...roles, [userId]: role }));
+      }
     }
   }
   roleFor(member: StaffMember): InvitableRole {
