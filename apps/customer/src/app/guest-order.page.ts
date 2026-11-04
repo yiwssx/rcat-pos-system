@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
+  OnDestroy,
   computed,
   inject,
   signal,
@@ -176,7 +177,7 @@ function guestError(error: unknown): string {
   </section>
   `,
 })
-export class GuestOrderPage implements OnInit {
+export class GuestOrderPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly api = inject(GuestOrderApi);
@@ -191,6 +192,8 @@ export class GuestOrderPage implements OnInit {
   readonly selected = signal<Record<string, string[]>>({});
   readonly online = signal(true);
   readonly money = formatSatang;
+  private scanToken: string | null = null;
+  private readonly win = this.document.defaultView;
   readonly products = computed(() => (this.session.visit()?.products ?? []).filter(
     (product) =>
       (!this.category() || product.categoryId === this.category()) &&
@@ -208,10 +211,10 @@ export class GuestOrderPage implements OnInit {
   );
 
   ngOnInit(): void {
-    const win = this.document.defaultView;
+    const win = this.win;
     this.online.set(win?.navigator.onLine ?? true);
-    win?.addEventListener("online", () => this.online.set(true));
-    win?.addEventListener("offline", () => this.online.set(false));
+    win?.addEventListener("online", this.goneOnline);
+    win?.addEventListener("offline", this.goneOffline);
     const fragment = this.route.snapshot.fragment;
     if (fragment !== null) {
       // A bearer token in the fragment must leave the visible URL / history
@@ -223,8 +226,10 @@ export class GuestOrderPage implements OnInit {
         this.error.set("QR สำหรับสั่งอาหารไม่ถูกต้อง กรุณาสแกน QR ใหม่");
         return;
       }
+      this.scanToken = token;
       void this.load(token);
     } else if (this.session.visitToken()) {
+      this.scanToken = this.session.visitToken();
       void this.load(this.session.visitToken()!);
     } else {
       this.loading.set(false);
@@ -232,8 +237,16 @@ export class GuestOrderPage implements OnInit {
     }
   }
 
+  private readonly goneOnline = () => this.online.set(true);
+  private readonly goneOffline = () => this.online.set(false);
+
+  ngOnDestroy(): void {
+    this.win?.removeEventListener("online", this.goneOnline);
+    this.win?.removeEventListener("offline", this.goneOffline);
+  }
+
   async reload(): Promise<void> {
-    const token = this.session.visitToken();
+    const token = this.session.visitToken() ?? this.scanToken;
     if (!token) {
       this.error.set("กรุณาสแกน QR ของโต๊ะใหม่เพื่อเริ่มสั่งอาหาร");
       return;
@@ -249,7 +262,12 @@ export class GuestOrderPage implements OnInit {
       this.session.setVisit(token, visit);
       this.selected.set({});
     } catch (error) {
-      this.session.invalidateVisit();
+      if (error instanceof HttpErrorResponse && error.status === 404) {
+        this.session.invalidateVisit();
+        this.scanToken = null;
+      }
+      // Network/5xx failures are retryable with the in-memory visit token.
+      // Never persist QR bearer in URL query, logs or localStorage.
       this.error.set(guestError(error));
     } finally {
       this.loading.set(false);
