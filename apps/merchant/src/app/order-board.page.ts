@@ -577,7 +577,8 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     let response = await this.api.orders(this.tenantId, this.storeId);
     let orders = response.orders;
     let pages = 1;
-    const covered = () => missingOrderIds(requiredOrderIds, orders).length === 0;
+    const covered = () =>
+      missingOrderIds(requiredOrderIds, orders).length === 0;
     while (
       !this.disposed &&
       response.hasMore &&
