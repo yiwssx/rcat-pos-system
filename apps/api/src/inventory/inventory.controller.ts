@@ -49,6 +49,46 @@ export class InventoryController {
     return this.inventory.movement(req, tenantId, storeId, body);
   }
 
+  @Put("products/:productId/tracking")
+  @Header("Cache-Control", "no-store")
+  tracking(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("productId") productId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.inventory.tracking(req, tenantId, storeId, productId, body);
+  }
+
+  @Put(
+    "modifier-recipes/:productId/groups/:groupId/options/:optionId/items/:itemId",
+  )
+  @Header("Cache-Control", "no-store")
+  modifierRecipe(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("productId") productId: string,
+    @Param("groupId") groupId: string,
+    @Param("optionId") optionId: string,
+    @Param("itemId") itemId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.inventory.modifierRecipe(
+      req,
+      tenantId,
+      storeId,
+      productId,
+      groupId,
+      optionId,
+      itemId,
+      body,
+    );
+  }
+
   @Put("recipes/:productId/items/:itemId")
   @Header("Cache-Control", "no-store")
   setRecipe(

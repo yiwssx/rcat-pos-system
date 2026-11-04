@@ -92,6 +92,54 @@ export class InventoryApi {
     );
   }
 
+  tracking(
+    tenantId: string,
+    storeId: string,
+    productId: string,
+    tracked: boolean,
+  ): Promise<{ productId: string; tracked: boolean }> {
+    return firstValueFrom(
+      this.http.put<{ productId: string; tracked: boolean }>(
+        inventoryPath(tenantId, storeId) +
+          "/products/" +
+          encodeURIComponent(productId) +
+          "/tracking",
+        { tracked },
+        { headers: this.csrf(), withCredentials: true },
+      ),
+    );
+  }
+
+  modifierRecipe(
+    tenantId: string,
+    storeId: string,
+    productId: string,
+    groupId: string,
+    optionId: string,
+    itemId: string,
+    quantityPerProduct: string,
+  ): Promise<{ optionId: string; itemId: string; quantityPerProduct: string }> {
+    return firstValueFrom(
+      this.http.put<{
+        optionId: string;
+        itemId: string;
+        quantityPerProduct: string;
+      }>(
+        inventoryPath(tenantId, storeId) +
+          "/modifier-recipes/" +
+          encodeURIComponent(productId) +
+          "/groups/" +
+          encodeURIComponent(groupId) +
+          "/options/" +
+          encodeURIComponent(optionId) +
+          "/items/" +
+          encodeURIComponent(itemId),
+        { quantityPerProduct },
+        { headers: this.csrf(), withCredentials: true },
+      ),
+    );
+  }
+
   recipe(
     tenantId: string,
     storeId: string,

@@ -33,11 +33,13 @@ on:
       - 'apps/api/src/catalog/**'
       - 'apps/api/src/ordering/**'
       - 'apps/api/src/orders/**'
+      - 'apps/api/src/inventory/**'
       - 'apps/api/src/app.module.ts'
       - 'apps/api/src/database/**'
       - 'apps/api/tsconfig.app.json'
       - 'libs/server-auth/**'
       - 'scripts/smoke-auth.mjs'
+      - 'scripts/smoke-inventory.mjs'
       - 'scripts/dev/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -124,6 +126,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/operational-reports.sql
       - name: Verify inventory ledger, recipes, idempotency, tenant and role isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/inventory-ledger.sql
+      - name: Verify atomic Order stock reservation, modifier recipe and cancellation snapshot
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-stock-reservation.sql
+      - name: Verify multi-ingredient shortage rollback and tenant permissions
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-stock-shortage.sql
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:

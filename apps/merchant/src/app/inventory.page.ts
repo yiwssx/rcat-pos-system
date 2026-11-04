@@ -44,17 +44,18 @@ function inventoryError(error: unknown): string {
   template: `
     <section class="inventory-shell" aria-labelledby="inventory-heading">
       <a routerLink="/" class="inventory-back">← กลับไปหน้าร้านค้า</a>
-      <span class="eyebrow">INVENTORY / MANUAL LEDGER</span>
+      <span class="eyebrow">INVENTORY / EXPLICIT ORDER TRACKING</span>
       <h1 id="inventory-heading">สต็อกวัตถุดิบของร้าน</h1>
       <p class="inventory-muted">
         {{ store()?.storeName || "กำลังตรวจสอบสิทธิ์..." }}
         · ปริมาณใช้หน่วย g / ml / ชิ้น และจำนวนเต็มทศนิยมไม่เกิน 3 ตำแหน่ง
       </p>
       <p class="inventory-warning" role="note">
-        <strong>สต็อกแบบบันทึกเองเท่านั้น</strong>
-        สูตรวัตถุดิบยังเป็นข้อมูลอ้างอิง
-        ระบบยังไม่หักวัตถุดิบอัตโนมัติจากออเดอร์ และตัวเลขสต็อกไม่ใช่ยอดขาย
-        เงินรับ หรือข้อมูล Payment
+        <strong>ตัดสต็อกเมื่อร้านรับออเดอร์ เฉพาะสินค้าที่เปิดติดตาม</strong>
+        สินค้าทุกชนิดเริ่มในโหมดจัดการสต็อกด้วยตนเอง
+        ตรวจสูตรหลักและตัวเลือกเสริมก่อนเปิดติดตามรายสินค้า
+        ระบบคืนปริมาณที่ตัดจริงเมื่อยกเลิกออเดอร์ที่รับแล้ว
+        สต็อกไม่ใช่ยอดเงินรับหรือข้อมูล Payment
       </p>
 
       @if (error()) {
@@ -235,8 +236,9 @@ function inventoryError(error: unknown): string {
             <section class="inventory-panel" aria-labelledby="recipe-heading">
               <h2 id="recipe-heading">สูตรการใช้วัตถุดิบต่อสินค้า 1 รายการ</h2>
               <p class="inventory-muted">
-                บันทึกเพื่อวางแผนเท่านั้น ไม่ตัดสต็อกตาม Order ใส่ 0
-                เพื่อลบส่วนประกอบในสูตร
+                สูตรนี้เป็นข้อมูลวางแผนจนกว่าจะเปิดติดตามสต็อกรายสินค้า
+                หลังเปิดแล้วจะตัดวัตถุดิบเมื่อร้านรับออเดอร์ ใส่ 0
+                เพื่อลบส่วนประกอบ
               </p>
               <form
                 class="inventory-form inventory-recipe-form"
@@ -293,6 +295,139 @@ function inventoryError(error: unknown): string {
                 </button>
               </form>
             </section>
+            <section
+              class="inventory-panel"
+              aria-labelledby="tracked-products-heading"
+            >
+              <h2 id="tracked-products-heading">
+                เปิดตัดสต็อกตามออเดอร์เป็นรายสินค้า
+              </h2>
+              <p class="inventory-muted">
+                เปิดได้หลังบันทึกสูตรวัตถุดิบหลักเท่านั้น
+                ตัวเลือกเสริมที่ไม่มีสูตรจะใช้วัตถุดิบเพิ่ม 0
+                ตรวจสอบสูตรตัวเลือกเสริมทุกตัวก่อนเปิดติดตาม
+                การเปิดนี้ไม่ตัดสต็อกจากออเดอร์เก่า
+              </p>
+              @if ((catalog()?.products?.length || 0) === 0) {
+                <p class="inventory-muted">ยังไม่มีสินค้าในเมนู</p>
+              } @else {
+                <ul class="inventory-tracking-list">
+                  @for (
+                    product of catalog()?.products || [];
+                    track product.id
+                  ) {
+                    <li>
+                      <span>
+                        <strong>{{ product.name }}</strong>
+                        <small>{{
+                          isTracked(product.id)
+                            ? "เปิดตัดสต็อกเมื่อรับออเดอร์"
+                            : "ยังไม่เปิดติดตาม"
+                        }}</small>
+                      </span>
+                      <button
+                        type="button"
+                        [disabled]="busy()"
+                        (click)="
+                          toggleTracking(product.id, !isTracked(product.id))
+                        "
+                      >
+                        {{ isTracked(product.id) ? "ปิดติดตาม" : "เปิดติดตาม" }}
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </section>
+
+            <section
+              class="inventory-panel"
+              aria-labelledby="modifier-recipe-heading"
+            >
+              <h2 id="modifier-recipe-heading">
+                สูตรวัตถุดิบของตัวเลือกเสริม (Modifier)
+              </h2>
+              <p class="inventory-muted">
+                เพิ่มปริมาณวัตถุดิบเฉพาะเมื่อเลือกรายการเสริมนี้
+                สูตรจะถูกรวมกับสูตรหลักตามจำนวนสินค้าที่สั่ง ใส่ 0
+                เพื่อลบส่วนประกอบ
+              </p>
+              <form
+                class="inventory-form inventory-recipe-form"
+                (submit)="updateModifierRecipe($event)"
+              >
+                <label
+                  >ตัวเลือกเสริม
+                  <select
+                    [value]="modifierOptionId()"
+                    (change)="onSelect($event, 'modifier-option')"
+                    required
+                  >
+                    <option value="">เลือกตัวเลือกเสริม</option>
+                    @for (
+                      option of catalog()?.modifierOptions || [];
+                      track option.id
+                    ) {
+                      <option [value]="option.id">
+                        {{ option.name }} · {{ productName(option.productId) }}
+                      </option>
+                    }
+                  </select>
+                </label>
+                <label
+                  >วัตถุดิบเพิ่มเติม
+                  <select
+                    [value]="modifierItemId()"
+                    (change)="onSelect($event, 'modifier-item')"
+                    required
+                  >
+                    <option value="">เลือกวัตถุดิบ</option>
+                    @for (item of data.items; track item.itemId) {
+                      <option [value]="item.itemId">
+                        {{ item.name }} ({{ item.unit }})
+                      </option>
+                    }
+                  </select>
+                </label>
+                <label
+                  >ปริมาณที่ใช้ต่อสินค้า 1 รายการ
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    [value]="modifierQuantity()"
+                    (input)="setText($event, 'modifier')"
+                    required
+                  />
+                </label>
+                <button
+                  type="submit"
+                  [disabled]="
+                    busy() ||
+                    !(catalog()?.modifierOptions?.length || 0) ||
+                    !data.items.length
+                  "
+                >
+                  บันทึกสูตร Modifier
+                </button>
+              </form>
+              @if (data.modifierRecipes.length > 0) {
+                <ul class="inventory-detail-list">
+                  @for (
+                    recipe of data.modifierRecipes;
+                    track recipe.optionId + recipe.itemId
+                  ) {
+                    <li>
+                      <strong>{{ modifierName(recipe.optionId) }}</strong>
+                      <span
+                        >{{ ingredientName(recipe.itemId) }}
+                        {{ units(recipe.quantityPerProduct) }}
+                        {{ ingredientUnit(recipe.itemId) }} / สินค้า 1 รายการ
+                      </span>
+                    </li>
+                  }
+                </ul>
+              }
+            </section>
           }
 
           <div class="inventory-grid">
@@ -337,9 +472,7 @@ function inventoryError(error: unknown): string {
                     <li>
                       <strong>{{ ingredientName(movement.itemId) }}</strong>
                       <span
-                        >{{
-                          movement.kind === "receipt" ? "รับเข้า" : "ปรับยอด"
-                        }}
+                        >{{ movementLabel(movement.kind) }}
                         {{ units(movement.delta) }}
                         {{ ingredientUnit(movement.itemId) }}
                         · คงเหลือ {{ units(movement.quantityAfter) }}
@@ -381,6 +514,9 @@ export class InventoryPage implements OnInit {
   readonly recipeProductId = signal("");
   readonly recipeItemId = signal("");
   readonly recipeQuantity = signal("");
+  readonly modifierOptionId = signal("");
+  readonly modifierItemId = signal("");
+  readonly modifierQuantity = signal("");
   readonly units = formatUnits;
   readonly isLow = lowStock;
   private retry: { payload: string; key: string } | null = null;
@@ -415,8 +551,10 @@ export class InventoryPage implements OnInit {
     try {
       const snapshot = await this.api.snapshot(this.tenantId, this.storeId);
       if (
-        snapshot.stockMode !== "manual_ledger_only" ||
-        snapshot.orderConsumptionEnabled !== false
+        !["manual_ledger_only", "order_acceptance_opt_in"].includes(
+          snapshot.stockMode,
+        ) ||
+        typeof snapshot.orderConsumptionEnabled !== "boolean"
       ) {
         throw new Error("ข้อมูลสต็อกไม่อยู่ในรูปแบบ Ledger ที่รองรับ");
       }
@@ -428,6 +566,106 @@ export class InventoryPage implements OnInit {
       this.error.set(inventoryError(error));
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  isTracked(productId: string): boolean {
+    return (this.snapshot()?.trackedProducts || []).some(
+      (product) => product.productId === productId,
+    );
+  }
+  productName(productId: string): string {
+    return (
+      this.catalog()?.products.find((product) => product.id === productId)
+        ?.name ?? "สินค้า"
+    );
+  }
+  modifierName(optionId: string): string {
+    return (
+      this.catalog()?.modifierOptions.find((option) => option.id === optionId)
+        ?.name ?? "ตัวเลือกเสริม"
+    );
+  }
+  movementLabel(kind: InventoryKind): string {
+    if (kind === "receipt") return "รับเข้า";
+    if (kind === "adjustment") return "ปรับยอด";
+    if (kind === "order_consumption") return "ตัดตามออเดอร์";
+    return "คืนจากการยกเลิกออเดอร์";
+  }
+
+  async toggleTracking(productId: string, tracked: boolean): Promise<void> {
+    if (
+      !this.canWrite() ||
+      !this.catalog()?.products.some((product) => product.id === productId)
+    )
+      return;
+    if (
+      tracked &&
+      !this.snapshot()?.recipes.some((recipe) => recipe.productId === productId)
+    ) {
+      this.error.set("ต้องบันทึกสูตรวัตถุดิบหลักก่อนเปิดตัดสต็อก");
+      return;
+    }
+    const confirmed = this.document.defaultView?.confirm(
+      tracked
+        ? "ยืนยันเปิดตัดสต็อกเมนูนี้เมื่อร้านรับออเดอร์? ตรวจสูตรหลักและ Modifier แล้ว"
+        : "ยืนยันปิดการตัดสต็อกสำหรับออเดอร์ใหม่ของเมนูนี้?",
+    );
+    if (!confirmed) return;
+    this.busy.set(true);
+    this.error.set("");
+    try {
+      await this.api.tracking(this.tenantId, this.storeId, productId, tracked);
+      this.notice.set(
+        tracked
+          ? "เปิดตัดสต็อกตามออเดอร์ให้สินค้านี้แล้ว"
+          : "ปิดตัดสต็อกให้สินค้านี้สำหรับออเดอร์ใหม่แล้ว",
+      );
+      await this.reload();
+    } catch (error) {
+      this.error.set(inventoryError(error));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  async updateModifierRecipe(event: Event): Promise<void> {
+    event.preventDefault();
+    if (!this.canWrite()) return;
+    const option = this.catalog()?.modifierOptions.find(
+      (entry) => entry.id === this.modifierOptionId(),
+    );
+    if (
+      !option ||
+      !this.snapshot()?.items.some(
+        (item) => item.itemId === this.modifierItemId(),
+      ) ||
+      !validStockInput(this.modifierQuantity(), {
+        zero: true,
+        max: 1000000000n,
+      })
+    ) {
+      this.error.set("กรุณาเลือกตัวเลือกเสริม วัตถุดิบ และปริมาณที่ถูกต้อง");
+      return;
+    }
+    this.busy.set(true);
+    this.error.set("");
+    try {
+      await this.api.modifierRecipe(
+        this.tenantId,
+        this.storeId,
+        option.productId,
+        option.groupId,
+        option.id,
+        this.modifierItemId(),
+        this.modifierQuantity(),
+      );
+      this.notice.set("บันทึกปริมาณ Modifier แล้ว (มีผลเมื่อรับออเดอร์ใหม่)");
+      await this.reload();
+    } catch (error) {
+      this.error.set(inventoryError(error));
+    } finally {
+      this.busy.set(false);
     }
   }
 
@@ -451,6 +689,7 @@ export class InventoryPage implements OnInit {
     if (field === "delta") this.moveDelta.set(value);
     if (field === "reason") this.moveReason.set(value);
     if (field === "recipe") this.recipeQuantity.set(value);
+    if (field === "modifier") this.modifierQuantity.set(value);
   }
   onUnit(event: Event): void {
     if (
@@ -473,6 +712,9 @@ export class InventoryPage implements OnInit {
     if (target === "movement-item") this.moveItemId.set(event.target.value);
     if (target === "product") this.recipeProductId.set(event.target.value);
     if (target === "recipe-item") this.recipeItemId.set(event.target.value);
+    if (target === "modifier-option")
+      this.modifierOptionId.set(event.target.value);
+    if (target === "modifier-item") this.modifierItemId.set(event.target.value);
   }
 
   private canWrite(): boolean {
@@ -592,7 +834,7 @@ export class InventoryPage implements OnInit {
         this.recipeItemId(),
         this.recipeQuantity(),
       );
-      this.notice.set("บันทึกสูตรวัตถุดิบสำเร็จ (ยังไม่ตัดสต็อก)");
+      this.notice.set("บันทึกสูตรวัตถุดิบสำเร็จ");
       await this.reload();
     } catch (error) {
       this.error.set(inventoryError(error));

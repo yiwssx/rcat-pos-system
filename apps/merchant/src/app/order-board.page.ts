@@ -44,6 +44,15 @@ function failureText(error: unknown): string {
       return "ไม่มีสิทธิ์เข้าถึงร้านหรือดำเนินรายการนี้";
     }
     if (error.status === 409) {
+      const response = error.error as { message?: unknown } | null;
+      const message =
+        typeof response?.message === "string" ? response.message : "";
+      if (message.includes("Insufficient tracked stock")) {
+        return "วัตถุดิบในสต็อกไม่เพียงพอ ออเดอร์ยังไม่ถูกรับ กรุณาเติมสต็อกแล้วลองใหม่";
+      }
+      if (message.includes("Tracked product recipe is incomplete")) {
+        return "สูตรวัตถุดิบของสินค้าที่ยังติดตามไม่สมบูรณ์ กรุณาตรวจสอบสูตรก่อนรับออเดอร์";
+      }
       return "ออเดอร์ถูกเปลี่ยนจากอีกอุปกรณ์แล้ว กำลังโหลดสถานะล่าสุด";
     }
   }
