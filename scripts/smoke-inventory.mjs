@@ -117,6 +117,14 @@ try {
   });
   assert.equal(productResponse.status,201,await productResponse.clone().text());
   const {productId}=await productResponse.json();
+  const trackedPath=inventory+"/products/"+productId+"/tracking";
+  assert.equal((await write(trackedPath,"PUT",owner,{tracked:true})).status,409,
+    "Tracking product without a base recipe must fail closed");
+  assert.equal((await write(trackedPath,"PUT",outsider,{tracked:true})).status,404,
+    "Another tenant cannot enable product tracking");
+  assert.equal((await write(trackedPath,"PUT",
+    {Cookie:owner.Cookie},{tracked:true})).status,403,
+    "Tracking toggle without CSRF was accepted");
   const recipePath=inventory+"/recipes/"+productId+"/items/"+itemId;
   const setRecipe=await write(recipePath,"PUT",owner,{quantityPerProduct:"150.250"});
   assert.equal(setRecipe.status,200,await setRecipe.clone().text());
@@ -129,13 +137,46 @@ try {
   assert.equal(data.items.find((x)=>x.itemId===itemId).onHand,"1000.000");
   assert.equal(data.recipes.find((x)=>x.productId===productId).quantityPerProduct,"150.250");
   assert.equal(data.recentMovements.filter((x)=>x.itemId===itemId).length,2);
+  const group=await write(base+"/catalog/products/"+productId+"/modifier-groups",
+    "POST",owner,{slug:"extra-stock",name:"Extra stock",minSelect:0,maxSelect:1});
+  assert.equal(group.status,201,await group.clone().text());
+  const {groupId}=await group.json();
+  const option=await write(base+"/catalog/products/"+productId+
+    "/modifier-groups/"+groupId+"/options",
+    "POST",owner,{name:"Extra rice",priceDeltaSatang:100});
+  assert.equal(option.status,201,await option.clone().text());
+  const {optionId}=await option.json();
+  const optionRecipe=inventory+"/modifier-recipes/"+productId+
+    "/groups/"+groupId+"/options/"+optionId+"/items/"+itemId;
+  const modifierResult=await write(optionRecipe,"PUT",owner,
+    {quantityPerProduct:"25.125"});
+  assert.equal(modifierResult.status,200,await modifierResult.clone().text());
+  assert.equal((await write(optionRecipe,"PUT",outsider,
+    {quantityPerProduct:"25.125"})).status,404);
+  const enabled=await write(trackedPath,"PUT",owner,{tracked:true});
+  assert.equal(enabled.status,200,await enabled.clone().text());
+  const enabledSnapshot=await request(inventory,{headers:{Cookie:owner.Cookie}});
+  const enabledData=await enabledSnapshot.json();
+  assert.equal(enabledData.stockMode,"order_acceptance_opt_in");
+  assert.equal(enabledData.orderConsumptionEnabled,true);
+  assert.ok(enabledData.trackedProducts.some((x)=>x.productId===productId));
+  assert.equal(enabledData.modifierRecipes.find((x)=>x.optionId===optionId)
+    .quantityPerProduct,"25.125");
+  const disabled=await write(trackedPath,"PUT",owner,{tracked:false});
+  assert.equal(disabled.status,200,await disabled.clone().text());
+  const disabledData=await (await request(inventory,{
+    headers:{Cookie:owner.Cookie},
+  })).json();
+  assert.equal(disabledData.stockMode,"manual_ledger_only");
+  assert.equal(disabledData.orderConsumptionEnabled,false);
+
 
   assert.equal((await write(recipePath,"PUT",owner,
     {quantityPerProduct:"0"})).status,200);
   const after=(await (await request(inventory,{headers:{Cookie:owner.Cookie}})).json());
   assert.equal(after.recipes.some((x)=>x.productId===productId),false);
   assert.equal(after.items.find((x)=>x.itemId===itemId).onHand,"1000.000");
-  console.log("PASS: inventory HTTP tenant authorization, CSRF, exact ledger, retry, recipe, no automatic Order deductions");
+  console.log("PASS: inventory HTTP tenant auth, CSRF, exact ledger, opt-in stock, Modifier recipe and safe disable");
 } finally {
   server.kill("SIGTERM");
 }
