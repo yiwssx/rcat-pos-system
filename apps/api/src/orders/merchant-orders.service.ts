@@ -138,14 +138,20 @@ export class MerchantOrdersService {
     rawIds: unknown,
   ): Promise<{ orders: unknown[] }> {
     validateIds(tenantId, storeId);
-    if (typeof rawIds !== "string" || rawIds.length > 50 * 37 ||
-        rawIds.length === 0) {
+    if (
+      typeof rawIds !== "string" ||
+      rawIds.length > 50 * 37 ||
+      rawIds.length === 0
+    ) {
       throw new BadRequestException("Invalid Order lookup IDs");
     }
     const ids = rawIds.split(",").map((id) => id.toLowerCase());
-    if (ids.length < 1 || ids.length > 50 ||
-        ids.some((id) => !UUID.test(id)) ||
-        new Set(ids).size !== ids.length) {
+    if (
+      ids.length < 1 ||
+      ids.length > 50 ||
+      ids.some((id) => !UUID.test(id)) ||
+      new Set(ids).size !== ids.length
+    ) {
       throw new BadRequestException("Invalid Order lookup IDs");
     }
     const session = await this.auth.session(req);
@@ -153,12 +159,7 @@ export class MerchantOrdersService {
       const result = await this.database.auth((client) =>
         client.query<{ data: { orders: unknown[] } }>(
           "SELECT rcat_private.merchant_order_lookup_ids($1,$2,$3,$4::uuid[]) AS data",
-          [
-            digestOpaqueSecret(session.token),
-            tenantId,
-            storeId,
-            ids,
-          ],
+          [digestOpaqueSecret(session.token), tenantId, storeId, ids],
         ),
       );
       return result.rows[0]?.data ?? { orders: [] };
