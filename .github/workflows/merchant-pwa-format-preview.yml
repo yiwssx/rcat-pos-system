@@ -1,0 +1,32 @@
+name: Temporary Merchant PWA Prettier preview
+on:
+  pull_request:
+    paths:
+      - 'apps/merchant/src/main.ts'
+      - '.github/workflows/merchant-pwa-format-preview.yml'
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Canonical Prettier source
+        run: |
+          pnpm exec prettier --write apps/merchant/src/main.ts
+          echo RCAT_FMT_BEGIN:apps/merchant/src/main.ts
+          base64 -w0 apps/merchant/src/main.ts
+          echo
+          echo RCAT_FMT_END:apps/merchant/src/main.ts
