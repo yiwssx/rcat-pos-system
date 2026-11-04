@@ -339,7 +339,7 @@ function inventoryError(error: unknown): string {
                       <strong>{{ ingredientName(movement.itemId) }}</strong>
                       <span
                         >{{
-                          movement.kind === "receipt" ? "รับเข้า" : "ปรับยอด"
+                          movementLabel(movement.kind)
                         }}
                         {{ units(movement.delta) }}
                         {{ ingredientUnit(movement.itemId) }}
@@ -432,6 +432,83 @@ export class InventoryPage implements OnInit {
       this.error.set(inventoryError(error));
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  isTracked(productId: string): boolean {
+    return (this.snapshot()?.trackedProducts || []).some(
+      (product) => product.productId === productId,
+    );
+  }
+  productName(productId: string): string {
+    return this.catalog()?.products.find((product) => product.id === productId)?.name
+      ?? "สินค้า";
+  }
+  modifierName(optionId: string): string {
+    return this.catalog()?.modifierOptions.find((option) => option.id === optionId)?.name
+      ?? "ตัวเลือกเสริม";
+  }
+  movementLabel(kind: InventoryKind): string {
+    if (kind === "receipt") return "รับเข้า";
+    if (kind === "adjustment") return "ปรับยอด";
+    if (kind === "order_consumption") return "ตัดตามออเดอร์";
+    return "คืนจากการยกเลิกออเดอร์";
+  }
+
+  async toggleTracking(productId: string, tracked: boolean): Promise<void> {
+    if (!this.canWrite() ||
+      !this.catalog()?.products.some((product) => product.id === productId)) return;
+    if (tracked && !this.snapshot()?.recipes.some(
+      (recipe) => recipe.productId === productId,
+    )) {
+      this.error.set("ต้องบันทึกสูตรวัตถุดิบหลักก่อนเปิดตัดสต็อก");
+      return;
+    }
+    const confirmed = this.document.defaultView?.confirm(
+      tracked
+        ? "ยืนยันเปิดตัดสต็อกเมนูนี้เมื่อร้านรับออเดอร์? ตรวจสูตรหลักและ Modifier แล้ว"
+        : "ยืนยันปิดการตัดสต็อกสำหรับออเดอร์ใหม่ของเมนูนี้?",
+    );
+    if (!confirmed) return;
+    this.busy.set(true);
+    this.error.set("");
+    try {
+      await this.api.tracking(this.tenantId, this.storeId, productId, tracked);
+      this.notice.set(tracked
+        ? "เปิดตัดสต็อกตามออเดอร์ให้สินค้านี้แล้ว"
+        : "ปิดตัดสต็อกให้สินค้านี้สำหรับออเดอร์ใหม่แล้ว");
+      await this.reload();
+    } catch (error) {
+      this.error.set(inventoryError(error));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  async updateModifierRecipe(event: Event): Promise<void> {
+    event.preventDefault();
+    if (!this.canWrite()) return;
+    const option = this.catalog()?.modifierOptions.find(
+      (entry) => entry.id === this.modifierOptionId(),
+    );
+    if (!option ||
+      !this.snapshot()?.items.some((item) => item.itemId === this.modifierItemId()) ||
+      !validStockInput(this.modifierQuantity(), { zero: true, max: 1000000000n })) {
+      this.error.set("กรุณาเลือกตัวเลือกเสริม วัตถุดิบ และปริมาณที่ถูกต้อง");
+      return;
+    }
+    this.busy.set(true);
+    this.error.set("");
+    try {
+      await this.api.modifierRecipe(this.tenantId, this.storeId,
+        option.productId, option.groupId, option.id,
+        this.modifierItemId(), this.modifierQuantity());
+      this.notice.set("บันทึกปริมาณ Modifier แล้ว (มีผลเมื่อรับออเดอร์ใหม่)");
+      await this.reload();
+    } catch (error) {
+      this.error.set(inventoryError(error));
+    } finally {
+      this.busy.set(false);
     }
   }
 
