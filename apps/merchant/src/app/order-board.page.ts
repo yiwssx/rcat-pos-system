@@ -682,8 +682,10 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
       }
     } catch (error) {
       if (!this.disposed) {
-        if (error instanceof HttpErrorResponse &&
-          [401, 403, 404].includes(error.status)) {
+        if (
+          error instanceof HttpErrorResponse &&
+          [401, 403, 404].includes(error.status)
+        ) {
           this.blockAccess();
         } else {
           this.error.set(failureText(error));
