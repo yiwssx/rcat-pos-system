@@ -1,5 +1,5 @@
 import { Controller, Get, Header, Param, Query, Req, Res } from "@nestjs/common";
-import type { Response } from "express";
+import { ServerResponse } from "node:http";
 import { ApiRequest } from "../auth/request-security";
 import { operationalReportCsv } from "./operational-report.core";
 import { OperationalReportsService } from "./operational-reports.service";
@@ -27,7 +27,7 @@ export class OperationalReportsController {
     @Param("tenantId") tenantId: string,
     @Param("storeId") storeId: string,
     @Query("day") day: unknown,
-    @Res({ passthrough: true }) response: Response,
+    @Res({ passthrough: true }) response: ServerResponse,
   ): Promise<string> {
     const data = await this.reports.daily(req, tenantId, storeId, day);
     response.setHeader("Content-Type", "text/csv; charset=utf-8");
