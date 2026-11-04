@@ -8,7 +8,10 @@ import { digestOpaqueSecret } from "../../../../libs/server-auth/src";
 import { ApiRequest } from "../auth/request-security";
 import { AuthService } from "../auth/auth.service";
 import { DatabaseAccess } from "../database/db-access";
-import { OperationalDailyReport, validBusinessDay } from "./operational-report.core";
+import {
+  OperationalDailyReport,
+  validBusinessDay,
+} from "./operational-report.core";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 @Injectable()
