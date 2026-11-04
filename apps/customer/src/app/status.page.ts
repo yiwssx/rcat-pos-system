@@ -21,12 +21,15 @@ import { FoundationPhaseComponent } from "@rcat/ui";
     <div class="status-card">
       <div>
         <strong>คำสั่งซื้อและ Payment</strong>
-        <p>ยังไม่มีบริการรับออร์เดอร์หรือรับชำระเงิน</p>
+        <p>
+          รับออเดอร์และติดตามสถานะได้ผ่าน QR โต๊ะที่ยังใช้ได้ แต่ยังไม่มี
+          Payment จริง
+        </p>
       </div>
       <span class="phase muted">Not available</span>
     </div>
   </section>`,
 })
 export class StatusPage {
-  readonly phase = signal("G1 — Foundation");
+  readonly phase = signal("G2 — Guest Ordering");
 }
