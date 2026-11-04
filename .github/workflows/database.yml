@@ -148,6 +148,8 @@ jobs:
         run: |
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events" | grep -qx '24'
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(DISTINCT action) FROM rcat.audit_events WHERE action IN ('tenant.created','staff.invited','staff.invitation.accepted','staff.role.changed','staff.removed')" | grep -qx '5'
+      - name: Provision isolated RCAT Workspace staff after legacy audit-count tests
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/google-http-fixtures.sql
       - name: Verify real Google Workspace OIDC code, PKCE, scoped Session, replay and subject binding
         env:
           CI: 'true'
