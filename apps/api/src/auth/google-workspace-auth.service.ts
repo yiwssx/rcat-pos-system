@@ -16,11 +16,8 @@ import {
   verifyGoogleWorkspaceIdToken,
 } from "./google-oidc-verifier";
 import { AuthService } from "./auth.service";
+import { GOOGLE_STATE_COOKIE, GOOGLE_NONCE_COOKIE, GOOGLE_VERIFIER_COOKIE, googleOauthCookies } from "./google-oauth-cookies";
 
-const STATE = "__Host-rcat_google_state";
-const NONCE = "__Host-rcat_google_nonce";
-const VERIFIER = "__Host-rcat_google_pkce";
-const OAUTH_MAX_AGE = 5 * 60;
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs";
@@ -95,26 +92,6 @@ function config(): OauthConfiguration {
     jwksEndpoint: providerOverride("GOOGLE_TEST_JWKS_ENDPOINT", GOOGLE_JWKS_URL),
   };
 }
-function cookieHeader(name: string, value: string, ageSeconds: number): string {
-  return [
-    `${name}=${value}`, "HttpOnly", "Secure", "SameSite=Lax", "Path=/",
-    `Max-Age=${ageSeconds}`,
-  ].join("; ");
-}
-export function googleOauthCookies(
-  state: string,
-  nonce: string,
-  verifier: string,
-): string[] {
-  return [
-    cookieHeader(STATE, state, OAUTH_MAX_AGE),
-    cookieHeader(NONCE, nonce, OAUTH_MAX_AGE),
-    cookieHeader(VERIFIER, verifier, OAUTH_MAX_AGE),
-  ];
-}
-export function clearGoogleOauthCookies(): string[] {
-  return [STATE, NONCE, VERIFIER].map((name) => cookieHeader(name, "", 0));
-}
 function equalSecret(a: string, b: string): boolean {
   const aa = Buffer.from(a);
   const bb = Buffer.from(b);
@@ -185,9 +162,9 @@ export class GoogleWorkspaceAuthService {
       throw new ServiceUnavailableException("Google Workspace login is disabled");
     }
     const opts = config();
-    const state = cookie(req, STATE);
-    const nonce = cookie(req, NONCE);
-    const verifier = cookie(req, VERIFIER);
+    const state = cookie(req, GOOGLE_STATE_COOKIE);
+    const nonce = cookie(req, GOOGLE_NONCE_COOKIE);
+    const verifier = cookie(req, GOOGLE_VERIFIER_COOKIE);
     if (typeof suppliedState !== "string" ||
         !/^[A-Za-z0-9_-]{43}$/.test(suppliedState) ||
         typeof state !== "string" || !equalSecret(state, suppliedState) ||
