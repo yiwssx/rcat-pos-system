@@ -116,21 +116,21 @@ BEGIN
 END $$;
 RESET ROLE;
 DO $$
-DECLARE id uuid:=current_setting('test.stock_accepted')::uuid;
-  untracked uuid:=current_setting('test.stock_untracked')::uuid;
+DECLARE v_order uuid:=current_setting('test.stock_accepted')::uuid;
+  v_untracked uuid:=current_setting('test.stock_untracked')::uuid;
 BEGIN
  IF (SELECT count(*) FROM rcat.inventory_movements
-     WHERE order_id=id AND kind='order_consumption')<>2
+     WHERE order_id=v_order AND kind='order_consumption')<>2
  OR (SELECT count(*) FROM rcat.inventory_movements
-     WHERE order_id=id AND kind='order_return')<>2
+     WHERE order_id=v_order AND kind='order_return')<>2
  OR (SELECT count(*) FROM rcat.audit_events
-     WHERE subject_id=id AND action='inventory.order.allocated')<>1
+     WHERE subject_id=v_order AND action='inventory.order.allocated')<>1
  OR (SELECT count(*) FROM rcat.audit_events
-     WHERE subject_id=id AND action='inventory.order.returned')<>1
+     WHERE subject_id=v_order AND action='inventory.order.returned')<>1
  OR (SELECT count(*) FROM rcat.inventory_order_allocations
-     WHERE order_id=id AND returned_at IS NOT NULL)<>2
+     WHERE order_id=v_order AND returned_at IS NOT NULL)<>2
  OR EXISTS(SELECT 1 FROM rcat.inventory_order_allocations
-     WHERE order_id=untracked)
+     WHERE order_id=v_untracked)
  THEN RAISE EXCEPTION 'Audited inventory movements duplicated or missing'; END IF;
 END $$;
 SET LOCAL ROLE rcat_app;
