@@ -34,11 +34,18 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function validMerchantCreation(input: MerchantCreation): string | null {
   const slugs = [input.tenantSlug, input.storeSlug];
-  if (slugs.some((slug) => !SLUG.test(slug) || slug.length < 3 || slug.length > 48)) {
+  if (
+    slugs.some(
+      (slug) => !SLUG.test(slug) || slug.length < 3 || slug.length > 48,
+    )
+  ) {
     return "รหัสร้าน/หน่วยงานต้องเป็น a-z, 0-9 หรือขีดกลาง และยาว 3–48 อักขระ";
   }
-  if ([input.tenantName, input.storeName].some((name) =>
-    name.trim().length < 1 || name.trim().length > 160)) {
+  if (
+    [input.tenantName, input.storeName].some(
+      (name) => name.trim().length < 1 || name.trim().length > 160,
+    )
+  ) {
     return "ชื่อหน่วยงาน/ร้านค้าต้องมีความยาว 1–160 อักขระ";
   }
   return null;
