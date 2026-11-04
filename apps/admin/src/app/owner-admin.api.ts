@@ -31,9 +31,11 @@ export class OwnerAdminApi {
   }
 
   stores(): Promise<{ stores: AdminStore[] }> {
-    return firstValueFrom(this.http.get<{ stores: AdminStore[] }>(
-      "/api/auth/merchant-stores", { withCredentials: true },
-    ));
+    return firstValueFrom(
+      this.http.get<{ stores: AdminStore[] }>("/api/auth/merchant-stores", {
+        withCredentials: true,
+      }),
+    );
   }
 
   createMerchant(form: MerchantCreation): Promise<{
@@ -41,48 +43,71 @@ export class OwnerAdminApi {
     storeId: string;
     role: "owner";
   }> {
-    return firstValueFrom(this.http.post<{
-      tenantId: string;
-      storeId: string;
-      role: "owner";
-    }>("/api/tenants", form, {
-      headers: this.csrfHeader(), withCredentials: true,
-    }));
+    return firstValueFrom(
+      this.http.post<{
+        tenantId: string;
+        storeId: string;
+        role: "owner";
+      }>("/api/tenants", form, {
+        headers: this.csrfHeader(),
+        withCredentials: true,
+      }),
+    );
   }
 
   staff(tenantId: string): Promise<{ tenantId: string; staff: StaffMember[] }> {
-    return firstValueFrom(this.http.get<{
-      tenantId: string;
-      staff: StaffMember[];
-    }>(tenantAdminPath(tenantId) + "/staff", {
-      withCredentials: true,
-    }));
+    return firstValueFrom(
+      this.http.get<{
+        tenantId: string;
+        staff: StaffMember[];
+      }>(tenantAdminPath(tenantId) + "/staff", {
+        withCredentials: true,
+      }),
+    );
   }
 
   invite(
     tenantId: string,
     email: string,
     role: InvitableRole,
-  ): Promise<{ invitationId: string; invitationToken: string; expiresInHours: number }> {
-    return firstValueFrom(this.http.post<{
-      invitationId: string;
-      invitationToken: string;
-      expiresInHours: number;
-    }>(tenantAdminPath(tenantId) + "/invitations", { email, role }, {
-      headers: this.csrfHeader(), withCredentials: true,
-    }));
+  ): Promise<{
+    invitationId: string;
+    invitationToken: string;
+    expiresInHours: number;
+  }> {
+    return firstValueFrom(
+      this.http.post<{
+        invitationId: string;
+        invitationToken: string;
+        expiresInHours: number;
+      }>(
+        tenantAdminPath(tenantId) + "/invitations",
+        { email, role },
+        {
+          headers: this.csrfHeader(),
+          withCredentials: true,
+        },
+      ),
+    );
   }
 
   accept(invitationToken: string): Promise<{
     tenantId: string;
     role: StaffMember["role"];
   }> {
-    return firstValueFrom(this.http.post<{
-      tenantId: string;
-      role: StaffMember["role"];
-    }>("/api/invitations/accept", { invitationToken }, {
-      headers: this.csrfHeader(), withCredentials: true,
-    }));
+    return firstValueFrom(
+      this.http.post<{
+        tenantId: string;
+        role: StaffMember["role"];
+      }>(
+        "/api/invitations/accept",
+        { invitationToken },
+        {
+          headers: this.csrfHeader(),
+          withCredentials: true,
+        },
+      ),
+    );
   }
 
   changeRole(
@@ -90,23 +115,37 @@ export class OwnerAdminApi {
     userId: string,
     role: InvitableRole,
   ): Promise<{ userId: string; role: StaffMember["role"] }> {
-    return firstValueFrom(this.http.patch<{
-      userId: string;
-      role: StaffMember["role"];
-    }>(tenantAdminPath(tenantId) + "/staff/" + encodeURIComponent(userId),
-    { role }, { headers: this.csrfHeader(), withCredentials: true }));
+    return firstValueFrom(
+      this.http.patch<{
+        userId: string;
+        role: StaffMember["role"];
+      }>(
+        tenantAdminPath(tenantId) + "/staff/" + encodeURIComponent(userId),
+        { role },
+        { headers: this.csrfHeader(), withCredentials: true },
+      ),
+    );
   }
 
   removeStaff(tenantId: string, userId: string): Promise<void> {
-    return firstValueFrom(this.http.delete<void>(
-      tenantAdminPath(tenantId) + "/staff/" + encodeURIComponent(userId),
-      { headers: this.csrfHeader(), withCredentials: true },
-    ));
+    return firstValueFrom(
+      this.http.delete<void>(
+        tenantAdminPath(tenantId) + "/staff/" + encodeURIComponent(userId),
+        { headers: this.csrfHeader(), withCredentials: true },
+      ),
+    );
   }
 
   logout(): Promise<void> {
-    return firstValueFrom(this.http.post<void>("/api/auth/logout", {}, {
-      headers: this.csrfHeader(), withCredentials: true,
-    }));
+    return firstValueFrom(
+      this.http.post<void>(
+        "/api/auth/logout",
+        {},
+        {
+          headers: this.csrfHeader(),
+          withCredentials: true,
+        },
+      ),
+    );
   }
 }
