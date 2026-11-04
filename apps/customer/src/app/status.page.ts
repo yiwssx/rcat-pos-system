@@ -21,7 +21,10 @@ import { FoundationPhaseComponent } from "@rcat/ui";
     <div class="status-card">
       <div>
         <strong>คำสั่งซื้อและ Payment</strong>
-        <p>รับออเดอร์และติดตามสถานะได้ผ่าน QR โต๊ะที่ยังใช้ได้ แต่ยังไม่มี Payment จริง</p>
+        <p>
+          รับออเดอร์และติดตามสถานะได้ผ่าน QR โต๊ะที่ยังใช้ได้ แต่ยังไม่มี
+          Payment จริง
+        </p>
       </div>
       <span class="phase muted">Not available</span>
     </div>
