@@ -20,13 +20,15 @@ import {
 
 function failure(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
-    if (error.status === 401) return "เซสชันหมดอายุ กรุณาเข้าสู่ระบบด้วย Google Workspace";
+    if (error.status === 401)
+      return "เซสชันหมดอายุ กรุณาเข้าสู่ระบบด้วย Google Workspace";
     if (error.status === 403 || error.status === 404) {
       return "ไม่มีสิทธิ์ดำเนินการนี้ หรือรายการหมดอายุแล้ว";
     }
     if (error.status === 409) return "รหัสหน่วยงานหรือร้านค้านี้ถูกใช้แล้ว";
     if (error.status === 400) return "ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง";
-    if (error.status === 0) return "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่";
+    if (error.status === 0)
+      return "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่";
   }
   return error instanceof Error ? error.message : "เกิดข้อผิดพลาด กรุณาลองใหม่";
 }
@@ -50,24 +52,33 @@ function failure(error: unknown): string {
             เข้าสู่ระบบด้วย Google Workspace @rcat.ac.th
           </a>
           @if (authenticated()) {
-            <button type="button" class="owner-logout" (click)="logout()" [disabled]="pending()">
+            <button
+              type="button"
+              class="owner-logout"
+              (click)="logout()"
+              [disabled]="pending()"
+            >
               ออกจากระบบ
             </button>
           }
         </div>
         <p class="owner-alert" role="note">
-          ระบบยังเป็นระยะพัฒนา · การสร้างร้านหรือจัดการพนักงานจะสำเร็จ
-          ต่อเมื่อ Backend ยืนยันธุรกรรมแล้วเท่านั้น · ยังไม่มีระบบรับเงิน
+          ระบบยังเป็นระยะพัฒนา · การสร้างร้านหรือจัดการพนักงานจะสำเร็จ ต่อเมื่อ
+          Backend ยืนยันธุรกรรมแล้วเท่านั้น · ยังไม่มีระบบรับเงิน
         </p>
       </header>
 
       @if (loading()) {
-        <p class="owner-state" role="status">กำลังตรวจสอบสิทธิ์ร้านค้าของบัญชี...</p>
+        <p class="owner-state" role="status">
+          กำลังตรวจสอบสิทธิ์ร้านค้าของบัญชี...
+        </p>
       }
       @if (error()) {
         <div class="owner-error" role="alert">
           {{ error() }}
-          <button type="button" (click)="loadStores()" [disabled]="loading()">ลองใหม่</button>
+          <button type="button" (click)="loadStores()" [disabled]="loading()">
+            ลองใหม่
+          </button>
         </div>
       }
       @if (notice()) {
@@ -78,12 +89,18 @@ function failure(error: unknown): string {
         <section aria-labelledby="owner-stores-title" class="owner-panel">
           <div class="owner-headline">
             <h2 id="owner-stores-title">ร้านที่เข้าถึงได้</h2>
-            <button type="button" (click)="loadStores()" [disabled]="loading() || pending()">
+            <button
+              type="button"
+              (click)="loadStores()"
+              [disabled]="loading() || pending()"
+            >
               โหลดข้อมูลล่าสุด
             </button>
           </div>
           @if (stores().length === 0) {
-            <p class="owner-muted">บัญชีนี้ยังไม่มีร้านค้า หรือยังไม่ได้รับคำเชิญจากเจ้าของร้าน</p>
+            <p class="owner-muted">
+              บัญชีนี้ยังไม่มีร้านค้า หรือยังไม่ได้รับคำเชิญจากเจ้าของร้าน
+            </p>
           } @else {
             <div class="owner-stores">
               @for (store of stores(); track store.tenantId + store.storeId) {
@@ -96,7 +113,9 @@ function failure(error: unknown): string {
                       จัดการบุคลากรและคำเชิญ
                     </a>
                   } @else {
-                    <span class="owner-muted">การจัดการสิทธิ์ต้องใช้บัญชีเจ้าของร้าน</span>
+                    <span class="owner-muted"
+                      >การจัดการสิทธิ์ต้องใช้บัญชีเจ้าของร้าน</span
+                    >
                   }
                 </article>
               }
@@ -107,27 +126,59 @@ function failure(error: unknown): string {
         <div class="owner-grid">
           <section class="owner-panel" aria-labelledby="create-title">
             <h2 id="create-title">สร้างร้านใหม่</h2>
-            <p class="owner-muted">เปิดเฉพาะบัญชีที่ได้รับอนุมัติแล้ว จำกัดจำนวนร้านตาม Backend</p>
+            <p class="owner-muted">
+              เปิดเฉพาะบัญชีที่ได้รับอนุมัติแล้ว จำกัดจำนวนร้านตาม Backend
+            </p>
             <form (submit)="create($event)" class="owner-form">
-              <label>รหัสหน่วยงาน (ภาษาอังกฤษ)
-                <input name="tenantSlug" type="text" autocomplete="off"
-                  [value]="tenantSlug()" (input)="field($event, 'tenantSlug')"
-                  placeholder="rcat-demo" maxlength="48" required>
+              <label
+                >รหัสหน่วยงาน (ภาษาอังกฤษ)
+                <input
+                  name="tenantSlug"
+                  type="text"
+                  autocomplete="off"
+                  [value]="tenantSlug()"
+                  (input)="field($event, 'tenantSlug')"
+                  placeholder="rcat-demo"
+                  maxlength="48"
+                  required
+                />
               </label>
-              <label>ชื่อหน่วยงาน
-                <input name="tenantName" type="text" autocomplete="organization"
-                  [value]="tenantName()" (input)="field($event, 'tenantName')"
-                  maxlength="160" required>
+              <label
+                >ชื่อหน่วยงาน
+                <input
+                  name="tenantName"
+                  type="text"
+                  autocomplete="organization"
+                  [value]="tenantName()"
+                  (input)="field($event, 'tenantName')"
+                  maxlength="160"
+                  required
+                />
               </label>
-              <label>รหัสร้าน (ภาษาอังกฤษ)
-                <input name="storeSlug" type="text" autocomplete="off"
-                  [value]="storeSlug()" (input)="field($event, 'storeSlug')"
-                  placeholder="canteen" maxlength="48" required>
+              <label
+                >รหัสร้าน (ภาษาอังกฤษ)
+                <input
+                  name="storeSlug"
+                  type="text"
+                  autocomplete="off"
+                  [value]="storeSlug()"
+                  (input)="field($event, 'storeSlug')"
+                  placeholder="canteen"
+                  maxlength="48"
+                  required
+                />
               </label>
-              <label>ชื่อร้าน
-                <input name="storeName" type="text" autocomplete="off"
-                  [value]="storeName()" (input)="field($event, 'storeName')"
-                  maxlength="160" required>
+              <label
+                >ชื่อร้าน
+                <input
+                  name="storeName"
+                  type="text"
+                  autocomplete="off"
+                  [value]="storeName()"
+                  (input)="field($event, 'storeName')"
+                  maxlength="160"
+                  required
+                />
               </label>
               <button type="submit" [disabled]="pending()">
                 {{ pending() ? "กำลังดำเนินการ..." : "สร้างร้านค้า" }}
@@ -142,11 +193,18 @@ function failure(error: unknown): string {
               ไม่ควรนำรหัสนี้ใส่ URL หรือส่งในกลุ่มสาธารณะ
             </p>
             <form (submit)="accept($event)" class="owner-form">
-              <label>รหัสคำเชิญ (43 อักขระ)
-                <input type="password" name="invitationToken"
-                  autocomplete="off" [value]="invitationToken()"
+              <label
+                >รหัสคำเชิญ (43 อักขระ)
+                <input
+                  type="password"
+                  name="invitationToken"
+                  autocomplete="off"
+                  [value]="invitationToken()"
                   (input)="setInviteToken($event)"
-                  maxlength="43" minlength="43" required>
+                  maxlength="43"
+                  minlength="43"
+                  required
+                />
               </label>
               <button type="submit" [disabled]="pending()">
                 {{ pending() ? "กำลังดำเนินการ..." : "ยืนยันรับคำเชิญ" }}
@@ -177,8 +235,8 @@ export class HomePage implements OnInit {
   readonly storeName = signal("");
   readonly invitationToken = signal("");
   readonly roleLabel = STAFF_ROLE_LABEL;
-  readonly ownedCount = computed(() =>
-    this.stores().filter((store) => store.role === "owner").length,
+  readonly ownedCount = computed(
+    () => this.stores().filter((store) => store.role === "owner").length,
   );
 
   ngOnInit(): void {
@@ -240,7 +298,9 @@ export class HomePage implements OnInit {
       this.tenantName.set("");
       this.storeSlug.set("");
       this.storeName.set("");
-      this.notice.set("สร้างร้านสำเร็จ (Store ID: " + result.storeId.slice(0, 8) + "…)");
+      this.notice.set(
+        "สร้างร้านสำเร็จ (Store ID: " + result.storeId.slice(0, 8) + "…)",
+      );
       const { stores } = await this.api.stores();
       this.stores.set(stores);
     } catch (error) {
