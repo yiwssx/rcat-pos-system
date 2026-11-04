@@ -63,8 +63,6 @@ function inventoryError(error: unknown): string {
       @if (loading()) {
         <p class="inventory-muted" role="status">กำลังโหลดสต็อกจาก Server...</p>
       }
-      @if (store() && snapshot(); as unused) {
-      }
       @if (store(); as currentStore) {
         @if (snapshot(); as data) {
           <div class="inventory-toolbar">
