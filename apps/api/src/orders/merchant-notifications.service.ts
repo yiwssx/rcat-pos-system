@@ -2,11 +2,29 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { digestOpaqueSecret } from "../../../../libs/server-auth/src";
 import { AuthService } from "../auth/auth.service";
 import { ApiRequest } from "../auth/request-security";
 import { DatabaseAccess } from "../database/db-access";
+
+export interface MerchantNotificationEvent {
+  eventId: string;
+  eventType: "order.submitted" | "order.status.changed";
+  orderId: string;
+  tableId: string;
+  status: "submitted" | "accepted" | "preparing" | "served" | "cancelled";
+  previousStatus: string | null;
+  occurredAt: string;
+}
+
+export interface MerchantNotificationPage {
+  events: MerchantNotificationEvent[];
+  nextCursor: string;
+  acknowledgedCursor: string;
+  hasMore: boolean;
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CURSOR = /^(?:0|[1-9][0-9]{0,18})$/;
@@ -57,7 +75,7 @@ export class MerchantNotificationsService {
     storeId: string,
     rawAfter: unknown,
     rawLimit: unknown,
-  ) {
+  ): Promise<MerchantNotificationPage> {
     validateScope(tenantId, storeId);
     const after = parseCursor(rawAfter, true);
     const limit = rawLimit === undefined ? 25 : Number(rawLimit);
@@ -74,12 +92,16 @@ export class MerchantNotificationsService {
     const session = await this.auth.session(req);
     try {
       const result = await this.database.auth((client) =>
-        client.query<{ data: Record<string, unknown> }>(
+        client.query<{ data: MerchantNotificationPage }>(
           "SELECT rcat_private.merchant_order_notifications($1,$2,$3,$4,$5) AS data",
           [digestOpaqueSecret(session.token), tenantId, storeId, after, limit],
         ),
       );
-      return result.rows[0]?.data;
+      const data = result.rows[0]?.data;
+      if (!data) {
+        throw new ServiceUnavailableException("Notifications unavailable");
+      }
+      return data;
     } catch (error) {
       mapFailure(error);
     }
