@@ -1391,8 +1391,11 @@ try {
     /^text\/csv/i);
   assert.match(reportCsvResponse.headers.get("content-disposition") ?? "",
     /attachment;/i);
-  const reportCsv = await reportCsvResponse.text();
-  assert.ok(reportCsv.startsWith("\ufeff"));
+  const csvBytes = new Uint8Array(await reportCsvResponse.arrayBuffer());
+  // Response.text() and TextDecoder may remove a UTF-8 BOM by design.
+  // Validate actual CSV bytes, which is what Excel receives.
+  assert.deepEqual([...csvBytes.slice(0, 3)], [0xef, 0xbb, 0xbf]);
+  const reportCsv = new TextDecoder().decode(csvBytes);
   assert.ok(reportCsv.includes("NOT REVENUE"));
   assert.ok(reportCsv.includes("not_implemented"));
   assert.ok(!reportCsv.includes("provider_verified"));
