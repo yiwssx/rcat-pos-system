@@ -25,11 +25,16 @@ import { GuestOrderApi, GuestOrderSession } from "./guest-order.api";
 
 function guestError(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
-    if (error.status === 0) return "เชื่อมต่อไม่ได้ โปรดตรวจสอบอินเทอร์เน็ตแล้วลองใหม่";
-    if (error.status === 404) return "QR ของโต๊ะหมดอายุหรือถูกเปลี่ยนแล้ว โปรดขอ QR ล่าสุดจากร้าน";
-    if (error.status === 409) return "คำสั่งซื้อถูกเปลี่ยนระหว่างส่ง โปรดตรวจสอบตะกร้าก่อนลองอีกครั้ง";
-    if (error.status === 400) return "สินค้า/ตัวเลือกไม่ตรงกับเมนูล่าสุด กรุณาตรวจสอบรายการ";
-    if (error.status >= 500) return "เซิร์ฟเวอร์ไม่พร้อม โปรดลองใหม่โดยไม่เปลี่ยนตะกร้า";
+    if (error.status === 0)
+      return "เชื่อมต่อไม่ได้ โปรดตรวจสอบอินเทอร์เน็ตแล้วลองใหม่";
+    if (error.status === 404)
+      return "QR ของโต๊ะหมดอายุหรือถูกเปลี่ยนแล้ว โปรดขอ QR ล่าสุดจากร้าน";
+    if (error.status === 409)
+      return "คำสั่งซื้อถูกเปลี่ยนระหว่างส่ง โปรดตรวจสอบตะกร้าก่อนลองอีกครั้ง";
+    if (error.status === 400)
+      return "สินค้า/ตัวเลือกไม่ตรงกับเมนูล่าสุด กรุณาตรวจสอบรายการ";
+    if (error.status >= 500)
+      return "เซิร์ฟเวอร์ไม่พร้อม โปรดลองใหม่โดยไม่เปลี่ยนตะกร้า";
   }
   return error instanceof Error ? error.message : "ไม่สามารถดำเนินการได้";
 }
@@ -40,141 +45,201 @@ function guestError(error: unknown): string {
   imports: [RouterLink],
   styleUrls: ["./guest-order.css"],
   template: `
-  <section class="guest-shell" aria-labelledby="guest-title">
-    <header class="guest-header">
-      <div>
-        <span class="eyebrow">RCAT POS · ORDERING QR</span>
-        <h1 id="guest-title">{{ session.visit()?.storeName || "สั่งอาหารผ่าน QR" }}</h1>
-        <p class="guest-context">
-          @if (session.visit()) {
-            <strong>โต๊ะ {{ session.visit()!.tableLabel }}</strong>
-            <span>· กรุณาตรวจสอบโต๊ะก่อนสั่ง</span>
-          } @else {
-            สแกน QR สำหรับสั่งอาหารของร้าน (ไม่ใช่ QR ชำระเงิน)
-          }
-        </p>
-      </div>
-      <a class="guest-track-link" routerLink="/order/track">ติดตามออเดอร์</a>
-    </header>
-
-    <p class="guest-payment-alert" role="note">
-      ระบบนี้รับคำสั่งซื้อเท่านั้น ยังไม่มีการชำระเงินผ่าน PromptPay
-      ราคาในตะกร้าเป็นประมาณการ และจะยืนยันยอดจริงหลังส่งออเดอร์
-    </p>
-
-    @if (loading()) {
-      <div class="guest-status" role="status">กำลังอ่านเมนูของร้าน...</div>
-    } @else if (error()) {
-      <div class="guest-error" role="alert">
-        <p>{{ error() }}</p>
-        <button type="button" (click)="reload()" [disabled]="loading()">ลองอีกครั้ง</button>
-      </div>
-    }
-
-    @if (session.visit(); as visit) {
-      <div class="guest-menu-toolbar">
-        <label class="guest-search">
-          <span>ค้นหาเมนู</span>
-          <input type="search" autocomplete="off" placeholder="ชื่ออาหาร / เครื่องดื่ม"
-            [value]="search()" (input)="onSearch($event)">
-        </label>
-        <label class="guest-category">
-          <span>หมวดหมู่</span>
-          <select [value]="category()" (change)="onCategory($event)">
-            <option value="">ทุกหมวดหมู่</option>
-            @for (group of visit.categories; track group.id) {
-              <option [value]="group.id">{{ group.name }}</option>
+    <section class="guest-shell" aria-labelledby="guest-title">
+      <header class="guest-header">
+        <div>
+          <span class="eyebrow">RCAT POS · ORDERING QR</span>
+          <h1 id="guest-title">
+            {{ session.visit()?.storeName || "สั่งอาหารผ่าน QR" }}
+          </h1>
+          <p class="guest-context">
+            @if (session.visit()) {
+              <strong>โต๊ะ {{ session.visit()!.tableLabel }}</strong>
+              <span>· กรุณาตรวจสอบโต๊ะก่อนสั่ง</span>
+            } @else {
+              สแกน QR สำหรับสั่งอาหารของร้าน (ไม่ใช่ QR ชำระเงิน)
             }
-          </select>
-        </label>
-      </div>
+          </p>
+        </div>
+        <a class="guest-track-link" routerLink="/order/track">ติดตามออเดอร์</a>
+      </header>
 
-      @if (products().length === 0) {
-        <div class="guest-status" role="status">ไม่มีสินค้าในหมวดหมู่นี้หรือไม่พบเมนูที่ค้นหา</div>
-      } @else {
-        <div class="guest-products">
-          @for (product of products(); track product.id) {
-            <article class="guest-product" [attr.aria-label]="product.name">
-              <div class="guest-product-head">
-                <div>
-                  <span class="guest-product-category">{{ categoryName(product.categoryId) }}</span>
-                  <h2>{{ product.name }}</h2>
-                </div>
-                <strong class="guest-price">{{ money(product.priceSatang) }} ฿</strong>
-              </div>
-              @for (group of groups(product.id); track group.id) {
-                <fieldset class="guest-options">
-                  <legend>{{ group.name }} <span>เลือก {{ group.minSelect }}–{{ group.maxSelect }}</span></legend>
-                  @if (options(group.id).length < group.minSelect) {
-                    <p class="guest-warning">ตัวเลือกไม่เพียงพอสำหรับเมนูนี้ กรุณาแจ้งร้านค้า</p>
-                  }
-                  @for (choice of options(group.id); track choice.id) {
-                    <label class="guest-option">
-                      <input type="checkbox" [checked]="isSelected(product.id, choice.id)"
-                        [disabled]="busy() || optionDisabled(product.id, group, choice.id)"
-                        (change)="toggleOption(product.id, group, choice.id)">
-                      <span>{{ choice.name }}</span>
-                      <span class="guest-option-price">
-                        {{ choice.priceDeltaSatang > 0 ? "+" : "" }}{{ moneySigned(choice.priceDeltaSatang) }} ฿
-                      </span>
-                    </label>
-                  }
-                </fieldset>
-              }
-              <div class="guest-product-actions">
-                <button type="button" class="guest-add" [disabled]="busy()"
-                  (click)="add(product)">เพิ่มลงตะกร้า</button>
-              </div>
-            </article>
-          }
+      <p class="guest-payment-alert" role="note">
+        ระบบนี้รับคำสั่งซื้อเท่านั้น ยังไม่มีการชำระเงินผ่าน PromptPay
+        ราคาในตะกร้าเป็นประมาณการ และจะยืนยันยอดจริงหลังส่งออเดอร์
+      </p>
+
+      @if (loading()) {
+        <div class="guest-status" role="status">กำลังอ่านเมนูของร้าน...</div>
+      } @else if (error()) {
+        <div class="guest-error" role="alert">
+          <p>{{ error() }}</p>
+          <button type="button" (click)="reload()" [disabled]="loading()">
+            ลองอีกครั้ง
+          </button>
         </div>
       }
 
-      <section class="guest-cart" aria-labelledby="cart-title">
-        <div class="guest-cart-heading">
-          <h2 id="cart-title">ตะกร้าของฉัน</h2>
-          <span>{{ cartQty() }} ชิ้น</span>
+      @if (session.visit(); as visit) {
+        <div class="guest-menu-toolbar">
+          <label class="guest-search">
+            <span>ค้นหาเมนู</span>
+            <input
+              type="search"
+              autocomplete="off"
+              placeholder="ชื่ออาหาร / เครื่องดื่ม"
+              [value]="search()"
+              (input)="onSearch($event)"
+            />
+          </label>
+          <label class="guest-category">
+            <span>หมวดหมู่</span>
+            <select [value]="category()" (change)="onCategory($event)">
+              <option value="">ทุกหมวดหมู่</option>
+              @for (group of visit.categories; track group.id) {
+                <option [value]="group.id">{{ group.name }}</option>
+              }
+            </select>
+          </label>
         </div>
-        @if (session.cart().length === 0) {
-          <p class="guest-cart-empty">ยังไม่มีสินค้าในตะกร้า เลือกรายการจากเมนูด้านบนได้เลย</p>
-        } @else {
-          <ol class="guest-cart-lines">
-            @for (line of session.cart(); track $index; let i = $index) {
-              <li>
-                <div class="guest-cart-name">
-                  <strong>{{ productName(line.productId) }}</strong>
-                  <span>{{ selectionNames(line.optionIds) }}</span>
-                </div>
-                <div class="guest-qty">
-                  <button type="button" [disabled]="busy()"
-                    [attr.aria-label]="'ลดจำนวน ' + productName(line.productId)"
-                    (click)="changeQuantity(i, -1)">−</button>
-                  <span>{{ line.quantity }}</span>
-                  <button type="button" [disabled]="busy()"
-                    [attr.aria-label]="'เพิ่มจำนวน ' + productName(line.productId)"
-                    (click)="changeQuantity(i, 1)">+</button>
-                </div>
-              </li>
-            }
-          </ol>
-          <div class="guest-cart-summary">
-            <span>ยอดประมาณการ (ยังไม่ใช่ใบเสร็จ)</span>
-            <strong>{{ money(estimate()) }} ฿</strong>
+
+        @if (products().length === 0) {
+          <div class="guest-status" role="status">
+            ไม่มีสินค้าในหมวดหมู่นี้หรือไม่พบเมนูที่ค้นหา
           </div>
-          @if (notice()) {
-            <p class="guest-warning" role="status">{{ notice() }}</p>
-          }
-          <button class="guest-checkout" type="button"
-            [disabled]="busy() || !online()" (click)="checkout()">
-            {{ busy() ? "กำลังส่งออเดอร์ กรุณาอย่าปิดหน้า..." : "ยืนยันส่งคำสั่งซื้อ (ยังไม่ชำระเงิน)" }}
-          </button>
-          <p class="guest-privacy">
-            หากส่งไม่สำเร็จ ให้กดลองอีกครั้งโดยไม่แก้ไขตะกร้า ระบบใช้รหัสคำสั่งซื้อเดิมเพื่อป้องกันการสั่งซ้ำ
-          </p>
+        } @else {
+          <div class="guest-products">
+            @for (product of products(); track product.id) {
+              <article class="guest-product" [attr.aria-label]="product.name">
+                <div class="guest-product-head">
+                  <div>
+                    <span class="guest-product-category">{{
+                      categoryName(product.categoryId)
+                    }}</span>
+                    <h2>{{ product.name }}</h2>
+                  </div>
+                  <strong class="guest-price"
+                    >{{ money(product.priceSatang) }} ฿</strong
+                  >
+                </div>
+                @for (group of groups(product.id); track group.id) {
+                  <fieldset class="guest-options">
+                    <legend>
+                      {{ group.name }}
+                      <span
+                        >เลือก {{ group.minSelect }}–{{ group.maxSelect }}</span
+                      >
+                    </legend>
+                    @if (options(group.id).length < group.minSelect) {
+                      <p class="guest-warning">
+                        ตัวเลือกไม่เพียงพอสำหรับเมนูนี้ กรุณาแจ้งร้านค้า
+                      </p>
+                    }
+                    @for (choice of options(group.id); track choice.id) {
+                      <label class="guest-option">
+                        <input
+                          type="checkbox"
+                          [checked]="isSelected(product.id, choice.id)"
+                          [disabled]="
+                            busy() ||
+                            optionDisabled(product.id, group, choice.id)
+                          "
+                          (change)="toggleOption(product.id, group, choice.id)"
+                        />
+                        <span>{{ choice.name }}</span>
+                        <span class="guest-option-price">
+                          {{ choice.priceDeltaSatang > 0 ? "+" : ""
+                          }}{{ moneySigned(choice.priceDeltaSatang) }} ฿
+                        </span>
+                      </label>
+                    }
+                  </fieldset>
+                }
+                <div class="guest-product-actions">
+                  <button
+                    type="button"
+                    class="guest-add"
+                    [disabled]="busy()"
+                    (click)="add(product)"
+                  >
+                    เพิ่มลงตะกร้า
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
         }
-      </section>
-    }
-  </section>
+
+        <section class="guest-cart" aria-labelledby="cart-title">
+          <div class="guest-cart-heading">
+            <h2 id="cart-title">ตะกร้าของฉัน</h2>
+            <span>{{ cartQty() }} ชิ้น</span>
+          </div>
+          @if (session.cart().length === 0) {
+            <p class="guest-cart-empty">
+              ยังไม่มีสินค้าในตะกร้า เลือกรายการจากเมนูด้านบนได้เลย
+            </p>
+          } @else {
+            <ol class="guest-cart-lines">
+              @for (line of session.cart(); track $index; let i = $index) {
+                <li>
+                  <div class="guest-cart-name">
+                    <strong>{{ productName(line.productId) }}</strong>
+                    <span>{{ selectionNames(line.optionIds) }}</span>
+                  </div>
+                  <div class="guest-qty">
+                    <button
+                      type="button"
+                      [disabled]="busy()"
+                      [attr.aria-label]="
+                        'ลดจำนวน ' + productName(line.productId)
+                      "
+                      (click)="changeQuantity(i, -1)"
+                    >
+                      −
+                    </button>
+                    <span>{{ line.quantity }}</span>
+                    <button
+                      type="button"
+                      [disabled]="busy()"
+                      [attr.aria-label]="
+                        'เพิ่มจำนวน ' + productName(line.productId)
+                      "
+                      (click)="changeQuantity(i, 1)"
+                    >
+                      +
+                    </button>
+                  </div>
+                </li>
+              }
+            </ol>
+            <div class="guest-cart-summary">
+              <span>ยอดประมาณการ (ยังไม่ใช่ใบเสร็จ)</span>
+              <strong>{{ money(estimate()) }} ฿</strong>
+            </div>
+            @if (notice()) {
+              <p class="guest-warning" role="status">{{ notice() }}</p>
+            }
+            <button
+              class="guest-checkout"
+              type="button"
+              [disabled]="busy() || !online()"
+              (click)="checkout()"
+            >
+              {{
+                busy()
+                  ? "กำลังส่งออเดอร์ กรุณาอย่าปิดหน้า..."
+                  : "ยืนยันส่งคำสั่งซื้อ (ยังไม่ชำระเงิน)"
+              }}
+            </button>
+            <p class="guest-privacy">
+              หากส่งไม่สำเร็จ ให้กดลองอีกครั้งโดยไม่แก้ไขตะกร้า
+              ระบบใช้รหัสคำสั่งซื้อเดิมเพื่อป้องกันการสั่งซ้ำ
+            </p>
+          }
+        </section>
+      }
+    </section>
   `,
 })
 export class GuestOrderPage implements OnInit, OnDestroy {
@@ -194,13 +259,15 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly money = formatSatang;
   private scanToken: string | null = null;
   private readonly win = this.document.defaultView;
-  readonly products = computed(() => (this.session.visit()?.products ?? []).filter(
-    (product) =>
-      (!this.category() || product.categoryId === this.category()) &&
-      product.name.toLocaleLowerCase("th-TH").includes(
-        this.search().trim().toLocaleLowerCase("th-TH"),
-      ),
-  ));
+  readonly products = computed(() =>
+    (this.session.visit()?.products ?? []).filter(
+      (product) =>
+        (!this.category() || product.categoryId === this.category()) &&
+        product.name
+          .toLocaleLowerCase("th-TH")
+          .includes(this.search().trim().toLocaleLowerCase("th-TH")),
+    ),
+  );
   readonly cartQty = computed(() =>
     this.session.cart().reduce((sum, item) => sum + item.quantity, 0),
   );
@@ -219,7 +286,11 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     if (fragment !== null) {
       // A bearer token in the fragment must leave the visible URL / history
       // immediately, before API calls or navigation; never put it in a query.
-      win?.history.replaceState(win.history.state, "", win.location.pathname + win.location.search);
+      win?.history.replaceState(
+        win.history.state,
+        "",
+        win.location.pathname + win.location.search,
+      );
       const token = sanitizedVisitToken(fragment);
       if (!token) {
         this.loading.set(false);
@@ -275,26 +346,44 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   }
 
   onSearch(event: Event): void {
-    if (event.target instanceof HTMLInputElement) this.search.set(event.target.value);
+    if (event.target instanceof HTMLInputElement)
+      this.search.set(event.target.value);
   }
   onCategory(event: Event): void {
-    if (event.target instanceof HTMLSelectElement) this.category.set(event.target.value);
+    if (event.target instanceof HTMLSelectElement)
+      this.category.set(event.target.value);
   }
   groups(productId: string): GuestModifierGroup[] {
-    return this.session.visit()?.modifierGroups.filter((x) => x.productId === productId) ?? [];
+    return (
+      this.session
+        .visit()
+        ?.modifierGroups.filter((x) => x.productId === productId) ?? []
+    );
   }
   options(groupId: string): GuestModifierOption[] {
-    return this.session.visit()?.modifierOptions.filter((x) => x.groupId === groupId) ?? [];
+    return (
+      this.session
+        .visit()
+        ?.modifierOptions.filter((x) => x.groupId === groupId) ?? []
+    );
   }
   categoryName(categoryId: string): string {
-    return this.session.visit()?.categories.find((x) => x.id === categoryId)?.name ?? "เมนู";
+    return (
+      this.session.visit()?.categories.find((x) => x.id === categoryId)?.name ??
+      "เมนู"
+    );
   }
   productName(productId: string): string {
-    return this.session.visit()?.products.find((x) => x.id === productId)?.name ?? "สินค้า";
+    return (
+      this.session.visit()?.products.find((x) => x.id === productId)?.name ??
+      "สินค้า"
+    );
   }
   selectionNames(optionIds: readonly string[]): string {
     const options = this.session.visit()?.modifierOptions ?? [];
-    return optionIds.map((id) => options.find((x) => x.id === id)?.name ?? "ตัวเลือก").join(" · ");
+    return optionIds
+      .map((id) => options.find((x) => x.id === id)?.name ?? "ตัวเลือก")
+      .join(" · ");
   }
   moneySigned(value: number): string {
     return value < 0 ? "-" + formatSatang(-value) : formatSatang(value);
@@ -302,16 +391,30 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   isSelected(productId: string, optionId: string): boolean {
     return (this.selected()[productId] ?? []).includes(optionId);
   }
-  optionDisabled(productId: string, group: GuestModifierGroup, optionId: string): boolean {
+  optionDisabled(
+    productId: string,
+    group: GuestModifierGroup,
+    optionId: string,
+  ): boolean {
     const ids = this.selected()[productId] ?? [];
-    return !ids.includes(optionId) &&
-      ids.filter((id) => this.options(group.id).some((option) => option.id === id)).length >= group.maxSelect;
+    return (
+      !ids.includes(optionId) &&
+      ids.filter((id) =>
+        this.options(group.id).some((option) => option.id === id),
+      ).length >= group.maxSelect
+    );
   }
-  toggleOption(productId: string, group: GuestModifierGroup, optionId: string): void {
+  toggleOption(
+    productId: string,
+    group: GuestModifierGroup,
+    optionId: string,
+  ): void {
     const ids = this.selected()[productId] ?? [];
     const next = ids.includes(optionId)
       ? ids.filter((x) => x !== optionId)
-      : this.optionDisabled(productId, group, optionId) ? ids : [...ids, optionId];
+      : this.optionDisabled(productId, group, optionId)
+        ? ids
+        : [...ids, optionId];
     this.selected.update((values) => ({ ...values, [productId]: next }));
     this.notice.set("");
   }
@@ -320,12 +423,14 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     const visit = this.session.visit();
     if (!visit) return;
     try {
-      this.session.setCart(addToCart(
-        visit,
-        this.session.cart(),
-        product.id,
-        this.selected()[product.id] ?? [],
-      ));
+      this.session.setCart(
+        addToCart(
+          visit,
+          this.session.cart(),
+          product.id,
+          this.selected()[product.id] ?? [],
+        ),
+      );
       this.notice.set("เพิ่ม " + product.name + " ลงตะกร้าแล้ว");
     } catch (error) {
       this.notice.set(guestError(error));
@@ -333,7 +438,9 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   }
   changeQuantity(index: number, amount: number): void {
     try {
-      this.session.setCart(changeCartQuantity(this.session.cart(), index, amount));
+      this.session.setCart(
+        changeCartQuantity(this.session.cart(), index, amount),
+      );
       this.notice.set("");
     } catch (error) {
       this.notice.set(guestError(error));
@@ -344,13 +451,18 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     const token = this.session.visitToken();
     const visit = this.session.visit();
     const lines = this.session.cart();
-    if (!token || !visit || !lines.length || this.busy() || !this.online()) return;
+    if (!token || !visit || !lines.length || this.busy() || !this.online())
+      return;
     if (Date.now() >= new Date(visit.expiresAt).getTime()) {
       this.notice.set("QR โต๊ะหมดอายุแล้ว กรุณาสแกนใหม่");
       return;
     }
     for (const line of lines) {
-      const invalid = selectedOptionError(visit, line.productId, line.optionIds);
+      const invalid = selectedOptionError(
+        visit,
+        line.productId,
+        line.optionIds,
+      );
       if (invalid) {
         this.notice.set(invalid);
         return;
@@ -365,10 +477,17 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       const latest = await this.api.resolve(token);
       const oldEstimate = estimateSatang(visit, lines);
       const newEstimate = estimateSatang(latest, lines);
-      if (!Number.isFinite(newEstimate) || newEstimate !== oldEstimate ||
-          lines.some((line) => selectedOptionError(latest, line.productId, line.optionIds))) {
+      if (
+        !Number.isFinite(newEstimate) ||
+        newEstimate !== oldEstimate ||
+        lines.some((line) =>
+          selectedOptionError(latest, line.productId, line.optionIds),
+        )
+      ) {
         this.session.setVisit(token, latest);
-        this.notice.set("เมนู ราคา หรือความพร้อมเปลี่ยนไป โปรดตรวจสอบตะกร้าก่อนยืนยันอีกครั้ง");
+        this.notice.set(
+          "เมนู ราคา หรือความพร้อมเปลี่ยนไป โปรดตรวจสอบตะกร้าก่อนยืนยันอีกครั้ง",
+        );
         return;
       }
       const key = this.session.keyFor(lines);
