@@ -44,17 +44,18 @@ function inventoryError(error: unknown): string {
   template: `
     <section class="inventory-shell" aria-labelledby="inventory-heading">
       <a routerLink="/" class="inventory-back">← กลับไปหน้าร้านค้า</a>
-      <span class="eyebrow">INVENTORY / MANUAL LEDGER</span>
+      <span class="eyebrow">INVENTORY / EXPLICIT ORDER TRACKING</span>
       <h1 id="inventory-heading">สต็อกวัตถุดิบของร้าน</h1>
       <p class="inventory-muted">
         {{ store()?.storeName || "กำลังตรวจสอบสิทธิ์..." }}
         · ปริมาณใช้หน่วย g / ml / ชิ้น และจำนวนเต็มทศนิยมไม่เกิน 3 ตำแหน่ง
       </p>
       <p class="inventory-warning" role="note">
-        <strong>สต็อกแบบบันทึกเองเท่านั้น</strong>
-        สูตรวัตถุดิบยังเป็นข้อมูลอ้างอิง
-        ระบบยังไม่หักวัตถุดิบอัตโนมัติจากออเดอร์ และตัวเลขสต็อกไม่ใช่ยอดขาย
-        เงินรับ หรือข้อมูล Payment
+        <strong>ตัดสต็อกเมื่อร้านรับออเดอร์ เฉพาะสินค้าที่เปิดติดตาม</strong>
+        สินค้าทุกชนิดเริ่มในโหมดจัดการสต็อกด้วยตนเอง
+        ตรวจสูตรหลักและตัวเลือกเสริมก่อนเปิดติดตามรายสินค้า
+        ระบบคืนปริมาณที่ตัดจริงเมื่อยกเลิกออเดอร์ที่รับแล้ว
+        สต็อกไม่ใช่ยอดเงินรับหรือข้อมูล Payment
       </p>
 
       @if (error()) {
@@ -235,8 +236,8 @@ function inventoryError(error: unknown): string {
             <section class="inventory-panel" aria-labelledby="recipe-heading">
               <h2 id="recipe-heading">สูตรการใช้วัตถุดิบต่อสินค้า 1 รายการ</h2>
               <p class="inventory-muted">
-                บันทึกเพื่อวางแผนเท่านั้น ไม่ตัดสต็อกตาม Order ใส่ 0
-                เพื่อลบส่วนประกอบในสูตร
+                สูตรนี้เป็นข้อมูลวางแผนจนกว่าจะเปิดติดตามสต็อกรายสินค้า
+                หลังเปิดแล้วจะตัดวัตถุดิบเมื่อร้านรับออเดอร์ ใส่ 0 เพื่อลบส่วนประกอบ
               </p>
               <form
                 class="inventory-form inventory-recipe-form"
@@ -381,6 +382,9 @@ export class InventoryPage implements OnInit {
   readonly recipeProductId = signal("");
   readonly recipeItemId = signal("");
   readonly recipeQuantity = signal("");
+  readonly modifierOptionId = signal("");
+  readonly modifierItemId = signal("");
+  readonly modifierQuantity = signal("");
   readonly units = formatUnits;
   readonly isLow = lowStock;
   private retry: { payload: string; key: string } | null = null;
@@ -415,8 +419,8 @@ export class InventoryPage implements OnInit {
     try {
       const snapshot = await this.api.snapshot(this.tenantId, this.storeId);
       if (
-        snapshot.stockMode !== "manual_ledger_only" ||
-        snapshot.orderConsumptionEnabled !== false
+        !["manual_ledger_only", "order_acceptance_opt_in"].includes(snapshot.stockMode) ||
+        typeof snapshot.orderConsumptionEnabled !== "boolean"
       ) {
         throw new Error("ข้อมูลสต็อกไม่อยู่ในรูปแบบ Ledger ที่รองรับ");
       }
@@ -451,6 +455,7 @@ export class InventoryPage implements OnInit {
     if (field === "delta") this.moveDelta.set(value);
     if (field === "reason") this.moveReason.set(value);
     if (field === "recipe") this.recipeQuantity.set(value);
+    if (field === "modifier") this.modifierQuantity.set(value);
   }
   onUnit(event: Event): void {
     if (
@@ -473,6 +478,8 @@ export class InventoryPage implements OnInit {
     if (target === "movement-item") this.moveItemId.set(event.target.value);
     if (target === "product") this.recipeProductId.set(event.target.value);
     if (target === "recipe-item") this.recipeItemId.set(event.target.value);
+    if (target === "modifier-option") this.modifierOptionId.set(event.target.value);
+    if (target === "modifier-item") this.modifierItemId.set(event.target.value);
   }
 
   private canWrite(): boolean {
@@ -592,7 +599,7 @@ export class InventoryPage implements OnInit {
         this.recipeItemId(),
         this.recipeQuantity(),
       );
-      this.notice.set("บันทึกสูตรวัตถุดิบสำเร็จ (ยังไม่ตัดสต็อก)");
+      this.notice.set("บันทึกสูตรวัตถุดิบสำเร็จ");
       await this.reload();
     } catch (error) {
       this.error.set(inventoryError(error));
