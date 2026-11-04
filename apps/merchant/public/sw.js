@@ -45,9 +45,9 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin ||
-      isPrivateOrDynamicPath(url.pathname)) return;
+  if (url.origin !== self.location.origin || url.pathname.startsWith("/api")) return;
   if (request.headers?.get("accept")?.includes("text/event-stream")) return;
+  if (url.pathname.startsWith("/auth") || url.pathname.startsWith("/admin")) return;
 
   if (request.mode === "navigate") {
     // Never cache the authenticated merchant HTML/page. When unreachable,
@@ -62,6 +62,8 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
+
+  if (isPrivateOrDynamicPath(url.pathname)) return;
 
   if (isPublicStaticAsset(request, url)) {
     event.respondWith((async () => {
