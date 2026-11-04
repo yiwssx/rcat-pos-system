@@ -83,17 +83,17 @@ BEGIN
 END $$;
 RESET ROLE;
 DO $$
-DECLARE id uuid:=current_setting('test.short_order')::uuid;
-  ingredient uuid:=current_setting('test.short_item')::uuid;
-  other uuid:=current_setting('test.short_other')::uuid;
+DECLARE v_order uuid:=current_setting('test.short_order')::uuid;
+  v_ingredient uuid:=current_setting('test.short_item')::uuid;
+  v_other uuid:=current_setting('test.short_other')::uuid;
 BEGIN
- IF (SELECT status FROM rcat.orders WHERE id=id)<>'accepted'
-   OR (SELECT on_hand FROM rcat.inventory_items WHERE id=ingredient)<>1
-   OR (SELECT on_hand FROM rcat.inventory_items WHERE id=other)<>2
+ IF (SELECT status FROM rcat.orders WHERE id=v_order)<>'accepted'
+   OR (SELECT on_hand FROM rcat.inventory_items WHERE id=v_ingredient)<>1
+   OR (SELECT on_hand FROM rcat.inventory_items WHERE id=v_other)<>2
    OR (SELECT count(*) FROM rcat.inventory_order_allocations
-     WHERE order_id=id)<>2
+     WHERE order_id=v_order)<>2
    OR (SELECT count(*) FROM rcat.order_outbox_events
-     WHERE order_id=id AND event_type='order.status.changed')<>1
+     WHERE order_id=v_order AND event_type='order.status.changed')<>1
  THEN RAISE EXCEPTION 'Failed attempt leaked status/outbox/stock, or retry not atomic'; END IF;
 END $$;
 ROLLBACK;
