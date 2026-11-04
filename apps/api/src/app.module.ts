@@ -31,6 +31,8 @@ import { MerchantNotificationsService } from "./orders/merchant-notifications.se
 import { MerchantNotificationStreamService } from "./orders/merchant-notification-stream.service";
 import { OperationalReportsController } from "./orders/operational-reports.controller";
 import { OperationalReportsService } from "./orders/operational-reports.service";
+import { InventoryController } from "./inventory/inventory.controller";
+import { InventoryService } from "./inventory/inventory.service";
 
 @Module({
   controllers: [
@@ -50,6 +52,7 @@ import { OperationalReportsService } from "./orders/operational-reports.service"
     OperationalBillsController,
     MerchantNotificationsController,
     OperationalReportsController,
+    InventoryController,
   ],
   providers: [
     DatabaseAccess,
@@ -69,6 +72,7 @@ import { OperationalReportsService } from "./orders/operational-reports.service"
     MerchantNotificationsService,
     MerchantNotificationStreamService,
     OperationalReportsService,
+    InventoryService,
   ],
 })
 export class AppModule {}
