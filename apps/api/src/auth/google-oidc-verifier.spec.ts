@@ -4,7 +4,7 @@ import {
   GoogleJwks,
   verifyGoogleWorkspaceIdToken,
 } from "./google-oidc-verifier";
-import { clearGoogleOauthCookies, googleOauthCookies } from "./google-workspace-auth.service";
+import { clearGoogleOauthCookies, googleOauthCookies } from "./google-oauth-cookies";
 
 const { privateKey, publicKey } = generateKeyPairSync("rsa", {
   modulusLength: 2048,
