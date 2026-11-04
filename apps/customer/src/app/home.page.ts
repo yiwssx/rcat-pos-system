@@ -5,35 +5,30 @@ import { RouterLink } from "@angular/router";
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
-  template: ` <section class="hero" aria-labelledby="hero-title">
-      <span class="eyebrow">CUSTOMER / WEB</span>
-      <h1 id="hero-title">สั่งอาหารผ่าน QR</h1>
-      <p class="lede">เลือกเมนูจากโทรศัพท์ได้ทันที เมื่อร้านเปิดให้บริการ</p>
-      <div class="notice" role="status">
-        <span class="notice-dot"></span>ระบบหน้าลูกค้าอยู่ระหว่างการพัฒนา
-        ยังไม่สามารถส่งคำสั่งซื้อหรือชำระเงินได้
-      </div>
-      <a class="primary-link" routerLink="/status"
-        >ดูสถานะการพัฒนา <span aria-hidden="true">↗</span></a
-      >
-    </section>
-    <section class="section" aria-labelledby="upcoming-title">
-      <div class="section-top">
-        <span class="eyebrow">ROADMAP</span>
-        <h2 id="upcoming-title">ฟังก์ชันที่จะพัฒนา</h2>
-      </div>
-      <div class="tiles">
-        <article class="tile">
-          <span class="tile-id">01</span>
-          <h3>เมนูและตะกร้าสินค้า</h3>
-          <p>กำลังเตรียมโครงสร้างและข้อกำหนดการใช้งาน</p>
-        </article>
-        <article class="tile">
-          <span class="tile-id">02</span>
-          <h3>ติดตามสถานะออร์เดอร์</h3>
-          <p>เชื่อมต่อกับ Backend และความปลอดภัยในระยะถัดไป</p>
-        </article>
-      </div>
-    </section>`,
+  template: `<section class="hero" aria-labelledby="hero-title">
+    <span class="eyebrow">CUSTOMER / QR ORDERING</span>
+    <h1 id="hero-title">สั่งอาหารผ่าน QR โต๊ะ</h1>
+    <p class="lede">สแกน QR สำหรับสั่งอาหารจากร้าน เพื่อเปิดเมนู เลือกตัวเลือก เพิ่มลงตะกร้า และติดตามสถานะ โดยไม่ต้องสมัครบัญชี</p>
+    <div class="notice" role="note">
+      <span class="notice-dot"></span>
+      QR สำหรับสั่งอาหารไม่ใช่ QR PromptPay และยังไม่เปิดให้ชำระเงินจริง
+    </div>
+    <a class="primary-link" routerLink="/order">เปิดหน้าสั่งอาหาร</a>
+  </section>
+  <section class="section" aria-labelledby="guide-title">
+    <div class="section-top">
+      <span class="eyebrow">HOW IT WORKS</span>
+      <h2 id="guide-title">ขั้นตอนสำหรับลูกค้า</h2>
+    </div>
+    <div class="tiles">
+      <article class="tile"><span class="tile-id">01 / สแกน QR</span>
+        <h3>เลือกโต๊ะ</h3><p>ใช้ QR ที่ร้านออกให้สำหรับรอบการสั่งซื้อปัจจุบัน</p></article>
+      <article class="tile"><span class="tile-id">02 / ยืนยันออเดอร์</span>
+        <h3>เลือกเมนูและตัวเลือก</h3><p>ระบบให้ร้านยืนยันยอดจริงจาก Server ก่อนติดตามสถานะ</p></article>
+      <article class="tile"><span class="tile-id">03 / ติดตาม</span>
+        <h3>ดูความคืบหน้า</h3><p>ตรวจสอบออเดอร์ที่ส่งจากแท็บนี้ได้โดยไม่ต้องเข้าสู่ระบบ</p>
+        <a routerLink="/order/track">ดูสถานะออเดอร์</a></article>
+    </div>
+  </section>`,
 })
 export class HomePage {}
