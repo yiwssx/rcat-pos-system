@@ -9,12 +9,14 @@ export const routes: Routes = [
   {
     path: "order",
     pathMatch: "full",
-    loadComponent: () => import("./guest-order.page").then((m) => m.GuestOrderPage),
+    loadComponent: () =>
+      import("./guest-order.page").then((m) => m.GuestOrderPage),
   },
   {
     path: "order/track",
     pathMatch: "full",
-    loadComponent: () => import("./guest-track.page").then((m) => m.GuestTrackPage),
+    loadComponent: () =>
+      import("./guest-track.page").then((m) => m.GuestTrackPage),
   },
   {
     path: "status",
