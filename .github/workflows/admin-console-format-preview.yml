@@ -1,0 +1,44 @@
+name: Temporary Admin Console Prettier Preview
+on:
+  pull_request:
+    paths:
+      - 'apps/admin/src/**'
+      - '.github/workflows/admin-console-format-preview.yml'
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Canonical source formatting
+        shell: bash
+        run: |
+          files=(
+            apps/admin/src/app/app.spec.ts
+            apps/admin/src/app/home.page.ts
+            apps/admin/src/app/owner-admin.api.ts
+            apps/admin/src/app/owner-admin.css
+            apps/admin/src/app/owner-admin.domain.ts
+            apps/admin/src/app/staff.page.ts
+            apps/admin/src/index.html
+          )
+          pnpm exec prettier --write "${files[@]}"
+          for f in "${files[@]}"; do
+            echo "RCAT_ADMIN_FORMAT_BEGIN:$f"
+            base64 -w0 "$f"
+            echo
+            echo "RCAT_ADMIN_FORMAT_END:$f"
+          done
