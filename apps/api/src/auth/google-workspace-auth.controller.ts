@@ -1,10 +1,8 @@
 import { Controller, Get, Header, Query, Req, Res } from "@nestjs/common";
 import { ServerResponse } from "node:http";
 import { ApiRequest } from "./request-security";
-import {
-  clearGoogleOauthCookies,
-  GoogleWorkspaceAuthService,
-} from "./google-workspace-auth.service";
+import { clearGoogleOauthCookies } from "./google-oauth-cookies";
+import { GoogleWorkspaceAuthService } from "./google-workspace-auth.service";
 
 @Controller("auth/google")
 export class GoogleWorkspaceAuthController {
