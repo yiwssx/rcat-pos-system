@@ -39,6 +39,41 @@ server.stderr.on("data", (data) => {
 async function api(path, init = {}) {
   return fetch(origin + path, init);
 }
+
+// Read actual HTTP event-stream frames, including multiple frames per chunk.
+// The caller owns the AbortController and closes the stream after assertions.
+function sseFrameReader(response, controller) {
+  assert.ok(response.body, "SSE response must be streaming");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  return {
+    async until(matches) {
+      const timeout = setTimeout(() => controller.abort(), 12_000);
+      try {
+        for (;;) {
+          let boundary = buffer.indexOf("\n\n");
+          while (boundary >= 0) {
+            const frame = buffer.slice(0, boundary);
+            buffer = buffer.slice(boundary + 2);
+            if (matches(frame)) return frame;
+            boundary = buffer.indexOf("\n\n");
+          }
+          const chunk = await reader.read();
+          assert.equal(chunk.done, false, "SSE disconnected before event");
+          buffer += decoder.decode(chunk.value, { stream: true });
+          assert.ok(buffer.length < 64 * 1024, "SSE frame exceeds buffer cap");
+        }
+      } finally {
+        clearTimeout(timeout);
+      }
+    },
+    close() {
+      controller.abort();
+    },
+  };
+}
+
 const json = { "Content-Type": "application/json", Origin: origin };
 try {
   let alive = false;
@@ -926,6 +961,17 @@ try {
   // acknowledgement, replay, Origin/CSRF and strict tenant/store isolation.
   const notificationsUrl =
     `/api/tenants/${made.tenantId}/stores/${made.storeId}/notifications`;
+  const streamUrl = notificationsUrl + "/stream";
+  assert.equal((await api(streamUrl)).status, 401,
+    "Anonymous guest must not open SSE stream");
+  assert.equal((await api(streamUrl, {
+    headers: { Cookie: cookieHeader, Origin: "https://untrusted.invalid" },
+  })).status, 403, "SSE cross-origin GET cannot bypass allowlist");
+  assert.equal((await api(
+    "/api/tenants/00000000-0000-4000-8000-000000000002/stores/20000000-0000-4000-8000-000000000002/notifications/stream",
+    { headers: { Cookie: cookieHeader } },
+  )).status, 404, "SSE must not cross tenant boundaries");
+
   assert.equal((await api(notificationsUrl)).status, 401,
     "Anonymous client cannot read merchant notifications");
   assert.equal((await api(notificationsUrl + "?limit=100", {
@@ -1009,6 +1055,40 @@ try {
   assert.equal((await resumedAck.json()).events.length, 2,
     "Saved acknowledgement must allow lossless reconnect");
 
+  // Last-Event-ID is only an advisory SSE transport value. The backend must
+  // replay from the persisted staff acknowledgement, not trust a forged high
+  // Last-Event-ID that would hide unacknowledged Orders.
+  const sseController = new AbortController();
+  const sseResponse = await api(streamUrl, {
+    headers: {
+      Cookie: cookieHeader,
+      Origin: origin,
+      "Last-Event-ID": "9223372036854775807",
+    },
+    signal: sseController.signal,
+  });
+  assert.equal(sseResponse.status, 200,
+    "Authorized staff should establish an SSE stream");
+  assert.match(sseResponse.headers.get("content-type") ?? "",
+    /^text\/event-stream/i);
+  assert.match(sseResponse.headers.get("cache-control") ?? "", /no-store/);
+  assert.equal(sseResponse.headers.get("x-accel-buffering"), "no");
+  const sse = sseFrameReader(sseResponse, sseController);
+  const firstSseFrame = await sse.until((frame) =>
+    frame.includes("event: order-event"));
+  assert.match(firstSseFrame,
+    new RegExp("^id: " + feed.events[1].eventId + "\\n", "m"),
+    "Forged Last-Event-ID must not suppress staff-unacked Order events");
+  const firstSseData = JSON.parse(
+    firstSseFrame.split("\n").find((line) => line.startsWith("data: "))?.slice(6) ?? "null",
+  );
+  assert.equal(firstSseData.eventType, "order.submitted");
+  assert.equal(firstSseData.eventId, feed.events[1].eventId);
+  assert.ok(!Object.hasOwn(firstSseData, "trackingToken"));
+  assert.ok(!Object.hasOwn(firstSseData, "amountSatang"));
+  assert.ok(!Object.hasOwn(firstSseData, "actorUserId"));
+
+
   const changeOrder = (expectedStatus, nextStatus, headers = catHeaders) =>
     api(singleOrderUrl, {
       method: "PATCH",
@@ -1026,6 +1106,22 @@ try {
   const accepted = await changeOrder("submitted", "accepted");
   assert.equal(accepted.status, 200, await accepted.clone().text());
   assert.equal((await accepted.json()).paymentState, "not_requested");
+  const deliveredStatus = await sse.until((frame) =>
+    frame.includes("event: order-event") && frame.includes('"status":"accepted"'));
+  const deliveredData = JSON.parse(
+    deliveredStatus.split("\n").find((line) => line.startsWith("data: "))?.slice(6) ?? "null",
+  );
+  assert.equal(deliveredData.orderId, payloads[0].orderId,
+    "Open SSE stream must receive newly committed Order status transitions");
+  assert.equal(deliveredData.eventType, "order.status.changed");
+  sse.close();
+  const afterSseGet = await api(notificationsUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(afterSseGet.status, 200);
+  assert.equal((await afterSseGet.json()).acknowledgedCursor, firstEventId,
+    "SSE delivery must NEVER acknowledge durable notifications");
+
   assert.equal((await changeOrder("submitted", "cancelled")).status, 409,
     "Stale expected state must fail without changing Order");
   assert.equal((await changeOrder("accepted", "preparing")).status, 200);
@@ -1269,6 +1365,17 @@ try {
     ["submitted", "accepted", "preparing", "served"],
     "Table QR rotation must not remove existing Order history");
 
+
+  // Server revalidates session while a stream stays open. Revoking the
+  // cookie must terminate delivery and notify the client on the next poll.
+  const revokedController = new AbortController();
+  const revokedResponse = await api(streamUrl, {
+    headers: { Cookie: cookieHeader },
+    signal: revokedController.signal,
+  });
+  assert.equal(revokedResponse.status, 200);
+  const revokedReader = sseFrameReader(revokedResponse, revokedController);
+
   const logout = await api("/api/auth/logout", {
     method: "POST",
     headers: {
@@ -1278,6 +1385,14 @@ try {
     },
   });
   assert.equal(logout.status, 204);
+  const revokedFrame = await revokedReader.until((frame) =>
+    frame.includes("event: access-revoked"));
+  assert.match(revokedFrame, /reason":"access_unavailable"/);
+  revokedReader.close();
+  assert.equal((await api(streamUrl, {
+    headers: { Cookie: cookieHeader },
+  })).status, 401, "Revoked session cannot reconnect to SSE");
+
   assert.equal(
     (await api("/api/auth/me", { headers: { Cookie: cookieHeader } })).status,
     401,
