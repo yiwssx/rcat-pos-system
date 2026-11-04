@@ -4,7 +4,10 @@ export interface OperationalDailyReport {
   snapshotType: "ordered_not_paid";
   paymentStatus: "not_implemented";
   orderCount: number;
-  statusCounts: Record<"submitted" | "accepted" | "preparing" | "served" | "cancelled", number>;
+  statusCounts: Record<
+    "submitted" | "accepted" | "preparing" | "served" | "cancelled",
+    number
+  >;
   orderedAmountSatang: string;
   activeOrderedAmountSatang: string;
   cancelledOrderedAmountSatang: string;
@@ -41,11 +44,15 @@ export function formatReportSatang(satang: string): string {
 }
 
 export function formatReportSeconds(value: number | null): string {
-  if (value === null || !Number.isSafeInteger(value) || value < 0) return "ไม่มีข้อมูล";
+  if (value === null || !Number.isSafeInteger(value) || value < 0)
+    return "ไม่มีข้อมูล";
   if (value < 60) return `${value} วินาที`;
   return `${Math.floor(value / 60)} นาที ${value % 60} วินาที`;
 }
 
-export function operationalReportPath(tenantId: string, storeId: string): string {
+export function operationalReportPath(
+  tenantId: string,
+  storeId: string,
+): string {
   return `/api/tenants/${encodeURIComponent(tenantId)}/stores/${encodeURIComponent(storeId)}/reports/operations`;
 }
