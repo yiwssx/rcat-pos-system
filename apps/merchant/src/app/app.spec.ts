@@ -29,8 +29,9 @@ describe("merchant operations routes", () => {
   });
 
   it("lazy loads the store-scoped operational report for owners", () => {
-    expect(routes.find((route) =>
-      route.path === "reports/:tenantId/:storeId")?.loadComponent,
+    expect(
+      routes.find((route) => route.path === "reports/:tenantId/:storeId")
+        ?.loadComponent,
     ).toBeTypeOf("function");
   });
 
@@ -150,12 +151,15 @@ describe("durable outbox projection", () => {
 
 describe("operational report without Payment", () => {
   it("uses Asia/Bangkok business day independent from UTC date", () => {
-    expect(todayBangkok(new Date("2026-11-03T20:00:00.000Z")))
-      .toBe("2026-11-04");
-    expect(todayBangkok(new Date("2026-11-04T16:59:59.000Z")))
-      .toBe("2026-11-04");
-    expect(todayBangkok(new Date("2026-11-04T17:00:00.000Z")))
-      .toBe("2026-11-05");
+    expect(todayBangkok(new Date("2026-11-03T20:00:00.000Z"))).toBe(
+      "2026-11-04",
+    );
+    expect(todayBangkok(new Date("2026-11-04T16:59:59.000Z"))).toBe(
+      "2026-11-04",
+    );
+    expect(todayBangkok(new Date("2026-11-04T17:00:00.000Z"))).toBe(
+      "2026-11-05",
+    );
   });
 
   it("formats arbitrarily large integer-satang snapshots exactly", () => {
@@ -171,8 +175,9 @@ describe("operational report without Payment", () => {
     expect(operationalReportPath("tenant", "store")).toBe(
       "/api/tenants/tenant/stores/store/reports/operations",
     );
-    expect(operationalReportPath("../tenant", "store?other"))
-      .not.toContain("/../");
+    expect(operationalReportPath("../tenant", "store?other")).not.toContain(
+      "/../",
+    );
     expect(operationalReportPath("a", "b")).not.toContain("/payments");
   });
 });
