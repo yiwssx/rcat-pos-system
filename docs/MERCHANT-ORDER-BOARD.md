@@ -57,16 +57,14 @@ persisted per-user acknowledgment cursor. On each refresh:
    storage of session cookies, CSRF tokens or order details. Event IDs use
    strings/BigInt and are never converted to unsafe JS numbers.
 
-**Important limitations:** The Inbox uses keyset pagination with 50 Orders per page. The board checks
-up to 20 pages (1,000 Orders) on each refresh/replay; if older Orders lie
-outside that explicit bounded recovery window, it deliberately **does not
-acknowledge them** and raises a warning. Thus durable event persistence is in place but full
-high-volume recovery is still blocked until a paginated authoritative
-Orders endpoint is added. Multiple devices signed in as the same staff user
-share the server acknowledgment cursor; another device always re-fetches
-Inbox on resume. At-least-once replay is supported; exactly-once display,
-offline writes, real push/WebSocket/SSE, broker workers, production-ready
-rate limits and event retention are not claimed.
+**Current recovery policy:** Keyset pagination remains operator-controlled
+(50 Orders per page, up to 20 visual history pages). Durable Outbox replay
+uses a bounded **exact Order ID lookup** for referenced Orders not in visible
+pages, independent of Order age or backlog size. Each Outbox page has at
+most 50 event IDs; missing/foreign-store Orders prevent acknowledgment.
+Multiple devices with the same staff user share a server cursor and must
+recheck the authoritative API on resume. No offline writes or guaranteed
+exactly-once display are claimed.
 
 ## Interaction and adverse state coverage
 
@@ -77,7 +75,7 @@ rate limits and event retention are not claimed.
 | Phone offline / tab asleep | Warning, no status mutations; refresh on resume |
 | Duplicate Outbox deliveries | Deduplicate by eventId; ack monotonic |
 | Concurrent status mutation (CAS 409) | No optimistic success; error + Inbox refresh |
-| Outbox references an older Order (>50 Inbox limit) | Do not ack; show coverage warning |
+| Outbox references an older Order (>50 Inbox limit) | Fetch exact Order ID from scoped backend before ack |
 | CSRF cookie missing/expired | Reject local write and show session recovery prompt |
 | Order cancelled or served | Clear terminal state; no payment/settlement claim |
 
@@ -127,21 +125,22 @@ together. Invalid cursors, malformed dates and limits outside 1–50 are
 rejected. The final page returns `hasMore:false,nextCursor:null`.
 
 **Merchant frontend:** The operator can load 50 older Orders at a time
-using the "โหลดออเดอร์เก่า" control. At every reconnect the board re-fetches
-the number of pages selected. For each Outbox batch, it reads authoritative
-Order pages until all referenced Order IDs are covered; **only then** does
-it acknowledge that event batch. If 20 pages do not cover an event, it
-shows a warning and leaves the Outbox cursor unacknowledged for retry rather
-than pretending that the missing Order was processed. Loaded-card counters
-are explicitly for loaded Orders, not a store-wide report.
+using the "โหลดออเดอร์เก่า" control. Reconnect refreshes selected pages.
+For each Outbox page, it compares committed event Order IDs to newly
+retrieved authoritative snapshots and performs a separate bounded
+`GET .../orders/lookup?ids=UUID,UUID` for missing references. It
+**acknowledges only when every referenced Order is covered**. This
+removes the former 1,000-Order recovery ceiling without scanning historical
+pages, while retaining the 20-page limit for interactive manual browsing.
+Loaded-card counters are for loaded Orders, not store-wide reports.
 
-**Further hardening:** The 20-page/1,000-Order per-refresh bound is a
-safety limit, **not** full historical recovery at arbitrary volume. A
-server-side batched Order-by-ID lookup or dedicated worker / store-level
-read model, dynamic scanning budgets, and load/performance testing are
-recommended before public Production. The 10-second polling is not
-push delivery; SSE/WebSocket remains a separate increment. No Payment
-state was changed; G5 PromptPay per Order remains LAST.
+**Further hardening:** This closes the page-depth correctness gap but
+not every production scaling concern: prolonged event bursts, cursor
+retention, browser memory, process restarts, concurrent clients and
+database/index load still require load/recovery testing. The exact-ID
+query is limited to 50 IDs and remains staff/tenant/store scoped.
+SSE is advisory; the persisted Outbox is the replay authority.
+Payment remains deferred to G5.
 
 ## G3 SSE merchant notifications — PR #49 increment
 
@@ -226,3 +225,24 @@ checks, slow readers and proxy buffering in the intended hosting topology,
 session churn, load tests, active-stream metrics, reconnection storm
 throttling, user-visible audio/toast preferences and operational retention
 are still release gates. Durable polling remains mandatory.
+
+## G3 exact Order-ID replay — migration 021
+
+`GET /api/tenants/:tenantId/stores/:storeId/orders/lookup?ids=UUID,UUID`
+reads 1–50 unique IDs through
+`rcat_private.merchant_order_lookup_ids`. This function validates the
+existing active staff session and Tenant/Store role, returns the **same
+immutable Order item and satang snapshots** as the paginated Inbox and
+silently omits unknown or foreign-store IDs. Duplicate, missing or
+malformed IDs are rejected; no direct Order table grants are added.
+The Angular board refuses to acknowledge an Outbox page unless the
+returned current snapshot covers **every** referenced Order ID.
+No client-provided UUID or SSE event ID is permission to query another
+store. The endpoint is `Cache-Control: no-store` and cannot mark an Order
+paid or change its fulfilment state.
+
+Real PostgreSQL integration verifies an Order beyond the first 50,
+tenant isolation and duplicate-ID rejection. HTTP integration verifies
+staff-only access, cross-tenant denial and current immutable Order
+snapshots. Angular tests cover targeted recovery from a simulated
+1,200-Order backlog.
