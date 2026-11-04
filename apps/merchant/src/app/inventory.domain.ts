@@ -47,10 +47,15 @@ export function formatUnits(input: string): string {
   if (scaled === null) return "—";
   const abs = scaled < 0 ? -scaled : scaled;
   const whole = abs / 1000n;
-  const frac = String(abs % 1000n).padStart(3, "0").replace(/0+$/, "");
+  const frac = String(abs % 1000n)
+    .padStart(3, "0")
+    .replace(/0+$/, "");
   const prefix = scaled < 0 ? "-" : "";
-  return prefix + new Intl.NumberFormat("th-TH").format(whole) +
-    (frac ? "." + frac : "");
+  return (
+    prefix +
+    new Intl.NumberFormat("th-TH").format(whole) +
+    (frac ? "." + frac : "")
+  );
 }
 export function lowStock(item: InventoryItem): boolean {
   const onHand = toMilliUnits(item.onHand);
@@ -62,12 +67,20 @@ export function validStockInput(
   options: { negative?: boolean; zero?: boolean; max?: bigint } = {},
 ): boolean {
   const value = toMilliUnits(input);
-  return value !== null && (options.negative || value >= 0n) &&
+  return (
+    value !== null &&
+    (options.negative || value >= 0n) &&
     (options.zero || value !== 0n) &&
-    (value <= (options.max ?? 1000000000n) * 1000n) &&
-    (value >= -(options.max ?? 1000000000n) * 1000n);
+    value <= (options.max ?? 1000000000n) * 1000n &&
+    value >= -(options.max ?? 1000000000n) * 1000n
+  );
 }
 export function inventoryPath(tenantId: string, storeId: string): string {
-  return "/api/tenants/" + encodeURIComponent(tenantId) +
-    "/stores/" + encodeURIComponent(storeId) + "/inventory";
+  return (
+    "/api/tenants/" +
+    encodeURIComponent(tenantId) +
+    "/stores/" +
+    encodeURIComponent(storeId) +
+    "/inventory"
+  );
 }
