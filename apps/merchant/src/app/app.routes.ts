@@ -14,7 +14,9 @@ export const routes: Routes = [
   {
     path: "reports/:tenantId/:storeId",
     loadComponent: () =>
-      import("./operational-reports.page").then((m) => m.OperationalReportsPage),
+      import("./operational-reports.page").then(
+        (m) => m.OperationalReportsPage,
+      ),
   },
   {
     path: "status",
