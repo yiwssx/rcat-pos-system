@@ -26,6 +26,7 @@ import { OperationalBillsController } from "./orders/operational-bills.controlle
 import { OperationalBillsService } from "./orders/operational-bills.service";
 import { MerchantNotificationsController } from "./orders/merchant-notifications.controller";
 import { MerchantNotificationsService } from "./orders/merchant-notifications.service";
+import { MerchantNotificationStreamService } from "./orders/merchant-notification-stream.service";
 
 @Module({
   controllers: [
@@ -59,6 +60,7 @@ import { MerchantNotificationsService } from "./orders/merchant-notifications.se
     MerchantOrdersService,
     OperationalBillsService,
     MerchantNotificationsService,
+    MerchantNotificationStreamService,
   ],
 })
 export class AppModule {}

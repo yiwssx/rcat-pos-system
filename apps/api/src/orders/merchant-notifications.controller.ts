@@ -7,13 +7,23 @@ import {
   Post,
   Query,
   Req,
+  Res,
 } from "@nestjs/common";
-import { ApiRequest, requireAllowedOrigin } from "../auth/request-security";
+import { ServerResponse } from "node:http";
+import {
+  ApiRequest,
+  header,
+  requireAllowedOrigin,
+} from "../auth/request-security";
 import { MerchantNotificationsService } from "./merchant-notifications.service";
+import { MerchantNotificationStreamService } from "./merchant-notification-stream.service";
 
 @Controller("tenants/:tenantId/stores/:storeId/notifications")
 export class MerchantNotificationsController {
-  constructor(private readonly notifications: MerchantNotificationsService) {}
+  constructor(
+    private readonly notifications: MerchantNotificationsService,
+    private readonly streams: MerchantNotificationStreamService,
+  ) {}
 
   @Get()
   @Header("Cache-Control", "no-store")
@@ -25,6 +35,19 @@ export class MerchantNotificationsController {
     @Query("limit") limit: unknown,
   ) {
     return this.notifications.list(req, tenantId, storeId, after, limit);
+  }
+
+  @Get("stream")
+  async stream(
+    @Req() req: ApiRequest,
+    @Res() res: ServerResponse,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+  ): Promise<void> {
+    // Native EventSource uses cookies for same-origin requests. A supplied
+    // cross-origin Origin must be explicitly allowlisted, never reflected.
+    if (header(req, "origin") !== undefined) requireAllowedOrigin(req);
+    return this.streams.open(req, res, tenantId, storeId);
   }
 
   @Post("ack")

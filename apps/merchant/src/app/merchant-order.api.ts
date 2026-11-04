@@ -69,6 +69,12 @@ export class MerchantOrderApi {
     );
   }
 
+  notificationStreamUrl(tenantId: string, storeId: string): string {
+    // Native EventSource sends the HttpOnly session cookie, not auth headers.
+    // Never put session/CSRF tokens or tenant credentials in a stream URL.
+    return scopePath(tenantId, storeId) + "/notifications/stream";
+  }
+
   acknowledge(
     tenantId: string,
     storeId: string,
