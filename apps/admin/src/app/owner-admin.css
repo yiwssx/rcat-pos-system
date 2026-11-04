@@ -15,17 +15,31 @@
   font-size: 1.35rem;
   margin: 0 0 0.9rem;
 }
-.owner-shell h3 { margin: 0.6rem 0 0.8rem; font-size: 1.14rem; }
+.owner-shell h3 {
+  margin: 0.6rem 0 0.8rem;
+  font-size: 1.14rem;
+}
 .owner-muted {
   color: #56667b;
   line-height: 1.7;
   overflow-wrap: anywhere;
 }
-.owner-intro { padding-bottom: 1.4rem; }
-.owner-session { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1.4rem; }
-.owner-login, .owner-logout, .owner-form button,
-.owner-headline button, .owner-secret button,
-.owner-staff-controls button, .owner-error button {
+.owner-intro {
+  padding-bottom: 1.4rem;
+}
+.owner-session {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-top: 1.4rem;
+}
+.owner-login,
+.owner-logout,
+.owner-form button,
+.owner-headline button,
+.owner-secret button,
+.owner-staff-controls button,
+.owner-error button {
   font: inherit;
   padding: 0.68rem 1rem;
   min-height: 46px;
@@ -40,16 +54,25 @@
   align-items: center;
   justify-content: center;
 }
-.owner-logout, .owner-headline button, .owner-secret button,
-.owner-staff-controls button, .owner-error button {
+.owner-logout,
+.owner-headline button,
+.owner-secret button,
+.owner-staff-controls button,
+.owner-error button {
   color: #25425e;
   border-color: #b3c7d7;
   background: #fff;
 }
-.owner-shell button:disabled { cursor: not-allowed; opacity: 0.55; }
-.owner-shell a:focus-visible, .owner-shell button:focus-visible,
-.owner-shell input:focus-visible, .owner-shell select:focus-visible {
-  outline: 3px solid #d88d23; outline-offset: 3px;
+.owner-shell button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.owner-shell a:focus-visible,
+.owner-shell button:focus-visible,
+.owner-shell input:focus-visible,
+.owner-shell select:focus-visible {
+  outline: 3px solid #d88d23;
+  outline-offset: 3px;
 }
 .owner-alert {
   margin: 1.4rem 0 0;
@@ -61,7 +84,9 @@
   color: #715225;
   line-height: 1.7;
 }
-.owner-state, .owner-error, .owner-success {
+.owner-state,
+.owner-error,
+.owner-success {
   margin: 1rem 0;
   padding: 1rem 1.1rem;
   border-radius: 0.8rem;
@@ -69,9 +94,19 @@
   border: 1px solid #dce6f0;
   line-height: 1.75;
 }
-.owner-error { background: #fff6f5; border-color: #e6b8b5; color: #8a3933; }
-.owner-success { background: #edf8f3; border-color: #b9ddc8; color: #226045; }
-.owner-error button { margin-left: 0.8rem; }
+.owner-error {
+  background: #fff6f5;
+  border-color: #e6b8b5;
+  color: #8a3933;
+}
+.owner-success {
+  background: #edf8f3;
+  border-color: #b9ddc8;
+  color: #226045;
+}
+.owner-error button {
+  margin-left: 0.8rem;
+}
 .owner-panel {
   background: #fff;
   border: 1px solid #e0e7ef;
@@ -87,7 +122,11 @@
   flex-wrap: wrap;
   gap: 0.8rem;
 }
-.owner-stores { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,250px),1fr)); gap: 0.85rem; }
+.owner-stores {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+  gap: 0.85rem;
+}
 .owner-stores article {
   border: 1px solid #e0e7ee;
   padding: 1.2rem;
@@ -95,9 +134,13 @@
   display: grid;
   gap: 0.5rem;
 }
-.owner-stores article > small { color: #64778a; }
-.owner-stores article > a, .owner-back {
-  display: inline-flex; align-items: center;
+.owner-stores article > small {
+  color: #64778a;
+}
+.owner-stores article > a,
+.owner-back {
+  display: inline-flex;
+  align-items: center;
   min-height: 44px;
   font-weight: 700;
   color: #205778;
@@ -117,7 +160,10 @@
   align-items: start;
   gap: 1.1rem;
 }
-.owner-form { display: grid; gap: 1rem; }
+.owner-form {
+  display: grid;
+  gap: 1rem;
+}
 .owner-form label {
   display: grid;
   gap: 0.4rem;
@@ -125,7 +171,8 @@
   font-size: 0.9rem;
   font-weight: 700;
 }
-.owner-form input, .owner-form select,
+.owner-form input,
+.owner-form select,
 .owner-staff-controls select {
   width: 100%;
   min-width: 0;
@@ -138,7 +185,9 @@
   padding: 0.68rem 0.8rem;
   min-height: 46px;
 }
-.owner-form button { justify-self: start; }
+.owner-form button {
+  justify-self: start;
+}
 .owner-secret {
   display: flex;
   flex-wrap: wrap;
@@ -149,7 +198,11 @@
   margin-top: 1.4rem;
   border-radius: 0.75rem;
 }
-.owner-secret h3, .owner-secret p, .owner-secret code { flex: 0 0 100%; }
+.owner-secret h3,
+.owner-secret p,
+.owner-secret code {
+  flex: 0 0 100%;
+}
 .owner-secret code {
   background: #fff;
   border: 1px solid #ebd9bf;
@@ -158,7 +211,11 @@
   word-break: break-all;
   font-size: 0.88rem;
 }
-.owner-staff-list { padding: 0; list-style: none; margin: 0; }
+.owner-staff-list {
+  padding: 0;
+  list-style: none;
+  margin: 0;
+}
 .owner-staff-list li {
   display: flex;
   gap: 1rem;
@@ -166,30 +223,61 @@
   border-bottom: 1px solid #e4ebf0;
   padding: 0.95rem 0;
 }
-.owner-staff-list li:last-child { border-bottom: 0; }
-.owner-staff-meta { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center; }
-.owner-staff-meta span { color: #4d667e; }
+.owner-staff-list li:last-child {
+  border-bottom: 0;
+}
+.owner-staff-meta {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.owner-staff-meta span {
+  color: #4d667e;
+}
 .owner-staff-controls {
   display: flex;
   gap: 0.65rem;
   flex-wrap: wrap;
   align-items: center;
 }
-.owner-staff-controls label { color: #556c82; font-size: 0.85rem; }
-.owner-staff-controls select { width: auto; max-width: 100%; }
+.owner-staff-controls label {
+  color: #556c82;
+  font-size: 0.85rem;
+}
+.owner-staff-controls select {
+  width: auto;
+  max-width: 100%;
+}
 .owner-staff-controls .owner-danger {
   color: #a13f39;
   background: #fff6f5;
   border-color: #e9b5b1;
 }
-.owner-back { margin-bottom: 1.3rem; text-decoration: none; }
+.owner-back {
+  margin-bottom: 1.3rem;
+  text-decoration: none;
+}
 @media (max-width: 790px) {
-  .owner-grid { grid-template-columns: 1fr; }
+  .owner-grid {
+    grid-template-columns: 1fr;
+  }
 }
 @media (max-width: 420px) {
-  .owner-shell { padding-inline: 0.8rem; }
-  .owner-session, .owner-staff-controls { align-items: stretch; }
-  .owner-form button { justify-self: stretch; }
-  .owner-headline { flex-direction: column; }
-  .owner-staff-controls select { flex: 1 0 100%; }
+  .owner-shell {
+    padding-inline: 0.8rem;
+  }
+  .owner-session,
+  .owner-staff-controls {
+    align-items: stretch;
+  }
+  .owner-form button {
+    justify-self: stretch;
+  }
+  .owner-headline {
+    flex-direction: column;
+  }
+  .owner-staff-controls select {
+    flex: 1 0 100%;
+  }
 }
