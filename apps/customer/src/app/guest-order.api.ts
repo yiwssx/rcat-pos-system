@@ -122,6 +122,7 @@ export class GuestOrderSession {
   recoverTracking(): GuestTracking | null {
     const current = this.tracking();
     if (current && Date.now() - current.createdAt < TRACKING_MAX_AGE_MS) return current;
+    if (current) this.clearTracking();
     try {
       const raw = this.window?.sessionStorage.getItem(TRACKING_STORAGE_KEY);
       if (!raw) return null;
