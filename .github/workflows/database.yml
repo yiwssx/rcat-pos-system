@@ -116,6 +116,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/merchant-store-scopes.sql
       - name: Verify 65-Order same-timestamp keyset pagination and security isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-inbox-pagination.sql
+      - name: Verify Bangkok business-day operational reports, Order reconciliation and tenant roles
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/operational-reports.sql
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
