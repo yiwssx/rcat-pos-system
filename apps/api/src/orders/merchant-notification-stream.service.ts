@@ -110,14 +110,18 @@ export class MerchantNotificationStreamService {
         }
         // A backlog drains in bounded pages; an empty feed uses 3s polling.
         // Server-side polling is a wake-up mechanism, not the durable source.
-        schedule(page.hasMore && page.events.length > 0 ? 50 : POLL_INTERVAL_MS);
+        schedule(
+          page.hasMore && page.events.length > 0 ? 50 : POLL_INTERVAL_MS,
+        );
       } catch (error) {
         if (!live) return;
         const status =
           error instanceof HttpException ? error.getStatus() : undefined;
         const revoked = status === 401 || status === 403 || status === 404;
         const type = revoked ? "access-revoked" : "stream-error";
-        write(`event: ${type}\ndata: {"reason":"${revoked ? "access_unavailable" : "retry"}"}\n\n`);
+        write(
+          `event: ${type}\ndata: {"reason":"${revoked ? "access_unavailable" : "retry"}"}\n\n`,
+        );
         stop(true);
       }
     };
