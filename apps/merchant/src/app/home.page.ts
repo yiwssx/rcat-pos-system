@@ -26,6 +26,15 @@ import { MerchantOrderApi } from "./merchant-order.api";
       ระบบอยู่ระหว่างพัฒนา · ยังไม่มีการรับชำระเงิน PromptPay
       และยังไม่เปิดใช้งาน Production
     </p>
+    <div class="google-access">
+      <a class="google-login" href="/api/auth/google/start">
+        เข้าสู่ระบบด้วย Google Workspace (@rcat.ac.th)
+      </a>
+      <p>
+        ใช้บัญชีบุคลากรที่ได้รับสิทธิ์จากเจ้าของร้านแล้วเท่านั้น การใช้บัญชี
+        Google อื่นหรือบัญชีที่ไม่อยู่ในวิทยาลัยจะไม่ได้รับสิทธิ์
+      </p>
+    </div>
     <div class="section-top">
       <span class="eyebrow">YOUR STORES</span>
       <h2 id="stores-title">ร้านค้าที่บัญชีนี้เข้าถึงได้</h2>
@@ -66,8 +75,9 @@ import { MerchantOrderApi } from "./merchant-order.api";
       </div>
     }
     <p class="home-help">
-      ต้องมี Session พนักงานที่ยังไม่หมดอายุบนโดเมนเดียวกับ API ระบบ Google
-      Sign-in และการใช้งานจริงยังอยู่ในแผนพัฒนาถัดไป
+      ระบบออก Session และตรวจสิทธิ์จาก Backend หลังยืนยัน Google Workspace
+      ต้องกำหนด OAuth Client และ HTTPS Redirect URI ก่อนใช้งานจริง
+      โครงการยังไม่เปิด Production
     </p>
   </section>`,
   styles: [
@@ -128,6 +138,35 @@ import { MerchantOrderApi } from "./merchant-order.api";
         font-size: 0.86rem;
         font-weight: 750;
         text-decoration: underline;
+      }
+      .google-access {
+        margin: 1.3rem 0 1.8rem;
+        display: grid;
+        justify-items: start;
+        gap: 0.6rem;
+      }
+      .google-login {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 48px;
+        background: #fff;
+        border: 1px solid #8eaac0;
+        border-radius: 0.7rem;
+        padding: 0.6rem 1.1rem;
+        color: #173956;
+        font-weight: 800;
+        text-decoration: none;
+      }
+      .google-login:focus-visible {
+        outline: 3px solid #d88d2a;
+        outline-offset: 3px;
+      }
+      .google-access p {
+        margin: 0;
+        color: #5f6f83;
+        font-size: 0.86rem;
+        line-height: 1.7;
       }
       .home-help {
         color: #62718b;
