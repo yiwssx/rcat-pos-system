@@ -159,6 +159,14 @@ export function mergeEvents(
     .slice(0, 30);
 }
 
+export function missingOrderIds(
+  required: ReadonlySet<string>,
+  orders: readonly MerchantOrder[],
+): string[] {
+  const loaded = new Set(orders.map((order) => order.orderId));
+  return [...required].filter((id) => !loaded.has(id));
+}
+
 export function hasEventCoverage(
   events: readonly OrderEvent[],
   orders: readonly MerchantOrder[],

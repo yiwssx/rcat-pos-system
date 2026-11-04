@@ -28,6 +28,17 @@ export class MerchantOrdersController {
     return this.orders.inbox(req, tenantId, storeId, status, limit, cursor);
   }
 
+  @Get("lookup")
+  @Header("Cache-Control", "no-store")
+  lookup(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Query("ids") ids: unknown,
+  ) {
+    return this.orders.lookup(req, tenantId, storeId, ids);
+  }
+
   @Patch(":orderId/status")
   @Header("Cache-Control", "no-store")
   transition(

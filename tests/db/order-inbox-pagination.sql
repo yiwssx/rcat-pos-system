@@ -20,7 +20,7 @@ DECLARE
   v_cart jsonb;v_result jsonb;v_page jsonb;v_row jsonb;
   v_cursor text;v_count integer:=0;v_n integer;
   v_ids text[]:=ARRAY[]::text[];
-  v_last_uuid uuid;v_first_order uuid;
+  v_last_uuid uuid;v_first_order uuid;v_old_order uuid;v_lookup jsonb;
   v_first_time text;v_step integer;v_expected boolean;
   denied boolean;
 BEGIN
@@ -87,11 +87,48 @@ BEGIN
         OR v_row->>'visitId' IS NULL
       THEN RAISE EXCEPTION 'Paginated Order payload differs from original'; END IF;
     END LOOP;
+    IF v_step=3 THEN
+      v_old_order:=(v_page#>>'{orders,0,orderId}')::uuid;
+    END IF;
     v_cursor:=v_page->>'nextCursor';
   END LOOP;
   IF v_count<>65 OR v_cursor IS NOT NULL THEN
     RAISE EXCEPTION 'Did not reach end of exactly 65 Orders';
   END IF;
+  -- The 51st Order is beyond the first 50 Orders. Direct scoped lookup
+  -- must recover it without any pagination, even after a long backlog.
+  v_lookup:=rcat_private.merchant_order_lookup_ids(
+    v_actor,v_tenant,v_store,ARRAY[v_old_order]);
+  IF jsonb_array_length(v_lookup->'orders')<>1
+    OR v_lookup#>>'{orders,0,orderId}'<>v_old_order::text
+    OR v_lookup#>>'{orders,0,paymentState}'<>'not_requested'
+    OR jsonb_array_length(v_lookup#>'{orders,0,items}')<>1
+  THEN RAISE EXCEPTION 'Exact-ID recovery failed on historical Order'; END IF;
+
+  v_lookup:=rcat_private.merchant_order_lookup_ids(
+    v_actor,v_tenant,v_store,
+    ARRAY['ffffffff-ffff-4fff-8fff-ffffffffffff'::uuid]);
+  IF jsonb_array_length(v_lookup->'orders')<>0 THEN
+    RAISE EXCEPTION 'Unknown Order ID leaked across scopes';
+  END IF;
+
+  denied:=false;
+  BEGIN
+    PERFORM rcat_private.merchant_order_lookup_ids(
+      v_actor,v_tenant,v_store,ARRAY[v_old_order,v_old_order]);
+  EXCEPTION WHEN invalid_parameter_value THEN denied:=true;
+  END;
+  IF NOT denied THEN RAISE EXCEPTION 'Duplicate Order lookup ID accepted'; END IF;
+
+  denied:=false;
+  BEGIN
+    PERFORM rcat_private.merchant_order_lookup_ids(
+      v_actor,'00000000-0000-4000-8000-000000000002',
+      '20000000-0000-4000-8000-000000000002',ARRAY[v_old_order]);
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+  END;
+  IF NOT denied THEN RAISE EXCEPTION 'Cross-tenant targeted Order lookup leaked'; END IF;
+
   v_page:=rcat_private.merchant_order_inbox_page(
     v_actor,v_tenant,v_store,'accepted',50,NULL,NULL);
   IF jsonb_array_length(v_page->'orders')<>1 OR

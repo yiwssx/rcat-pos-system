@@ -11,6 +11,7 @@ import {
   formatSatang,
   hasEventCoverage,
   mergeEvents,
+  missingOrderIds,
   MerchantOrder,
   OrderEvent,
   orderActions,
@@ -138,6 +139,25 @@ describe("durable outbox projection", () => {
       [order("older"), order("recent")],
     );
     expect(hasEventCoverage([older, recent], recovered)).toBe(true);
+  });
+
+  it("recovers 1200-Order backlogs through exact event IDs rather than 20 Inbox pages", () => {
+    const historical = Array.from({ length: 1200 }, (_, i) =>
+      order("old-" + i),
+    );
+    const recentPage = historical.slice(1150);
+    const missing = missingOrderIds(new Set(["old-1", "old-1199"]), recentPage);
+    expect(missing).toEqual(["old-1"]);
+    const resolved = appendOrderPage(recentPage, [historical[1]!]);
+    expect(
+      hasEventCoverage(
+        [event("21", "old-1"), event("22", "old-1199")],
+        resolved,
+      ),
+    ).toBe(true);
+    expect(missingOrderIds(new Set(["foreign-id"]), resolved)).toEqual([
+      "foreign-id",
+    ]);
   });
 
   it("bounds the recent activity feed to 30 events", () => {
