@@ -294,6 +294,87 @@ function inventoryError(error: unknown): string {
                 </button>
               </form>
             </section>
+            <section class="inventory-panel" aria-labelledby="tracked-products-heading">
+              <h2 id="tracked-products-heading">เปิดตัดสต็อกตามออเดอร์เป็นรายสินค้า</h2>
+              <p class="inventory-muted">
+                เปิดได้หลังบันทึกสูตรวัตถุดิบหลักเท่านั้น
+                ตัวเลือกเสริมที่ไม่มีสูตรจะใช้วัตถุดิบเพิ่ม 0
+                ตรวจสอบสูตรตัวเลือกเสริมทุกตัวก่อนเปิดติดตาม
+                การเปิดนี้ไม่ตัดสต็อกจากออเดอร์เก่า
+              </p>
+              @if ((catalog()?.products?.length || 0) === 0) {
+                <p class="inventory-muted">ยังไม่มีสินค้าในเมนู</p>
+              } @else {
+                <ul class="inventory-tracking-list">
+                  @for (product of catalog()?.products || []; track product.id) {
+                    <li>
+                      <span>
+                        <strong>{{ product.name }}</strong>
+                        <small>{{ isTracked(product.id)
+                          ? "เปิดตัดสต็อกเมื่อรับออเดอร์" : "ยังไม่เปิดติดตาม" }}</small>
+                      </span>
+                      <button type="button" [disabled]="busy()"
+                        (click)="toggleTracking(product.id, !isTracked(product.id))">
+                        {{ isTracked(product.id) ? "ปิดติดตาม" : "เปิดติดตาม" }}
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </section>
+
+            <section class="inventory-panel" aria-labelledby="modifier-recipe-heading">
+              <h2 id="modifier-recipe-heading">สูตรวัตถุดิบของตัวเลือกเสริม (Modifier)</h2>
+              <p class="inventory-muted">
+                เพิ่มปริมาณวัตถุดิบเฉพาะเมื่อเลือกรายการเสริมนี้
+                สูตรจะถูกรวมกับสูตรหลักตามจำนวนสินค้าที่สั่ง
+                ใส่ 0 เพื่อลบส่วนประกอบ
+              </p>
+              <form class="inventory-form inventory-recipe-form"
+                (submit)="updateModifierRecipe($event)">
+                <label>ตัวเลือกเสริม
+                  <select [value]="modifierOptionId()"
+                    (change)="onSelect($event, 'modifier-option')" required>
+                    <option value="">เลือกตัวเลือกเสริม</option>
+                    @for (option of catalog()?.modifierOptions || []; track option.id) {
+                      <option [value]="option.id">
+                        {{ option.name }} · {{ productName(option.productId) }}
+                      </option>
+                    }
+                  </select>
+                </label>
+                <label>วัตถุดิบเพิ่มเติม
+                  <select [value]="modifierItemId()"
+                    (change)="onSelect($event, 'modifier-item')" required>
+                    <option value="">เลือกวัตถุดิบ</option>
+                    @for (item of data.items; track item.itemId) {
+                      <option [value]="item.itemId">{{ item.name }} ({{ item.unit }})</option>
+                    }
+                  </select>
+                </label>
+                <label>ปริมาณที่ใช้ต่อสินค้า 1 รายการ
+                  <input type="text" inputmode="decimal" [value]="modifierQuantity()"
+                    (input)="setText($event, 'modifier')" required>
+                </label>
+                <button type="submit" [disabled]="busy() ||
+                  !(catalog()?.modifierOptions?.length || 0) || !data.items.length">
+                  บันทึกสูตร Modifier
+                </button>
+              </form>
+              @if (data.modifierRecipes.length > 0) {
+                <ul class="inventory-detail-list">
+                  @for (recipe of data.modifierRecipes; track recipe.optionId + recipe.itemId) {
+                    <li>
+                      <strong>{{ modifierName(recipe.optionId) }}</strong>
+                      <span>{{ ingredientName(recipe.itemId) }}
+                        {{ units(recipe.quantityPerProduct) }}
+                        {{ ingredientUnit(recipe.itemId) }} / สินค้า 1 รายการ
+                      </span>
+                    </li>
+                  }
+                </ul>
+              }
+            </section>
           }
 
           <div class="inventory-grid">
