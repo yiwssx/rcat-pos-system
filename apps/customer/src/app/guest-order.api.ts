@@ -26,11 +26,17 @@ export class GuestOrderApi {
 
   resolve(token: string): Promise<GuestVisit> {
     return firstValueFrom(
-      this.http.post<GuestVisit>("/api/guest/ordering-visit/resolve", { token }),
+      this.http.post<GuestVisit>("/api/guest/ordering-visit/resolve", {
+        token,
+      }),
     );
   }
 
-  checkout(token: string, items: readonly CartLine[], key: string): Promise<GuestCheckout> {
+  checkout(
+    token: string,
+    items: readonly CartLine[],
+    key: string,
+  ): Promise<GuestCheckout> {
     return firstValueFrom(
       this.http.post<GuestCheckout>(
         "/api/guest/orders",
@@ -71,7 +77,10 @@ export class GuestOrderSession {
 
   setVisit(token: string, visit: GuestVisit): void {
     // A new QR replaces the current cart, preventing cross-table checkout.
-    if (this.visit()?.visitId !== visit.visitId || this.visitToken() !== token) {
+    if (
+      this.visit()?.visitId !== visit.visitId ||
+      this.visitToken() !== token
+    ) {
       this.cart.set([]);
       this.pending = null;
     }
@@ -95,7 +104,9 @@ export class GuestOrderSession {
     const payload = JSON.stringify(items);
     if (this.pending?.payload === payload) return this.pending.key;
     if (!this.window?.crypto?.randomUUID) {
-      throw new Error("เบราว์เซอร์นี้ไม่รองรับการสร้างรหัสคำสั่งซื้อที่ปลอดภัย");
+      throw new Error(
+        "เบราว์เซอร์นี้ไม่รองรับการสร้างรหัสคำสั่งซื้อที่ปลอดภัย",
+      );
     }
     const key = this.window.crypto.randomUUID();
     this.pending = { key, payload };
@@ -106,12 +117,19 @@ export class GuestOrderSession {
     if (!ID.test(orderId) || !TOKEN.test(token)) {
       throw new Error("ไม่สามารถบันทึกรหัสติดตามออเดอร์");
     }
-    const tracking: GuestTracking = { orderId, trackingToken: token, createdAt: Date.now() };
+    const tracking: GuestTracking = {
+      orderId,
+      trackingToken: token,
+      createdAt: Date.now(),
+    };
     this.tracking.set(tracking);
     // Tab-scoped only (not localStorage or URL). A new tab cannot silently
     // read someone else's order. Tokens remain inaccessible to server logs.
     try {
-      this.window?.sessionStorage.setItem(TRACKING_STORAGE_KEY, JSON.stringify(tracking));
+      this.window?.sessionStorage.setItem(
+        TRACKING_STORAGE_KEY,
+        JSON.stringify(tracking),
+      );
     } catch {
       // In-memory tracking still works when storage is disabled.
     }
@@ -121,21 +139,26 @@ export class GuestOrderSession {
 
   recoverTracking(): GuestTracking | null {
     const current = this.tracking();
-    if (current && Date.now() - current.createdAt < TRACKING_MAX_AGE_MS) return current;
+    if (current && Date.now() - current.createdAt < TRACKING_MAX_AGE_MS)
+      return current;
     if (current) this.clearTracking();
     try {
       const raw = this.window?.sessionStorage.getItem(TRACKING_STORAGE_KEY);
       if (!raw) return null;
       const parsed: unknown = JSON.parse(raw);
-      if (!parsed || typeof parsed !== "object") throw new Error("Invalid tracking");
+      if (!parsed || typeof parsed !== "object")
+        throw new Error("Invalid tracking");
       const item = parsed as Record<string, unknown>;
-      if (typeof item["orderId"] !== "string" ||
-          typeof item["trackingToken"] !== "string" ||
-          !ID.test(item["orderId"]) || !TOKEN.test(item["trackingToken"]) ||
-          typeof item["createdAt"] !== "number" ||
-          !Number.isFinite(item["createdAt"]) ||
-          Date.now() - item["createdAt"] > TRACKING_MAX_AGE_MS ||
-          item["createdAt"] > Date.now()) {
+      if (
+        typeof item["orderId"] !== "string" ||
+        typeof item["trackingToken"] !== "string" ||
+        !ID.test(item["orderId"]) ||
+        !TOKEN.test(item["trackingToken"]) ||
+        typeof item["createdAt"] !== "number" ||
+        !Number.isFinite(item["createdAt"]) ||
+        Date.now() - item["createdAt"] > TRACKING_MAX_AGE_MS ||
+        item["createdAt"] > Date.now()
+      ) {
         throw new Error("Invalid tracking");
       }
       const recovered = item as unknown as GuestTracking;
