@@ -45,8 +45,8 @@ function failureText(error: unknown): string {
     }
     if (error.status === 409) {
       const response = error.error as { message?: unknown } | null;
-      const message = typeof response?.message === "string"
-        ? response.message : "";
+      const message =
+        typeof response?.message === "string" ? response.message : "";
       if (message.includes("Insufficient tracked stock")) {
         return "วัตถุดิบในสต็อกไม่เพียงพอ ออเดอร์ยังไม่ถูกรับ กรุณาเติมสต็อกแล้วลองใหม่";
       }

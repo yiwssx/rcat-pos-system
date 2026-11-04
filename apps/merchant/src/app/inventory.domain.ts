@@ -1,5 +1,6 @@
 export type InventoryUnit = "g" | "ml" | "unit";
-export type InventoryKind = "receipt" | "adjustment" | "order_consumption" | "order_return";
+export type InventoryKind =
+  "receipt" | "adjustment" | "order_consumption" | "order_return";
 export interface InventoryItem {
   itemId: string;
   name: string;
@@ -29,11 +30,21 @@ export interface InventorySnapshot {
   stockMode: "manual_ledger_only" | "order_acceptance_opt_in";
   orderConsumptionEnabled: boolean;
   trackedProducts: { productId: string; productName: string }[];
-  modifierRecipes: { optionId: string; productId: string; itemId: string; quantityPerProduct: string }[];
+  modifierRecipes: {
+    optionId: string;
+    productId: string;
+    itemId: string;
+    quantityPerProduct: string;
+  }[];
 }
 export interface CatalogProducts {
   products: { id: string; name: string; available: boolean }[];
-  modifierOptions: { id: string; productId: string; groupId: string; name: string }[];
+  modifierOptions: {
+    id: string;
+    productId: string;
+    groupId: string;
+    name: string;
+  }[];
 }
 
 const DECIMAL = /^(?:0|[1-9][0-9]{0,12})(?:\.[0-9]{1,3})?$/;

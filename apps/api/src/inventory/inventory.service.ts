@@ -25,9 +25,13 @@ function mapInventoryError(error: unknown): never {
     throw new NotFoundException("Inventory unavailable");
   }
   if (code === "P0004")
-    throw new ConflictException("Insufficient inventory or stock quantity overflow");
+    throw new ConflictException(
+      "Insufficient inventory or stock quantity overflow",
+    );
   if (code === "P0005")
-    throw new ConflictException("Complete the base recipe before enabling tracking");
+    throw new ConflictException(
+      "Complete the base recipe before enabling tracking",
+    );
   if (code === "23505")
     throw new ConflictException("Inventory record or retry key already used");
   if (
@@ -73,7 +77,9 @@ export class InventoryService {
       const record = result.rows[0]?.snapshot;
       if (
         !record ||
-        !["manual_ledger_only", "order_acceptance_opt_in"].includes(record.stockMode) ||
+        !["manual_ledger_only", "order_acceptance_opt_in"].includes(
+          record.stockMode,
+        ) ||
         typeof record.orderConsumptionEnabled !== "boolean" ||
         !Array.isArray(record.trackedProducts) ||
         !Array.isArray(record.modifierRecipes)
@@ -170,8 +176,10 @@ export class InventoryService {
     }
     const session = await this.auth.session(req);
     this.auth.requireCsrf(req, session);
-    const body = raw && typeof raw === "object" && !Array.isArray(raw)
-      ? (raw as Record<string, unknown>) : {};
+    const body =
+      raw && typeof raw === "object" && !Array.isArray(raw)
+        ? (raw as Record<string, unknown>)
+        : {};
     const tracked = body["tracked"];
     if (typeof tracked !== "boolean") {
       throw new BadRequestException("Invalid stock tracking flag");
@@ -180,8 +188,13 @@ export class InventoryService {
       const result = await this.database.auth((client) =>
         client.query<{ data: { productId: string; tracked: boolean } }>(
           "SELECT rcat_private.inventory_set_product_tracking($1,$2,$3,$4,$5) AS data",
-          [digestOpaqueSecret(session.token), tenantId, storeId,
-            productId, tracked],
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            productId,
+            tracked,
+          ],
         ),
       );
       return result.rows[0]?.data;
@@ -206,22 +219,34 @@ export class InventoryService {
     }
     const session = await this.auth.session(req);
     this.auth.requireCsrf(req, session);
-    const data = raw && typeof raw === "object" && !Array.isArray(raw)
-      ? (raw as Record<string, unknown>) : {};
+    const data =
+      raw && typeof raw === "object" && !Array.isArray(raw)
+        ? (raw as Record<string, unknown>)
+        : {};
     const quantity = data["quantityPerProduct"];
     if (!validRecipeQuantity(quantity)) {
       throw new BadRequestException("Invalid modifier recipe quantity");
     }
     try {
       const result = await this.database.auth((client) =>
-        client.query<{ data: {
-          optionId: string;
-          itemId: string;
-          quantityPerProduct: string;
-        } }>(
+        client.query<{
+          data: {
+            optionId: string;
+            itemId: string;
+            quantityPerProduct: string;
+          };
+        }>(
           "SELECT rcat_private.inventory_set_modifier_recipe($1,$2,$3,$4,$5,$6,$7,$8::numeric) AS data",
-          [digestOpaqueSecret(session.token), tenantId, storeId,
-            productId, groupId, optionId, itemId, quantity],
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            productId,
+            groupId,
+            optionId,
+            itemId,
+            quantity,
+          ],
         ),
       );
       return result.rows[0]?.data;

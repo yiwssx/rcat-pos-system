@@ -100,8 +100,10 @@ export class InventoryApi {
   ): Promise<{ productId: string; tracked: boolean }> {
     return firstValueFrom(
       this.http.put<{ productId: string; tracked: boolean }>(
-        inventoryPath(tenantId, storeId) + "/products/" +
-          encodeURIComponent(productId) + "/tracking",
+        inventoryPath(tenantId, storeId) +
+          "/products/" +
+          encodeURIComponent(productId) +
+          "/tracking",
         { tracked },
         { headers: this.csrf(), withCredentials: true },
       ),
@@ -123,10 +125,14 @@ export class InventoryApi {
         itemId: string;
         quantityPerProduct: string;
       }>(
-        inventoryPath(tenantId, storeId) + "/modifier-recipes/" +
-          encodeURIComponent(productId) + "/groups/" +
-          encodeURIComponent(groupId) + "/options/" +
-          encodeURIComponent(optionId) + "/items/" +
+        inventoryPath(tenantId, storeId) +
+          "/modifier-recipes/" +
+          encodeURIComponent(productId) +
+          "/groups/" +
+          encodeURIComponent(groupId) +
+          "/options/" +
+          encodeURIComponent(optionId) +
+          "/items/" +
           encodeURIComponent(itemId),
         { quantityPerProduct },
         { headers: this.csrf(), withCredentials: true },
