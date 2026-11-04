@@ -27,9 +27,11 @@ function inventoryError(error: unknown): string {
     if (error.status === 403 || error.status === 404) {
       return "ไม่มีสิทธิ์ดูหรือจัดการสต็อกของร้านนี้";
     }
-    if (error.status === 409) return "ข้อมูลถูกใช้แล้ว หรือรหัส Retry ถูกใช้กับรายการอื่น";
+    if (error.status === 409)
+      return "ข้อมูลถูกใช้แล้ว หรือรหัส Retry ถูกใช้กับรายการอื่น";
     if (error.status === 400) return "จำนวนไม่ถูกต้อง หรือสต็อกไม่เพียงพอ";
-    if (error.status === 0) return "เชื่อมต่อไม่ได้ โปรดลองใหม่โดยไม่แก้ไขรายการ";
+    if (error.status === 0)
+      return "เชื่อมต่อไม่ได้ โปรดลองใหม่โดยไม่แก้ไขรายการ";
   }
   return error instanceof Error ? error.message : "ไม่สามารถดำเนินการได้";
 }
@@ -50,8 +52,9 @@ function inventoryError(error: unknown): string {
       </p>
       <p class="inventory-warning" role="note">
         <strong>สต็อกแบบบันทึกเองเท่านั้น</strong>
-        สูตรวัตถุดิบยังเป็นข้อมูลอ้างอิง ระบบยังไม่หักวัตถุดิบอัตโนมัติจากออเดอร์
-        และตัวเลขสต็อกไม่ใช่ยอดขาย เงินรับ หรือข้อมูล Payment
+        สูตรวัตถุดิบยังเป็นข้อมูลอ้างอิง
+        ระบบยังไม่หักวัตถุดิบอัตโนมัติจากออเดอร์ และตัวเลขสต็อกไม่ใช่ยอดขาย
+        เงินรับ หรือข้อมูล Payment
       </p>
 
       @if (error()) {
@@ -66,7 +69,10 @@ function inventoryError(error: unknown): string {
       @if (store(); as currentStore) {
         @if (snapshot(); as data) {
           <div class="inventory-toolbar">
-            <span>วัตถุดิบ {{ data.items.length }} รายการ · บันทึกล่าสุดสูงสุด 50 รายการ</span>
+            <span
+              >วัตถุดิบ {{ data.items.length }} รายการ · บันทึกล่าสุดสูงสุด 50
+              รายการ</span
+            >
             <button type="button" [disabled]="busy()" (click)="reload()">
               โหลดข้อมูลล่าสุด
             </button>
@@ -80,8 +86,12 @@ function inventoryError(error: unknown): string {
               <div class="inventory-table-wrap">
                 <table>
                   <thead>
-                    <tr><th scope="col">วัตถุดิบ</th><th scope="col">คงเหลือ</th>
-                      <th scope="col">เกณฑ์แจ้งเตือน</th><th scope="col">สถานะ</th></tr>
+                    <tr>
+                      <th scope="col">วัตถุดิบ</th>
+                      <th scope="col">คงเหลือ</th>
+                      <th scope="col">เกณฑ์แจ้งเตือน</th>
+                      <th scope="col">สถานะ</th>
+                    </tr>
                   </thead>
                   <tbody>
                     @for (item of data.items; track item.itemId) {
@@ -91,7 +101,9 @@ function inventoryError(error: unknown): string {
                         <td>{{ units(item.reorderAt) }} {{ item.unit }}</td>
                         <td>
                           @if (isLow(item)) {
-                            <strong class="inventory-low">ต่ำกว่าหรือเท่ากับเกณฑ์</strong>
+                            <strong class="inventory-low"
+                              >ต่ำกว่าหรือเท่ากับเกณฑ์</strong
+                            >
                           } @else {
                             <span>เพียงพอตามเกณฑ์</span>
                           }
@@ -104,60 +116,112 @@ function inventoryError(error: unknown): string {
             }
           </section>
 
-          @if (currentStore.role === "owner" || currentStore.role === "manager") {
+          @if (
+            currentStore.role === "owner" || currentStore.role === "manager"
+          ) {
             <div class="inventory-grid">
-              <section class="inventory-panel" aria-labelledby="add-ingredient-heading">
+              <section
+                class="inventory-panel"
+                aria-labelledby="add-ingredient-heading"
+              >
                 <h2 id="add-ingredient-heading">เพิ่มวัตถุดิบ</h2>
-                <form class="inventory-form" (submit)="createIngredient($event)">
-                  <label>ชื่อวัตถุดิบ
-                    <input type="text" [value]="newName()" (input)="setText($event,'name')"
-                      maxlength="120" required placeholder="เช่น ข้าวสาร">
+                <form
+                  class="inventory-form"
+                  (submit)="createIngredient($event)"
+                >
+                  <label
+                    >ชื่อวัตถุดิบ
+                    <input
+                      type="text"
+                      [value]="newName()"
+                      (input)="setText($event, 'name')"
+                      maxlength="120"
+                      required
+                      placeholder="เช่น ข้าวสาร"
+                    />
                   </label>
-                  <label>หน่วย
+                  <label
+                    >หน่วย
                     <select [value]="newUnit()" (change)="onUnit($event)">
                       <option value="g">กรัม (g)</option>
                       <option value="ml">มิลลิลิตร (ml)</option>
                       <option value="unit">ชิ้น (unit)</option>
                     </select>
                   </label>
-                  <label>เกณฑ์แจ้งเตือนขั้นต่ำ
-                    <input type="text" inputmode="decimal" [value]="reorderAt()"
-                      (input)="setText($event,'reorder')" required>
+                  <label
+                    >เกณฑ์แจ้งเตือนขั้นต่ำ
+                    <input
+                      type="text"
+                      inputmode="decimal"
+                      [value]="reorderAt()"
+                      (input)="setText($event, 'reorder')"
+                      required
+                    />
                   </label>
-                  <button type="submit" [disabled]="busy()">สร้างวัตถุดิบ</button>
+                  <button type="submit" [disabled]="busy()">
+                    สร้างวัตถุดิบ
+                  </button>
                 </form>
               </section>
 
-              <section class="inventory-panel" aria-labelledby="movement-heading">
+              <section
+                class="inventory-panel"
+                aria-labelledby="movement-heading"
+              >
                 <h2 id="movement-heading">บันทึกการเคลื่อนไหว</h2>
                 <p class="inventory-muted">
-                  รับของเข้าต้องใช้จำนวนบวก หากปรับลด ให้เลือกปรับยอดและใส่ - นำหน้า
-                  ระบบจะปฏิเสธรายการที่ทำให้ยอดติดลบ
+                  รับของเข้าต้องใช้จำนวนบวก หากปรับลด ให้เลือกปรับยอดและใส่ -
+                  นำหน้า ระบบจะปฏิเสธรายการที่ทำให้ยอดติดลบ
                 </p>
                 <form class="inventory-form" (submit)="moveStock($event)">
-                  <label>วัตถุดิบ
-                    <select [value]="moveItemId()" (change)="onSelect($event,'movement-item')" required>
+                  <label
+                    >วัตถุดิบ
+                    <select
+                      [value]="moveItemId()"
+                      (change)="onSelect($event, 'movement-item')"
+                      required
+                    >
                       <option value="">เลือกวัตถุดิบ</option>
                       @for (item of data.items; track item.itemId) {
-                        <option [value]="item.itemId">{{ item.name }} ({{ item.unit }})</option>
+                        <option [value]="item.itemId">
+                          {{ item.name }} ({{ item.unit }})
+                        </option>
                       }
                     </select>
                   </label>
-                  <label>ประเภท
+                  <label
+                    >ประเภท
                     <select [value]="moveKind()" (change)="onMoveKind($event)">
                       <option value="receipt">รับสินค้าเข้า (+)</option>
                       <option value="adjustment">ปรับยอด (+ หรือ -)</option>
                     </select>
                   </label>
-                  <label>จำนวน (ไม่เกิน 3 ตำแหน่งทศนิยม)
-                    <input type="text" inputmode="decimal" [value]="moveDelta()"
-                      (input)="setText($event,'delta')" required placeholder="50.500">
+                  <label
+                    >จำนวน (ไม่เกิน 3 ตำแหน่งทศนิยม)
+                    <input
+                      type="text"
+                      inputmode="decimal"
+                      [value]="moveDelta()"
+                      (input)="setText($event, 'delta')"
+                      required
+                      placeholder="50.500"
+                    />
                   </label>
-                  <label>เหตุผลหรือเอกสารอ้างอิง
-                    <input type="text" [value]="moveReason()" (input)="setText($event,'reason')"
-                      maxlength="200" required placeholder="รับของจากผู้ขาย">
+                  <label
+                    >เหตุผลหรือเอกสารอ้างอิง
+                    <input
+                      type="text"
+                      [value]="moveReason()"
+                      (input)="setText($event, 'reason')"
+                      maxlength="200"
+                      required
+                      placeholder="รับของจากผู้ขาย"
+                    />
                   </label>
-                  <button type="submit" [disabled]="busy() || !data.items.length">
+                  <button
+                    type="submit"
+                    [disabled]="busy() || !data.items.length"
+                  >
                     {{ busy() ? "กำลังตรวจสอบ..." : "ยืนยันบันทึกสต็อก" }}
                   </button>
                   <p class="inventory-muted">
@@ -171,32 +235,60 @@ function inventoryError(error: unknown): string {
             <section class="inventory-panel" aria-labelledby="recipe-heading">
               <h2 id="recipe-heading">สูตรการใช้วัตถุดิบต่อสินค้า 1 รายการ</h2>
               <p class="inventory-muted">
-                บันทึกเพื่อวางแผนเท่านั้น ไม่ตัดสต็อกตาม Order
-                ใส่ 0 เพื่อลบส่วนประกอบในสูตร
+                บันทึกเพื่อวางแผนเท่านั้น ไม่ตัดสต็อกตาม Order ใส่ 0
+                เพื่อลบส่วนประกอบในสูตร
               </p>
-              <form class="inventory-form inventory-recipe-form" (submit)="setRecipe($event)">
-                <label>สินค้า
-                  <select [value]="recipeProductId()" (change)="onSelect($event,'product')" required>
+              <form
+                class="inventory-form inventory-recipe-form"
+                (submit)="setRecipe($event)"
+              >
+                <label
+                  >สินค้า
+                  <select
+                    [value]="recipeProductId()"
+                    (change)="onSelect($event, 'product')"
+                    required
+                  >
                     <option value="">เลือกสินค้า</option>
-                    @for (product of catalog()?.products || []; track product.id) {
+                    @for (
+                      product of catalog()?.products || [];
+                      track product.id
+                    ) {
                       <option [value]="product.id">{{ product.name }}</option>
                     }
                   </select>
                 </label>
-                <label>วัตถุดิบ
-                  <select [value]="recipeItemId()" (change)="onSelect($event,'recipe-item')" required>
+                <label
+                  >วัตถุดิบ
+                  <select
+                    [value]="recipeItemId()"
+                    (change)="onSelect($event, 'recipe-item')"
+                    required
+                  >
                     <option value="">เลือกวัตถุดิบ</option>
                     @for (item of data.items; track item.itemId) {
-                      <option [value]="item.itemId">{{ item.name }} ({{ item.unit }})</option>
+                      <option [value]="item.itemId">
+                        {{ item.name }} ({{ item.unit }})
+                      </option>
                     }
                   </select>
                 </label>
-                <label>ปริมาณที่ใช้ต่อสินค้า 1 ชิ้น
-                  <input type="text" inputmode="decimal" [value]="recipeQuantity()"
-                    (input)="setText($event,'recipe')" required>
+                <label
+                  >ปริมาณที่ใช้ต่อสินค้า 1 ชิ้น
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    [value]="recipeQuantity()"
+                    (input)="setText($event, 'recipe')"
+                    required
+                  />
                 </label>
-                <button type="submit" [disabled]="busy() || !data.items.length ||
-                  !catalog()?.products?.length">
+                <button
+                  type="submit"
+                  [disabled]="
+                    busy() || !data.items.length || !catalog()?.products?.length
+                  "
+                >
                   บันทึกสูตรวัตถุดิบ
                 </button>
               </form>
@@ -204,13 +296,19 @@ function inventoryError(error: unknown): string {
           }
 
           <div class="inventory-grid">
-            <section class="inventory-panel" aria-labelledby="recipe-list-heading">
+            <section
+              class="inventory-panel"
+              aria-labelledby="recipe-list-heading"
+            >
               <h2 id="recipe-list-heading">สูตรที่บันทึกแล้ว</h2>
               @if (data.recipes.length === 0) {
                 <p class="inventory-muted">ยังไม่มีข้อมูลสูตรวัตถุดิบ</p>
               } @else {
                 <ul class="inventory-detail-list">
-                  @for (recipe of data.recipes; track recipe.productId + recipe.itemId) {
+                  @for (
+                    recipe of data.recipes;
+                    track recipe.productId + recipe.itemId
+                  ) {
                     <li>
                       <strong>{{ recipe.productName }}</strong>
                       <span>
@@ -223,16 +321,25 @@ function inventoryError(error: unknown): string {
                 </ul>
               }
             </section>
-            <section class="inventory-panel" aria-labelledby="movement-list-heading">
+            <section
+              class="inventory-panel"
+              aria-labelledby="movement-list-heading"
+            >
               <h2 id="movement-list-heading">ประวัติการเคลื่อนไหวล่าสุด</h2>
               @if (data.recentMovements.length === 0) {
                 <p class="inventory-muted">ยังไม่มีการบันทึกการเคลื่อนไหว</p>
               } @else {
                 <ul class="inventory-detail-list">
-                  @for (movement of data.recentMovements; track movement.movementId) {
+                  @for (
+                    movement of data.recentMovements;
+                    track movement.movementId
+                  ) {
                     <li>
                       <strong>{{ ingredientName(movement.itemId) }}</strong>
-                      <span>{{ movement.kind === "receipt" ? "รับเข้า" : "ปรับยอด" }}
+                      <span
+                        >{{
+                          movement.kind === "receipt" ? "รับเข้า" : "ปรับยอด"
+                        }}
                         {{ units(movement.delta) }}
                         {{ ingredientUnit(movement.itemId) }}
                         · คงเหลือ {{ units(movement.quantityAfter) }}
@@ -254,7 +361,8 @@ export class InventoryPage implements OnInit {
   private readonly merchant = inject(MerchantOrderApi);
   private readonly route = inject(ActivatedRoute);
   private readonly document = inject(DOCUMENT);
-  private readonly tenantId = this.route.snapshot.paramMap.get("tenantId") ?? "";
+  private readonly tenantId =
+    this.route.snapshot.paramMap.get("tenantId") ?? "";
   private readonly storeId = this.route.snapshot.paramMap.get("storeId") ?? "";
   readonly store = signal<MerchantStore | null>(null);
   readonly snapshot = signal<InventorySnapshot | null>(null);
@@ -284,9 +392,12 @@ export class InventoryPage implements OnInit {
   private async initialize(): Promise<void> {
     try {
       const { stores } = await this.merchant.stores();
-      const store = stores.find((entry) =>
-        entry.tenantId === this.tenantId && entry.storeId === this.storeId &&
-        entry.role !== "cashier");
+      const store = stores.find(
+        (entry) =>
+          entry.tenantId === this.tenantId &&
+          entry.storeId === this.storeId &&
+          entry.role !== "cashier",
+      );
       if (!store) throw new Error("ไม่มีสิทธิ์เข้าถึงสต็อกของร้านนี้");
       this.store.set(store);
       await this.reload();
@@ -302,14 +413,16 @@ export class InventoryPage implements OnInit {
     this.loading.set(true);
     this.error.set("");
     try {
-      const snapshot = await this.api.snapshot(this.tenantId,this.storeId);
-      if (snapshot.stockMode !== "manual_ledger_only" ||
-        snapshot.orderConsumptionEnabled !== false) {
+      const snapshot = await this.api.snapshot(this.tenantId, this.storeId);
+      if (
+        snapshot.stockMode !== "manual_ledger_only" ||
+        snapshot.orderConsumptionEnabled !== false
+      ) {
         throw new Error("ข้อมูลสต็อกไม่อยู่ในรูปแบบ Ledger ที่รองรับ");
       }
       this.snapshot.set(snapshot);
       if (this.store()?.role === "owner" || this.store()?.role === "manager") {
-        this.catalog.set(await this.api.catalog(this.tenantId,this.storeId));
+        this.catalog.set(await this.api.catalog(this.tenantId, this.storeId));
       }
     } catch (error) {
       this.error.set(inventoryError(error));
@@ -319,10 +432,15 @@ export class InventoryPage implements OnInit {
   }
 
   ingredientName(id: string): string {
-    return this.snapshot()?.items.find((item) => item.itemId === id)?.name ?? "วัตถุดิบ";
+    return (
+      this.snapshot()?.items.find((item) => item.itemId === id)?.name ??
+      "วัตถุดิบ"
+    );
   }
   ingredientUnit(id: string): string {
-    return this.snapshot()?.items.find((item) => item.itemId === id)?.unit ?? "";
+    return (
+      this.snapshot()?.items.find((item) => item.itemId === id)?.unit ?? ""
+    );
   }
 
   setText(event: Event, field: string): void {
@@ -335,14 +453,18 @@ export class InventoryPage implements OnInit {
     if (field === "recipe") this.recipeQuantity.set(value);
   }
   onUnit(event: Event): void {
-    if (event.target instanceof HTMLSelectElement &&
-      ["g","ml","unit"].includes(event.target.value)) {
+    if (
+      event.target instanceof HTMLSelectElement &&
+      ["g", "ml", "unit"].includes(event.target.value)
+    ) {
       this.newUnit.set(event.target.value as InventoryUnit);
     }
   }
   onMoveKind(event: Event): void {
-    if (event.target instanceof HTMLSelectElement &&
-      (event.target.value === "receipt" || event.target.value === "adjustment")) {
+    if (
+      event.target instanceof HTMLSelectElement &&
+      (event.target.value === "receipt" || event.target.value === "adjustment")
+    ) {
       this.moveKind.set(event.target.value);
     }
   }
@@ -354,22 +476,33 @@ export class InventoryPage implements OnInit {
   }
 
   private canWrite(): boolean {
-    return !this.busy() &&
-      (this.store()?.role === "owner" || this.store()?.role === "manager");
+    return (
+      !this.busy() &&
+      (this.store()?.role === "owner" || this.store()?.role === "manager")
+    );
   }
 
   async createIngredient(event: Event): Promise<void> {
     event.preventDefault();
     if (!this.canWrite()) return;
-    if (!this.newName().trim() || this.newName().trim().length > 120 ||
-      !validStockInput(this.reorderAt(),{max:1000000000000n,zero:true})) {
-      this.error.set("ชื่อวัตถุดิบหรือเกณฑ์แจ้งเตือนไม่ถูกต้อง"); return;
+    if (
+      !this.newName().trim() ||
+      this.newName().trim().length > 120 ||
+      !validStockInput(this.reorderAt(), { max: 1000000000000n, zero: true })
+    ) {
+      this.error.set("ชื่อวัตถุดิบหรือเกณฑ์แจ้งเตือนไม่ถูกต้อง");
+      return;
     }
     this.busy.set(true);
     this.error.set("");
     try {
-      await this.api.createItem(this.tenantId,this.storeId,
-        this.newName().trim(),this.newUnit(),this.reorderAt());
+      await this.api.createItem(
+        this.tenantId,
+        this.storeId,
+        this.newName().trim(),
+        this.newUnit(),
+        this.reorderAt(),
+      );
       this.newName.set("");
       this.notice.set("สร้างวัตถุดิบสำเร็จ");
       await this.reload();
@@ -385,32 +518,51 @@ export class InventoryPage implements OnInit {
     if (!this.canWrite()) return;
     const delta = this.moveDelta();
     const reason = this.moveReason().trim();
-    if (!this.snapshot()?.items.some((i) => i.itemId === this.moveItemId()) ||
-      !validStockInput(delta,{negative:this.moveKind()==="adjustment",
-        zero:false,max:1000000000n}) ||
-      reason.length < 3 || reason.length > 200) {
+    if (
+      !this.snapshot()?.items.some((i) => i.itemId === this.moveItemId()) ||
+      !validStockInput(delta, {
+        negative: this.moveKind() === "adjustment",
+        zero: false,
+        max: 1000000000n,
+      }) ||
+      reason.length < 3 ||
+      reason.length > 200
+    ) {
       this.error.set("กรุณาตรวจสอบวัตถุดิบ จำนวน และเหตุผล (3–200 อักขระ)");
       return;
     }
     const payload = JSON.stringify({
-      itemId:this.moveItemId(),kind:this.moveKind(),delta,reason,
+      itemId: this.moveItemId(),
+      kind: this.moveKind(),
+      delta,
+      reason,
     });
     try {
       const win = this.document.defaultView;
-      if (!win?.crypto?.randomUUID) throw new Error("Browser ไม่รองรับการสร้างรหัส Retry ที่ปลอดภัย");
+      if (!win?.crypto?.randomUUID)
+        throw new Error("Browser ไม่รองรับการสร้างรหัส Retry ที่ปลอดภัย");
       if (!this.retry || this.retry.payload !== payload) {
-        this.retry = {payload,key:win.crypto.randomUUID()};
+        this.retry = { payload, key: win.crypto.randomUUID() };
       }
       this.busy.set(true);
       this.error.set("");
-      const result = await this.api.move(this.tenantId,this.storeId,
-        this.moveItemId(),this.retry.key,this.moveKind(),delta,reason);
+      const result = await this.api.move(
+        this.tenantId,
+        this.storeId,
+        this.moveItemId(),
+        this.retry.key,
+        this.moveKind(),
+        delta,
+        reason,
+      );
       this.retry = null;
       this.moveDelta.set("");
       this.moveReason.set("");
-      this.notice.set(result.replayed
-        ? "ตรวจสอบแล้วว่าเคยบันทึกรายการนี้สำเร็จ"
-        : "บันทึกการเคลื่อนไหวสต็อกสำเร็จ");
+      this.notice.set(
+        result.replayed
+          ? "ตรวจสอบแล้วว่าเคยบันทึกรายการนี้สำเร็จ"
+          : "บันทึกการเคลื่อนไหวสต็อกสำเร็จ",
+      );
       await this.reload();
     } catch (error) {
       this.error.set(inventoryError(error));
@@ -422,17 +574,24 @@ export class InventoryPage implements OnInit {
   async setRecipe(event: Event): Promise<void> {
     event.preventDefault();
     if (!this.canWrite()) return;
-    if (!this.catalog()?.products.some((p) => p.id === this.recipeProductId()) ||
+    if (
+      !this.catalog()?.products.some((p) => p.id === this.recipeProductId()) ||
       !this.snapshot()?.items.some((i) => i.itemId === this.recipeItemId()) ||
-      !validStockInput(this.recipeQuantity(),{zero:true,max:1000000000n})) {
+      !validStockInput(this.recipeQuantity(), { zero: true, max: 1000000000n })
+    ) {
       this.error.set("กรุณาเลือกสินค้า วัตถุดิบ และระบุจำนวนที่ถูกต้อง");
       return;
     }
     this.busy.set(true);
     this.error.set("");
     try {
-      await this.api.recipe(this.tenantId,this.storeId,
-        this.recipeProductId(),this.recipeItemId(),this.recipeQuantity());
+      await this.api.recipe(
+        this.tenantId,
+        this.storeId,
+        this.recipeProductId(),
+        this.recipeItemId(),
+        this.recipeQuantity(),
+      );
       this.notice.set("บันทึกสูตรวัตถุดิบสำเร็จ (ยังไม่ตัดสต็อก)");
       await this.reload();
     } catch (error) {
