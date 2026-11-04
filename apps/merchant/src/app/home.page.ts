@@ -54,6 +54,13 @@ import { MerchantOrderApi } from "./merchant-order.api";
               [routerLink]="['/orders', store.tenantId, store.storeId]"
               >เปิดกระดานออเดอร์</a
             >
+            @if (store.role === "owner" || store.role === "manager") {
+              <a
+                class="store-report-link"
+                [routerLink]="['/reports', store.tenantId, store.storeId]"
+                >ดูรายงานออเดอร์ (ไม่ใช่รายรับ)</a
+              >
+            }
           </article>
         }
       </div>
@@ -111,6 +118,16 @@ import { MerchantOrderApi } from "./merchant-order.api";
         padding: 0.5rem 1rem;
         border-radius: 0.5rem;
         cursor: pointer;
+      }
+      .store-report-link {
+        display: inline-flex;
+        margin-top: 0.9rem;
+        align-items: center;
+        min-height: 44px;
+        color: #235570;
+        font-size: 0.86rem;
+        font-weight: 750;
+        text-decoration: underline;
       }
       .home-help {
         color: #62718b;

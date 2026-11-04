@@ -1336,6 +1336,70 @@ try {
   assert.equal((await fullReplay.json()).events.length, 7,
     "Explicit replay must retain append-only notification history");
 
+  // G3 daily operational reporting is explicitly NOT a Payment ledger.
+  // The backend derives day boundaries in Asia/Bangkok and enforces
+  // owner/manager session + tenant/store scope on JSON and CSV endpoints.
+  const dayParts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const dayPart = (type) => dayParts.find((part) => part.type === type)?.value;
+  const businessDay = `${dayPart("year")}-${dayPart("month")}-${dayPart("day")}`;
+  const reportBase = `/api/tenants/${made.tenantId}/stores/${made.storeId}/reports/operations`;
+  const reportUrl = reportBase + "?day=" + businessDay;
+  assert.equal((await api(reportUrl)).status, 401,
+    "Anonymous guests must never read merchant operational reports");
+  assert.equal((await api(reportBase + "?day=2026-02-30", {
+    headers: { Cookie: cookieHeader },
+  })).status, 400, "Impossible business day must fail");
+  assert.equal((await api(reportUrl, {
+    headers: { Cookie: bHeader },
+  })).status, 404, "Other staff cannot fetch tenant operational report");
+  assert.equal((await api(
+    `/api/tenants/00000000-0000-4000-8000-000000000002/stores/20000000-0000-4000-8000-000000000002/reports/operations?day=${businessDay}`,
+    { headers: { Cookie: cookieHeader } },
+  )).status, 404, "Cross-tenant operational report must be blocked");
+  const reportResponse = await api(reportUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(reportResponse.status, 200, await reportResponse.clone().text());
+  assert.equal(reportResponse.headers.get("cache-control"), "no-store");
+  const operational = await reportResponse.json();
+  assert.equal(operational.day, businessDay);
+  assert.equal(operational.timezone, "Asia/Bangkok");
+  assert.equal(operational.snapshotType, "ordered_not_paid");
+  assert.equal(operational.paymentStatus, "not_implemented");
+  assert.ok(operational.orderCount >= 3,
+    "Operational report includes all test orders in this business day");
+  assert.equal(
+    Object.values(operational.statusCounts).reduce((sum, count) => sum + count, 0),
+    operational.orderCount, "Status counts reconcile to immutable Orders");
+  assert.equal(
+    BigInt(operational.activeOrderedAmountSatang) +
+    BigInt(operational.cancelledOrderedAmountSatang),
+    BigInt(operational.orderedAmountSatang),
+    "Cancelled and active amounts reconcile exactly without float rounding");
+  assert.ok(operational.topProducts.every((p) =>
+    typeof p.productName === "string" &&
+    typeof p.orderedAmountSatang === "string" &&
+    !Object.hasOwn(p, "paymentState")));
+  const reportCsvResponse = await api(reportBase + ".csv?day=" + businessDay, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(reportCsvResponse.status, 200,
+    await reportCsvResponse.clone().text());
+  assert.match(reportCsvResponse.headers.get("content-type") ?? "",
+    /^text\/csv/i);
+  assert.match(reportCsvResponse.headers.get("content-disposition") ?? "",
+    /attachment;/i);
+  const csvBytes = new Uint8Array(await reportCsvResponse.arrayBuffer());
+  // Response.text() and TextDecoder may remove a UTF-8 BOM by design.
+  // Validate actual CSV bytes, which is what Excel receives.
+  assert.deepEqual([...csvBytes.slice(0, 3)], [0xef, 0xbb, 0xbf]);
+  const reportCsv = new TextDecoder().decode(csvBytes);
+  assert.ok(reportCsv.includes("NOT REVENUE"));
+  assert.ok(reportCsv.includes("not_implemented"));
+  assert.ok(!reportCsv.includes("provider_verified"));
+
   const changedVisit = await api(rotateUrl, {
     method: "POST", headers: catHeaders,
   });

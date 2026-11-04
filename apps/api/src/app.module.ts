@@ -27,6 +27,8 @@ import { OperationalBillsService } from "./orders/operational-bills.service";
 import { MerchantNotificationsController } from "./orders/merchant-notifications.controller";
 import { MerchantNotificationsService } from "./orders/merchant-notifications.service";
 import { MerchantNotificationStreamService } from "./orders/merchant-notification-stream.service";
+import { OperationalReportsController } from "./orders/operational-reports.controller";
+import { OperationalReportsService } from "./orders/operational-reports.service";
 
 @Module({
   controllers: [
@@ -44,6 +46,7 @@ import { MerchantNotificationStreamService } from "./orders/merchant-notificatio
     MerchantOrdersController,
     OperationalBillsController,
     MerchantNotificationsController,
+    OperationalReportsController,
   ],
   providers: [
     DatabaseAccess,
@@ -61,6 +64,7 @@ import { MerchantNotificationStreamService } from "./orders/merchant-notificatio
     OperationalBillsService,
     MerchantNotificationsService,
     MerchantNotificationStreamService,
+    OperationalReportsService,
   ],
 })
 export class AppModule {}
