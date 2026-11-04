@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { ServerResponse } from "node:http";
 import { ApiRequest } from "../auth/request-security";
+import { encodeOrderSse } from "./merchant-notification-stream.core";
 import {
   MerchantNotificationPage,
   MerchantNotificationsService,
@@ -15,23 +16,6 @@ const HEARTBEAT_MS = 15_000;
 const MAX_STREAM_AGE_MS = 15 * 60_000;
 const MAX_LOCAL_CONNECTIONS = 32;
 const RECONNECT_MS = 5_000;
-
-export function encodeOrderSse(
-  event: MerchantNotificationPage["events"][number],
-): string {
-  if (!/^[1-9][0-9]{0,18}$/.test(event.eventId)) {
-    throw new Error("Invalid Order outbox event ID");
-  }
-  // SSE data contains only server-scoped, non-sensitive event references.
-  // No merchant, customer or table QR capability / price / payment data.
-  const data = JSON.stringify({
-    eventId: event.eventId,
-    orderId: event.orderId,
-    eventType: event.eventType,
-    status: event.status,
-  });
-  return `id: ${event.eventId}\nevent: order-event\ndata: ${data}\n\n`;
-}
 
 @Injectable()
 export class MerchantNotificationStreamService {
