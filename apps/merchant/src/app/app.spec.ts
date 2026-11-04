@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { routes } from "./app.routes";
+import { formatUnits, lowStock, toMilliUnits, validStockInput } from "./inventory.domain";
 import {
   formatReportSatang,
   formatReportSeconds,
@@ -34,6 +35,11 @@ describe("merchant operations routes", () => {
       routes.find((route) => route.path === "reports/:tenantId/:storeId")
         ?.loadComponent,
     ).toBeTypeOf("function");
+  });
+
+  it("lazy loads inventory scoped to tenant/store, without Payment", () => {
+    expect(routes.find((route) => route.path === "inventory/:tenantId/:storeId")
+      ?.loadComponent).toBeTypeOf("function");
   });
 
   it("does not expose a payment route", () => {
@@ -199,5 +205,23 @@ describe("operational report without Payment", () => {
       "/../",
     );
     expect(operationalReportPath("a", "b")).not.toContain("/payments");
+  });
+});
+
+describe("exact inventory quantities and shortage indicators", () => {
+  it("uses BigInt for exact g/ml/unit stock thresholds", () => {
+    expect(toMilliUnits("9007199254740.993")).toBe(9007199254740993n);
+    expect(formatUnits("2000.125")).toContain("2");
+    expect(formatUnits("-0.500")).toContain("-0.5");
+    expect(toMilliUnits("1.0001")).toBe(null);
+    expect(toMilliUnits("1e5")).toBe(null);
+    expect(validStockInput("100.005",{zero:false})).toBe(true);
+    expect(validStockInput("-100.005",{zero:false,negative:true})).toBe(true);
+    expect(validStockInput("-100.005",{zero:false})).toBe(false);
+    expect(validStockInput("0",{zero:false})).toBe(false);
+    expect(lowStock({itemId:"1",name:"Rice",unit:"g",onHand:"9.999",reorderAt:"10"}))
+      .toBe(true);
+    expect(lowStock({itemId:"1",name:"Rice",unit:"g",onHand:"10.001",reorderAt:"10"}))
+      .toBe(false);
   });
 });
