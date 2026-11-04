@@ -877,6 +877,36 @@ try {
   // Merchant fulfilment: Order inbox requires a session, and state writes
   // require Origin + CSRF. Only the merchant can see its Order snapshots.
   const merchantOrdersUrl = `/api/tenants/${made.tenantId}/stores/${made.storeId}/orders`;
+  const targetLookup = merchantOrdersUrl + "/lookup?ids=" +
+    encodeURIComponent(payloads[0].orderId);
+  assert.equal((await api(targetLookup)).status, 401,
+    "Guest cannot read exact-ID merchant Order snapshots");
+  const historicalLookupResponse = await api(targetLookup, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(historicalLookupResponse.status, 200);
+  const historicalLookup = await historicalLookupResponse.json();
+  assert.equal(historicalLookup.orders[0].orderId, payloads[0].orderId);
+  assert.equal(historicalLookup.orders[0].paymentState, "not_requested");
+  assert.equal((await api(
+    merchantOrdersUrl + "/lookup?ids=" +
+      encodeURIComponent(payloads[0].orderId + "," + payloads[0].orderId),
+    { headers: { Cookie: cookieHeader } },
+  )).status, 400, "Duplicate targeted Order IDs must be denied");
+  assert.equal((await api(
+    merchantOrdersUrl + "/lookup?ids=not-a-uuid",
+    { headers: { Cookie: cookieHeader } },
+  )).status, 400, "Malformed Order lookup IDs must be denied");
+  assert.equal((await api(
+    merchantOrdersUrl + "/lookup?ids=ffffffff-ffff-4fff-8fff-ffffffffffff",
+    { headers: { Cookie: cookieHeader } },
+  )).status, 200, "Unknown Order ID must not reveal whether it exists elsewhere");
+  assert.equal((await api(
+    "/api/tenants/00000000-0000-4000-8000-000000000002/stores/20000000-0000-4000-8000-000000000002/orders/lookup?ids=" +
+      encodeURIComponent(payloads[0].orderId),
+    { headers: { Cookie: cookieHeader } },
+  )).status, 404, "Cross-tenant lookup must be denied");
+
   const singleOrderUrl = merchantOrdersUrl + "/" + payloads[0].orderId + "/status";
   assert.equal((await api(merchantOrdersUrl)).status, 401,
     "Anonymous visitor cannot access merchant Orders");
