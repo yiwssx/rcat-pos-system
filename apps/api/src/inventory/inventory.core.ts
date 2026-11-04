@@ -3,7 +3,7 @@
 const DECIMAL = /^(?:0|[1-9][0-9]{0,12})(?:\.[0-9]{1,3})?$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export type InventoryUnit = "g" | "ml" | "unit";
-export type InventoryMovementKind = "receipt" | "adjustment";
+export type InventoryMovementKind = "receipt" | "adjustment" | "order_consumption" | "order_return";
 
 export interface InventoryItem {
   itemId: string;
@@ -31,8 +31,10 @@ export interface InventorySnapshot {
   items: InventoryItem[];
   recipes: InventoryRecipe[];
   recentMovements: InventoryMovement[];
-  stockMode: "manual_ledger_only";
-  orderConsumptionEnabled: false;
+  stockMode: "manual_ledger_only" | "order_acceptance_opt_in";
+  orderConsumptionEnabled: boolean;
+  trackedProducts: { productId: string; productName: string }[];
+  modifierRecipes: { optionId: string; productId: string; itemId: string; quantityPerProduct: string }[];
 }
 export interface InventoryCreateItem {
   name: string;
