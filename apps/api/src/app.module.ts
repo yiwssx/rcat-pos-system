@@ -3,6 +3,8 @@ import { HealthController } from "./health/health.controller";
 import { DatabaseAccess } from "./database/db-access";
 import { AuthController, TenantStoreController } from "./auth/auth.controller";
 import { AuthService } from "./auth/auth.service";
+import { GoogleWorkspaceAuthController } from "./auth/google-workspace-auth.controller";
+import { GoogleWorkspaceAuthService } from "./auth/google-workspace-auth.service";
 import { EmailDeliveryService } from "./auth/email-delivery.service";
 import { PasswordRecoveryService } from "./auth/password-recovery.service";
 import { PasswordRecoveryController } from "./auth/password-recovery.controller";
@@ -34,6 +36,7 @@ import { OperationalReportsService } from "./orders/operational-reports.service"
   controllers: [
     HealthController,
     AuthController,
+    GoogleWorkspaceAuthController,
     EmailRegistrationController,
     PasswordRecoveryController,
     TenantStoreController,
@@ -51,6 +54,7 @@ import { OperationalReportsService } from "./orders/operational-reports.service"
   providers: [
     DatabaseAccess,
     AuthService,
+    GoogleWorkspaceAuthService,
     EmailRegistrationService,
     PasswordRecoveryService,
     EmailDeliveryService,
