@@ -15,6 +15,7 @@ import {
   formatSatang,
   hasEventCoverage,
   mergeEvents,
+  missingOrderIds,
   MerchantOrder,
   MerchantRole,
   MerchantStore,
@@ -561,9 +562,9 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
         });
   }
 
-  // Load keyset pages until either a) the operator's requested history is
-  // visible or b) each Outbox event being acknowledged is covered by an
-  // authoritative Order snapshot. A bounded scan leaves older events unacked.
+  // Use keyset pages only for explicitly requested visual history. Outbox
+  // recovery instead resolves exact event Order IDs through a scoped batch
+  // lookup, avoiding a historical page-count ceiling and database scans.
   private async authoritativePages(
     requiredOrderIds: ReadonlySet<string>,
     minimumPages: number,
@@ -576,16 +577,13 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     let response = await this.api.orders(this.tenantId, this.storeId);
     let orders = response.orders;
     let pages = 1;
-    const covered = () =>
-      [...requiredOrderIds].every((id) =>
-        orders.some((order) => order.orderId === id),
-      );
+    const covered = () => missingOrderIds(requiredOrderIds, orders).length === 0;
     while (
       !this.disposed &&
       response.hasMore &&
       response.nextCursor &&
       pages < MAX_INBOX_PAGES &&
-      (pages < minimumPages || !covered())
+      pages < minimumPages
     ) {
       const cursor = response.nextCursor;
       const next = await this.api.orders(this.tenantId, this.storeId, cursor);
@@ -595,6 +593,18 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
       orders = appendOrderPage(orders, next.orders);
       pages += 1;
       response = next;
+    }
+    const missing = missingOrderIds(requiredOrderIds, orders);
+    if (!this.disposed && missing.length > 0) {
+      // Notification pages contain <=50 events, so this stays bounded.
+      // Unknown or foreign-store IDs are omitted by PostgreSQL; never ack
+      // unless *every* referenced Order is in the authoritative result.
+      const resolved = await this.api.lookupOrders(
+        this.tenantId,
+        this.storeId,
+        missing,
+      );
+      orders = appendOrderPage(orders, resolved.orders);
     }
     return { orders, hasMore: response.hasMore, pages, covered: covered() };
   }
@@ -640,8 +650,8 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
           exhausted = true;
           break;
         }
-        // Outbox IDs are commit ordered per store. Fetch the matching Orders
-        // with precise keyset pagination AFTER receiving this batch.
+        // Outbox IDs are commit-ordered. Refresh selected history and
+        // resolve remaining referenced Order IDs directly with scoped SQL.
         snapshot = await this.authoritativePages(
           new Set(batch.events.map((event) => event.orderId)),
           this.loadedPages(),
@@ -655,7 +665,7 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
           !hasEventCoverage(batch.events, snapshot.orders)
         ) {
           this.warning.set(
-            "ออเดอร์ย้อนหลังเกินขีดจำกัดการกู้คืนรอบนี้ เหตุการณ์ยังไม่ถูกยืนยันรับทราบ",
+            "ไม่พบออเดอร์ที่เหตุการณ์อ้างถึงในร้านนี้ จึงยังไม่ยืนยันรับทราบ กรุณาตรวจสอบข้อมูล",
           );
           break;
         }
