@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { routes } from "./app.routes";
 import {
+  formatReportSatang,
+  formatReportSeconds,
+  operationalReportPath,
+  todayBangkok,
+} from "./operational-report.domain";
+import {
   appendOrderPage,
   formatSatang,
   hasEventCoverage,
@@ -19,6 +25,12 @@ describe("merchant operations routes", () => {
     ).toBeTypeOf("function");
     expect(
       routes.find((route) => route.path === "status")?.loadComponent,
+    ).toBeTypeOf("function");
+  });
+
+  it("lazy loads the store-scoped operational report for owners", () => {
+    expect(routes.find((route) =>
+      route.path === "reports/:tenantId/:storeId")?.loadComponent,
     ).toBeTypeOf("function");
   });
 
@@ -133,5 +145,34 @@ describe("durable outbox projection", () => {
     expect(out).toHaveLength(30);
     expect(out[0]?.eventId).toBe("75");
     expect(out[out.length - 1]?.eventId).toBe("46");
+  });
+});
+
+describe("operational report without Payment", () => {
+  it("uses Asia/Bangkok business day independent from UTC date", () => {
+    expect(todayBangkok(new Date("2026-11-03T20:00:00.000Z")))
+      .toBe("2026-11-04");
+    expect(todayBangkok(new Date("2026-11-04T16:59:59.000Z")))
+      .toBe("2026-11-04");
+    expect(todayBangkok(new Date("2026-11-04T17:00:00.000Z")))
+      .toBe("2026-11-05");
+  });
+
+  it("formats arbitrarily large integer-satang snapshots exactly", () => {
+    expect(formatReportSatang("9007199254740993")).toMatch(/\.93$/);
+    expect(formatReportSatang("0")).toMatch(/\.00$/);
+    expect(formatReportSatang("-1")).toBe("—");
+    expect(formatReportSatang("1.05")).toBe("—");
+    expect(formatReportSeconds(null)).toBe("ไม่มีข้อมูล");
+    expect(formatReportSeconds(121)).toContain("2 นาที");
+  });
+
+  it("encodes scopes and never constructs Payment API paths", () => {
+    expect(operationalReportPath("tenant", "store")).toBe(
+      "/api/tenants/tenant/stores/store/reports/operations",
+    );
+    expect(operationalReportPath("../tenant", "store?other"))
+      .not.toContain("/../");
+    expect(operationalReportPath("a", "b")).not.toContain("/payments");
   });
 });
