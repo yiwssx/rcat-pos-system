@@ -73,8 +73,10 @@ export class InventoryService {
       const record = result.rows[0]?.snapshot;
       if (
         !record ||
-        record.stockMode !== "manual_ledger_only" ||
-        record.orderConsumptionEnabled !== false
+        !["manual_ledger_only", "order_acceptance_opt_in"].includes(record.stockMode) ||
+        typeof record.orderConsumptionEnabled !== "boolean" ||
+        !Array.isArray(record.trackedProducts) ||
+        !Array.isArray(record.modifierRecipes)
       ) {
         throw new Error("Unexpected inventory snapshot");
       }
