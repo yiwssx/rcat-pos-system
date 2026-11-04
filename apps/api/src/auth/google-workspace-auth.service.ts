@@ -16,7 +16,12 @@ import {
   verifyGoogleWorkspaceIdToken,
 } from "./google-oidc-verifier";
 import { AuthService } from "./auth.service";
-import { GOOGLE_STATE_COOKIE, GOOGLE_NONCE_COOKIE, GOOGLE_VERIFIER_COOKIE, googleOauthCookies } from "./google-oauth-cookies";
+import {
+  GOOGLE_STATE_COOKIE,
+  GOOGLE_NONCE_COOKIE,
+  GOOGLE_VERIFIER_COOKIE,
+  googleOauthCookies,
+} from "./google-oauth-cookies";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -37,8 +42,14 @@ interface GoogleSession {
 function strictProviderUrl(input: string, expectedPath: string): boolean {
   try {
     const u = new URL(input);
-    return u.protocol === "https:" && !u.username && !u.password &&
-      !u.hash && !u.search && u.pathname === expectedPath;
+    return (
+      u.protocol === "https:" &&
+      !u.username &&
+      !u.password &&
+      !u.hash &&
+      !u.search &&
+      u.pathname === expectedPath
+    );
   } catch {
     return false;
   }
@@ -48,14 +59,26 @@ function providerOverride(name: string, fallback: string): string {
   if (!override) return fallback;
   // Test-only isolated loopback mock; never override Google endpoints in
   // production or accept an attacker-selectable endpoint from a request.
-  if (process.env["CI"] !== "true" || process.env["NODE_ENV"] !== "test" ||
-      process.env["ENABLE_DEVELOPMENT_AUTH"] !== "true") {
-    throw new ServiceUnavailableException("Invalid Google provider configuration");
+  if (
+    process.env["CI"] !== "true" ||
+    process.env["NODE_ENV"] !== "test" ||
+    process.env["ENABLE_DEVELOPMENT_AUTH"] !== "true"
+  ) {
+    throw new ServiceUnavailableException(
+      "Invalid Google provider configuration",
+    );
   }
   const url = new URL(override);
-  if (url.protocol !== "http:" || !["localhost", "127.0.0.1"].includes(url.hostname) ||
-      url.username || url.password || url.hash) {
-    throw new ServiceUnavailableException("Invalid Google provider test endpoint");
+  if (
+    url.protocol !== "http:" ||
+    !["localhost", "127.0.0.1"].includes(url.hostname) ||
+    url.username ||
+    url.password ||
+    url.hash
+  ) {
+    throw new ServiceUnavailableException(
+      "Invalid Google provider test endpoint",
+    );
   }
   return url.toString();
 }
@@ -74,22 +97,42 @@ function config(): OauthConfiguration {
     process.env["NODE_ENV"] === "test" &&
     callback.protocol === "http:" &&
     ["127.0.0.1", "localhost"].includes(callback.hostname);
-  if (clientId.length < 12 || clientId.length > 300 ||
-      clientSecret.length < 12 || clientSecret.length > 1000 ||
-      (!strictProviderUrl(redirectUri, "/api/auth/google/callback") &&
-       !(localHttp && callback.pathname === "/api/auth/google/callback" &&
-         !callback.search && !callback.hash && !callback.username && !callback.password))) {
+  if (
+    clientId.length < 12 ||
+    clientId.length > 300 ||
+    clientSecret.length < 12 ||
+    clientSecret.length > 1000 ||
+    (!strictProviderUrl(redirectUri, "/api/auth/google/callback") &&
+      !(
+        localHttp &&
+        callback.pathname === "/api/auth/google/callback" &&
+        !callback.search &&
+        !callback.hash &&
+        !callback.username &&
+        !callback.password
+      ))
+  ) {
     throw new ServiceUnavailableException("Google OAuth is not configured");
   }
   const allowed = (process.env["AUTH_ALLOWED_ORIGINS"] ?? "")
-    .split(",").map((x) => x.trim()).filter(Boolean);
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
   if (!allowed.includes(callback.origin)) {
     throw new ServiceUnavailableException("OAuth origin is not allowlisted");
   }
   return {
-    clientId, clientSecret, redirectUri,
-    tokenEndpoint: providerOverride("GOOGLE_TEST_TOKEN_ENDPOINT", GOOGLE_TOKEN_URL),
-    jwksEndpoint: providerOverride("GOOGLE_TEST_JWKS_ENDPOINT", GOOGLE_JWKS_URL),
+    clientId,
+    clientSecret,
+    redirectUri,
+    tokenEndpoint: providerOverride(
+      "GOOGLE_TEST_TOKEN_ENDPOINT",
+      GOOGLE_TOKEN_URL,
+    ),
+    jwksEndpoint: providerOverride(
+      "GOOGLE_TEST_JWKS_ENDPOINT",
+      GOOGLE_JWKS_URL,
+    ),
   };
 }
 function equalSecret(a: string, b: string): boolean {
@@ -109,14 +152,17 @@ export class GoogleWorkspaceAuthService {
 
   start(): { redirect: string; cookies: string[] } {
     if (!this.database.enabled) {
-      throw new ServiceUnavailableException("Google Workspace login is disabled");
+      throw new ServiceUnavailableException(
+        "Google Workspace login is disabled",
+      );
     }
     const opts = config();
     const state = newOpaqueSecret();
     const nonce = newOpaqueSecret();
     const verifier = newOpaqueSecret();
     const challenge = createHash("sha256")
-      .update(verifier, "ascii").digest("base64url");
+      .update(verifier, "ascii")
+      .digest("base64url");
     const url = new URL(GOOGLE_AUTH_URL);
     url.searchParams.set("response_type", "code");
     url.searchParams.set("client_id", opts.clientId);
@@ -144,8 +190,11 @@ export class GoogleWorkspaceAuthService {
     });
     if (!response.ok) throw new Error("Google certificates unavailable");
     const raw: unknown = await response.json();
-    if (!raw || typeof raw !== "object" ||
-        !Array.isArray((raw as GoogleJwks).keys)) {
+    if (
+      !raw ||
+      typeof raw !== "object" ||
+      !Array.isArray((raw as GoogleJwks).keys)
+    ) {
       throw new Error("Malformed Google certificates");
     }
     const value = raw as GoogleJwks;
@@ -159,20 +208,28 @@ export class GoogleWorkspaceAuthService {
     suppliedCode: unknown,
   ): Promise<GoogleSession> {
     if (!this.database.enabled) {
-      throw new ServiceUnavailableException("Google Workspace login is disabled");
+      throw new ServiceUnavailableException(
+        "Google Workspace login is disabled",
+      );
     }
     const opts = config();
     const state = cookie(req, GOOGLE_STATE_COOKIE);
     const nonce = cookie(req, GOOGLE_NONCE_COOKIE);
     const verifier = cookie(req, GOOGLE_VERIFIER_COOKIE);
-    if (typeof suppliedState !== "string" ||
-        !/^[A-Za-z0-9_-]{43}$/.test(suppliedState) ||
-        typeof state !== "string" || !equalSecret(state, suppliedState) ||
-        typeof nonce !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(nonce) ||
-        typeof verifier !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(verifier) ||
-        typeof suppliedCode !== "string" ||
-        suppliedCode.length < 5 || suppliedCode.length > 2048 ||
-        !/^[A-Za-z0-9_./-]+$/.test(suppliedCode)) {
+    if (
+      typeof suppliedState !== "string" ||
+      !/^[A-Za-z0-9_-]{43}$/.test(suppliedState) ||
+      typeof state !== "string" ||
+      !equalSecret(state, suppliedState) ||
+      typeof nonce !== "string" ||
+      !/^[A-Za-z0-9_-]{43}$/.test(nonce) ||
+      typeof verifier !== "string" ||
+      !/^[A-Za-z0-9_-]{43}$/.test(verifier) ||
+      typeof suppliedCode !== "string" ||
+      suppliedCode.length < 5 ||
+      suppliedCode.length > 2048 ||
+      !/^[A-Za-z0-9_./-]+$/.test(suppliedCode)
+    ) {
       throw new UnauthorizedException("Google login unavailable");
     }
 
@@ -194,21 +251,34 @@ export class GoogleWorkspaceAuthService {
       });
       if (!response.ok) throw new Error("Google authorization code rejected");
       const result: unknown = await response.json();
-      if (!result || typeof result !== "object" ||
-          typeof (result as Record<string, unknown>)["id_token"] !== "string") {
+      if (
+        !result ||
+        typeof result !== "object" ||
+        typeof (result as Record<string, unknown>)["id_token"] !== "string"
+      ) {
         throw new Error("Missing Google ID token");
       }
       const jwt = (result as { id_token: string }).id_token;
       let jwks = await this.readJwks(opts);
       let identity;
       try {
-        identity = verifyGoogleWorkspaceIdToken(jwt, opts.clientId, nonce, jwks);
+        identity = verifyGoogleWorkspaceIdToken(
+          jwt,
+          opts.clientId,
+          nonce,
+          jwks,
+        );
       } catch {
         // Refresh cached signing keys once after rotation; never skip
         // signature, audience, nonce, hosted domain or email checks.
         this.jwks = undefined;
         jwks = await this.readJwks(opts);
-        identity = verifyGoogleWorkspaceIdToken(jwt, opts.clientId, nonce, jwks);
+        identity = verifyGoogleWorkspaceIdToken(
+          jwt,
+          opts.clientId,
+          nonce,
+          jwks,
+        );
       }
       const token = newOpaqueSecret();
       const csrf = newOpaqueSecret();
