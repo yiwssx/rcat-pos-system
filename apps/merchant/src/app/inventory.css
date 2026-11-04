@@ -1,0 +1,213 @@
+:host {
+  display: block;
+}
+.inventory-shell {
+  max-width: 1200px;
+  margin: auto;
+  padding: 2rem 1rem 5rem;
+}
+.inventory-shell h1 {
+  margin: 0.7rem 0;
+  max-width: none;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+}
+.inventory-shell h2 {
+  font-size: 1.25rem;
+  margin: 0 0 1rem;
+}
+.inventory-shell .inventory-muted {
+  color: #617083;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+.inventory-back {
+  display: inline-flex;
+  align-items: center;
+  color: #25516f;
+  min-height: 44px;
+  text-decoration: none;
+  font-weight: 700;
+}
+.inventory-warning {
+  border-left: 4px solid #c67d22;
+  background: #fff7e8;
+  border-radius: 0 0.8rem 0.8rem 0;
+  padding: 1rem 1.15rem;
+  color: #72511e;
+  line-height: 1.7;
+  margin: 1.5rem 0;
+}
+.inventory-warning strong {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.inventory-error,
+.inventory-notice {
+  padding: 1rem;
+  border-radius: 0.8rem;
+  line-height: 1.7;
+  margin: 0.9rem 0;
+}
+.inventory-error {
+  background: #fff3f3;
+  border: 1px solid #e5b8b8;
+  color: #842d30;
+}
+.inventory-notice {
+  background: #eff8f3;
+  border: 1px solid #badcca;
+  color: #236144;
+}
+.inventory-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin: 1.5rem 0 0;
+  color: #435b70;
+}
+.inventory-panel {
+  background: #fff;
+  border: 1px solid #e1e8ef;
+  border-radius: 1rem;
+  padding: clamp(1rem, 2.2vw, 1.5rem);
+  margin-top: 1rem;
+  min-width: 0;
+}
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+.inventory-grid .inventory-panel {
+  margin-top: 1rem;
+}
+.inventory-form {
+  display: grid;
+  gap: 0.9rem;
+}
+.inventory-form label {
+  display: grid;
+  gap: 0.45rem;
+  color: #40586b;
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+.inventory-form input,
+.inventory-form select {
+  width: 100%;
+  min-height: 46px;
+  min-width: 0;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid #aabfd1;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #21394f;
+  font: inherit;
+  font-size: 1rem;
+}
+.inventory-form button,
+.inventory-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0.62rem 1.15rem;
+  border: 0;
+  border-radius: 0.65rem;
+  color: white;
+  background: #173950;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.inventory-toolbar button {
+  background: white;
+  color: #234b65;
+  border: 1px solid #b2c5d5;
+}
+.inventory-form button:disabled,
+.inventory-toolbar button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.inventory-shell button:focus-visible,
+.inventory-shell a:focus-visible,
+.inventory-shell select:focus-visible,
+.inventory-shell input:focus-visible {
+  outline: 3px solid #d68a24;
+  outline-offset: 3px;
+}
+.inventory-table-wrap {
+  overflow-x: auto;
+  width: 100%;
+}
+.inventory-table-wrap table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 600px;
+}
+.inventory-table-wrap th,
+.inventory-table-wrap td {
+  text-align: left;
+  border-bottom: 1px solid #e8eff5;
+  padding: 0.85rem 0.7rem;
+}
+.inventory-table-wrap td:nth-child(2),
+.inventory-table-wrap td:nth-child(3) {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.inventory-low {
+  color: #a24a1b;
+  font-size: 0.84rem;
+}
+.inventory-detail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.inventory-detail-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #e7edf2;
+  overflow-wrap: anywhere;
+}
+.inventory-detail-list li:last-child {
+  border: 0;
+}
+.inventory-detail-list span,
+.inventory-detail-list small {
+  color: #5d7086;
+  line-height: 1.5;
+}
+.inventory-recipe-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+}
+.inventory-recipe-form button {
+  align-self: end;
+}
+@media (max-width: 850px) {
+  .inventory-grid {
+    grid-template-columns: 1fr;
+  }
+  .inventory-recipe-form {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 540px) {
+  .inventory-shell {
+    padding: 1.25rem 0.75rem 4rem;
+  }
+  .inventory-recipe-form {
+    grid-template-columns: 1fr;
+  }
+  .inventory-toolbar {
+    align-items: stretch;
+  }
+}

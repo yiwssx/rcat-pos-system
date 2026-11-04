@@ -11,11 +11,13 @@ on:
       - 'apps/api/src/catalog/**'
       - 'apps/api/src/ordering/**'
       - 'apps/api/src/orders/**'
+      - 'apps/api/src/inventory/**'
       - 'apps/api/src/app.module.ts'
       - 'apps/api/src/database/**'
       - 'apps/api/tsconfig.app.json'
       - 'libs/server-auth/**'
       - 'scripts/smoke-auth.mjs'
+      - 'scripts/smoke-inventory.mjs'
       - 'scripts/dev/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -120,6 +122,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-inbox-pagination.sql
       - name: Verify Bangkok business-day operational reports, Order reconciliation and tenant roles
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/operational-reports.sql
+      - name: Verify inventory ledger, recipes, idempotency, tenant and role isolation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/inventory-ledger.sql
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -154,3 +158,7 @@ jobs:
         env:
           CI: 'true'
         run: node scripts/smoke-google-oauth.mjs
+      - name: Verify real inventory HTTP authorization, replay, quantity and recipe recovery
+        env:
+          CI: 'true'
+        run: node scripts/smoke-inventory.mjs
