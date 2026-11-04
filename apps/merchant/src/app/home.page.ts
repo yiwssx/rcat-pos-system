@@ -55,9 +55,11 @@ import { MerchantOrderApi } from "./merchant-order.api";
               >เปิดกระดานออเดอร์</a
             >
             @if (store.role === "owner" || store.role === "manager") {
-              <a class="store-report-link"
+              <a
+                class="store-report-link"
                 [routerLink]="['/reports', store.tenantId, store.storeId]"
-                >ดูรายงานออเดอร์ (ไม่ใช่รายรับ)</a>
+                >ดูรายงานออเดอร์ (ไม่ใช่รายรับ)</a
+              >
             }
           </article>
         }
