@@ -211,3 +211,57 @@
     align-items: stretch;
   }
 }
+
+.inventory-tracking-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.inventory-tracking-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e5edf3;
+}
+.inventory-tracking-list span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.inventory-tracking-list small {
+  color: #60748a;
+  line-height: 1.5;
+}
+.inventory-tracking-list button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0.6rem 1rem;
+  flex: 0 0 auto;
+  background: #fff;
+  color: #194e69;
+  border: 1px solid #adc3d4;
+  border-radius: 0.65rem;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.inventory-tracking-list button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.inventory-tracking-list button:focus-visible {
+  outline: 3px solid #d68a24;
+  outline-offset: 3px;
+}
+@media (max-width: 540px) {
+  .inventory-tracking-list li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
