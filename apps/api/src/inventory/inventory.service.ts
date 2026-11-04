@@ -17,16 +17,24 @@ import {
 } from "./inventory.core";
 
 function mapInventoryError(error: unknown): never {
-  const code = error && typeof error === "object" && "code" in error
-    ? (error as { code: unknown }).code
-    : null;
+  const code =
+    error && typeof error === "object" && "code" in error
+      ? (error as { code: unknown }).code
+      : null;
   if (code === "42501" || code === "28000" || code === "23503") {
     throw new NotFoundException("Inventory unavailable");
   }
-  if (code === "23505") throw new ConflictException("Inventory record or retry key already used");
-  if (code === "22023" || code === "23514" || code === "22P02" ||
-      code === "22003") {
-    throw new BadRequestException("Invalid quantity, item or insufficient stock");
+  if (code === "23505")
+    throw new ConflictException("Inventory record or retry key already used");
+  if (
+    code === "22023" ||
+    code === "23514" ||
+    code === "22P02" ||
+    code === "22003"
+  ) {
+    throw new BadRequestException(
+      "Invalid quantity, item or insufficient stock",
+    );
   }
   throw error;
 }
@@ -59,8 +67,11 @@ export class InventoryService {
         ),
       );
       const record = result.rows[0]?.snapshot;
-      if (!record || record.stockMode !== "manual_ledger_only" ||
-          record.orderConsumptionEnabled !== false) {
+      if (
+        !record ||
+        record.stockMode !== "manual_ledger_only" ||
+        record.orderConsumptionEnabled !== false
+      ) {
         throw new Error("Unexpected inventory snapshot");
       }
       return record;
@@ -84,8 +95,14 @@ export class InventoryService {
       const result = await this.database.auth((client) =>
         client.query<{ item_id: string }>(
           "SELECT rcat_private.inventory_create_item($1,$2,$3,$4,$5,$6::numeric) AS item_id",
-          [digestOpaqueSecret(session.token), tenantId, storeId,
-            item.name, item.unit, item.reorderAt],
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            item.name,
+            item.unit,
+            item.reorderAt,
+          ],
         ),
       );
       return { itemId: result.rows[0]?.item_id };
@@ -116,9 +133,16 @@ export class InventoryService {
           };
         }>(
           "SELECT rcat_private.inventory_move($1,$2,$3,$4,$5,$6,$7::numeric,$8) AS movement",
-          [digestOpaqueSecret(session.token), tenantId, storeId,
-            movement.itemId, movement.idempotencyKey,
-            movement.kind, movement.delta, movement.reason],
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            movement.itemId,
+            movement.idempotencyKey,
+            movement.kind,
+            movement.delta,
+            movement.reason,
+          ],
         ),
       );
       return result.rows[0]?.movement;
@@ -141,20 +165,32 @@ export class InventoryService {
     }
     const session = await this.auth.session(req);
     this.auth.requireCsrf(req, session);
-    const data = raw && typeof raw === "object" && !Array.isArray(raw)
-      ? raw as Record<string, unknown> : {};
+    const data =
+      raw && typeof raw === "object" && !Array.isArray(raw)
+        ? (raw as Record<string, unknown>)
+        : {};
     const quantity = data["quantityPerProduct"];
     if (!validRecipeQuantity(quantity)) {
       throw new BadRequestException("Invalid recipe quantity");
     }
     try {
       const result = await this.database.auth((client) =>
-        client.query<{ recipe: {
-          productId: string; itemId: string; quantityPerProduct: string;
-        } }>(
+        client.query<{
+          recipe: {
+            productId: string;
+            itemId: string;
+            quantityPerProduct: string;
+          };
+        }>(
           "SELECT rcat_private.inventory_set_recipe($1,$2,$3,$4,$5,$6::numeric) AS recipe",
-          [digestOpaqueSecret(session.token), tenantId, storeId,
-            productId, itemId, quantity],
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            productId,
+            itemId,
+            quantity,
+          ],
         ),
       );
       return result.rows[0]?.recipe;
