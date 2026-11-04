@@ -13,8 +13,8 @@
     h1{font-size:clamp(1.7rem,5vw,2.5rem);margin:0.5rem 0}p{line-height:1.8;color:#55687e}
     .label{font-size:.78rem;font-weight:800;color:#a45a1a;letter-spacing:.14em}
     .warning{border-left:4px solid #c77b2a;background:#fff6e8;padding:1rem;border-radius:.25rem .75rem .75rem .25rem}
-    button{display:block;background:#15364d;color:#fff;border:0;border-radius:.65rem;min-height:48px;padding:.75rem 1.2rem;font:inherit;font-weight:750;cursor:pointer}
-    button:focus-visible{outline:3px solid #d88a24;outline-offset:3px}
+    a{display:inline-block;text-decoration:none;background:#15364d;color:#fff;border:0;border-radius:.65rem;min-height:48px;padding:.75rem 1.2rem;font:inherit;font-weight:750;cursor:pointer}
+    a:focus-visible{outline:3px solid #d88a24;outline-offset:3px}
   </style>
 </head>
 <body>
@@ -24,7 +24,7 @@
     <p>ยังไม่สามารถตรวจสอบออเดอร์ใหม่หรืออัปเดตสถานะกับร้านค้าได้</p>
     <p class="warning"><strong>อย่าถือว่ารับออเดอร์หรือบันทึกการเปลี่ยนสถานะสำเร็จ</strong>
       โปรดเชื่อมต่ออินเทอร์เน็ตก่อนดำเนินการต่อ ข้อมูลบนหน้าจอเก่าอาจไม่ใช่สถานะล่าสุด</p>
-    <button type="button" onclick="location.reload()">ลองเชื่อมต่ออีกครั้ง</button>
+    <a href="/">ลองเชื่อมต่ออีกครั้ง</a>
     <p>เมื่อกลับมาออนไลน์ หน้า Order Board จะโหลดออเดอร์จริงและตรวจสอบเหตุการณ์จาก Durable Outbox ใหม่</p>
   </main>
 </body>
