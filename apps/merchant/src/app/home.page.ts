@@ -64,9 +64,11 @@ import { MerchantOrderApi } from "./merchant-order.api";
               >เปิดกระดานออเดอร์</a
             >
             @if (store.role !== "cashier") {
-              <a class="store-report-link"
+              <a
+                class="store-report-link"
                 [routerLink]="['/inventory', store.tenantId, store.storeId]"
-                >จัดการสต็อกและสูตรวัตถุดิบ</a>
+                >จัดการสต็อกและสูตรวัตถุดิบ</a
+              >
             }
             @if (store.role === "owner" || store.role === "manager") {
               <a
