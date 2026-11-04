@@ -62,17 +62,20 @@ export function validQuantity(
   const unsigned = negative ? value.slice(1) : value;
   if (!DECIMAL.test(unsigned)) return false;
   const [whole, part = ""] = unsigned.split(".");
-  const units = BigInt(whole) * 1000n +
-    BigInt(part.padEnd(3, "0"));
+  const units = BigInt(whole) * 1000n + BigInt(part.padEnd(3, "0"));
   return (allowZero || units > 0n) && units <= max * 1000n;
 }
 export function validateItem(raw: unknown): InventoryCreateItem | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const item = raw as Record<string, unknown>;
-  if (typeof item["name"] !== "string" ||
-    item["name"].trim().length < 1 || item["name"].trim().length > 120 ||
-    !["g","ml","unit"].includes(String(item["unit"])) ||
-    !validQuantity(item["reorderAt"],1000000000000n)) return null;
+  if (
+    typeof item["name"] !== "string" ||
+    item["name"].trim().length < 1 ||
+    item["name"].trim().length > 120 ||
+    !["g", "ml", "unit"].includes(String(item["unit"])) ||
+    !validQuantity(item["reorderAt"], 1000000000000n)
+  )
+    return null;
   return {
     name: item["name"].trim(),
     unit: item["unit"] as InventoryUnit,
@@ -82,14 +85,21 @@ export function validateItem(raw: unknown): InventoryCreateItem | null {
 export function validateMovement(raw: unknown): InventoryNewMovement | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const body = raw as Record<string, unknown>;
-  if (!validInventoryId(body["itemId"]) ||
-      !validInventoryId(body["idempotencyKey"]) ||
-      (body["kind"] !== "receipt" && body["kind"] !== "adjustment") ||
-      !validQuantity(body["delta"],1000000000n,
-        body["kind"] === "adjustment",false) ||
-      typeof body["reason"] !== "string" ||
-      body["reason"].trim().length < 3 ||
-      body["reason"].trim().length > 200) return null;
+  if (
+    !validInventoryId(body["itemId"]) ||
+    !validInventoryId(body["idempotencyKey"]) ||
+    (body["kind"] !== "receipt" && body["kind"] !== "adjustment") ||
+    !validQuantity(
+      body["delta"],
+      1000000000n,
+      body["kind"] === "adjustment",
+      false,
+    ) ||
+    typeof body["reason"] !== "string" ||
+    body["reason"].trim().length < 3 ||
+    body["reason"].trim().length > 200
+  )
+    return null;
   return {
     itemId: body["itemId"],
     idempotencyKey: body["idempotencyKey"],
@@ -99,5 +109,5 @@ export function validateMovement(raw: unknown): InventoryNewMovement | null {
   };
 }
 export function validRecipeQuantity(raw: unknown): raw is string {
-  return validQuantity(raw,1000000000n,false,true);
+  return validQuantity(raw, 1000000000n, false, true);
 }
