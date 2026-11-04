@@ -1,0 +1,21 @@
+{
+  "name": "RCAT POS — Merchant Operations",
+  "short_name": "RCAT POS",
+  "description": "จัดการออเดอร์และร้านค้า ใช้งานผ่านมือถือหรือแท็บเล็ต",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f8fb",
+  "theme_color": "#cb7523",
+  "lang": "th",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

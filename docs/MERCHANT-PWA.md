@@ -1,0 +1,54 @@
+# Merchant PWA — Safe Offline Shell (G3 / #8)
+
+The merchant Angular app is installable as a standalone Progressive Web App. It
+is **online-only for business operations**: it does not allow offline mutation,
+Order acceptance, financial confirmation or notification acknowledgements.
+
+## Install/registration
+
+- `apps/merchant/public/manifest.webmanifest` supplies a Thai app name,
+  standalone display mode, theme color and SVG icon. All assets are included in
+  the Angular production build through `angular.json`.
+- Browser registers `/sw.js` under HTTPS (or local loopback for dev).
+  If unsupported, disabled or rejected, the normal authenticated merchant
+  board and HTTP fallback still work without offline caching.
+- On install the service worker caches **only** `/offline.html`, PWA manifest
+  and the public logo. On-demand cache applies **only** to same-origin hashed
+  JavaScript/CSS build assets (not any `/api`, Session, tenant/order response,
+  images containing customer data, routes or dynamically fetched JSON).
+- Navigations always fetch from the server and are NEVER cached. If the network
+  fails, all navigations (including previously authenticated Order Board and
+  report routes) display the **generic offline screen**. The screen displays
+  no historical Orders, store memberships, prices or unconfirmed status.
+
+## Isolation and recovery
+
+- An authenticated `/api/**` request is not intercepted, and a streaming
+  SSE request is never cached. Changing Order states always requires a live
+  HTTP request, Session, Origin and CSRF in the existing API. There is no
+  Background Sync, offline queue, IndexedDB or replay of side-effectful calls.
+- On browser reconnect, the existing Order Board opens SSE again and re-reads
+  the authoritative Inbox + persisted Durable Outbox. The Service Worker does
+  **not** acknowledge events or infer that offline orders were received.
+- A cache-version update deletes older RCAT Merchant static-only cache versions.
+  It does not delete caches owned by other apps. Same-origin deploys of
+  Merchant and Customer/Admin with overlapping paths are unsupported: deploy
+  merchant to a distinct origin before enabling `scope: /`.
+- Offline navigation still serves an informational `offline.html`; cached
+  scripts cannot bootstrap the authenticated merchant UI while offline.
+
+## Tests and operational gates
+
+`node tests/pwa-service-worker.mjs` executes the actual Service Worker
+source in a simulated event context. It verifies that offline navigation
+shows a generic message, API/SSE/mutations are excluded, only approved
+hashed static assets qualify for runtime cache, and install cache contains
+only public files. It runs under `merchant:test` in Workspace CI.
+
+**Not yet production-qualified:** installability on iOS Safari/Chrome/Android,
+actual proxy `Cache-Control` and response headers, TLS, CSP, reload after
+Service Worker upgrades, SW lifecycle after role revocation, multiple tabs,
+mobile background/sleep, storage quota, static icon install criteria on
+target devices, and full browser End-to-End validation. Installability is
+a convenience, not offline operations. The deferred PromptPay flow remains
+outside this feature (G5/#7).

@@ -59,7 +59,8 @@
             "index": "apps/merchant/src/index.html",
             "browser": "apps/merchant/src/main.ts",
             "tsConfig": "apps/merchant/tsconfig.app.json",
-            "styles": ["apps/merchant/src/styles.css"]
+            "styles": ["apps/merchant/src/styles.css"],
+            "assets": [{ "glob": "**/*", "input": "apps/merchant/public", "output": "/" }]
           },
           "configurations": {
             "production": {
