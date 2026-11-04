@@ -142,3 +142,87 @@ read model, dynamic scanning budgets, and load/performance testing are
 recommended before public Production. The 10-second polling is not
 push delivery; SSE/WebSocket remains a separate increment. No Payment
 state was changed; G5 PromptPay per Order remains LAST.
+
+## G3 SSE merchant notifications — PR #49 increment
+
+The merchant board uses **native browser EventSource** to receive advisory
+Order wake-up signals and requests an authoritative Inbox + Durable Outbox
+reconciliation after every signal. It never updates Order status directly
+from SSE and never acknowledges a notification without verifying the
+referenced Orders. A compatible environment must serve Angular and the
+NestJS API behind HTTPS with consistent same-origin paths.
+
+### API and transport
+
+`GET /api/tenants/:tenantId/stores/:storeId/notifications/stream`
+
+- Requires a valid, non-revoked HttpOnly staff Session and the same
+  tenant/store/role checks as the merchant notification polling API. When an
+  `Origin` header is present it must be explicitly allowlisted. Invalid or
+  cross-tenant sessions receive HTTP 401/403/404 **before** any SSE headers.
+  Authentication revalidates on every server poll, so revoked sessions or
+  removed memberships receive `event: access-revoked` and the stream closes.
+- Sends `Content-Type: text/event-stream`, `Cache-Control: no-store,
+  no-transform` and `X-Accel-Buffering: no` to discourage proxy buffering.
+  Sends an initial `retry: 5000` hint and periodic `: keepalive` comments.
+- Sends committed events as:
+  ```text
+  id: 9007199254740993
+  event: order-event
+  data: {"eventId":"9007199254740993","orderId":"...","eventType":"order.status.changed","status":"accepted"}
+
+  ```
+  Only event ID, Order ID, event type and operational status are included:
+  no actor IDs, customer tokens, CSRF/session secrets, line-item prices or
+  payment data. Event IDs remain decimal **strings**, never unsafe JS
+  Numbers. The Server-Sent Events `Last-Event-ID` header is intentionally
+  **ignored as an acknowledgement**. On stream reconnect, the server starts
+  from the last staff acknowledgement persisted in PostgreSQL, ensuring a
+  malicious/stale or ahead-of-ack browser cursor cannot silently skip
+  unacknowledged Orders. Event delivery is therefore at-least-once;
+  duplicates are expected and safely deduplicated by the existing Outbox.
+- A server-local stream polls the committed Outbox approximately every **3
+  seconds**. It does **not** use PostgreSQL LISTEN/NOTIFY, Redis pub/sub,
+  WebSocket, or a broker in this increment. Reads are bounded to 50 events
+  per page, with fast (50ms) catch-up while additional pages exist.
+  Connection memory is capped at 32 SSE clients per API instance. Slow
+  network readers are disconnected rather than buffered without limit,
+  reconnecting through durable staff acknowledgements.
+  A stream is rotated after 15 minutes; browser EventSource reconnects.
+- The stream holds no database connection between polls. Operational
+  readiness still requires measurement of CPU/DB load, pooled connections,
+  reverse-proxy idle timeout, Cloudflare buffering/edge behavior, horizontal
+  scaling and SSE error rates. The 32-connection cap is a deliberately
+  conservative initial instance limit, **not** a production capacity claim.
+
+### Browser lifecycle and fallback
+
+- When a merchant opens a valid store, the Angular board establishes one
+  EventSource with the session cookie. `order-event` and `open` (including
+  automatic reconnection) trigger a debounced Inbox/Outbox refresh.
+  The existing 10-second HTTP poll remains **active whenever SSE is
+  unavailable or reconnecting**. A healthy SSE connection still performs a
+  full reconciliation at least every 60 seconds.
+- Background tabs release SSE connections. When the screen wakes or network
+  resumes, the client opens a new SSE connection and fetches authoritative
+  records. Offline, unsubscribed, destroyed or revoked pages close the
+  EventSource explicitly. `access-revoked` clears retained Order cards and
+  requires a fresh authenticated Session.
+- SSE never triggers Payment or implies payment receipt. Money remains
+  `paymentState=not_requested`; per-Order PromptPay stays deferred to
+  G5 (#7).
+
+### Testing / remaining gates
+
+The HTTP integration suite opens real streaming connections and verifies
+the MIME/cache/buffering headers, anonymous/foreign-Origin/cross-tenant
+denial, a spoofed high `Last-Event-ID` not skipping unacknowledged Orders,
+live submitted-to-accepted delivery after commit, **no auto-ack**, and
+midstream session revocation. API unit tests verify line-safe framing,
+64-bit ID preservation and payload minimization.
+
+This does not yet qualify as production push: provider/device/browser E2E
+checks, slow readers and proxy buffering in the intended hosting topology,
+session churn, load tests, active-stream metrics, reconnection storm
+throttling, user-visible audio/toast preferences and operational retention
+are still release gates. Durable polling remains mandatory.
