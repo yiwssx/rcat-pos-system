@@ -19,7 +19,7 @@ import { RouterLink, RouterOutlet } from "@angular/router";
     </header>
     <main id="main"><router-outlet /></main>
     <footer class="footer">
-      RCAT POS · G1 Foundation · ไม่เปิดรับธุรกรรมจริง
+      RCAT POS · Tenant Administration · ยังไม่เปิด Production
     </footer>
   </div>`,
 })
