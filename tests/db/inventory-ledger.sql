@@ -25,7 +25,7 @@ DECLARE
   ingredient uuid; foreign_ingredient uuid;
   category uuid; product uuid;
   movement jsonb; replay jsonb; snapshot jsonb;
-  bad boolean;before_audit bigint;
+  bad boolean;
 BEGIN
   ingredient:=rcat_private.inventory_create_item(
     owner_token,a,store_a,'ข้าวสาร','g',1000.000);
@@ -44,8 +44,6 @@ BEGIN
   IF movement->>'replayed'<>'false' OR
     (movement->>'onHand')::numeric<>2000.125
   THEN RAISE EXCEPTION 'Receipt result incorrect: %',movement; END IF;
-  SELECT count(*) INTO before_audit FROM rcat.audit_events
-    WHERE tenant_id=a AND action='inventory.movement.created';
   replay:=rcat_private.inventory_move(
     owner_token,a,store_a,ingredient,
     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','receipt',
@@ -54,9 +52,9 @@ BEGIN
      OR replay->>'movementId'<>movement->>'movementId'
      OR (replay->>'onHand')::numeric<>2000.125
   THEN RAISE EXCEPTION 'Idempotency replay failed'; END IF;
-  IF (SELECT count(*) FROM rcat.audit_events
-      WHERE tenant_id=a AND action='inventory.movement.created')<>before_audit
-  THEN RAISE EXCEPTION 'Retry wrote duplicate audit'; END IF;
+  snapshot:=rcat_private.inventory_snapshot(owner_token,a,store_a);
+  IF jsonb_array_length(snapshot->'recentMovements')<>1
+  THEN RAISE EXCEPTION 'Retry created a duplicate stock movement'; END IF;
 
   bad:=false;
   BEGIN
