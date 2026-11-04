@@ -12,6 +12,11 @@ export const routes: Routes = [
       import("./order-board.page").then((m) => m.MerchantOrderBoardPage),
   },
   {
+    path: "reports/:tenantId/:storeId",
+    loadComponent: () =>
+      import("./operational-reports.page").then((m) => m.OperationalReportsPage),
+  },
+  {
     path: "status",
     loadComponent: () => import("./status.page").then((m) => m.StatusPage),
   },
