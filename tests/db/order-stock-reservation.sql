@@ -63,10 +63,14 @@ BEGIN
    cashier,t,s,ordered,'submitted','accepted');
  IF result->>'inventoryMovementCount'<>'2'
    OR result->>'paymentState'<>'not_requested'
-   OR (SELECT on_hand FROM rcat.inventory_items WHERE id=rice)<>4799.000
-   OR (SELECT on_hand FROM rcat.inventory_items WHERE id=broth)<>4939.500
-   OR (SELECT count(*) FROM rcat.inventory_order_allocations
-     WHERE order_id=ordered AND returned_at IS NULL)<>2
+   OR (SELECT (x->>'onHand')::numeric
+       FROM jsonb_array_elements(
+         (rcat_private.inventory_snapshot(owner,t,s))->'items') x
+       WHERE x->>'itemId'=rice::text)<>4799.000
+   OR (SELECT (x->>'onHand')::numeric
+       FROM jsonb_array_elements(
+         (rcat_private.inventory_snapshot(owner,t,s))->'items') x
+       WHERE x->>'itemId'=broth::text)<>4939.500
  THEN RAISE EXCEPTION 'Accept failed base+option consumption'; END IF;
  denied:=false;
  BEGIN
@@ -81,10 +85,14 @@ BEGIN
  result:=rcat_private.transition_merchant_order(
    cashier,t,s,ordered,'accepted','cancelled');
  IF result->>'inventoryMovementCount'<>'2'
-   OR (SELECT on_hand FROM rcat.inventory_items WHERE id=rice)<>5000.000
-   OR (SELECT on_hand FROM rcat.inventory_items WHERE id=broth)<>5000.000
-   OR (SELECT count(*) FROM rcat.inventory_order_allocations
-     WHERE order_id=ordered AND returned_at IS NOT NULL)<>2
+   OR (SELECT (x->>'onHand')::numeric
+       FROM jsonb_array_elements(
+         (rcat_private.inventory_snapshot(owner,t,s))->'items') x
+       WHERE x->>'itemId'=rice::text)<>5000.000
+   OR (SELECT (x->>'onHand')::numeric
+       FROM jsonb_array_elements(
+         (rcat_private.inventory_snapshot(owner,t,s))->'items') x
+       WHERE x->>'itemId'=broth::text)<>5000.000
  THEN RAISE EXCEPTION 'Cancellation did not return frozen quantity'; END IF;
  denied:=false;
  BEGIN
@@ -100,15 +108,16 @@ BEGIN
  other:=(result->>'orderId')::uuid;
  result:=rcat_private.transition_merchant_order(
    cashier,t,s,other,'submitted','accepted');
- IF result->>'inventoryMovementCount'<>'0' OR
-   EXISTS(SELECT 1 FROM rcat.inventory_order_allocations WHERE order_id=other)
+ IF result->>'inventoryMovementCount'<>'0'
  THEN RAISE EXCEPTION 'Legacy untracked item consumed stock'; END IF;
 
  PERFORM set_config('test.stock_accepted',ordered::text,true);
+ PERFORM set_config('test.stock_untracked',other::text,true);
 END $$;
 RESET ROLE;
 DO $$
 DECLARE id uuid:=current_setting('test.stock_accepted')::uuid;
+  untracked uuid:=current_setting('test.stock_untracked')::uuid;
 BEGIN
  IF (SELECT count(*) FROM rcat.inventory_movements
      WHERE order_id=id AND kind='order_consumption')<>2
@@ -118,6 +127,10 @@ BEGIN
      WHERE subject_id=id AND action='inventory.order.allocated')<>1
  OR (SELECT count(*) FROM rcat.audit_events
      WHERE subject_id=id AND action='inventory.order.returned')<>1
+ OR (SELECT count(*) FROM rcat.inventory_order_allocations
+     WHERE order_id=id AND returned_at IS NOT NULL)<>2
+ OR EXISTS(SELECT 1 FROM rcat.inventory_order_allocations
+     WHERE order_id=untracked)
  THEN RAISE EXCEPTION 'Audited inventory movements duplicated or missing'; END IF;
 END $$;
 SET LOCAL ROLE rcat_app;
