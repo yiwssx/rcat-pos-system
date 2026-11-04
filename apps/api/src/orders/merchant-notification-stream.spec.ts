@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { encodeOrderSse } from "./merchant-notification-stream.service";
-import { MerchantNotificationEvent } from "./merchant-notifications.service";
+import { encodeOrderSse } from "./merchant-notification-stream.core";
+import type { MerchantNotificationEvent } from "./merchant-notifications.service";
 
 describe("durable merchant SSE envelope", () => {
   const event: MerchantNotificationEvent = {
