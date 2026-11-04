@@ -23,26 +23,53 @@ const VISIT: GuestVisit = {
     { id: "p2", categoryId: "food", name: "น้ำ", priceSatang: 2500 },
   ],
   modifierGroups: [
-    { id: "g1", productId: "p1", name: "เครื่องเคียง", slug: "extras", minSelect: 1, maxSelect: 2 },
+    {
+      id: "g1",
+      productId: "p1",
+      name: "เครื่องเคียง",
+      slug: "extras",
+      minSelect: 1,
+      maxSelect: 2,
+    },
   ],
   modifierOptions: [
-    { id: "o1", productId: "p1", groupId: "g1", name: "ไข่", priceDeltaSatang: 1500 },
-    { id: "o2", productId: "p1", groupId: "g1", name: "ลดข้าว", priceDeltaSatang: -1000 },
+    {
+      id: "o1",
+      productId: "p1",
+      groupId: "g1",
+      name: "ไข่",
+      priceDeltaSatang: 1500,
+    },
+    {
+      id: "o2",
+      productId: "p1",
+      groupId: "g1",
+      name: "ลดข้าว",
+      priceDeltaSatang: -1000,
+    },
   ],
 };
 
 describe("customer route security and QR ordering", () => {
   it("lazy loads mobile guest ordering and order-only tracking routes", () => {
-    expect(routes.find((x) => x.path === "order")?.loadComponent).toBeTypeOf("function");
-    expect(routes.find((x) => x.path === "order/track")?.loadComponent).toBeTypeOf("function");
+    expect(routes.find((x) => x.path === "order")?.loadComponent).toBeTypeOf(
+      "function",
+    );
+    expect(
+      routes.find((x) => x.path === "order/track")?.loadComponent,
+    ).toBeTypeOf("function");
     expect(routes.some((route) => route.path?.includes("payment"))).toBe(false);
   });
 
   it("extracts only an exact, single fragment-only ordering capability", () => {
     const token = "X".repeat(43);
     expect(sanitizedVisitToken("token=" + token)).toBe(token);
-    expect(sanitizedVisitToken("token=" + token + "&token=" + token)).toBe(null);
-    expect(sanitizedVisitToken("token=" + token + "&redirect=https://evil.test")).toBe(null);
+    expect(sanitizedVisitToken("token=" + token + "&token=" + token)).toBe(
+      null,
+    );
+    expect(
+      sanitizedVisitToken("token=" + token + "&redirect=https://evil.test"),
+    ).toBe(null);
     expect(sanitizedVisitToken("token=too-short")).toBe(null);
     expect(sanitizedVisitToken("random=" + token)).toBe(null);
     expect(sanitizedVisitToken(null)).toBe(null);
@@ -69,17 +96,26 @@ describe("customer route security and QR ordering", () => {
   });
 
   it("rejects invalid totals, quantity overflow and overly large carts", () => {
-    expect(estimateSatang(VISIT, [{ productId: "missing", optionIds: [], quantity: 1 }]))
-      .toBeNaN();
-    expect(() => addToCart(
-      VISIT,
-      [{ productId: "p2", optionIds: [], quantity: 20 }],
-      "p2", [],
-    )).toThrow("20 ชิ้น");
-    expect(() => changeCartQuantity(
-      [{ productId: "p2", optionIds: [], quantity: 20 }],
-      0, 1,
-    )).toThrow();
+    expect(
+      estimateSatang(VISIT, [
+        { productId: "missing", optionIds: [], quantity: 1 },
+      ]),
+    ).toBeNaN();
+    expect(() =>
+      addToCart(
+        VISIT,
+        [{ productId: "p2", optionIds: [], quantity: 20 }],
+        "p2",
+        [],
+      ),
+    ).toThrow("20 ชิ้น");
+    expect(() =>
+      changeCartQuantity(
+        [{ productId: "p2", optionIds: [], quantity: 20 }],
+        0,
+        1,
+      ),
+    ).toThrow();
     expect(() => changeCartQuantity([], 0, 1)).toThrow();
     expect(formatSatang(-1)).toBe("—");
     expect(formatSatang(Number.NaN)).toBe("—");
