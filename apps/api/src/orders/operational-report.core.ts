@@ -7,7 +7,10 @@ export interface OperationalDailyReport {
   snapshotType: "ordered_not_paid";
   paymentStatus: "not_implemented";
   orderCount: number;
-  statusCounts: Record<"submitted" | "accepted" | "preparing" | "served" | "cancelled", number>;
+  statusCounts: Record<
+    "submitted" | "accepted" | "preparing" | "served" | "cancelled",
+    number
+  >;
   orderedAmountSatang: string;
   activeOrderedAmountSatang: string;
   cancelledOrderedAmountSatang: string;
@@ -25,17 +28,17 @@ export interface OperationalDailyReport {
 export function validBusinessDay(value: unknown): value is string {
   if (typeof value !== "string" || !DAY.test(value)) return false;
   const date = new Date(value + "T00:00:00Z");
-  return Number.isFinite(date.valueOf()) &&
-    date.toISOString().slice(0, 10) === value;
+  return (
+    Number.isFinite(date.valueOf()) && date.toISOString().slice(0, 10) === value
+  );
 }
 
 // Excel opens CSV cells beginning =,+,-,@ as formulas. Every CSV field is
 // quoted and formula-looking data receives a literal leading apostrophe.
 export function csvField(input: string | number): string {
   const data = String(input).replace(/\r|\n/g, " ");
-  const escaped = /^[\s]*[=+\-@]/.test(data) || /^[\t\r]/.test(data)
-    ? "'" + data
-    : data;
+  const escaped =
+    /^[\s]*[=+\-@]/.test(data) || /^[\t\r]/.test(data) ? "'" + data : data;
   return '"' + escaped.replace(/"/g, '""') + '"';
 }
 export function operationalReportCsv(data: OperationalDailyReport): string {
@@ -48,19 +51,28 @@ export function operationalReportCsv(data: OperationalDailyReport): string {
   csv += row("Payment status", data.paymentStatus);
   csv += row("Orders", data.orderCount);
   csv += row("All order value (satang; not paid)", data.orderedAmountSatang);
-  csv += row("Non-cancelled order value (satang; not paid)",
-    data.activeOrderedAmountSatang);
-  csv += row("Cancelled order value (satang; not paid)",
-    data.cancelledOrderedAmountSatang);
-  csv += row("Served order value (satang; not paid)",
-    data.servedOrderedAmountSatang);
+  csv += row(
+    "Non-cancelled order value (satang; not paid)",
+    data.activeOrderedAmountSatang,
+  );
+  csv += row(
+    "Cancelled order value (satang; not paid)",
+    data.cancelledOrderedAmountSatang,
+  );
+  csv += row(
+    "Served order value (satang; not paid)",
+    data.servedOrderedAmountSatang,
+  );
   csv += row("Average seconds to accept", data.avgSecondsToAccept ?? "N/A");
   csv += row("Average seconds to serve", data.avgSecondsToServe ?? "N/A");
   csv += row();
-  csv += row("Product", "Units ordered (non-cancelled)", "Order value satang (not paid)");
+  csv += row(
+    "Product",
+    "Units ordered (non-cancelled)",
+    "Order value satang (not paid)",
+  );
   for (const item of data.topProducts) {
     csv += row(item.productName, item.unitsOrdered, item.orderedAmountSatang);
   }
   return csv;
 }
-
