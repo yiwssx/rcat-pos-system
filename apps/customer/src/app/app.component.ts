@@ -14,12 +14,13 @@ import { RouterLink, RouterOutlet } from "@angular/router";
       >
       <nav aria-label="นำทาง">
         <a routerLink="/">ภาพรวม</a>
-        <a routerLink="/status">สถานะระบบ</a>
+        <a routerLink="/order">สั่งอาหาร</a>
+        <a routerLink="/order/track">ติดตามออเดอร์</a>
       </nav>
     </header>
     <main id="main"><router-outlet /></main>
     <footer class="footer">
-      RCAT POS · G1 Foundation · ไม่เปิดรับธุรกรรมจริง
+      RCAT POS · Guest Ordering · ยังไม่มีการชำระเงินผ่านระบบ
     </footer>
   </div>`,
 })
