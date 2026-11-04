@@ -253,7 +253,9 @@ export class StaffPage implements OnInit, OnDestroy {
     const token = this.issuedToken();
     if (!token) return;
     try {
-      await this.document.defaultView?.navigator.clipboard?.writeText(token);
+      const clipboard = this.document.defaultView?.navigator.clipboard;
+      if (!clipboard) throw new Error("Clipboard unavailable");
+      await clipboard.writeText(token);
       this.notice.set("คัดลอกแล้ว รหัสนี้เป็นความลับ");
     } catch {
       this.error.set("คัดลอกไม่ได้ กรุณาเลือกข้อความแล้วคัดลอกด้วยตนเอง");
