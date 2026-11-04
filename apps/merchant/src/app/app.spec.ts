@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { routes } from "./app.routes";
-import { formatUnits, lowStock, toMilliUnits, validStockInput } from "./inventory.domain";
+import {
+  formatUnits,
+  lowStock,
+  toMilliUnits,
+  validStockInput,
+} from "./inventory.domain";
 import {
   formatReportSatang,
   formatReportSeconds,
@@ -38,8 +43,10 @@ describe("merchant operations routes", () => {
   });
 
   it("lazy loads inventory scoped to tenant/store, without Payment", () => {
-    expect(routes.find((route) => route.path === "inventory/:tenantId/:storeId")
-      ?.loadComponent).toBeTypeOf("function");
+    expect(
+      routes.find((route) => route.path === "inventory/:tenantId/:storeId")
+        ?.loadComponent,
+    ).toBeTypeOf("function");
   });
 
   it("does not expose a payment route", () => {
@@ -215,13 +222,29 @@ describe("exact inventory quantities and shortage indicators", () => {
     expect(formatUnits("-0.500")).toContain("-0.5");
     expect(toMilliUnits("1.0001")).toBe(null);
     expect(toMilliUnits("1e5")).toBe(null);
-    expect(validStockInput("100.005",{zero:false})).toBe(true);
-    expect(validStockInput("-100.005",{zero:false,negative:true})).toBe(true);
-    expect(validStockInput("-100.005",{zero:false})).toBe(false);
-    expect(validStockInput("0",{zero:false})).toBe(false);
-    expect(lowStock({itemId:"1",name:"Rice",unit:"g",onHand:"9.999",reorderAt:"10"}))
-      .toBe(true);
-    expect(lowStock({itemId:"1",name:"Rice",unit:"g",onHand:"10.001",reorderAt:"10"}))
-      .toBe(false);
+    expect(validStockInput("100.005", { zero: false })).toBe(true);
+    expect(validStockInput("-100.005", { zero: false, negative: true })).toBe(
+      true,
+    );
+    expect(validStockInput("-100.005", { zero: false })).toBe(false);
+    expect(validStockInput("0", { zero: false })).toBe(false);
+    expect(
+      lowStock({
+        itemId: "1",
+        name: "Rice",
+        unit: "g",
+        onHand: "9.999",
+        reorderAt: "10",
+      }),
+    ).toBe(true);
+    expect(
+      lowStock({
+        itemId: "1",
+        name: "Rice",
+        unit: "g",
+        onHand: "10.001",
+        reorderAt: "10",
+      }),
+    ).toBe(false);
   });
 });
