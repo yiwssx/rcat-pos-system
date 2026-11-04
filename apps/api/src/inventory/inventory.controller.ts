@@ -62,7 +62,9 @@ export class InventoryController {
     return this.inventory.tracking(req, tenantId, storeId, productId, body);
   }
 
-  @Put("modifier-recipes/:productId/groups/:groupId/options/:optionId/items/:itemId")
+  @Put(
+    "modifier-recipes/:productId/groups/:groupId/options/:optionId/items/:itemId",
+  )
   @Header("Cache-Control", "no-store")
   modifierRecipe(
     @Req() req: ApiRequest,
@@ -76,7 +78,14 @@ export class InventoryController {
   ) {
     requireAllowedOrigin(req);
     return this.inventory.modifierRecipe(
-      req, tenantId, storeId, productId, groupId, optionId, itemId, body,
+      req,
+      tenantId,
+      storeId,
+      productId,
+      groupId,
+      optionId,
+      itemId,
+      body,
     );
   }
 
