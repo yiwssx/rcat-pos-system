@@ -14,10 +14,13 @@ import {
 describe("Admin tenant-owner routing and validation", () => {
   it("loads account onboarding and tenant-scoped staff UI lazily, without payment", () => {
     expect(routes[0]?.path).toBe("");
-    expect(routes.find((route) => route.path === "tenants/:tenantId/staff")
-      ?.loadComponent).toBeTypeOf("function");
-    expect(routes.find((route) => route.path === "status")?.loadComponent)
-      .toBeTypeOf("function");
+    expect(
+      routes.find((route) => route.path === "tenants/:tenantId/staff")
+        ?.loadComponent,
+    ).toBeTypeOf("function");
+    expect(
+      routes.find((route) => route.path === "status")?.loadComponent,
+    ).toBeTypeOf("function");
     expect(routes.some((route) => route.path?.includes("payment"))).toBe(false);
   });
 
@@ -36,20 +39,25 @@ describe("Admin tenant-owner routing and validation", () => {
       storeName: "ร้านอาหาร",
     };
     expect(validMerchantCreation(form)).toBe(null);
-    expect(validMerchantCreation({ ...form, tenantSlug: "../evil" }))
-      .not.toBe(null);
-    expect(validMerchantCreation({ ...form, storeSlug: "UPPERCASE" }))
-      .not.toBe(null);
-    expect(validMerchantCreation({ ...form, tenantSlug: "a" }))
-      .not.toBe(null);
-    expect(validMerchantCreation({ ...form, tenantName: " ".repeat(10) }))
-      .not.toBe(null);
-    expect(validMerchantCreation({ ...form, storeName: "a".repeat(161) }))
-      .not.toBe(null);
+    expect(validMerchantCreation({ ...form, tenantSlug: "../evil" })).not.toBe(
+      null,
+    );
+    expect(validMerchantCreation({ ...form, storeSlug: "UPPERCASE" })).not.toBe(
+      null,
+    );
+    expect(validMerchantCreation({ ...form, tenantSlug: "a" })).not.toBe(null);
+    expect(
+      validMerchantCreation({ ...form, tenantName: " ".repeat(10) }),
+    ).not.toBe(null);
+    expect(
+      validMerchantCreation({ ...form, storeName: "a".repeat(161) }),
+    ).not.toBe(null);
   });
 
   it("accepts only RCAT email in the invitation UI and never grants owner via invite", () => {
-    expect(normalizeStaffEmail("  STAFF@RCAT.AC.TH  ")).toBe("staff@rcat.ac.th");
+    expect(normalizeStaffEmail("  STAFF@RCAT.AC.TH  ")).toBe(
+      "staff@rcat.ac.th",
+    );
     for (const email of [
       "someone@gmail.com",
       "staff@rcat.ac.th.evil.test",
