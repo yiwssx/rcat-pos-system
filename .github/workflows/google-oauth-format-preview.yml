@@ -1,0 +1,39 @@
+name: Temporary Google OAuth formatter
+on:
+  pull_request:
+    paths:
+      - 'apps/api/src/auth/google-*'
+      - 'apps/merchant/src/app/home.page.ts'
+      - '.github/workflows/google-oauth-format-preview.yml'
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.23.0, run_install: false }
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .node-version, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Canonical formatted sources
+        shell: bash
+        run: |
+          files=(
+            apps/api/src/auth/google-oauth-cookies.ts
+            apps/api/src/auth/google-oidc-verifier.spec.ts
+            apps/api/src/auth/google-oidc-verifier.ts
+            apps/api/src/auth/google-workspace-auth.controller.ts
+            apps/api/src/auth/google-workspace-auth.service.ts
+            apps/merchant/src/app/home.page.ts
+          )
+          pnpm exec prettier --write "${files[@]}"
+          for f in "${files[@]}"; do
+            echo "RCAT_GOOGLE_FMT_BEGIN:$f"
+            base64 -w0 "$f"
+            echo
+            echo "RCAT_GOOGLE_FMT_END:$f"
+          done
