@@ -1,10 +1,8 @@
 import { Controller, Get, Header, Param, Query, Req, Res } from "@nestjs/common";
 import type { Response } from "express";
 import { ApiRequest } from "../auth/request-security";
-import {
-  operationalReportCsv,
-  OperationalReportsService,
-} from "./operational-reports.service";
+import { operationalReportCsv } from "./operational-report.core";
+import { OperationalReportsService } from "./operational-reports.service";
 
 @Controller("tenants/:tenantId/stores/:storeId/reports")
 export class OperationalReportsController {
