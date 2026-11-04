@@ -10,7 +10,11 @@ import {
 export class OperationalReportsApi {
   private readonly http = inject(HttpClient);
 
-  daily(tenantId: string, storeId: string, day: string): Promise<OperationalDailyReport> {
+  daily(
+    tenantId: string,
+    storeId: string,
+    day: string,
+  ): Promise<OperationalDailyReport> {
     return firstValueFrom(
       this.http.get<OperationalDailyReport>(
         operationalReportPath(tenantId, storeId),
@@ -20,7 +24,10 @@ export class OperationalReportsApi {
   }
 
   csvUrl(tenantId: string, storeId: string, day: string): string {
-    return operationalReportPath(tenantId, storeId) +
-      ".csv?day=" + encodeURIComponent(day);
+    return (
+      operationalReportPath(tenantId, storeId) +
+      ".csv?day=" +
+      encodeURIComponent(day)
+    );
   }
 }
