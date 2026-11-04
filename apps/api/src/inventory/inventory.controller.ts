@@ -61,7 +61,12 @@ export class InventoryController {
   ) {
     requireAllowedOrigin(req);
     return this.inventory.setRecipe(
-      req,tenantId,storeId,productId,itemId,body,
+      req,
+      tenantId,
+      storeId,
+      productId,
+      itemId,
+      body,
     );
   }
 }
