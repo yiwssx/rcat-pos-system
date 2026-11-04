@@ -1,6 +1,6 @@
 // All stock quantities are fixed-point DECIMAL strings, never JS floats.
 // g/ml/unit are the only supported unit labels in this foundation.
-const DECIMAL = /^(?:0|[1-9][0-9]{0,11})(?:\.[0-9]{1,3})?$/;
+const DECIMAL = /^(?:0|[1-9][0-9]{0,12})(?:\.[0-9]{1,3})?$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export type InventoryUnit = "g" | "ml" | "unit";
 export type InventoryMovementKind = "receipt" | "adjustment";
