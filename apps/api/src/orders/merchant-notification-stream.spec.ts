@@ -44,9 +44,9 @@ describe("durable merchant SSE envelope", () => {
   });
 
   it("rejects a line-injected Last-Event-ID stored as event data", () => {
-    expect(() => encodeOrderSse({ ...event, eventId: "1\nevent: forgery" })).toThrow(
-      "Invalid Order outbox event ID",
-    );
+    expect(() =>
+      encodeOrderSse({ ...event, eventId: "1\nevent: forgery" }),
+    ).toThrow("Invalid Order outbox event ID");
     expect(() => encodeOrderSse({ ...event, eventId: "0" })).toThrow();
     expect(() => encodeOrderSse({ ...event, eventId: "-1" })).toThrow();
   });
