@@ -29,6 +29,8 @@ import {
 import { MerchantOrderApi } from "./merchant-order.api";
 
 const POLL_MS = 10_000;
+const SSE_RECONCILE_MS = 60_000;
+const SSE_EVENT_DEBOUNCE_MS = 500;
 const MAX_CATCHUP_PAGES = 6;
 const MAX_INBOX_PAGES = 20; // Explicit bounded recovery; retain outbox until complete.
 
@@ -88,9 +90,17 @@ function failureText(error: unknown): string {
           [class.is-offline]="!connected()"
         ></span>
         {{
-          connected()
-            ? "เชื่อมต่ออยู่ · ตรวจออเดอร์ทุก 10 วินาที"
-            : "ออฟไลน์ · รอเชื่อมต่ออีกครั้ง"
+          !connected()
+            ? "ออฟไลน์ · รอเชื่อมต่ออีกครั้ง"
+            : streamState() === "streaming"
+              ? "SSE ทำงาน · ออเดอร์แจ้งอัตโนมัติ · ตรวจสอบซ้ำทุก 60 วินาที"
+              : streamState() === "connecting"
+                ? "กำลังเชื่อม SSE · ใช้ Polling สำรองทุก 10 วินาที"
+                : streamState() === "blocked"
+                  ? "ถูกตัดสิทธิ์การแจ้งเตือน · กรุณาเข้าสู่ระบบใหม่"
+                  : streamState() === "paused"
+                    ? "หยุด SSE ระหว่างซ่อนแท็บ · จะซิงก์เมื่อกลับมา"
+                    : "Polling สำรองทุก 10 วินาที · SSE กำลังเชื่อมต่อใหม่"
         }}
         @if (lastSynced()) {
           <span
@@ -322,6 +332,9 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
   private readonly document = inject(DOCUMENT);
   private readonly win = this.document.defaultView;
   private interval?: ReturnType<typeof setInterval>;
+  private stream?: EventSource;
+  private streamRefresh?: ReturnType<typeof setTimeout>;
+  private refreshPending = false;
   private disposed = false;
   private inFlight = false;
   private tenantId = "";
@@ -339,6 +352,9 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
   readonly busyId = signal<string | null>(null);
   readonly lastSynced = signal<Date | null>(null);
   readonly connected = signal(true);
+  readonly streamState = signal<
+    "connecting" | "streaming" | "polling" | "paused" | "blocked"
+  >("polling");
   readonly filter = signal("active");
   readonly history = signal<OrderHistory | null>(null);
   readonly selectedHistoryId = signal<string | null>(null);
@@ -379,7 +395,17 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     this.win?.addEventListener("focus", this.resume);
     this.document.addEventListener("visibilitychange", this.resume);
     this.interval = setInterval(() => {
-      if (this.document.visibilityState === "visible" && this.connected()) {
+      if (this.document.visibilityState !== "visible" || !this.connected()) {
+        return;
+      }
+      // SSE is an advisory wake signal, not a durable acknowledgement.
+      // Periodic reconciliation still runs when the stream appears healthy.
+      const synced = this.lastSynced();
+      if (
+        this.streamState() !== "streaming" ||
+        !synced ||
+        Date.now() - synced.getTime() >= SSE_RECONCILE_MS
+      ) {
         void this.refresh();
       }
     }, POLL_MS);
@@ -389,6 +415,8 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.disposed = true;
     if (this.interval) clearInterval(this.interval);
+    if (this.streamRefresh) clearTimeout(this.streamRefresh);
+    this.closeStream();
     this.win?.removeEventListener("online", this.resume);
     this.win?.removeEventListener("offline", this.goOffline);
     this.win?.removeEventListener("focus", this.resume);
@@ -397,15 +425,101 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
 
   private readonly goOffline = () => {
     this.connected.set(false);
+    this.closeStream();
+    this.streamState.set("polling");
     this.warning.set("การเชื่อมต่อขาด · รายการบนจออาจไม่ใช่สถานะล่าสุด");
   };
 
   private readonly resume = () => {
     this.connected.set(this.win?.navigator.onLine ?? true);
-    if (this.document.visibilityState === "visible" && this.connected()) {
-      void this.refresh();
+    if (this.document.visibilityState !== "visible") {
+      this.closeStream();
+      if (this.streamState() !== "blocked") this.streamState.set("paused");
+      return;
+    }
+    if (this.connected() && this.streamState() !== "blocked") {
+      this.openStream();
+      this.queueStreamRefresh();
     }
   };
+
+  private closeStream(): void {
+    this.stream?.close();
+    this.stream = undefined;
+  }
+
+  private queueStreamRefresh(): void {
+    if (this.disposed || this.streamState() === "blocked") return;
+    this.refreshPending = true;
+    if (this.streamRefresh) return;
+    this.streamRefresh = setTimeout(() => {
+      this.streamRefresh = undefined;
+      if (this.inFlight) return; // retry once the in-flight refresh finishes
+      if (!this.refreshPending) return;
+      this.refreshPending = false;
+      void this.refresh();
+    }, SSE_EVENT_DEBOUNCE_MS);
+  }
+
+  private openStream(): void {
+    if (
+      this.disposed ||
+      this.stream ||
+      !this.store() ||
+      !this.connected() ||
+      this.streamState() === "blocked" ||
+      this.document.visibilityState !== "visible"
+    ) {
+      return;
+    }
+    if (typeof EventSource === "undefined") {
+      this.streamState.set("polling");
+      return;
+    }
+    const source = new EventSource(
+      this.api.notificationStreamUrl(this.tenantId, this.storeId),
+      { withCredentials: true },
+    );
+    this.stream = source;
+    this.streamState.set("connecting");
+
+    source.addEventListener("open", () => {
+      if (this.disposed || this.stream !== source) return;
+      this.streamState.set("streaming");
+      // Always reconcile from authoritative Inbox + saved Outbox ack on
+      // (re)connect. SSE Last-Event-ID is never a financial/order authority.
+      this.queueStreamRefresh();
+    });
+    source.addEventListener("order-event", () => {
+      if (this.disposed || this.stream !== source) return;
+      // Advisory only. Do not trust SSE payload as a new Order or ack it.
+      this.queueStreamRefresh();
+    });
+    source.addEventListener("access-revoked", () => {
+      if (this.disposed || this.stream !== source) return;
+      this.blockAccess();
+    });
+    source.addEventListener("stream-error", () => {
+      if (this.disposed || this.stream !== source) return;
+      this.streamState.set("polling");
+      this.queueStreamRefresh();
+    });
+    source.onerror = () => {
+      if (this.disposed || this.stream !== source) return;
+      // EventSource will retry automatically; 10s polling still recovers.
+      this.streamState.set("polling");
+      this.queueStreamRefresh();
+    };
+  }
+
+  private blockAccess(): void {
+    this.closeStream();
+    this.streamState.set("blocked");
+    this.orders.set([]);
+    this.events.set([]);
+    this.store.set(null);
+    this.error.set("สิทธิ์ร้านหรือเซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
+  }
 
   private async initialize(): Promise<void> {
     try {
@@ -420,6 +534,7 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
         return;
       }
       this.store.set(selected);
+      this.openStream();
       await this.refresh();
     } catch (error) {
       if (!this.disposed) this.error.set(failureText(error));
@@ -566,10 +681,20 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
         this.lastSynced.set(new Date());
       }
     } catch (error) {
-      if (!this.disposed) this.error.set(failureText(error));
+      if (!this.disposed) {
+        if (error instanceof HttpErrorResponse &&
+          [401, 403, 404].includes(error.status)) {
+          this.blockAccess();
+        } else {
+          this.error.set(failureText(error));
+        }
+      }
     } finally {
       this.inFlight = false;
-      if (!this.disposed) this.refreshing.set(false);
+      if (!this.disposed) {
+        this.refreshing.set(false);
+        if (this.refreshPending) this.queueStreamRefresh();
+      }
     }
   }
 
