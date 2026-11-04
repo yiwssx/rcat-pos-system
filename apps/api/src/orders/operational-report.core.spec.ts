@@ -13,7 +13,11 @@ const report: OperationalDailyReport = {
   paymentStatus: "not_implemented",
   orderCount: 2,
   statusCounts: {
-    submitted: 0, accepted: 1, preparing: 0, served: 0, cancelled: 1,
+    submitted: 0,
+    accepted: 1,
+    preparing: 0,
+    served: 0,
+    cancelled: 1,
   },
   orderedAmountSatang: "30700",
   activeOrderedAmountSatang: "20800",
@@ -24,7 +28,7 @@ const report: OperationalDailyReport = {
   topProducts: [
     {
       productId: "product-id",
-      productName: "=HYPERLINK(\"https://attacker.invalid\")",
+      productName: '=HYPERLINK("https://attacker.invalid")',
       unitsOrdered: "2",
       orderedAmountSatang: "20800",
     },
@@ -43,12 +47,12 @@ describe("operational reporting security and business-day semantics", () => {
   });
 
   it("prevents formula injection and escapes commas, quotes and newlines", () => {
-    expect(csvField("=1+2")).toBe("\"'=1+2\"");
-    expect(csvField("  +SUM(1,2)")).toBe("\"'  +SUM(1,2)\"");
-    expect(csvField("@macro")).toBe("\"'@macro\"");
-    expect(csvField("-1")).toBe("\"'-1\"");
-    expect(csvField("hello,\"world\"")).toBe("\"hello,\"\"world\"\"\"");
-    expect(csvField("a\nb")).toBe("\"a b\"");
+    expect(csvField("=1+2")).toBe('"\'=1+2"');
+    expect(csvField("  +SUM(1,2)")).toBe('"\'  +SUM(1,2)"');
+    expect(csvField("@macro")).toBe('"\'@macro"');
+    expect(csvField("-1")).toBe('"\'-1"');
+    expect(csvField('hello,"world"')).toBe('"hello,""world"""');
+    expect(csvField("a\nb")).toBe('"a b"');
   });
 
   it("exports only order value and explicitly rejects payment/revenue implication", () => {
