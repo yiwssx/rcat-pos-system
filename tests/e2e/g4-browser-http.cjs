@@ -259,9 +259,10 @@ async function browserFlow(fixture) {
       hasText: "เมนูทดสอบชั่วคราว",
     });
     await newItem.getByRole("button", { name: "แก้ไข" }).click();
-    await second.getByLabel("ชื่อสินค้า", { exact: true }).last()
+    const editForm = newItem.locator(".catalog-edit");
+    await editForm.getByLabel("ชื่อสินค้า", { exact: true })
       .fill("เมนูทดสอบแก้ไขแล้ว");
-    await second.getByLabel("ราคาขายใหม่ (บาท)").fill("99.50");
+    await editForm.getByLabel("ราคาขายใหม่ (บาท)").fill("99.50");
     await second.getByRole("button", { name: "บันทึกการแก้ไข" }).click();
     await second.getByText("บันทึกข้อมูลสินค้าแล้ว").waitFor();
     const revisedItem = second.locator(".catalog-product", {
