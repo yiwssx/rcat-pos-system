@@ -1,0 +1,49 @@
+name: Temporary Stocktake Prettier Preview
+on:
+  pull_request:
+    paths:
+      - 'apps/api/src/inventory/**'
+      - 'apps/merchant/src/app/**'
+      - '.github/workflows/stocktake-format-preview.yml'
+permissions:
+  contents: read
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Print canonical Prettier source for local patch
+        shell: bash
+        run: |
+          files=(
+            apps/api/src/inventory/inventory.controller.ts
+            apps/api/src/inventory/inventory.core.spec.ts
+            apps/api/src/inventory/inventory.core.ts
+            apps/api/src/inventory/inventory.service.ts
+            apps/merchant/src/app/app.spec.ts
+            apps/merchant/src/app/inventory.api.ts
+            apps/merchant/src/app/inventory.css
+            apps/merchant/src/app/inventory.domain.ts
+            apps/merchant/src/app/inventory.page.ts
+            apps/merchant/src/app/stocktake.css
+            apps/merchant/src/app/stocktake.page.ts
+          )
+          pnpm exec prettier --write "${files[@]}"
+          for f in "${files[@]}"; do
+            echo "RCAT_STOCKTAKE_FORMAT_BEGIN:$f"
+            base64 -w0 "$f"
+            echo
+            echo "RCAT_STOCKTAKE_FORMAT_END:$f"
+          done
