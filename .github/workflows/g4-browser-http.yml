@@ -10,6 +10,7 @@ on:
       - 'apps/api/**'
       - 'db/**'
       - 'scripts/db/**'
+      - 'scripts/ops/ci-nginx-sse.conf'
       - 'pnpm-lock.yaml'
       - 'package.json'
   push:
@@ -22,6 +23,7 @@ on:
       - 'apps/api/**'
       - 'db/**'
       - 'scripts/db/**'
+      - 'scripts/ops/ci-nginx-sse.conf'
       - 'pnpm-lock.yaml'
       - 'package.json'
 
@@ -74,10 +76,11 @@ jobs:
           cache: pnpm
       - name: Install frozen dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install PostgreSQL client
+      - name: Install PostgreSQL client and real nginx SSE proxy
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client
+          sudo apt-get install -y -qq postgresql-client nginx
+          nginx -t -c "$PWD/scripts/ops/ci-nginx-sse.conf"
       - name: Apply database migrations
         run: bash scripts/db/migrate.sh
       - name: Seed isolated tenants and demo users in disposable CI only
