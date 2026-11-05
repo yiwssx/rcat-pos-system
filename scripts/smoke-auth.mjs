@@ -91,7 +91,13 @@ try {
     await sleep(250);
   }
   assert.ok(alive, "API did not start: " + output);
-  assert.equal((await api("/api/ready")).status, 503);
+  // Readiness now checks both restricted PostgreSQL roles and Ordering schema.
+  const ready = await api("/api/ready");
+  assert.equal(ready.status, 200, await ready.clone().text());
+  const readiness = await ready.json();
+  assert.equal(readiness.status, "ready");
+  assert.equal(readiness.productionReady, false);
+  assert.equal(readiness.paymentEnabled, false);
 
   // Isolated CI registration: no account exists until proof of email token.
   const registerBody = {
