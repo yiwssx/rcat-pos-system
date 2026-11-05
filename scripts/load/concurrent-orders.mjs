@@ -115,7 +115,7 @@ async function createFixture() {
       )
     );
     const productId = await call(
-      "SELECT rcat_private.add_menu_product($1,$2,$3,$4,$5) AS data",
+      "SELECT rcat_private.add_menu_product($1,$2,$3,$4,$5,$6) AS data",
       [session, tenantId, storeId, catId, "Load-test bowl", 12000],
     );
     const ingredientA = await call(
