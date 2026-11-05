@@ -42,9 +42,8 @@ BEGIN
  IF (rcat_private.redeem_table_code(a,st,t,wrong,
     decode(repeat('a6',32),'hex'))->>'ok')::boolean THEN
    RAISE EXCEPTION 'Wrong code minted guest credential'; END IF;
- SELECT code_failed_attempts INTO attempt FROM rcat.table_ordering_visits
- WHERE id=(v->>'visitId')::uuid;
- IF attempt<>1 THEN RAISE EXCEPTION 'Bad attempt did not persist'; END IF;
+ -- The committed failed counter is verified below through the 12-try
+ -- denial boundary, not by granting the auth role raw table SELECT.
  detail:=rcat_private.redeem_table_code(a,st,t,old_code,old_guest);
  IF NOT (detail->>'ok')::boolean THEN
    RAISE EXCEPTION 'Valid code did not issue guest grant'; END IF;
