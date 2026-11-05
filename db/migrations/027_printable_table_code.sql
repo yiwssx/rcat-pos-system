@@ -158,9 +158,9 @@ BEGIN
    AND tab.tenant_id=visit.tenant_id AND tab.store_id=visit.store_id
  WHERE (
    visit.token_digest=p_token_digest OR EXISTS(
-     SELECT 1 FROM rcat.table_guest_grants grant
-     WHERE grant.visit_id=visit.id AND grant.token_digest=p_token_digest
-       AND grant.expires_at>now()
+     SELECT 1 FROM rcat.table_guest_grants g
+     WHERE g.visit_id=visit.id AND g.token_digest=p_token_digest
+       AND g.expires_at>now()
    )
  ) AND visit.revoked_at IS NULL
    AND visit.expires_at>now() AND tab.active;
@@ -251,9 +251,9 @@ BEGIN
    AND t.tenant_id=visit.tenant_id AND t.store_id=visit.store_id
  WHERE (
    visit.token_digest=p_visit_digest OR EXISTS(
-     SELECT 1 FROM rcat.table_guest_grants grant
-     WHERE grant.visit_id=visit.id AND grant.token_digest=p_visit_digest
-       AND grant.expires_at>now()
+     SELECT 1 FROM rcat.table_guest_grants g
+     WHERE g.visit_id=visit.id AND g.token_digest=p_visit_digest
+       AND g.expires_at>now()
    )
  ) AND visit.revoked_at IS NULL
    AND visit.expires_at>now() AND t.active;
