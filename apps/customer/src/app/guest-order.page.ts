@@ -142,6 +142,11 @@ function guestError(error: unknown): string {
           <div class="guest-products">
             @for (product of products(); track product.id) {
               <article class="guest-product" [attr.aria-label]="product.name">
+                @if (product.hasImage) {
+                  <img class="guest-product-photo" loading="lazy"
+                    [src]="productImageUrl(visit.tenantId, visit.storeId, product.id)"
+                    [alt]="'รูปภาพเมนู ' + product.name" />
+                }
                 <div class="guest-product-head">
                   <div>
                     <span class="guest-product-category">{{
@@ -421,6 +426,11 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     } finally {
       this.busy.set(false);
     }
+  }
+
+  productImageUrl(tenant: string, store: string, product: string): string {
+    return "/api/guest/catalog-media/" + encodeURIComponent(tenant) +
+      "/" + encodeURIComponent(store) + "/" + encodeURIComponent(product);
   }
 
   onSearch(event: Event): void {
