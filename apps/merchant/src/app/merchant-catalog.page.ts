@@ -9,6 +9,7 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { prepareProductWebp } from "./prepare-product-webp";
 import { MerchantOrderApi } from "./merchant-order.api";
 import {
   CatalogCategory,
@@ -225,6 +226,27 @@ function bahtInput(satang: number): string {
                       เก็บถาวร
                     </button>
                   </div>
+                }
+              </div>
+              <div class="catalog-media" aria-label="รูปภาพสินค้า">
+                @if (product.hasImage) {
+                  <img [src]="imageUrl(product)" [alt]="'รูปสินค้า ' + product.name"
+                    class="catalog-media-preview" loading="lazy" />
+                }
+                @if (!product.archivedAt) {
+                  <div class="catalog-media-actions">
+                    <label [attr.for]="'catalog-media-' + product.id">
+                      {{ product.hasImage ? "เปลี่ยนรูปสินค้า" : "เพิ่มรูปสินค้า" }}
+                    </label>
+                    <input [id]="'catalog-media-' + product.id"
+                      type="file" accept="image/jpeg,image/png,image/webp"
+                      [disabled]="saving()" (change)="uploadImage($event, product)" />
+                    @if (product.hasImage) {
+                      <button type="button" class="subtle"
+                        [disabled]="saving()" (click)="removeImage(product)">ลบรูปสินค้า</button>
+                    }
+                  </div>
+                  <p>JPG / PNG / WebP · แปลงเป็น WebP ก่อนส่ง · สูงสุด 192 KB</p>
                 }
               </div>
               @if (editId() === product.id && !product.archivedAt) {
@@ -465,6 +487,34 @@ export class MerchantCatalogPage implements OnInit {
       this.newProduct.name = "";
       this.newProduct.priceBaht = "";
     }
+  }
+
+  imageUrl(product: CatalogProduct): string {
+    return this.api.productImageUrl(
+      this.tenantId, this.storeId, product.id, product.revision,
+    );
+  }
+
+  async uploadImage(event: Event, product: CatalogProduct): Promise<void> {
+    if (!(event.target instanceof HTMLInputElement)) return;
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    await this.mutate(async () => {
+      const webp = await prepareProductWebp(file, this.document);
+      await this.api.uploadImage(
+        this.tenantId, this.storeId, product.id, product.revision, webp,
+      );
+    }, "บันทึกรูปสินค้าแล้ว");
+  }
+
+  async removeImage(product: CatalogProduct): Promise<void> {
+    if (!this.document.defaultView?.confirm(
+      "ลบรูปภาพสินค้า " + product.name + " ?",
+    )) return;
+    await this.mutate(() => this.api.deleteImage(
+      this.tenantId, this.storeId, product.id, product.revision,
+    ), "ลบรูปสินค้าแล้ว");
   }
 
   beginEdit(product: CatalogProduct): void {
