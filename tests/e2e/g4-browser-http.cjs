@@ -234,7 +234,8 @@ async function browserFlow(fixture) {
     // without claiming the Order has been paid or losing the tracking secret.
     await guest.getByRole("button", { name: "ตรวจสถานะล่าสุด" }).click();
     await guest.locator(".guest-order-state").getByText("รับออเดอร์แล้ว").waitFor({ timeout: 20000 });
-    assert.ok(!(await guest.content()).includes("ชำระเงินสำเร็จ"));
+    assert.ok(await guest.getByText("Payment: not_requested").isVisible(),
+      "Customer tracking did not retain explicit unverified payment state");
 
     // Expire the first merchant session with real logout + CSRF, then
     // refresh the browser to prove stale tab access is no longer authorized.
