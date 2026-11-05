@@ -181,6 +181,7 @@ async function browserFlow(fixture) {
     isMobile: true,
     hasTouch: true,
     baseURL: merchant,
+    ignoreHTTPSErrors: true,
   });
   const guest = await guestContext.newPage();
   const board = await merchantContext.newPage();
