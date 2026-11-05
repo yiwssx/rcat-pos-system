@@ -163,21 +163,24 @@ module.exports = async function qualifySse({
         submit(customer, currentVisitToken, productId, "sse-backlog")),
     );
     assert.equal(new Set(seeded.map((x) => x.orderId)).size, EXTRA_ORDERS);
-    const first = await jsonGet(notificationUrl + "?after=0&limit=50", owner.cookie);
-    assert.equal(first.events.length, 50, "SSE backlog must exceed 50 outbox events");
+    // The preceding real Merchant browser flow may have already
+    // acknowledged earlier Order events. SSE must start from that persisted
+    // staff cursor, NOT replay events that were explicitly acknowledged.
+    const first = await jsonGet(notificationUrl + "?limit=50", owner.cookie);
+    assert.equal(first.events.length, 50, "Unacknowledged SSE backlog must exceed 50 events");
     assert.equal(first.hasMore, true, "Outbox pagination unexpectedly truncated");
     const second = await jsonGet(
       notificationUrl + "?after=" + first.nextCursor + "&limit=50",
       owner.cookie,
     );
     assert.ok(second.events.length >= 12, "Backlog was not large enough for page boundary");
-    const first52 = [...first.events, ...second.events.slice(0, 5)];
+    const first55 = [...first.events, ...second.events.slice(0, 5)];
 
     const backlog = await connect(streamUrl, owner.cookie, merchant);
     all.push(backlog);
     assert.equal(backlog.status, 200);
     let previous = 0n;
-    for (const expected of first52) {
+    for (const expected of first55) {
       const observed = await untilEvent(backlog, (f) => f.kind === "order-event");
       assert.equal(observed.id, expected.eventId, "SSE replay skipped or reordered an event");
       assert.equal(observed.data.orderId, expected.orderId);
@@ -290,7 +293,7 @@ module.exports = async function qualifySse({
       result: "PASS",
       streamsAccepted: MAX_SSE,
       overflowStatus: 503,
-      backlogVerified: first52.length,
+      backlogVerified: first55.length,
       replantedAfterDisconnect: true,
       forgedLastEventIdSkipped: false,
       committedOrderDelivered: fresh.orderId === live.data.orderId,
