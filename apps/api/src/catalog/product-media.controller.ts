@@ -1,0 +1,76 @@
+import {
+  Controller, Delete, Get, Header, Param, Put, Req, Res,
+  Body,
+} from "@nestjs/common";
+import type { ServerResponse } from "node:http";
+import { ApiRequest, requireAllowedOrigin } from "../auth/request-security";
+import { ProductMediaService } from "./product-media.service";
+
+function sendWebp(res: ServerResponse, data: {
+  webp: Buffer;
+  digest_sha256: Buffer;
+}): void {
+  res.statusCode = 200;
+  res.setHeader("Content-Type", "image/webp");
+  res.setHeader("Content-Length", data.webp.length);
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+  res.setHeader("Cache-Control", "private, no-store");
+  res.setHeader("ETag", '"' + data.digest_sha256.toString("hex") + '"');
+  res.end(data.webp);
+}
+
+@Controller()
+export class ProductMediaController {
+  constructor(private readonly media: ProductMediaService) {}
+
+  @Put("tenants/:tenantId/stores/:storeId/catalog/products/:productId/image")
+  @Header("Cache-Control", "no-store")
+  put(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenant: string,
+    @Param("storeId") store: string,
+    @Param("productId") product: string,
+    @Body() raw: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.media.put(req, tenant, store, product, raw);
+  }
+
+  @Delete("tenants/:tenantId/stores/:storeId/catalog/products/:productId/image")
+  @Header("Cache-Control", "no-store")
+  remove(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenant: string,
+    @Param("storeId") store: string,
+    @Param("productId") product: string,
+  ) {
+    requireAllowedOrigin(req);
+    return this.media.remove(req, tenant, store, product);
+  }
+
+  @Get("tenants/:tenantId/stores/:storeId/catalog/products/:productId/image")
+  async staffRead(
+    @Req() req: ApiRequest, @Res() res: ServerResponse,
+    @Param("tenantId") tenant: string,
+    @Param("storeId") store: string,
+    @Param("productId") product: string,
+  ) {
+    const data = await this.media.readStaff(req, tenant, store, product);
+    sendWebp(res, data);
+  }
+
+  // UUIDs are public catalog references, not secrets. Public delivery is
+  // only allowed for currently available and unarchived menu products.
+  @Get("guest/catalog-media/:tenantId/:storeId/:productId")
+  async guestRead(
+    @Res() res: ServerResponse,
+    @Param("tenantId") tenant: string,
+    @Param("storeId") store: string,
+    @Param("productId") product: string,
+  ) {
+    const data = await this.media.readGuest(tenant, store, product);
+    sendWebp(res, data);
+  }
+}
