@@ -10,9 +10,7 @@ export function httpRouteGroup(rawUrl: string | undefined): string {
   const segments = path.split("/").filter(Boolean);
   if (segments[0] !== "api") return "other";
   const group = segments[1] ?? "root";
-  const allowed = new Set([
-    "health", "ready", "auth", "guest", "tenants",
-  ]);
+  const allowed = new Set(["health", "ready", "auth", "guest", "tenants"]);
   return allowed.has(group) ? group : "other";
 }
 
