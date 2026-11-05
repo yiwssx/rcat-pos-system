@@ -29,10 +29,14 @@ export class DatabaseAccess implements OnModuleDestroy {
       throw new Error("Two distinct restricted PostgreSQL URLs are required");
     }
     this.authPool = new Pool({
-      connectionString: authUrl, max: 4, connectionTimeoutMillis: 5000,
+      connectionString: authUrl,
+      max: 4,
+      connectionTimeoutMillis: 5000,
     });
     this.tenantPool = new Pool({
-      connectionString: tenantUrl, max: 4, connectionTimeoutMillis: 5000,
+      connectionString: tenantUrl,
+      max: 4,
+      connectionTimeoutMillis: 5000,
     });
   }
 
@@ -49,12 +53,11 @@ export class DatabaseAccess implements OnModuleDestroy {
         "SELECT to_regclass('rcat_private.auth_sessions') IS NOT NULL AS ready",
       ),
     );
-    const orders = await this.withRole(
-      "rcat_app", this.tenantPool, (client) =>
-        client.query<{ ready: boolean }>(
-          "SELECT to_regclass('rcat.orders') IS NOT NULL AND " +
+    const orders = await this.withRole("rcat_app", this.tenantPool, (client) =>
+      client.query<{ ready: boolean }>(
+        "SELECT to_regclass('rcat.orders') IS NOT NULL AND " +
           "to_regclass('rcat.order_outbox_events') IS NOT NULL AS ready",
-        ),
+      ),
     );
     if (!auth.rows[0]?.ready || !orders.rows[0]?.ready) {
       throw new ServiceUnavailableException("Database schema is unavailable");
