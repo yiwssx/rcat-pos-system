@@ -40,28 +40,6 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Display Nx projects
         run: pnpm exec nx show projects
-      - name: Generate exact Prettier formatting suggestions for G4 patch
-        if: github.event_name == 'pull_request'
-        run: |
-          pnpm exec prettier --write apps/api/src/database/db-access.ts apps/api/src/health/health.controller.ts apps/api/src/observability/http-telemetry.spec.ts apps/api/src/observability/http-telemetry.ts apps/api/src/orders/merchant-notification-stream.spec.ts apps/api/src/orders/merchant-notification-stream.service.ts apps/api/src/orders/merchant-notification-stream.core.ts apps/api/src/main.ts
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          for path in [
-              'apps/api/src/database/db-access.ts',
-              'apps/api/src/health/health.controller.ts',
-              'apps/api/src/observability/http-telemetry.spec.ts',
-              'apps/api/src/observability/http-telemetry.ts',
-              'apps/api/src/orders/merchant-notification-stream.spec.ts',
-              'apps/api/src/orders/merchant-notification-stream.service.ts',
-              'apps/api/src/orders/merchant-notification-stream.core.ts',
-              'apps/api/src/main.ts',
-          ]:
-              print('RCAT_FORMAT_RESULT=' + json.dumps({
-                  'path': path,
-                  'content': Path(path).read_text(encoding='utf-8'),
-              }))
-          PY
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request'
         env:
