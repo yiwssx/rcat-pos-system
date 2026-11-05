@@ -158,17 +158,33 @@ describe("G3 exceptional kitchen stock return validation", () => {
   };
   it("allows only explicitly unused ingredients and exact decimal quantities", () => {
     expect(validateExceptionReturnRequest(body)).toEqual(body);
-    expect(validateExceptionReturnRequest({
-      ...body, category: "kitchen_error_unconsumed",
-    })).not.toBe(null);
-    for (const quantity of ["0", "-0.001", "1e3", "1.0001", "1000000001", 1.1]) {
+    expect(
+      validateExceptionReturnRequest({
+        ...body,
+        category: "kitchen_error_unconsumed",
+      }),
+    ).not.toBe(null);
+    for (const quantity of [
+      "0",
+      "-0.001",
+      "1e3",
+      "1.0001",
+      "1000000001",
+      1.1,
+    ]) {
       expect(validateExceptionReturnRequest({ ...body, quantity })).toBe(null);
     }
     for (const category of ["spoiled", "cooked", "damaged_food", null]) {
       expect(validateExceptionReturnRequest({ ...body, category })).toBe(null);
     }
-    expect(validateExceptionReturnRequest({ ...body, reason: "short" })).toBe(null);
-    expect(validateExceptionReturnRequest({ ...body, itemId: "../foreign" })).toBe(null);
-    expect(validateExceptionReturnRequest({ ...body, idempotencyKey: "invalid" })).toBe(null);
+    expect(validateExceptionReturnRequest({ ...body, reason: "short" })).toBe(
+      null,
+    );
+    expect(
+      validateExceptionReturnRequest({ ...body, itemId: "../foreign" }),
+    ).toBe(null);
+    expect(
+      validateExceptionReturnRequest({ ...body, idempotencyKey: "invalid" }),
+    ).toBe(null);
   });
 });

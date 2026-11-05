@@ -137,8 +137,7 @@ export function stocktakeDifference(
 }
 
 export type ExceptionReturnCategory =
-  | "unused_unopened"
-  | "kitchen_error_unconsumed";
+  "unused_unopened" | "kitchen_error_unconsumed";
 export interface ExceptionReturnAllocation {
   itemId: string;
   itemName: string;

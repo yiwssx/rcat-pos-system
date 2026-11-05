@@ -52,10 +52,12 @@ function failureMessage(error: unknown): string {
         · ออเดอร์ #{{ orderId.slice(0, 8) }}
       </p>
       <p class="stocktake-caution" role="note">
-        <strong>คืนได้เฉพาะวัตถุดิบที่ยังไม่ถูกใช้และยังนำเข้าคลังได้จริง</strong>
+        <strong
+          >คืนได้เฉพาะวัตถุดิบที่ยังไม่ถูกใช้และยังนำเข้าคลังได้จริง</strong
+        >
         ห้ามคืนวัตถุดิบที่ปรุงแล้ว เสียหาย หรือปนเปื้อน
-        การยื่นคำขอไม่เพิ่มสต็อกจนกว่า Owner/Manager
-        อีกบัญชีจะตรวจสอบและอนุมัติ ระบบไม่ยกเลิกออเดอร์หรือคืนเงิน
+        การยื่นคำขอไม่เพิ่มสต็อกจนกว่า Owner/Manager อีกบัญชีจะตรวจสอบและอนุมัติ
+        ระบบไม่ยกเลิกออเดอร์หรือคืนเงิน
       </p>
 
       @if (error()) {
@@ -84,7 +86,10 @@ function failureMessage(error: unknown): string {
           </p>
         }
         <div class="stocktake-grid">
-          <section class="stocktake-panel" aria-labelledby="exception-allocation-title">
+          <section
+            class="stocktake-panel"
+            aria-labelledby="exception-allocation-title"
+          >
             <h2 id="exception-allocation-title">วัตถุดิบที่ตัดตามออเดอร์</h2>
             @if (data.allocations.length === 0) {
               <p class="stocktake-muted">
@@ -95,47 +100,80 @@ function failureMessage(error: unknown): string {
               <article class="stocktake-record">
                 <h3>{{ item.itemName }}</h3>
                 <p class="stocktake-muted">
-                  ตัด {{ formatQuantity(item.allocated) }} {{ item.unit }}
-                  · คืนแล้ว {{ formatQuantity(item.alreadyReturned) }}
-                  · คืนเพิ่มได้สูงสุด {{ formatQuantity(item.remaining) }}
+                  ตัด {{ formatQuantity(item.allocated) }} {{ item.unit }} ·
+                  คืนแล้ว {{ formatQuantity(item.alreadyReturned) }} ·
+                  คืนเพิ่มได้สูงสุด {{ formatQuantity(item.remaining) }}
                 </p>
               </article>
             }
           </section>
 
           @if (data.eligible && mayManage()) {
-            <section class="stocktake-panel" aria-labelledby="exception-request-title">
-              <h2 id="exception-request-title">ยื่นคำขอคืนวัตถุดิบที่ยังไม่ใช้</h2>
+            <section
+              class="stocktake-panel"
+              aria-labelledby="exception-request-title"
+            >
+              <h2 id="exception-request-title">
+                ยื่นคำขอคืนวัตถุดิบที่ยังไม่ใช้
+              </h2>
               <form class="stocktake-form" (submit)="submit($event)">
-                <label>วัตถุดิบ
-                  <select [value]="itemId()" (change)="selectItem($event)" required>
+                <label
+                  >วัตถุดิบ
+                  <select
+                    [value]="itemId()"
+                    (change)="selectItem($event)"
+                    required
+                  >
                     <option value="">เลือกจากรายการที่ยังคืนได้</option>
                     @for (item of available(); track item.itemId) {
                       <option [value]="item.itemId">
-                        {{ item.itemName }} (สูงสุด {{ formatQuantity(item.remaining) }})
+                        {{ item.itemName }} (สูงสุด
+                        {{ formatQuantity(item.remaining) }})
                       </option>
                     }
                   </select>
                 </label>
-                <label>ปริมาณที่ยังไม่ใช้ (g / ml / ชิ้น)
-                  <input type="text" inputmode="decimal" required
-                    placeholder="เช่น 0.500" [value]="quantity()"
-                    (input)="setValue($event, 'quantity')" />
+                <label
+                  >ปริมาณที่ยังไม่ใช้ (g / ml / ชิ้น)
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    required
+                    placeholder="เช่น 0.500"
+                    [value]="quantity()"
+                    (input)="setValue($event, 'quantity')"
+                  />
                 </label>
-                <label>เหตุผลที่นำกลับเข้าคลังได้
-                  <select [value]="category()" (change)="selectCategory($event)">
-                    <option value="unused_unopened">ยังไม่เปิดใช้ / ยังไม่แกะบรรจุภัณฑ์</option>
+                <label
+                  >เหตุผลที่นำกลับเข้าคลังได้
+                  <select
+                    [value]="category()"
+                    (change)="selectCategory($event)"
+                  >
+                    <option value="unused_unopened">
+                      ยังไม่เปิดใช้ / ยังไม่แกะบรรจุภัณฑ์
+                    </option>
                     <option value="kitchen_error_unconsumed">
                       ครัวเตรียมเกิน แต่ยังไม่ถูกใช้หรือปนเปื้อน
                     </option>
                   </select>
                 </label>
-                <label>รายละเอียดหลักฐานการตรวจสอบ (10–200 ตัวอักษร)
-                  <input type="text" minlength="10" maxlength="200" required
+                <label
+                  >รายละเอียดหลักฐานการตรวจสอบ (10–200 ตัวอักษร)
+                  <input
+                    type="text"
+                    minlength="10"
+                    maxlength="200"
+                    required
                     placeholder="ระบุสภาพและเหตุผลที่ยังใช้ได้"
-                    [value]="reason()" (input)="setValue($event, 'reason')" />
+                    [value]="reason()"
+                    (input)="setValue($event, 'reason')"
+                  />
                 </label>
-                <button type="submit" [disabled]="busy() || !available().length">
+                <button
+                  type="submit"
+                  [disabled]="busy() || !available().length"
+                >
                   ส่งคำขอให้ผู้อนุมัติอีกบัญชี
                 </button>
               </form>
@@ -143,7 +181,10 @@ function failureMessage(error: unknown): string {
           }
         </div>
 
-        <section class="stocktake-panel" aria-labelledby="exception-history-title">
+        <section
+          class="stocktake-panel"
+          aria-labelledby="exception-history-title"
+        >
           <h2 id="exception-history-title">ประวัติคำขอและการตรวจสอบ</h2>
           @if (!data.requests.length) {
             <p class="stocktake-muted">ยังไม่มีคำขอคืนสต็อกกรณีพิเศษ</p>
@@ -159,15 +200,26 @@ function failureMessage(error: unknown): string {
                   {{ formatQuantity(entry.quantity) }} · {{ entry.reason }}
                 </p>
                 <p class="stocktake-muted">
-                  ผู้ขอ: {{ entry.createdBy.slice(0, 8) }}
-                  · ผู้ตัดสิน: {{ entry.reviewedBy?.slice(0, 8) || "—" }}
+                  ผู้ขอ: {{ entry.createdBy.slice(0, 8) }} · ผู้ตัดสิน:
+                  {{ entry.reviewedBy?.slice(0, 8) || "—" }}
                 </p>
                 @if (entry.state === "pending" && mayManage()) {
                   <div class="stocktake-buttons">
-                    <button type="button" [disabled]="busy()"
-                      (click)="review(entry, true)">อนุมัติคืนเข้าสต็อก</button>
-                    <button type="button" class="stocktake-reject" [disabled]="busy()"
-                      (click)="review(entry, false)">ปฏิเสธคำขอ</button>
+                    <button
+                      type="button"
+                      [disabled]="busy()"
+                      (click)="review(entry, true)"
+                    >
+                      อนุมัติคืนเข้าสต็อก
+                    </button>
+                    <button
+                      type="button"
+                      class="stocktake-reject"
+                      [disabled]="busy()"
+                      (click)="review(entry, false)"
+                    >
+                      ปฏิเสธคำขอ
+                    </button>
                   </div>
                 }
               </article>
@@ -219,8 +271,10 @@ export class ExceptionReturnsPage implements OnInit {
     }[state];
   }
   itemName(id: string): string {
-    return this.view()?.allocations.find((entry) => entry.itemId === id)
-      ?.itemName ?? "วัตถุดิบ";
+    return (
+      this.view()?.allocations.find((entry) => entry.itemId === id)?.itemName ??
+      "วัตถุดิบ"
+    );
   }
 
   ngOnInit(): void {
@@ -299,8 +353,11 @@ export class ExceptionReturnsPage implements OnInit {
     }
     try {
       const crypto = this.document.defaultView?.crypto;
-      if (!crypto?.randomUUID) throw new Error("อุปกรณ์ไม่รองรับ UUID ที่ปลอดภัย");
-      const payload = [chosen.itemId, quantity, this.category(), reason].join("|");
+      if (!crypto?.randomUUID)
+        throw new Error("อุปกรณ์ไม่รองรับ UUID ที่ปลอดภัย");
+      const payload = [chosen.itemId, quantity, this.category(), reason].join(
+        "|",
+      );
       if (!this.retry || this.retry.payload !== payload) {
         this.retry = {
           itemId: chosen.itemId,
@@ -341,7 +398,8 @@ export class ExceptionReturnsPage implements OnInit {
       !this.document.defaultView?.confirm(
         `ยืนยัน${decision} ปริมาณ ${entry.quantity} หรือไม่?\nการอนุมัติจะเพิ่มสต็อกทันที แต่ไม่เปลี่ยนสถานะออเดอร์/Payment`,
       )
-    ) return;
+    )
+      return;
     this.busy.set(true);
     this.error.set("");
     try {

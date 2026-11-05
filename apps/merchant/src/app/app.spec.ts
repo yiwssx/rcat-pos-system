@@ -280,8 +280,10 @@ describe("two-person Stocktake client invariants", () => {
 describe("G3 exceptional return Merchant safeguards", () => {
   it("lazily loads the scoped Order exception flow, never Payment", () => {
     expect(
-      routes.find((route) =>
-        route.path === "inventory/:tenantId/:storeId/exception-returns/:orderId",
+      routes.find(
+        (route) =>
+          route.path ===
+          "inventory/:tenantId/:storeId/exception-returns/:orderId",
       )?.loadComponent,
     ).toBeTypeOf("function");
     expect(routes.some((route) => route.path?.includes("payment"))).toBe(false);
@@ -293,6 +295,8 @@ describe("G3 exceptional return Merchant safeguards", () => {
     expect(validRecoverableReturnQuantity("-1", "100")).toBe(false);
     expect(validRecoverableReturnQuantity("1.0001", "100")).toBe(false);
     expect(validRecoverableReturnQuantity("1e2", "100")).toBe(false);
-    expect(validRecoverableReturnQuantity("1000000001", "1000000001")).toBe(false);
+    expect(validRecoverableReturnQuantity("1000000001", "1000000001")).toBe(
+      false,
+    );
   });
 });

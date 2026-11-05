@@ -252,12 +252,19 @@ function failureText(error: unknown): string {
                     </button>
                   }
                   @if (
-                    (store()?.role === "owner" || store()?.role === "manager") &&
+                    (store()?.role === "owner" ||
+                      store()?.role === "manager") &&
                     (order.status === "preparing" || order.status === "served")
                   ) {
                     <a
                       class="exception-link"
-                      [routerLink]="['/inventory', store()!.tenantId, store()!.storeId, 'exception-returns', order.orderId]"
+                      [routerLink]="[
+                        '/inventory',
+                        store()!.tenantId,
+                        store()!.storeId,
+                        'exception-returns',
+                        order.orderId,
+                      ]"
                     >
                       คืนสต็อกกรณีพิเศษ
                     </a>

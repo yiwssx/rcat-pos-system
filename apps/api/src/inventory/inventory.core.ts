@@ -173,8 +173,7 @@ export function validateReviewedStocktake(
 }
 
 export type ExceptionReturnCategory =
-  | "unused_unopened"
-  | "kitchen_error_unconsumed";
+  "unused_unopened" | "kitchen_error_unconsumed";
 
 export interface ExceptionReturnRequest {
   itemId: string;
@@ -184,7 +183,9 @@ export interface ExceptionReturnRequest {
   reason: string;
 }
 
-export function validateExceptionReturnRequest(raw: unknown): ExceptionReturnRequest | null {
+export function validateExceptionReturnRequest(
+  raw: unknown,
+): ExceptionReturnRequest | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const body = raw as Record<string, unknown>;
   if (
