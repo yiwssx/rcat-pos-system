@@ -19,8 +19,14 @@ Payment or bank-verified event.
 
 `tests/e2e/g4-sse-qualification.cjs` runs as part of the existing
 `tests/e2e/g4-browser-http.cjs` scenario inside
-`.github/workflows/g4-browser-http.yml`. All endpoints use the real NestJS
-API behind the Angular test-only HTTPS proxy and CI-only PostgreSQL 16.
+`.github/workflows/g4-browser-http.yml`. Guest checkout and staff login use the real NestJS API behind the Angular
+test-only HTTPS proxy. **The SSE capacity probe starts a fresh, second
+NestJS instance on loopback port 31949**, sharing the same ephemeral
+PostgreSQL 16 database. This eliminates legitimate streams remaining from
+prior Merchant browser tabs when measuring the exact per-instance cap.
+A staff logout through the first instance must revoke an SSE feed on the
+second instance. The second instance is reached directly from a trusted CI
+Node test client; it is not a public or browser HTTP endpoint.
 
 | Invariant | Test |
 | --- | --- |
