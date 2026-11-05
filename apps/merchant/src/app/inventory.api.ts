@@ -9,6 +9,8 @@ import {
   InventoryUnit,
   inventoryPath,
   StocktakeList,
+  ExceptionReturnView,
+  ExceptionReturnCategory,
 } from "./inventory.domain";
 
 @Injectable({ providedIn: "root" })
@@ -241,6 +243,72 @@ export class InventoryApi {
           "/items/" +
           encodeURIComponent(itemId),
         { quantityPerProduct },
+        { headers: this.csrf(), withCredentials: true },
+      ),
+    );
+  }
+
+  exceptionReturnView(
+    tenantId: string,
+    storeId: string,
+    orderId: string,
+  ): Promise<ExceptionReturnView> {
+    return firstValueFrom(
+      this.http.get<ExceptionReturnView>(
+        inventoryPath(tenantId, storeId) +
+          "/exception-returns/" +
+          encodeURIComponent(orderId),
+        { withCredentials: true },
+      ),
+    );
+  }
+
+  requestExceptionReturn(
+    tenantId: string,
+    storeId: string,
+    orderId: string,
+    request: {
+      itemId: string;
+      idempotencyKey: string;
+      quantity: string;
+      category: ExceptionReturnCategory;
+      reason: string;
+    },
+  ): Promise<{ requestId: string; state: string; replayed: boolean }> {
+    return firstValueFrom(
+      this.http.post<{ requestId: string; state: string; replayed: boolean }>(
+        inventoryPath(tenantId, storeId) +
+          "/exception-returns/" +
+          encodeURIComponent(orderId),
+        request,
+        { headers: this.csrf(), withCredentials: true },
+      ),
+    );
+  }
+
+  reviewExceptionReturn(
+    tenantId: string,
+    storeId: string,
+    requestId: string,
+    approve: boolean,
+  ): Promise<{
+    requestId: string;
+    state: string;
+    movementId: string | null;
+    replayed: boolean;
+  }> {
+    return firstValueFrom(
+      this.http.post<{
+        requestId: string;
+        state: string;
+        movementId: string | null;
+        replayed: boolean;
+      }>(
+        inventoryPath(tenantId, storeId) +
+          "/exception-returns/requests/" +
+          encodeURIComponent(requestId) +
+          "/review",
+        { approve },
         { headers: this.csrf(), withCredentials: true },
       ),
     );
