@@ -19,6 +19,11 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "inventory/:tenantId/:storeId/exception-returns/:orderId",
+    loadComponent: () =>
+      import("./exception-returns.page").then((m) => m.ExceptionReturnsPage),
+  },
+  {
     path: "inventory/:tenantId/:storeId/stocktakes",
     loadComponent: () =>
       import("./stocktake.page").then((m) => m.StocktakePage),

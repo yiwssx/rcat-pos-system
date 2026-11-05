@@ -17,6 +17,7 @@ import {
   validateNewStocktake,
   validateSubmittedStocktake,
   validateReviewedStocktake,
+  validateExceptionReturnRequest,
 } from "./inventory.core";
 
 function mapInventoryError(error: unknown): never {
@@ -30,6 +31,10 @@ function mapInventoryError(error: unknown): never {
   if (code === "P0006")
     throw new ConflictException(
       "Inventory has changed since stocktake opened; reject and recount",
+    );
+  if (code === "P0008")
+    throw new ConflictException(
+      "Exception return is ineligible, over-allocated or already reviewed",
     );
   if (code === "P0007")
     throw new ConflictException(
@@ -456,6 +461,101 @@ export class InventoryService {
         ),
       );
       return result.rows[0]?.recipe;
+    } catch (error) {
+      mapInventoryError(error);
+    }
+  }
+
+  async exceptionReturnView(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    orderId: string,
+  ) {
+    this.checkScope(tenantId, storeId);
+    if (!validInventoryId(orderId))
+      throw new NotFoundException("Order unavailable");
+    const session = await this.auth.session(req);
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: unknown }>(
+          "SELECT rcat_private.inventory_exception_return_view($1,$2,$3,$4) AS data",
+          [digestOpaqueSecret(session.token), tenantId, storeId, orderId],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      mapInventoryError(error);
+    }
+  }
+
+  async requestExceptionReturn(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    orderId: string,
+    raw: unknown,
+  ) {
+    this.checkScope(tenantId, storeId);
+    if (!validInventoryId(orderId))
+      throw new NotFoundException("Order unavailable");
+    const session = await this.auth.session(req);
+    this.auth.requireCsrf(req, session);
+    const body = validateExceptionReturnRequest(raw);
+    if (!body)
+      throw new BadRequestException("Invalid recoverable stock return");
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: unknown }>(
+          "SELECT rcat_private.inventory_request_exception_return($1,$2,$3,$4,$5,$6,$7::numeric,$8,$9) AS data",
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            orderId,
+            body.itemId,
+            body.idempotencyKey,
+            body.quantity,
+            body.category,
+            body.reason,
+          ],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      mapInventoryError(error);
+    }
+  }
+
+  async reviewExceptionReturn(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    requestId: string,
+    raw: unknown,
+  ) {
+    this.checkScope(tenantId, storeId);
+    if (!validInventoryId(requestId))
+      throw new NotFoundException("Return request unavailable");
+    const session = await this.auth.session(req);
+    this.auth.requireCsrf(req, session);
+    const body = validateReviewedStocktake(raw);
+    if (!body)
+      throw new BadRequestException("Invalid exception return decision");
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: unknown }>(
+          "SELECT rcat_private.inventory_review_exception_return($1,$2,$3,$4,$5) AS data",
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            requestId,
+            body.approve,
+          ],
+        ),
+      );
+      return result.rows[0]?.data;
     } catch (error) {
       mapInventoryError(error);
     }

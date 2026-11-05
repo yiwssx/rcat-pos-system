@@ -135,3 +135,47 @@ export function stocktakeDifference(
     frac = (abs % 1000n).toString().padStart(3, "0");
   return (delta >= 0n ? "+" : "-") + whole.toString() + "." + frac;
 }
+
+export type ExceptionReturnCategory =
+  "unused_unopened" | "kitchen_error_unconsumed";
+export interface ExceptionReturnAllocation {
+  itemId: string;
+  itemName: string;
+  unit: InventoryUnit;
+  allocated: string;
+  alreadyReturned: string;
+  remaining: string;
+}
+export interface ExceptionReturnRecord {
+  requestId: string;
+  itemId: string;
+  quantity: string;
+  category: ExceptionReturnCategory;
+  reason: string;
+  state: "pending" | "approved" | "rejected";
+  createdBy: string;
+  reviewedBy: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+}
+export interface ExceptionReturnView {
+  orderId: string;
+  orderStatus: "submitted" | "accepted" | "preparing" | "served" | "cancelled";
+  eligible: boolean;
+  allocations: ExceptionReturnAllocation[];
+  requests: ExceptionReturnRecord[];
+}
+export function validRecoverableReturnQuantity(
+  quantity: string,
+  remaining: string,
+): boolean {
+  const asked = toMilliUnits(quantity);
+  const available = toMilliUnits(remaining);
+  return (
+    asked !== null &&
+    available !== null &&
+    asked > 0n &&
+    asked <= 1000000000n * 1000n &&
+    asked <= available
+  );
+}

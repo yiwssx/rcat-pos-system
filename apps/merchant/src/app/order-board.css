@@ -267,6 +267,21 @@
   min-height: 44px;
   padding: 0.55rem 0.8rem;
 }
+.order-actions .exception-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #b99452;
+  border-radius: 0.6rem;
+  background: #fffaed;
+  color: #714c1a;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+}
 .order-actions button.danger {
   background: #fff;
   color: #a52e2e;

@@ -7,6 +7,7 @@ import {
   validPhysicalCount,
   toMilliUnits,
   validStockInput,
+  validRecoverableReturnQuantity,
 } from "./inventory.domain";
 import {
   formatReportSatang,
@@ -273,5 +274,29 @@ describe("two-person Stocktake client invariants", () => {
     expect(stocktakeDifference("1000.125", "975.500")).toBe("+24.625");
     expect(stocktakeDifference("100", "100")).toBe("+0.000");
     expect(stocktakeDifference(null, "100")).toBe("—");
+  });
+});
+
+describe("G3 exceptional return Merchant safeguards", () => {
+  it("lazily loads the scoped Order exception flow, never Payment", () => {
+    expect(
+      routes.find(
+        (route) =>
+          route.path ===
+          "inventory/:tenantId/:storeId/exception-returns/:orderId",
+      )?.loadComponent,
+    ).toBeTypeOf("function");
+    expect(routes.some((route) => route.path?.includes("payment"))).toBe(false);
+  });
+  it("never exceeds original unreturned allocation and uses exact milliquantity", () => {
+    expect(validRecoverableReturnQuantity("100.125", "100.125")).toBe(true);
+    expect(validRecoverableReturnQuantity("100.126", "100.125")).toBe(false);
+    expect(validRecoverableReturnQuantity("0", "100")).toBe(false);
+    expect(validRecoverableReturnQuantity("-1", "100")).toBe(false);
+    expect(validRecoverableReturnQuantity("1.0001", "100")).toBe(false);
+    expect(validRecoverableReturnQuantity("1e2", "100")).toBe(false);
+    expect(validRecoverableReturnQuantity("1000000001", "1000000001")).toBe(
+      false,
+    );
   });
 });
