@@ -2,12 +2,58 @@
 // Invoked after the existing end-to-end Order flow; not a production benchmark.
 const assert = require("node:assert/strict");
 const { randomUUID } = require("node:crypto");
+const { spawn } = require("node:child_process");
 const { performance } = require("node:perf_hooks");
 const { setTimeout: delay } = require("node:timers/promises");
 
 const MAX_SSE = 32;
 const EXTRA_ORDERS = 35;
 const SSE_DEADLINE_MS = 14000;
+
+const SECOND_API_PORT = 31949;
+// The earlier Chromium Merchant sessions may keep legitimate SSE connections
+// alive on the first API instance. Capacity must be measured against a fresh
+// second instance: 32 is PER INSTANCE, not per test client or per store.
+async function startIsolatedSseInstance(merchant, customer) {
+  const root = "http://127.0.0.1:" + SECOND_API_PORT;
+  const logs = [];
+  const child = spawn(process.execPath, ["dist/apps/api/src/main.js"], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      PORT: String(SECOND_API_PORT),
+      NODE_ENV: "test",
+      ENABLE_DEVELOPMENT_AUTH: "true",
+      AUTH_ALLOWED_ORIGINS: merchant + "," + customer,
+      GUEST_ORDER_BASE_URL: customer + "/order",
+      AUTH_DATABASE_URL:
+        "postgres://rcat_auth_ci:ci-auth-only@127.0.0.1:5432/rcat_ci_test",
+      TENANT_DATABASE_URL:
+        "postgres://rcat_app_ci:ci-tenant-only@127.0.0.1:5432/rcat_ci_test",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  for (const output of [child.stdout, child.stderr]) {
+    output.on("data", (data) => {
+      logs.push(String(data));
+      if (logs.length > 70) logs.shift();
+    });
+  }
+  for (let attempt = 0; attempt < 70; attempt += 1) {
+    if (child.exitCode !== null) {
+      throw new Error("Isolated SSE API exited: " + logs.join("").slice(-4000));
+    }
+    try {
+      const response = await fetch(root + "/api/health", {
+        signal: AbortSignal.timeout(1000),
+      });
+      if (response.status === 200) return { root, child };
+    } catch { /* isolated API starting */ }
+    await delay(250);
+  }
+  child.kill("SIGTERM");
+  throw new Error("Second SSE API did not become healthy: " + logs.join("").slice(-4000));
+}
 
 function cookieHeader(response) {
   const raw = response.headers.getSetCookie().map((s) => s.split(";")[0]);
@@ -140,11 +186,13 @@ async function submit(customer, token, productId, prefix) {
 module.exports = async function qualifySse({
   db, merchant, customer, orderScope, productId, currentVisitToken,
 }) {
-  const streamUrl = merchant + orderScope + "/notifications/stream";
-  const notificationUrl = merchant + orderScope + "/notifications";
   const all = [];
   const started = performance.now();
+  let instance;
   try {
+    instance = await startIsolatedSseInstance(merchant, customer);
+    const streamUrl = instance.root + orderScope + "/notifications/stream";
+    const notificationUrl = instance.root + orderScope + "/notifications";
     const owner = await login(merchant, "a@test.invalid");
     const foreign = await login(merchant, "b@test.invalid");
     const invalid = await fetch(streamUrl, { signal: AbortSignal.timeout(12000) });
@@ -299,9 +347,10 @@ module.exports = async function qualifySse({
       committedOrderDelivered: fresh.orderId === live.data.orderId,
       revokedStreamTerminated: true,
       elapsedMs: Math.round(performance.now() - started),
-      note: "single CI NestJS instance; not sustained multi-node or production SSE throughput",
+      note: "isolated second CI NestJS instance sharing DB; not sustained multi-node throughput",
     }));
   } finally {
     for (const conn of all) close(conn);
+    instance?.child.kill("SIGTERM");
   }
 };
