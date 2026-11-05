@@ -8,6 +8,7 @@ import {
   validateNewStocktake,
   validateSubmittedStocktake,
   validateReviewedStocktake,
+  validateExceptionReturnRequest,
 } from "./inventory.core";
 
 const ITEM = "10000000-0000-4000-8000-000000000001";
@@ -144,5 +145,30 @@ describe("G3 stocktake domain", () => {
     });
     expect(validateReviewedStocktake({ approve: "true" })).toBe(null);
     expect(validateReviewedStocktake({ decision: "approved" })).toBe(null);
+  });
+});
+
+describe("G3 exceptional kitchen stock return validation", () => {
+  const body = {
+    itemId: ITEM,
+    idempotencyKey: KEY,
+    quantity: "100.125",
+    category: "unused_unopened",
+    reason: "Unused sealed rice container checked by kitchen",
+  };
+  it("allows only explicitly unused ingredients and exact decimal quantities", () => {
+    expect(validateExceptionReturnRequest(body)).toEqual(body);
+    expect(validateExceptionReturnRequest({
+      ...body, category: "kitchen_error_unconsumed",
+    })).not.toBe(null);
+    for (const quantity of ["0", "-0.001", "1e3", "1.0001", "1000000001", 1.1]) {
+      expect(validateExceptionReturnRequest({ ...body, quantity })).toBe(null);
+    }
+    for (const category of ["spoiled", "cooked", "damaged_food", null]) {
+      expect(validateExceptionReturnRequest({ ...body, category })).toBe(null);
+    }
+    expect(validateExceptionReturnRequest({ ...body, reason: "short" })).toBe(null);
+    expect(validateExceptionReturnRequest({ ...body, itemId: "../foreign" })).toBe(null);
+    expect(validateExceptionReturnRequest({ ...body, idempotencyKey: "invalid" })).toBe(null);
   });
 });
