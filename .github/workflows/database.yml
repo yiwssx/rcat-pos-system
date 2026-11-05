@@ -104,6 +104,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/google-workspace-identity.sql
       - name: Verify catalog scope, satang integrity and RLS using PostgreSQL
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/catalog.sql
+      - name: Verify merchant catalog versioned edit, soft archive, RLS and immutable old Order snapshots
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/catalog-product-lifecycle.sql
       - name: Verify per-visit ordering tokens and tenant isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/ordering-visits.sql
       - name: Verify product modifiers, tenant isolation and guest visibility
