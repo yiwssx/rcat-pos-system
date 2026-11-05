@@ -1466,6 +1466,92 @@ try {
     "Table QR rotation must not remove existing Order history");
 
 
+  // G2 catalog lifecycle HTTP: owner-only, CSRF, optimistic revision, and
+  // archive after Orders have committed (old immutable totals must survive).
+  const productPath = catalogUrl + "/products/" + productId;
+  const currentCatalogResponse = await api(catalogUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(currentCatalogResponse.status, 200);
+  const catalogBeforeEdit = await currentCatalogResponse.json();
+  const initialRevision = catalogBeforeEdit.products[0].revision;
+  assert.equal(initialRevision, 2, "Two availability toggles must bump revision");
+
+  const updatedProduct = {
+    expectedRevision: initialRevision,
+    name: "ข้าวผัดสูตรใหม่",
+    categoryId,
+    priceSatang: 15000,
+  };
+  assert.equal((await api(productPath, {
+    method: "PATCH", headers: { ...json, Cookie: cookieHeader },
+    body: JSON.stringify(updatedProduct),
+  })).status, 403, "Catalog price edits require CSRF");
+  assert.equal((await api(productPath, {
+    method: "PATCH", headers: catHeaders,
+    body: JSON.stringify({ ...updatedProduct, priceSatang: 50.25 }),
+  })).status, 400, "Edited price must use integral satang");
+  assert.equal((await api(productPath, {
+    method: "PATCH",
+    headers: { ...json, Cookie: bHeader, "X-CSRF-Token": bCsrf },
+    body: JSON.stringify(updatedProduct),
+  })).status, 404, "Removed user cannot edit Catalog");
+
+  const editedResponse = await api(productPath, {
+    method: "PATCH", headers: catHeaders,
+    body: JSON.stringify(updatedProduct),
+  });
+  assert.equal(editedResponse.status, 200, await editedResponse.clone().text());
+  const editResult = await editedResponse.json();
+  assert.equal(editResult.revision, initialRevision + 1);
+  assert.equal(editResult.priceSatang, 15000);
+  assert.equal((await api(productPath, {
+    method: "PATCH", headers: catHeaders,
+    body: JSON.stringify(updatedProduct),
+  })).status, 409, "Stale Merchant browser must not overwrite another edit");
+
+  const archivePath = productPath + "/archive";
+  assert.equal((await api(archivePath, {
+    method: "POST", headers: { ...json, Cookie: cookieHeader },
+    body: JSON.stringify({ expectedRevision: editResult.revision }),
+  })).status, 403, "Archive requires CSRF");
+  assert.equal((await api(archivePath, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ expectedRevision: initialRevision }),
+  })).status, 409, "Stale Merchant browser must not archive recent edit");
+  const archivedResponse = await api(archivePath, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ expectedRevision: editResult.revision }),
+  });
+  assert.equal(archivedResponse.status, 201, await archivedResponse.clone().text());
+  assert.equal((await archivedResponse.json()).archived, true);
+  const archivedCatalog = await api(catalogUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(archivedCatalog.status, 200);
+  const archivedProduct = (await archivedCatalog.json()).products[0];
+  assert.equal(archivedProduct.available, false);
+  assert.ok(archivedProduct.archivedAt);
+  assert.equal(archivedProduct.revision, editResult.revision + 1);
+  assert.equal((await api(productPath + "/availability", {
+    method: "PATCH", headers: catHeaders,
+    body: JSON.stringify({ available: true }),
+  })).status, 409, "Archived product cannot be reactivated");
+  const latestVisitToken = decodeURIComponent(
+    new URL((await changedVisit.clone().json()).orderingUrl).hash.slice("#token=".length),
+  );
+  const afterArchiveMenu = await publicResolve(latestVisitToken);
+  assert.equal(afterArchiveMenu.status, 201);
+  assert.equal((await afterArchiveMenu.json()).products.length, 0,
+    "Archived product must disappear from active Guest menu");
+  assert.equal((await checkout("catalog-archived-order0001", {
+    visitToken: latestVisitToken,
+    items: [{ productId, quantity: 1, optionIds: [] }],
+  })).status, 404, "Archived products cannot be purchased");
+  const trackedOldOrder = await track(trackUrl, payloads[0].trackingToken);
+  assert.equal(trackedOldOrder.status, 200,
+    "Archiving a product must not revoke existing Order tracking");
+
   // Server revalidates session while a stream stays open. Revoking the
   // cookie must terminate delivery and notify the client on the next poll.
   const revokedController = new AbortController();
