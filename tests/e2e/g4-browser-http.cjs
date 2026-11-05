@@ -237,6 +237,45 @@ async function browserFlow(fixture) {
     assert.ok(await guest.getByText("Payment: not_requested").isVisible(),
       "Customer tracking did not retain explicit unverified payment state");
 
+    // Real mobile Merchant Catalog UX: CSRF owner creates a category and
+    // product, edits its price, then archives the product without touching
+    // the original Order fixture or its payment state.
+    await second.goto(merchant + "/catalog/" + tenant + "/" + store);
+    await second.getByRole("heading", { name: "เพิ่มหมวดหมู่" }).waitFor();
+    await second.getByLabel("ชื่อหมวดหมู่").fill("E2E ทดสอบเมนู");
+    await second.getByLabel("รหัสหมวดหมู่ (ภาษาอังกฤษ)")
+      .fill("e2e-catalog-check");
+    await second.getByRole("button", { name: "เพิ่มหมวดหมู่" }).click();
+    await second.getByText("เพิ่มหมวดหมู่แล้ว").waitFor();
+
+    await second.getByLabel("ชื่อสินค้า", { exact: true }).fill("เมนูทดสอบชั่วคราว");
+    await second.getByLabel("หมวดหมู่", { exact: true })
+      .selectOption({ label: "E2E ทดสอบเมนู" });
+    await second.getByLabel("ราคาขาย (บาท)").fill("85.25");
+    await second.getByRole("button", { name: "เพิ่มสินค้า" }).click();
+    await second.getByText("เพิ่มสินค้าแล้ว").waitFor();
+
+    const newItem = second.locator(".catalog-product", {
+      hasText: "เมนูทดสอบชั่วคราว",
+    });
+    await newItem.getByRole("button", { name: "แก้ไข" }).click();
+    await second.getByLabel("ชื่อสินค้า", { exact: true }).last()
+      .fill("เมนูทดสอบแก้ไขแล้ว");
+    await second.getByLabel("ราคาขายใหม่ (บาท)").fill("99.50");
+    await second.getByRole("button", { name: "บันทึกการแก้ไข" }).click();
+    await second.getByText("บันทึกข้อมูลสินค้าแล้ว").waitFor();
+    const revisedItem = second.locator(".catalog-product", {
+      hasText: "เมนูทดสอบแก้ไขแล้ว",
+    });
+    await revisedItem.getByText("99.50 บาท").waitFor();
+    second.once("dialog", (dialog) => dialog.accept());
+    await revisedItem.getByRole("button", { name: "เก็บถาวร" }).click();
+    await second.getByText("เก็บสินค้าถาวรแล้ว").waitFor();
+    await second.getByRole("button", { name: "แสดงสินค้าเก็บถาวร" }).click();
+    await second.locator(".catalog-product", {
+      hasText: "เมนูทดสอบแก้ไขแล้ว",
+    }).getByText("เก็บถาวร").waitFor();
+
     // Expire the first merchant session with real logout + CSRF, then
     // refresh the browser to prove stale tab access is no longer authorized.
     const stored = await merchantContext.cookies(merchant);
@@ -253,7 +292,7 @@ async function browserFlow(fixture) {
       browser: "Chromium", viewport: "mobile customer + desktop/mobile merchant",
       result: "PASS",
       scenarios: ["QR URL scrub", "offline submit block", "tracked checkout",
-        "independent merchant tabs", "order status propagation", "expired session denied"],
+        "independent merchant tabs", "order status propagation", "mobile catalog create/edit/archive", "expired session denied"],
     }));
   } catch (error) {
     for (const [name, page] of [["guest", guest], ["merchant", board], ["second", second]]) {
