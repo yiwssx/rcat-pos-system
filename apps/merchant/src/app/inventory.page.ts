@@ -50,6 +50,10 @@ function inventoryError(error: unknown): string {
         {{ store()?.storeName || "กำลังตรวจสอบสิทธิ์..." }}
         · ปริมาณใช้หน่วย g / ml / ชิ้น และจำนวนเต็มทศนิยมไม่เกิน 3 ตำแหน่ง
       </p>
+      <a class="inventory-stocktake-link"
+        [routerLink]="['/inventory',tenantId,storeId,'stocktakes']">
+        ตรวจนับสต็อก / Stocktake และอนุมัติปรับยอด
+      </a>
       <p class="inventory-warning" role="note">
         <strong>ตัดสต็อกเมื่อร้านรับออเดอร์ เฉพาะสินค้าที่เปิดติดตาม</strong>
         สินค้าทุกชนิดเริ่มในโหมดจัดการสต็อกด้วยตนเอง
