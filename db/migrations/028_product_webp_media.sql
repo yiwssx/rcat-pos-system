@@ -170,3 +170,72 @@ BEGIN
   ),'[]'::jsonb)
  );
 END $$;
+
+-- Guest product images are public assets only for active visible goods.
+CREATE OR REPLACE FUNCTION rcat_private.resolve_ordering_visit(p_token_digest bytea)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog
+AS $$
+DECLARE v rcat.table_ordering_visits%ROWTYPE;t_label text;s_name text;
+BEGIN
+ IF p_token_digest IS NULL OR octet_length(p_token_digest)<>32 THEN
+    RAISE EXCEPTION 'Visit unavailable' USING ERRCODE='42501'; END IF;
+ SELECT visit.* INTO v FROM rcat.table_ordering_visits visit
+ JOIN rcat.store_tables tab ON tab.id=visit.table_id
+   AND tab.tenant_id=visit.tenant_id AND tab.store_id=visit.store_id
+ WHERE (
+   visit.token_digest=p_token_digest OR EXISTS(
+     SELECT 1 FROM rcat.table_guest_grants g
+     WHERE g.visit_id=visit.id AND g.token_digest=p_token_digest
+       AND g.expires_at>now()
+   )
+ ) AND visit.revoked_at IS NULL
+   AND visit.expires_at>now() AND tab.active;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Visit unavailable' USING ERRCODE='42501'; END IF;
+ SELECT t.label,s.display_name INTO t_label,s_name
+  FROM rcat.store_tables t
+  JOIN rcat.stores s ON s.id=t.store_id AND s.tenant_id=t.tenant_id
+ WHERE t.id=v.table_id AND t.tenant_id=v.tenant_id AND t.store_id=v.store_id;
+ RETURN jsonb_build_object(
+   'visitId',v.id,'tenantId',v.tenant_id,'storeId',v.store_id,'tableId',v.table_id,
+   'tableLabel',t_label,'storeName',s_name,'expiresAt',v.expires_at,
+   'categories',COALESCE((
+      SELECT jsonb_agg(jsonb_build_object('id',c.id,'name',c.name,'slug',c.slug)
+        ORDER BY c.sort_order,c.slug)
+      FROM rcat.menu_categories c WHERE c.tenant_id=v.tenant_id
+       AND c.store_id=v.store_id
+   ),'[]'::jsonb),
+   'modifierGroups',COALESCE((
+   SELECT jsonb_agg(jsonb_build_object(
+     'id',g.id,'productId',g.product_id,'slug',g.slug,
+     'name',g.name,'minSelect',g.min_select,'maxSelect',g.max_select)
+     ORDER BY g.sort_order,g.slug)
+   FROM rcat.menu_modifier_groups g
+   JOIN rcat.menu_products mp ON mp.id=g.product_id
+     AND mp.tenant_id=g.tenant_id AND mp.store_id=g.store_id
+   WHERE g.tenant_id=v.tenant_id AND g.store_id=v.store_id
+     AND mp.available
+ ),'[]'::jsonb),
+ 'modifierOptions',COALESCE((
+   SELECT jsonb_agg(jsonb_build_object(
+     'id',o.id,'productId',o.product_id,'groupId',o.group_id,
+     'name',o.name,'priceDeltaSatang',o.price_delta_satang)
+     ORDER BY o.sort_order,o.name)
+   FROM rcat.menu_modifier_options o
+   JOIN rcat.menu_products mp ON mp.id=o.product_id
+      AND mp.tenant_id=o.tenant_id AND mp.store_id=o.store_id
+   WHERE o.tenant_id=v.tenant_id AND o.store_id=v.store_id
+     AND o.available AND mp.available
+ ),'[]'::jsonb),
+ 'products',COALESCE((
+      SELECT jsonb_agg(jsonb_build_object('id',p.id,'name',p.name,
+        'categoryId',p.category_id,'priceSatang',p.price_satang,
+         'hasImage',EXISTS(SELECT 1 FROM rcat.menu_product_media m
+           WHERE m.tenant_id=p.tenant_id AND m.store_id=p.store_id
+             AND m.product_id=p.id))
+        ORDER BY p.created_at,p.id)
+      FROM rcat.menu_products p WHERE p.tenant_id=v.tenant_id
+        AND p.store_id=v.store_id AND p.available
+   ),'[]'::jsonb)
+ );
+END $$;
