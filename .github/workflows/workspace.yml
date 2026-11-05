@@ -40,6 +40,23 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Display Nx projects
         run: pnpm exec nx show projects
+      - name: Generate precise Prettier formatting of changed Catalog files (temporary diagnostic)
+        if: github.event_name == 'pull_request'
+        run: |
+          pnpm exec prettier --write apps/api/src/catalog/catalog.service.ts apps/merchant/src/app/merchant-catalog.api.ts apps/merchant/src/app/merchant-catalog.page.ts
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for p in [
+              'apps/api/src/catalog/catalog.service.ts',
+              'apps/merchant/src/app/merchant-catalog.api.ts',
+              'apps/merchant/src/app/merchant-catalog.page.ts',
+          ]:
+              print('CATALOG_PRETTIER_JSON=' + json.dumps({
+                  'path': p,
+                  'content': Path(p).read_text(encoding='utf-8')
+              }, ensure_ascii=True))
+          PY
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request'
         env:
