@@ -1,0 +1,69 @@
+name: G4 PostgreSQL Recovery and Integrity
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/ops/**'
+      - 'tests/db/g4-*'
+      - 'db/**'
+      - 'scripts/db/**'
+      - '.github/workflows/g4-recovery.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/ops/**'
+      - 'tests/db/g4-*'
+      - 'db/**'
+      - 'scripts/db/**'
+      - '.github/workflows/g4-recovery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: g4-db-recovery-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  restore-drill:
+    name: PostgreSQL 16 isolated backup and restore qualification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test-only-ci-password
+          POSTGRES_DB: rcat_ci_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d rcat_ci_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      CI: 'true'
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGDATABASE: rcat_ci_test
+      PGPASSWORD: test-only-ci-password
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install PostgreSQL 16 compatible client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+      - name: Apply checksummed migrations
+        run: bash scripts/db/migrate.sh
+      - name: Seed two disposable isolated tenants
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/tenant-isolation.sql
+      - name: Commit recovery fixture with Orders, Outbox and Audit
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/g4-recovery-fixture.sql
+      - name: Dump, restore, compare every record and verify RLS and event replay
+        run: bash scripts/ops/ci-backup-restore.sh

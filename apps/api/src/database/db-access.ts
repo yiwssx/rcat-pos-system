@@ -13,25 +13,55 @@ export class DatabaseAccess implements OnModuleDestroy {
   private readonly tenantPool?: Pool;
 
   constructor() {
-    if (process.env["ENABLE_DEVELOPMENT_AUTH"] !== "true") {
-      return;
-    }
-    // Development-only login endpoints until distributed rate limiting, audit,
-    // account recovery and threat review are complete. Fail shut in production.
-    if (process.env["NODE_ENV"] === "production") {
+    // Production Google Workspace sessions require PostgreSQL too. Database
+    // availability must NEVER implicitly enable the password-login endpoint.
+    const developmentLogin = process.env["ENABLE_DEVELOPMENT_AUTH"] === "true";
+    if (developmentLogin && process.env["NODE_ENV"] === "production") {
       throw new Error("Development authentication may not run in production");
     }
     const authUrl = process.env["AUTH_DATABASE_URL"];
     const tenantUrl = process.env["TENANT_DATABASE_URL"];
+    if (!authUrl && !tenantUrl && !developmentLogin) {
+      // Still expose /api/health; readiness and protected endpoints fail shut.
+      return;
+    }
     if (!authUrl || !tenantUrl || authUrl === tenantUrl) {
       throw new Error("Two distinct restricted PostgreSQL URLs are required");
     }
-    this.authPool = new Pool({ connectionString: authUrl, max: 4 });
-    this.tenantPool = new Pool({ connectionString: tenantUrl, max: 4 });
+    this.authPool = new Pool({
+      connectionString: authUrl,
+      max: 4,
+      connectionTimeoutMillis: 5000,
+    });
+    this.tenantPool = new Pool({
+      connectionString: tenantUrl,
+      max: 4,
+      connectionTimeoutMillis: 5000,
+    });
   }
 
   get enabled(): boolean {
     return !!this.authPool && !!this.tenantPool;
+  }
+
+  async readiness(): Promise<void> {
+    // Validate BOTH restricted role connections and the minimal Ordering
+    // schema. Never put customer data, credentials or driver errors into the
+    // publicly accessible /ready response.
+    const auth = await this.auth((client) =>
+      client.query<{ ready: boolean }>(
+        "SELECT to_regclass('rcat_private.auth_sessions') IS NOT NULL AS ready",
+      ),
+    );
+    const orders = await this.withRole("rcat_app", this.tenantPool, (client) =>
+      client.query<{ ready: boolean }>(
+        "SELECT to_regclass('rcat.orders') IS NOT NULL AND " +
+          "to_regclass('rcat.order_outbox_events') IS NOT NULL AS ready",
+      ),
+    );
+    if (!auth.rows[0]?.ready || !orders.rows[0]?.ready) {
+      throw new ServiceUnavailableException("Database schema is unavailable");
+    }
   }
 
   async auth<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {

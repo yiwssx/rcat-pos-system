@@ -1,6 +1,7 @@
 import {
   Injectable,
   ForbiddenException,
+  NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { PoolClient } from "pg";
@@ -40,6 +41,14 @@ export class AuthService {
     req: ApiRequest,
     input: unknown,
   ): Promise<{ userId: string; token: string; csrf: string }> {
+    // Password login is a CI/development fixture only. Database credentials
+    // must not enable it when running Google-only staging/production.
+    if (
+      process.env["ENABLE_DEVELOPMENT_AUTH"] !== "true" ||
+      process.env["NODE_ENV"] === "production"
+    ) {
+      throw new NotFoundException();
+    }
     if (!input || typeof input !== "object") {
       throw new UnauthorizedException("Invalid credentials");
     }

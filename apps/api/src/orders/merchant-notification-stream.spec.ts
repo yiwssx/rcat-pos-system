@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { encodeOrderSse } from "./merchant-notification-stream.core";
+import {
+  encodeOrderSse,
+  writeBoundedSse,
+} from "./merchant-notification-stream.core";
 import type { MerchantNotificationEvent } from "./merchant-notifications.service";
 
 describe("durable merchant SSE envelope", () => {
@@ -49,5 +52,41 @@ describe("durable merchant SSE envelope", () => {
     ).toThrow("Invalid Order outbox event ID");
     expect(() => encodeOrderSse({ ...event, eventId: "0" })).toThrow();
     expect(() => encodeOrderSse({ ...event, eventId: "-1" })).toThrow();
+  });
+});
+
+describe("bounded SSE writer", () => {
+  it("returns false on slow-reader backpressure without queueing frames", () => {
+    for (let i = 0; i < 40; i += 1) {
+      let writes = 0;
+      const sink = {
+        writableEnded: false,
+        destroyed: false,
+        write: () => {
+          writes += 1;
+          return false;
+        },
+      } as unknown as Parameters<typeof writeBoundedSse>[0];
+      expect(writeBoundedSse(sink, "event: order-event\\n\\n")).toBe(false);
+      expect(writes).toBe(1);
+    }
+  });
+
+  it("does not write to a closed or destroyed connection", () => {
+    for (const state of [
+      { writableEnded: true, destroyed: false },
+      { writableEnded: false, destroyed: true },
+    ]) {
+      let writes = 0;
+      const sink = {
+        ...state,
+        write: () => {
+          writes += 1;
+          return true;
+        },
+      } as unknown as Parameters<typeof writeBoundedSse>[0];
+      expect(writeBoundedSse(sink, "test")).toBe(false);
+      expect(writes).toBe(0);
+    }
   });
 });

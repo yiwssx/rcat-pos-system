@@ -1,6 +1,8 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
+import type { IncomingMessage, ServerResponse } from "node:http";
+import { installHttpTelemetry } from "./observability/http-telemetry";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: false });
@@ -13,6 +15,12 @@ async function bootstrap(): Promise<void> {
   if (origins.length > 0) {
     app.enableCors({ origin: origins, credentials: true });
   }
+
+  // Structured, safe-by-default request tracing (no URL, query, token or IP).
+  app.use((req: IncomingMessage, res: ServerResponse, next: () => void) => {
+    installHttpTelemetry(req, res);
+    next();
+  });
 
   app.setGlobalPrefix("api");
   app.enableShutdownHooks();

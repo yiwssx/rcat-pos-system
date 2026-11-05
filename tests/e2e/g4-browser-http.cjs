@@ -358,6 +358,7 @@ async function main() {
     db, merchant, customer, orderScope, productId: fixture.productId,
     currentVisitToken,
   });
+  await require("./g4-readiness.cjs")();
 }
 
 (async () => {
