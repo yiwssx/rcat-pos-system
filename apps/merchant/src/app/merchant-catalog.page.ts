@@ -25,7 +25,9 @@ function parseBaht(value: string): number | null {
 }
 
 function bahtInput(satang: number): string {
-  return Math.floor(satang / 100) + "." + (satang % 100).toString().padStart(2, "0");
+  return (
+    Math.floor(satang / 100) + "." + (satang % 100).toString().padStart(2, "0")
+  );
 }
 
 @Component({
@@ -40,26 +42,33 @@ function bahtInput(satang: number): string {
         <p class="eyebrow">MERCHANT / MENU MANAGEMENT</p>
         <h1 id="catalog-title">จัดการเมนูและสินค้า</h1>
         <p class="catalog-intro">
-          ปรับราคา ชื่อ หมวดหมู่ และสถานะการขาย โดยไม่เปลี่ยนราคาที่บันทึกในออเดอร์เก่า
+          ปรับราคา ชื่อ หมวดหมู่ และสถานะการขาย
+          โดยไม่เปลี่ยนราคาที่บันทึกในออเดอร์เก่า
         </p>
         <p class="catalog-notice">
-          การเก็บสินค้าเข้าคลัง (Archive) จะนำออกจากเมนูลูกค้าถาวร แต่ยังคงประวัติออเดอร์และสต็อก
-          ไม่มีการรับชำระเงินจากหน้านี้
+          การเก็บสินค้าเข้าคลัง (Archive) จะนำออกจากเมนูลูกค้าถาวร
+          แต่ยังคงประวัติออเดอร์และสต็อก ไม่มีการรับชำระเงินจากหน้านี้
         </p>
       </header>
 
       @if (loading()) {
-        <p role="status" class="catalog-message">กำลังตรวจสอบสิทธิ์และโหลดสินค้า...</p>
+        <p role="status" class="catalog-message">
+          กำลังตรวจสอบสิทธิ์และโหลดสินค้า...
+        </p>
       } @else if (!canManage()) {
         <p class="catalog-message" role="alert">
           {{ error() || "เฉพาะเจ้าของร้านและผู้จัดการเท่านั้นที่แก้ไขเมนูได้" }}
         </p>
       } @else {
         @if (error()) {
-          <p class="catalog-message catalog-error" role="alert">{{ error() }}</p>
+          <p class="catalog-message catalog-error" role="alert">
+            {{ error() }}
+          </p>
         }
         @if (success()) {
-          <p class="catalog-message catalog-success" role="status">{{ success() }}</p>
+          <p class="catalog-message catalog-success" role="status">
+            {{ success() }}
+          </p>
         }
 
         <div class="catalog-grid">
@@ -67,15 +76,24 @@ function bahtInput(satang: number): string {
             <h2>เพิ่มหมวดหมู่</h2>
             <label for="category-name">ชื่อหมวดหมู่</label>
             <input
-              id="category-name" name="categoryName" [(ngModel)]="newCategory.name"
-              maxlength="120" required placeholder="เช่น อาหารจานเดียว"
+              id="category-name"
+              name="categoryName"
+              [(ngModel)]="newCategory.name"
+              maxlength="120"
+              required
+              placeholder="เช่น อาหารจานเดียว"
               [disabled]="saving()"
             />
             <label for="category-slug">รหัสหมวดหมู่ (ภาษาอังกฤษ)</label>
             <input
-              id="category-slug" name="categorySlug" [(ngModel)]="newCategory.slug"
-              maxlength="48" required pattern="[a-z0-9]+(-[a-z0-9]+)*"
-              placeholder="thai-food" [disabled]="saving()"
+              id="category-slug"
+              name="categorySlug"
+              [(ngModel)]="newCategory.slug"
+              maxlength="48"
+              required
+              pattern="[a-z0-9]+(-[a-z0-9]+)*"
+              placeholder="thai-food"
+              [disabled]="saving()"
             />
             <button type="submit" [disabled]="saving()">เพิ่มหมวดหมู่</button>
           </form>
@@ -84,13 +102,21 @@ function bahtInput(satang: number): string {
             <h2>เพิ่มสินค้า</h2>
             <label for="new-product-name">ชื่อสินค้า</label>
             <input
-              id="new-product-name" name="newProductName" [(ngModel)]="newProduct.name"
-              maxlength="160" required placeholder="เช่น ข้าวผัด" [disabled]="saving()"
+              id="new-product-name"
+              name="newProductName"
+              [(ngModel)]="newProduct.name"
+              maxlength="160"
+              required
+              placeholder="เช่น ข้าวผัด"
+              [disabled]="saving()"
             />
             <label for="new-product-category">หมวดหมู่</label>
             <select
-              id="new-product-category" name="newProductCategory"
-              [(ngModel)]="newProduct.categoryId" required [disabled]="saving()"
+              id="new-product-category"
+              name="newProductCategory"
+              [(ngModel)]="newProduct.categoryId"
+              required
+              [disabled]="saving()"
             >
               <option value="" disabled>เลือกหมวดหมู่</option>
               @for (category of categories(); track category.id) {
@@ -99,18 +125,27 @@ function bahtInput(satang: number): string {
             </select>
             <label for="new-product-price">ราคาขาย (บาท)</label>
             <input
-              id="new-product-price" name="newProductPrice"
-              [(ngModel)]="newProduct.priceBaht" required
-              inputmode="decimal" placeholder="59.00"
+              id="new-product-price"
+              name="newProductPrice"
+              [(ngModel)]="newProduct.priceBaht"
+              required
+              inputmode="decimal"
+              placeholder="59.00"
               [disabled]="saving()"
             />
-            <button type="submit" [disabled]="saving() || categories().length === 0">
+            <button
+              type="submit"
+              [disabled]="saving() || categories().length === 0"
+            >
               เพิ่มสินค้า
             </button>
           </form>
         </div>
 
-        <section class="catalog-panel catalog-products" aria-labelledby="products-title">
+        <section
+          class="catalog-panel catalog-products"
+          aria-labelledby="products-title"
+        >
           <div class="catalog-toolbar">
             <div>
               <h2 id="products-title">สินค้าทั้งหมด</h2>
@@ -118,17 +153,27 @@ function bahtInput(satang: number): string {
             </div>
             <div class="catalog-actions">
               <button type="button" class="subtle" (click)="toggleArchived()">
-                {{ showArchived() ? "ซ่อนสินค้าเก็บถาวร" : "แสดงสินค้าเก็บถาวร" }}
+                {{
+                  showArchived() ? "ซ่อนสินค้าเก็บถาวร" : "แสดงสินค้าเก็บถาวร"
+                }}
               </button>
-              <button type="button" class="subtle" (click)="refresh()" [disabled]="saving()">
+              <button
+                type="button"
+                class="subtle"
+                (click)="refresh()"
+                [disabled]="saving()"
+              >
                 โหลดข้อมูลใหม่
               </button>
             </div>
           </div>
           <label for="catalog-search">ค้นหาชื่อสินค้า</label>
           <input
-            id="catalog-search" name="catalogSearch" [(ngModel)]="search"
-            placeholder="พิมพ์ชื่อสินค้า..." autocomplete="off"
+            id="catalog-search"
+            name="catalogSearch"
+            [(ngModel)]="search"
+            placeholder="พิมพ์ชื่อสินค้า..."
+            autocomplete="off"
           />
 
           @for (product of displayedProducts(); track product.id) {
@@ -136,8 +181,14 @@ function bahtInput(satang: number): string {
               <div class="catalog-summary">
                 <div>
                   <h3>{{ product.name }}</h3>
-                  <p>{{ categoryName(product.categoryId) }} · {{ money(product.priceSatang) }} บาท</p>
-                  <span class="catalog-status" [class.inactive]="!product.available">
+                  <p>
+                    {{ categoryName(product.categoryId) }} ·
+                    {{ money(product.priceSatang) }} บาท
+                  </p>
+                  <span
+                    class="catalog-status"
+                    [class.inactive]="!product.available"
+                  >
                     {{
                       product.archivedAt
                         ? "เก็บถาวร"
@@ -149,38 +200,80 @@ function bahtInput(satang: number): string {
                 </div>
                 @if (!product.archivedAt) {
                   <div class="catalog-actions">
-                    <button type="button" class="subtle"
-                      [disabled]="saving()" (click)="beginEdit(product)">แก้ไข</button>
-                    <button type="button" class="subtle"
-                      [disabled]="saving()" (click)="toggleAvailability(product)">
+                    <button
+                      type="button"
+                      class="subtle"
+                      [disabled]="saving()"
+                      (click)="beginEdit(product)"
+                    >
+                      แก้ไข
+                    </button>
+                    <button
+                      type="button"
+                      class="subtle"
+                      [disabled]="saving()"
+                      (click)="toggleAvailability(product)"
+                    >
                       {{ product.available ? "ปิดขาย" : "เปิดขาย" }}
                     </button>
-                    <button type="button" class="danger"
-                      [disabled]="saving()" (click)="archive(product)">เก็บถาวร</button>
+                    <button
+                      type="button"
+                      class="danger"
+                      [disabled]="saving()"
+                      (click)="archive(product)"
+                    >
+                      เก็บถาวร
+                    </button>
                   </div>
                 }
               </div>
               @if (editId() === product.id && !product.archivedAt) {
                 <form class="catalog-edit" (ngSubmit)="saveEdit()">
-                  <p>แก้ไขข้อมูลสินค้า · ตรวจสอบ Revision {{ edit.revision }}</p>
+                  <p>
+                    แก้ไขข้อมูลสินค้า · ตรวจสอบ Revision {{ edit.revision }}
+                  </p>
                   <label for="edit-product-name">ชื่อสินค้า</label>
-                  <input id="edit-product-name" name="editName"
-                    [(ngModel)]="edit.name" required maxlength="160" [disabled]="saving()" />
+                  <input
+                    id="edit-product-name"
+                    name="editName"
+                    [(ngModel)]="edit.name"
+                    required
+                    maxlength="160"
+                    [disabled]="saving()"
+                  />
                   <label for="edit-product-category">หมวดหมู่</label>
-                  <select id="edit-product-category" name="editCategory"
-                    [(ngModel)]="edit.categoryId" required [disabled]="saving()">
+                  <select
+                    id="edit-product-category"
+                    name="editCategory"
+                    [(ngModel)]="edit.categoryId"
+                    required
+                    [disabled]="saving()"
+                  >
                     @for (category of categories(); track category.id) {
                       <option [value]="category.id">{{ category.name }}</option>
                     }
                   </select>
                   <label for="edit-product-price">ราคาขายใหม่ (บาท)</label>
-                  <input id="edit-product-price" name="editPrice"
-                    [(ngModel)]="edit.priceBaht" required inputmode="decimal"
-                    [disabled]="saving()" />
+                  <input
+                    id="edit-product-price"
+                    name="editPrice"
+                    [(ngModel)]="edit.priceBaht"
+                    required
+                    inputmode="decimal"
+                    [disabled]="saving()"
+                  />
                   <div class="catalog-actions">
-                    <button type="submit" [disabled]="saving()">บันทึกการแก้ไข</button>
-                    <button type="button" class="subtle"
-                      [disabled]="saving()" (click)="cancelEdit()">ยกเลิก</button>
+                    <button type="submit" [disabled]="saving()">
+                      บันทึกการแก้ไข
+                    </button>
+                    <button
+                      type="button"
+                      class="subtle"
+                      [disabled]="saving()"
+                      (click)="cancelEdit()"
+                    >
+                      ยกเลิก
+                    </button>
                   </div>
                 </form>
               }
@@ -233,16 +326,22 @@ export class MerchantCatalogPage implements OnInit {
     try {
       const { stores } = await this.orders.stores();
       const selected = stores.find(
-        (store) => store.tenantId === this.tenantId && store.storeId === this.storeId,
+        (store) =>
+          store.tenantId === this.tenantId && store.storeId === this.storeId,
       );
-      if (!selected || (selected.role !== "owner" && selected.role !== "manager")) {
+      if (
+        !selected ||
+        (selected.role !== "owner" && selected.role !== "manager")
+      ) {
         this.error.set("บัญชีนี้ไม่ได้รับสิทธิ์แก้ไขสินค้าของร้านนี้");
         return;
       }
       this.canManage.set(true);
       await this.refresh();
     } catch {
-      this.error.set("ไม่สามารถตรวจสอบสิทธิ์หรือโหลดข้อมูลได้ กรุณาเข้าสู่ระบบอีกครั้ง");
+      this.error.set(
+        "ไม่สามารถตรวจสอบสิทธิ์หรือโหลดข้อมูลได้ กรุณาเข้าสู่ระบบอีกครั้ง",
+      );
     } finally {
       this.loading.set(false);
     }
@@ -266,7 +365,10 @@ export class MerchantCatalogPage implements OnInit {
   }
 
   categoryName(id: string): string {
-    return this.categories().find((category) => category.id === id)?.name ?? "ไม่พบหมวดหมู่";
+    return (
+      this.categories().find((category) => category.id === id)?.name ??
+      "ไม่พบหมวดหมู่"
+    );
   }
 
   money(satang: number): string {
@@ -289,7 +391,10 @@ export class MerchantCatalogPage implements OnInit {
     this.showArchived.update((value) => !value);
   }
 
-  private async mutate(work: () => Promise<unknown>, message: string): Promise<boolean> {
+  private async mutate(
+    work: () => Promise<unknown>,
+    message: string,
+  ): Promise<boolean> {
     if (this.saving()) return false;
     this.saving.set(true);
     this.error.set("");
@@ -322,27 +427,41 @@ export class MerchantCatalogPage implements OnInit {
       this.error.set("กรุณากรอกชื่อและรหัสหมวดหมู่ภาษาอังกฤษให้ถูกต้อง");
       return;
     }
-    if (await this.mutate(
-      () => this.api.createCategory(this.tenantId, this.storeId, name, slug),
-      "เพิ่มหมวดหมู่แล้ว",
-    )) {
+    if (
+      await this.mutate(
+        () => this.api.createCategory(this.tenantId, this.storeId, name, slug),
+        "เพิ่มหมวดหมู่แล้ว",
+      )
+    ) {
       this.newCategory = { name: "", slug: "" };
     }
   }
 
   async addProduct(): Promise<void> {
     const priceSatang = parseBaht(this.newProduct.priceBaht);
-    if (!this.newProduct.name.trim() || !this.newProduct.categoryId || priceSatang === null) {
-      this.error.set("กรุณาตรวจสอบชื่อ หมวดหมู่ และราคา (บาท ทศนิยมไม่เกินสองตำแหน่ง)");
+    if (
+      !this.newProduct.name.trim() ||
+      !this.newProduct.categoryId ||
+      priceSatang === null
+    ) {
+      this.error.set(
+        "กรุณาตรวจสอบชื่อ หมวดหมู่ และราคา (บาท ทศนิยมไม่เกินสองตำแหน่ง)",
+      );
       return;
     }
-    if (await this.mutate(
-      () => this.api.createProduct(
-        this.tenantId, this.storeId, this.newProduct.name.trim(),
-        this.newProduct.categoryId, priceSatang,
-      ),
-      "เพิ่มสินค้าแล้ว",
-    )) {
+    if (
+      await this.mutate(
+        () =>
+          this.api.createProduct(
+            this.tenantId,
+            this.storeId,
+            this.newProduct.name.trim(),
+            this.newProduct.categoryId,
+            priceSatang,
+          ),
+        "เพิ่มสินค้าแล้ว",
+      )
+    ) {
       this.newProduct.name = "";
       this.newProduct.priceBaht = "";
     }
@@ -367,26 +486,36 @@ export class MerchantCatalogPage implements OnInit {
   async saveEdit(): Promise<void> {
     const productId = this.editId();
     const priceSatang = parseBaht(this.edit.priceBaht);
-    if (!productId || !this.edit.name.trim() || !this.edit.categoryId || priceSatang === null) {
+    if (
+      !productId ||
+      !this.edit.name.trim() ||
+      !this.edit.categoryId ||
+      priceSatang === null
+    ) {
       this.error.set("กรุณาตรวจสอบชื่อ หมวดหมู่ และราคาสินค้า");
       return;
     }
     await this.mutate(
-      () => this.api.editProduct(this.tenantId, this.storeId, productId, {
-        name: this.edit.name.trim(),
-        categoryId: this.edit.categoryId,
-        priceSatang,
-        expectedRevision: this.edit.revision,
-      }),
+      () =>
+        this.api.editProduct(this.tenantId, this.storeId, productId, {
+          name: this.edit.name.trim(),
+          categoryId: this.edit.categoryId,
+          priceSatang,
+          expectedRevision: this.edit.revision,
+        }),
       "บันทึกข้อมูลสินค้าแล้ว ออเดอร์เดิมยังใช้ราคาที่บันทึกไว้",
     );
   }
 
   async toggleAvailability(product: CatalogProduct): Promise<void> {
     await this.mutate(
-      () => this.api.availability(
-        this.tenantId, this.storeId, product.id, !product.available,
-      ),
+      () =>
+        this.api.availability(
+          this.tenantId,
+          this.storeId,
+          product.id,
+          !product.available,
+        ),
       product.available ? "ปิดขายสินค้าชั่วคราวแล้ว" : "เปิดขายสินค้าแล้ว",
     );
   }
@@ -397,9 +526,13 @@ export class MerchantCatalogPage implements OnInit {
     );
     if (!approved) return;
     await this.mutate(
-      () => this.api.archiveProduct(
-        this.tenantId, this.storeId, product.id, product.revision,
-      ),
+      () =>
+        this.api.archiveProduct(
+          this.tenantId,
+          this.storeId,
+          product.id,
+          product.revision,
+        ),
       "เก็บสินค้าถาวรแล้ว และคงประวัติออเดอร์เดิม",
     );
   }
