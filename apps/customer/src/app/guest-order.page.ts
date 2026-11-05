@@ -69,6 +69,37 @@ function guestError(error: unknown): string {
         ราคาในตะกร้าเป็นประมาณการ และจะยืนยันยอดจริงหลังส่งออเดอร์
       </p>
 
+      @if (staticTable(); as table) {
+        @if (!session.visit()) {
+          <form class="guest-code-form" (submit)="submitTableCode($event)">
+            <h2>กรอกรหัสรอบโต๊ะ</h2>
+            <p>
+              QR ติดโต๊ะเป็นลิงก์สาธารณะ ยังสั่งอาหารไม่ได้
+              กรุณาขอรหัส 8 หลักจากพนักงานของร้านก่อน
+            </p>
+            <label for="table-code">รหัส 8 หลักที่พนักงานแจ้ง</label>
+            <input
+              id="table-code"
+              name="tableCode"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="8"
+              minlength="8"
+              pattern="[0-9]{8}"
+              required
+              [value]="tableCode()"
+              (input)="updateTableCode($event)"
+              [disabled]="busy()"
+            />
+            <button type="submit" [disabled]="busy() || !online() || tableCode().length !== 8">
+              {{ busy() ? "กำลังตรวจรหัส..." : "ยืนยันรหัสและเปิดเมนู" }}
+            </button>
+            <p class="guest-code-help">รหัสจะไม่ถูกส่งใน URL หรือ QR และไม่ได้ใช้ยืนยันการชำระเงิน</p>
+          </form>
+        }
+      }
+
       @if (loading()) {
         <div class="guest-status" role="status">กำลังอ่านเมนูของร้าน...</div>
       } @else if (error()) {
@@ -256,6 +287,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly category = signal("");
   readonly selected = signal<Record<string, string[]>>({});
   readonly online = signal(true);
+  readonly staticTable = signal<{ tenantId: string; storeId: string; tableId: string } | null>(null);
+  readonly tableCode = signal("");
   readonly money = formatSatang;
   private scanToken: string | null = null;
   private readonly win = this.document.defaultView;
@@ -299,6 +332,20 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       }
       this.scanToken = token;
       void this.load(token);
+    } else if (this.route.snapshot.queryParamMap.keys.length > 0) {
+      const query = this.route.snapshot.queryParamMap;
+      const tenantId = query.get("tenant");
+      const storeId = query.get("store");
+      const tableId = query.get("table");
+      const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      this.loading.set(false);
+      this.session.invalidateVisit();
+      if (query.keys.length !== 3 || !tenantId || !storeId || !tableId ||
+          !uuid.test(tenantId) || !uuid.test(storeId) || !uuid.test(tableId)) {
+        this.error.set("QR ติดโต๊ะไม่ถูกต้อง กรุณาสแกน QR ใหม่");
+        return;
+      }
+      this.staticTable.set({ tenantId, storeId, tableId });
     } else if (this.session.visitToken()) {
       this.scanToken = this.session.visitToken();
       void this.load(this.session.visitToken()!);
@@ -342,6 +389,37 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       this.error.set(guestError(error));
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  updateTableCode(event: Event): void {
+    if (event.target instanceof HTMLInputElement) {
+      this.tableCode.set(event.target.value.replace(/[^0-9]/g, "").slice(0, 8));
+    }
+  }
+
+  async submitTableCode(event: Event): Promise<void> {
+    event.preventDefault();
+    const table = this.staticTable();
+    const code = this.tableCode();
+    if (!table || !/^[0-9]{8}$/.test(code) || this.busy() || !this.online()) return;
+    this.busy.set(true);
+    this.error.set("");
+    try {
+      const grant = await this.api.redeemCode(
+        table.tenantId, table.storeId, table.tableId, code,
+      );
+      this.tableCode.set("");
+      this.scanToken = grant.visitToken;
+      await this.load(grant.visitToken);
+    } catch (error) {
+      this.error.set(
+        error instanceof HttpErrorResponse && error.status === 404
+          ? "รหัสไม่ถูกต้อง หมดอายุ หรือมีการขอรหัสผิดหลายครั้ง กรุณาติดต่อพนักงาน"
+          : guestError(error),
+      );
+    } finally {
+      this.busy.set(false);
     }
   }
 
