@@ -58,7 +58,10 @@ export class MerchantCatalogApi {
     return { "X-CSRF-Token": token };
   }
 
-  snapshot(tenantId: string, storeId: string): Promise<MerchantCatalogSnapshot> {
+  snapshot(
+    tenantId: string,
+    storeId: string,
+  ): Promise<MerchantCatalogSnapshot> {
     return firstValueFrom(
       this.http.get<MerchantCatalogSnapshot>(scope(tenantId, storeId), {
         withCredentials: true,
@@ -115,9 +118,7 @@ export class MerchantCatalogApi {
         revision: number;
         changed: boolean;
       }>(
-        scope(tenantId, storeId) +
-          "/products/" +
-          encodeURIComponent(productId),
+        scope(tenantId, storeId) + "/products/" + encodeURIComponent(productId),
         values,
         { headers: this.csrfHeaders(), withCredentials: true },
       ),
