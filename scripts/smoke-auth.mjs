@@ -1440,6 +1440,7 @@ try {
     method: "POST", headers: catHeaders,
   });
   assert.equal(changedVisit.status, 201);
+  const changedVisitData = await changedVisit.json();
   assert.equal((await checkout("new-order-after-visit0001", cart)).status, 404,
     "Old visit cannot submit an order after rotation");
 
@@ -1455,7 +1456,7 @@ try {
   assert.equal(oldBillSnapshot.orderCount, billBefore.orderCount,
     "Rotating to a new table Visit must not merge operational Bills");
   assert.equal(oldBillSnapshot.visitId, secondVisit.visitId);
-  assert.notEqual(oldBillSnapshot.visitId, (await changedVisit.json()).visitId);
+  assert.notEqual(oldBillSnapshot.visitId, changedVisitData.visitId);
   const historyAfterRotation = await track(
     guestHistoryUrl, payloads[0].trackingToken,
   );
@@ -1538,7 +1539,7 @@ try {
     body: JSON.stringify({ available: true }),
   })).status, 409, "Archived product cannot be reactivated");
   const latestVisitToken = decodeURIComponent(
-    new URL((await changedVisit.clone().json()).orderingUrl).hash.slice("#token=".length),
+    new URL(changedVisitData.orderingUrl).hash.slice("#token=".length),
   );
   const afterArchiveMenu = await publicResolve(latestVisitToken);
   assert.equal(afterArchiveMenu.status, 201);
