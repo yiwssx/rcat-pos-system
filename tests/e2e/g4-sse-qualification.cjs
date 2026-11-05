@@ -11,6 +11,46 @@ const EXTRA_ORDERS = 35;
 const SSE_DEADLINE_MS = 14000;
 
 const SECOND_API_PORT = 31949;
+
+const PROXY_PORT = 31955;
+async function startProxy() {
+  const config = process.cwd() + "/scripts/ops/ci-nginx-sse.conf";
+  const log = [];
+  const child = spawn("nginx", ["-c", config, "-g", "daemon off;"], {
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  for (const output of [child.stdout, child.stderr]) {
+    output.on("data", (data) => {
+      log.push(String(data)); if (log.length > 30) log.shift();
+    });
+  }
+  for (let n = 0; n < 45; n += 1) {
+    if (child.exitCode !== null) {
+      throw new Error("nginx proxy exited: " + log.join("").slice(-2000));
+    }
+    try {
+      const r = await fetch("http://127.0.0.1:" + PROXY_PORT + "/api/health", {
+        signal: AbortSignal.timeout(1000),
+      });
+      if (r.status === 200) return child;
+    } catch { /* waiting for nginx */ }
+    await delay(120);
+  }
+  child.kill("SIGTERM");
+  throw new Error("nginx SSE proxy did not become healthy");
+}
+async function stopProxy(child) {
+  if (!child) return;
+  if (child.exitCode !== null) return;
+  await new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL"); resolve();
+    }, 2000);
+    child.once("exit", () => { clearTimeout(timer); resolve(); });
+    child.kill("SIGTERM");
+  });
+}
+
 // The earlier Chromium Merchant sessions may keep legitimate SSE connections
 // alive on the first API instance. Capacity must be measured against a fresh
 // second instance: 32 is PER INSTANCE, not per test client or per store.
@@ -189,6 +229,7 @@ module.exports = async function qualifySse({
   const all = [];
   const started = performance.now();
   let instance;
+  let proxy;
   try {
     instance = await startIsolatedSseInstance(merchant, customer);
     const streamUrl = instance.root + orderScope + "/notifications/stream";
@@ -223,6 +264,32 @@ module.exports = async function qualifySse({
     );
     assert.ok(second.events.length >= 5, "Need at least five unacknowledged events past page 50");
     const first55 = [...first.events, ...second.events.slice(0, 5)];
+
+    // Real nginx reverse proxy must deliver the initial event without
+    // response buffering. Killing/restarting the proxy must not lose
+    // unacknowledged Orders: the PostgreSQL cursor is authoritative.
+    const proxyUrl = "http://127.0.0.1:" + PROXY_PORT + orderScope + "/notifications/stream";
+    proxy = await startProxy();
+    const proxied = await connect(proxyUrl, owner.cookie, merchant);
+    all.push(proxied);
+    assert.equal(proxied.status, 200);
+    const firstProxyEvent = await untilEvent(
+      proxied, (frame) => frame.kind === "order-event", 5000);
+    assert.equal(firstProxyEvent.id, first.events[0].eventId);
+    close(proxied);
+    await stopProxy(proxy);
+    proxy = undefined;
+    proxy = await startProxy();
+    const afterRestart = await connect(proxyUrl, owner.cookie, merchant);
+    all.push(afterRestart);
+    assert.equal(afterRestart.status, 200);
+    const recovered = await untilEvent(
+      afterRestart, (frame) => frame.kind === "order-event", 5000);
+    assert.equal(recovered.id, firstProxyEvent.id,
+      "Proxy restart lost unacknowledged Outbox replay");
+    close(afterRestart);
+    await stopProxy(proxy);
+    proxy = undefined;
 
     const backlog = await connect(streamUrl, owner.cookie, merchant);
     all.push(backlog);
@@ -346,11 +413,13 @@ module.exports = async function qualifySse({
       forgedLastEventIdSkipped: false,
       committedOrderDelivered: fresh.orderId === live.data.orderId,
       revokedStreamTerminated: true,
+      nginxProxyRestartReplayed: true,
       elapsedMs: Math.round(performance.now() - started),
       note: "isolated second CI NestJS instance sharing DB; not sustained multi-node throughput",
     }));
   } finally {
     for (const conn of all) close(conn);
+    await stopProxy(proxy);
     instance?.child.kill("SIGTERM");
   }
 };
