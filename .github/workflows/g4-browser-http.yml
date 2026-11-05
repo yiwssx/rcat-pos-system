@@ -58,6 +58,7 @@ jobs:
       PGDATABASE: rcat_ci_test
       PGPASSWORD: test-only-ci-password
       NODE_PATH: /tmp/rcat-g4-playwright/node_modules
+      NODE_EXTRA_CA_CERTS: /tmp/rcat-g4-cert.pem
       NX_DAEMON: 'false'
     steps:
       - uses: actions/checkout@v4
@@ -89,6 +90,13 @@ jobs:
         run: |
           npm install --prefix /tmp/rcat-g4-playwright --no-save --no-package-lock --ignore-scripts playwright@1.56.1
           /tmp/rcat-g4-playwright/node_modules/.bin/playwright install --with-deps chromium
+      - name: Generate ephemeral loopback HTTPS certificate for Secure staff cookies
+        run: |
+          openssl req -x509 -newkey rsa:2048 -sha256 -nodes -days 1 \
+            -keyout /tmp/rcat-g4-key.pem -out /tmp/rcat-g4-cert.pem \
+            -subj '/CN=localhost' \
+            -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1'
+          chmod 600 /tmp/rcat-g4-key.pem
       - name: Exercise Chromium mobile/desktop and real HTTP checkout
         run: node tests/e2e/g4-browser-http.cjs
       - name: Upload UI failure screenshots (CI dummy data only)
