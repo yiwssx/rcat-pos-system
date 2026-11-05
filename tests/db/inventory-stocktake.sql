@@ -19,7 +19,7 @@ DECLARE
  owner bytea:=decode(repeat('c1',32),'hex');
  manager bytea:=decode(repeat('c3',32),'hex');
  item uuid; item_other uuid; take uuid; stale_take uuid; reject_take uuid;
- r jsonb; list jsonb;bad boolean;
+ r jsonb; list jsonb;bad boolean;i integer;
 BEGIN
  item:=rcat_private.inventory_create_item(owner,t,s,'Stocktake rice','g',100);
  item_other:=rcat_private.inventory_create_item(owner,t,s,'Stocktake broth','ml',100);
@@ -120,6 +120,27 @@ BEGIN
  r:=rcat_private.inventory_review_stocktake(manager,t,s,reject_take,true);
  IF r->>'movementId' IS NOT NULL THEN
     RAISE EXCEPTION 'Zero delta created movement'; END IF;
+
+ -- An open count must never disappear from the reviewer queue when
+ -- more than 40 recent completed stocktakes exist.
+ r:=rcat_private.inventory_open_stocktake(owner,t,s,item_other,
+   pg_catalog.gen_random_uuid());
+ reject_take:=(r->>'stocktakeId')::uuid;
+ FOR i IN 1..45 LOOP
+   r:=rcat_private.inventory_open_stocktake(owner,t,s,item,
+     pg_catalog.gen_random_uuid());
+   PERFORM rcat_private.inventory_submit_stocktake(manager,t,s,
+     (r->>'stocktakeId')::uuid,975.500,'Historical completed count');
+   PERFORM rcat_private.inventory_review_stocktake(owner,t,s,
+     (r->>'stocktakeId')::uuid,false);
+ END LOOP;
+ list:=rcat_private.inventory_stocktake_list(owner,t,s);
+ IF jsonb_array_length(list->'stocktakes')<>41 OR NOT EXISTS (
+   SELECT 1 FROM jsonb_array_elements(list->'stocktakes') v
+   WHERE (v->>'stocktakeId')::uuid=reject_take AND v->>'state'='open'
+ ) THEN
+   RAISE EXCEPTION 'Pending stocktake was hidden behind completed history';
+ END IF;
 
  bad:=false;
  BEGIN
