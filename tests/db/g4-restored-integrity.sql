@@ -1,5 +1,6 @@
 \set ON_ERROR_STOP on
 -- Run against rcat_ci_restore ONLY after restoring from a CI-only dump.
+SELECT set_config('test.expected_migrations', :'expected_migrations', false);
 DO $$
 BEGIN
   IF current_database() <> 'rcat_ci_restore' THEN
@@ -19,7 +20,8 @@ BEGIN
       WHERE action='order.status.changed') <> 3 THEN
     RAISE EXCEPTION 'Restore lost Order audit events';
   END IF;
-  IF (SELECT count(*) FROM rcat_migrations.applied) <> 25 THEN
+  IF (SELECT count(*) FROM rcat_migrations.applied) <>
+      current_setting('test.expected_migrations')::integer THEN
     RAISE EXCEPTION 'Restore lost checksummed migration ledger';
   END IF;
 END $$;
