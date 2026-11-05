@@ -194,13 +194,28 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog
 AS $$
 DECLARE v_actor uuid;v_take rcat.inventory_stocktakes%ROWTYPE;
   v_item rcat.inventory_items%ROWTYPE;v_delta numeric;v_movement uuid;
-  v_state text;
+  v_state text;v_item_id uuid;
 BEGIN
   v_actor:=rcat_private._inventory_actor(p_digest,p_tenant,p_store,true);
   IF p_take IS NULL OR p_approve IS NULL THEN
     RAISE EXCEPTION 'Invalid stocktake review' USING ERRCODE='22023';
   END IF;
   v_state:=CASE WHEN p_approve THEN 'approved' ELSE 'rejected' END;
+  -- Use ingredient -> stocktake lock ordering, just like opening a count.
+  -- Otherwise an opening count (ingredient -> unique pending row) racing an
+  -- approval (stocktake -> ingredient) can deadlock in PostgreSQL.
+  IF p_approve THEN
+    SELECT item_id INTO v_item_id FROM rcat.inventory_stocktakes
+      WHERE tenant_id=p_tenant AND store_id=p_store AND id=p_take;
+    IF FOUND THEN
+      PERFORM 1 FROM rcat.inventory_items
+        WHERE tenant_id=p_tenant AND store_id=p_store AND id=v_item_id
+        FOR UPDATE;
+      IF NOT FOUND THEN
+        RAISE EXCEPTION 'Inventory unavailable' USING ERRCODE='42501';
+      END IF;
+    END IF;
+  END IF;
   SELECT * INTO v_take FROM rcat.inventory_stocktakes
     WHERE tenant_id=p_tenant AND store_id=p_store AND id=p_take FOR UPDATE;
   IF NOT FOUND THEN
@@ -285,9 +300,18 @@ BEGIN
       'reviewedBy',v.reviewed_by)
       ORDER BY v.created_at DESC,v.id DESC)
     FROM (
+      -- Always retain all unresolved counts in the review queue, even if
+      -- more than 40 historical decisions have been recorded since opening.
       SELECT * FROM rcat.inventory_stocktakes
       WHERE tenant_id=p_tenant AND store_id=p_store
-      ORDER BY created_at DESC,id DESC LIMIT 40
+        AND state IN ('open','submitted')
+      UNION ALL
+      SELECT * FROM (
+        SELECT * FROM rcat.inventory_stocktakes
+        WHERE tenant_id=p_tenant AND store_id=p_store
+          AND state IN ('approved','rejected')
+        ORDER BY created_at DESC,id DESC LIMIT 40
+      ) closed
     ) v
   ),'[]'::jsonb));
 END $$;
