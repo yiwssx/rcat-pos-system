@@ -171,3 +171,38 @@ export function validateReviewedStocktake(
   const approve = (raw as Record<string, unknown>)["approve"];
   return typeof approve === "boolean" ? { approve } : null;
 }
+
+export type ExceptionReturnCategory =
+  | "unused_unopened"
+  | "kitchen_error_unconsumed";
+
+export interface ExceptionReturnRequest {
+  itemId: string;
+  idempotencyKey: string;
+  quantity: string;
+  category: ExceptionReturnCategory;
+  reason: string;
+}
+
+export function validateExceptionReturnRequest(raw: unknown): ExceptionReturnRequest | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const body = raw as Record<string, unknown>;
+  if (
+    !validInventoryId(body["itemId"]) ||
+    !validInventoryId(body["idempotencyKey"]) ||
+    !validQuantity(body["quantity"], 1000000000n, false, false) ||
+    (body["category"] !== "unused_unopened" &&
+      body["category"] !== "kitchen_error_unconsumed") ||
+    typeof body["reason"] !== "string" ||
+    body["reason"].trim().length < 10 ||
+    body["reason"].trim().length > 200
+  )
+    return null;
+  return {
+    itemId: body["itemId"],
+    idempotencyKey: body["idempotencyKey"],
+    quantity: body["quantity"],
+    category: body["category"],
+    reason: body["reason"].trim(),
+  };
+}
