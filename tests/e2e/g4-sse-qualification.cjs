@@ -140,7 +140,11 @@ async function connect(url, cookie, origin, lastEventId) {
     }
     assert.match(res.headers.get("content-type") ?? "", /^text\/event-stream/);
     assert.match(res.headers.get("cache-control") ?? "", /no-store/);
-    assert.equal(res.headers.get("x-accel-buffering"), "no");
+    // nginx intentionally consumes X-Accel-Buffering. Verify actual first
+    // streamed event latency in the proxy restart scenario instead.
+    if (!url.includes(":" + PROXY_PORT + "/")) {
+      assert.equal(res.headers.get("x-accel-buffering"), "no");
+    }
     assert.ok(res.body, "Stream must provide a readable HTTP response body");
     return {
       status: 200,
