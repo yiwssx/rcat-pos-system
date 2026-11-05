@@ -152,7 +152,7 @@ BEGIN
  IF (SELECT count(*) FROM rcat.audit_events
      WHERE subject_id=product AND action='catalog.product.archived')<>1
  THEN RAISE EXCEPTION 'Archive audit missing'; END IF;
-END $;
+END $$;
 SET LOCAL ROLE rcat_app;
 SELECT set_config('app.tenant_id',
  '00000000-0000-4000-8000-000000000002',true);
@@ -161,6 +161,6 @@ BEGIN
  IF EXISTS(SELECT 1 FROM rcat.menu_products
      WHERE name='New sale name') THEN
    RAISE EXCEPTION 'RLS exposed archived tenant A product to tenant B'; END IF;
-END $;
+END $$;
 ROLLBACK;
 \echo 'PASS: product CAS edit/soft archive, RBAC/RLS, immutable old Orders, guest hidden stock and audit'
