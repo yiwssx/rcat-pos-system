@@ -18,8 +18,8 @@ const apiPort = 3000; // Angular /api proxy files target this port.
 const customerPort = 31947;
 const merchantPort = 31948;
 const apiOrigin = "http://127.0.0.1:" + apiPort;
-const customer = "http://127.0.0.1:" + customerPort;
-const merchant = "http://127.0.0.1:" + merchantPort;
+const customer = "https://127.0.0.1:" + customerPort;
+const merchant = "https://127.0.0.1:" + merchantPort;
 const tenant = "00000000-0000-4000-8000-000000000001";
 const store = "20000000-0000-4000-8000-000000000001";
 const orderScope = "/api/tenants/" + tenant + "/stores/" + store;
@@ -169,10 +169,12 @@ async function browserFlow(fixture) {
     ...devices["iPhone 13"],
     browserName: undefined,
     baseURL: customer,
+    ignoreHTTPSErrors: true,
   });
   const merchantContext = await browser.newContext({
     viewport: { width: 1365, height: 900 },
     baseURL: merchant,
+    ignoreHTTPSErrors: true,
   });
   const secondContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -334,9 +336,11 @@ async function main() {
   });
   await untilHealthy(apiOrigin + "/api/health", api);
   const app1 = start("Angular Customer", "pnpm",
-    ["exec", "ng", "serve", "customer", "--host", "127.0.0.1", "--port", String(customerPort)]);
+    ["exec", "ng", "serve", "customer", "--host", "127.0.0.1", "--port", String(customerPort),
+      "--ssl", "--ssl-cert", "/tmp/rcat-g4-cert.pem", "--ssl-key", "/tmp/rcat-g4-key.pem"]);
   const app2 = start("Angular Merchant", "pnpm",
-    ["exec", "ng", "serve", "merchant", "--host", "127.0.0.1", "--port", String(merchantPort)]);
+    ["exec", "ng", "serve", "merchant", "--host", "127.0.0.1", "--port", String(merchantPort),
+      "--ssl", "--ssl-cert", "/tmp/rcat-g4-cert.pem", "--ssl-key", "/tmp/rcat-g4-key.pem"]);
   await Promise.all([
     untilHealthy(customer + "/order", app1),
     untilHealthy(merchant + "/", app2),
