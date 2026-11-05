@@ -18,6 +18,7 @@ on:
       - 'libs/server-auth/**'
       - 'scripts/smoke-auth.mjs'
       - 'scripts/smoke-inventory.mjs'
+      - 'scripts/load/**'
       - 'scripts/dev/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -40,6 +41,7 @@ on:
       - 'libs/server-auth/**'
       - 'scripts/smoke-auth.mjs'
       - 'scripts/smoke-inventory.mjs'
+      - 'scripts/load/**'
       - 'scripts/dev/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -172,3 +174,13 @@ jobs:
         env:
           CI: 'true'
         run: node scripts/smoke-inventory.mjs
+      - name: Exercise 24 parallel guest Orders, stock contention and duplicate merchant actions
+        env:
+          CI: 'true'
+          RCAT_LOAD_CLIENTS: '24'
+        run: node scripts/load/concurrent-orders.mjs
+      - name: Exercise 64 concurrent requests with 16 live database sessions
+        env:
+          CI: 'true'
+          RCAT_LOAD_CLIENTS: '64'
+        run: node scripts/load/concurrent-orders.mjs
