@@ -218,6 +218,44 @@ try {
   })).json());
   assert.equal(still.items.find((i)=>i.itemId===itemId).onHand,
     "1000.000","Unapproved physical count changed live stock");
+
+  // Exception returns must reject anonymous, foreign tenant, missing CSRF,
+  // malformed exact quantities, waste categories and fabricated Order IDs.
+  const missingOrder = randomUUID();
+  const exceptionPath = inventory + "/exception-returns/" + missingOrder;
+  const exceptionBody = {
+    itemId, idempotencyKey: randomUUID(), quantity: "0.125",
+    category: "unused_unopened",
+    reason: "Sealed unused ingredient checked by kitchen manager",
+  };
+  assert.equal((await request(exceptionPath)).status, 401,
+    "Anonymous exception allocation read allowed");
+  assert.equal((await request(exceptionPath, {
+    headers: { Cookie: outsider.Cookie },
+  })).status, 404, "Foreign tenant exception read allowed");
+  assert.equal((await write(exceptionPath, "POST",
+    { Cookie: owner.Cookie }, exceptionBody)).status, 403,
+    "Exception return bypassed CSRF");
+  assert.equal((await write(exceptionPath, "POST", owner,
+    { ...exceptionBody, category: "cooked" })).status, 400,
+    "Cooked goods classified as unused stock");
+  assert.equal((await write(exceptionPath, "POST", owner,
+    { ...exceptionBody, quantity: "0.0001" })).status, 400,
+    "Over-precision exception return accepted");
+  assert.equal((await write(exceptionPath, "POST", owner,
+    exceptionBody)).status, 404, "Request created for nonexistent Order");
+  const reviewPath = inventory + "/exception-returns/requests/" +
+    randomUUID() + "/review";
+  assert.equal((await write(reviewPath, "POST",
+    { Cookie: owner.Cookie }, { approve: true })).status, 403,
+    "Exception approval bypassed CSRF");
+  assert.equal((await write(reviewPath, "POST", owner,
+    { approve: "true" })).status, 400,
+    "Non-boolean exception approval accepted");
+  assert.equal((await write(reviewPath, "POST", owner,
+    { approve: true })).status, 404,
+    "Fabricated exception return reviewed");
+
   console.log("PASS: inventory HTTP tenant auth, CSRF, exact ledger, opt-in stock, Modifier recipe and safe disable, Stocktake RBAC, CSRF and no self-approval");
 } finally {
   server.kill("SIGTERM");
