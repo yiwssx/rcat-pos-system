@@ -351,6 +351,13 @@ async function main() {
   const fixture = await apiSetup();
   await browserFlow(fixture);
   await httpLoad(fixture);
+  // Shares the same ephemeral Order journey and live NestJS/HTTPS services.
+  // Kept after the existing HTTP burst to force a realistic 50+ event backlog.
+  const currentVisitToken = await fixture.rotate();
+  await require("./g4-sse-qualification.cjs")({
+    db, merchant, customer, orderScope, productId: fixture.productId,
+    currentVisitToken,
+  });
 }
 
 (async () => {
