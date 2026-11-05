@@ -5,6 +5,7 @@ export interface GuestCategory {
 }
 export interface GuestProduct {
   id: string;
+  hasImage: boolean;
   categoryId: string;
   name: string;
   priceSatang: number;
@@ -26,6 +27,7 @@ export interface GuestModifierOption {
 }
 export interface GuestVisit {
   visitId: string;
+  tenantId: string;
   storeId: string;
   tableId: string;
   tableLabel: string;
