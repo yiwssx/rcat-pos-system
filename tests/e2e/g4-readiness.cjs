@@ -88,9 +88,7 @@ module.exports = async function qualifyGoogleOnly() {
     const notReady = await fetch(broken + "/api/ready");
     assert.equal(notReady.status, 503,
       "Readiness must fail when tenant DB credentials cannot authenticate");
-    assert.deepEqual(await notReady.json(), {
-      message: { status: "not_ready" }, error: "Service Unavailable", statusCode: 503,
-    });
+    assert.deepEqual(await notReady.json(), { status: "not_ready" });
     const live = await fetch(broken + "/api/health");
     assert.equal(live.status, 200, "DB failure should not lie about process liveness");
     console.log(JSON.stringify({
