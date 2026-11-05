@@ -85,6 +85,55 @@ export class InventoryController {
     );
   }
 
+  @Get("exception-returns/:orderId")
+  @Header("Cache-Control", "no-store")
+  exceptionReturnView(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("orderId") orderId: string,
+  ) {
+    return this.inventory.exceptionReturnView(req, tenantId, storeId, orderId);
+  }
+
+  @Post("exception-returns/:orderId")
+  @Header("Cache-Control", "no-store")
+  requestExceptionReturn(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("orderId") orderId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.inventory.requestExceptionReturn(
+      req,
+      tenantId,
+      storeId,
+      orderId,
+      body,
+    );
+  }
+
+  @Post("exception-returns/requests/:requestId/review")
+  @Header("Cache-Control", "no-store")
+  reviewExceptionReturn(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("requestId") requestId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.inventory.reviewExceptionReturn(
+      req,
+      tenantId,
+      storeId,
+      requestId,
+      body,
+    );
+  }
+
   @Post("items")
   @Header("Cache-Control", "no-store")
   createItem(
