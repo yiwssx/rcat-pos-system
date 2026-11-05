@@ -36,6 +36,8 @@ a successful checkout.
 
 ## CI execution and diagnostic measurements
 
+The PostgreSQL CI job runs **both 24-request and 64-request burst profiles**, each with a fresh random test tenant and at most 16 actively connected PostgreSQL sessions. They exercise real transactions but do not simulate hundreds of production nodes.
+
 The PostgreSQL CI job provisions its own disposable PostgreSQL 16
 `rcat_ci_test` database. The script guards against use outside
 `CI=true`, the exact test database name and a loopback database address.
