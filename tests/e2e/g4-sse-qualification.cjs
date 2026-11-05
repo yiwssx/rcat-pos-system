@@ -173,7 +173,7 @@ module.exports = async function qualifySse({
       notificationUrl + "?after=" + first.nextCursor + "&limit=50",
       owner.cookie,
     );
-    assert.ok(second.events.length >= 12, "Backlog was not large enough for page boundary");
+    assert.ok(second.events.length >= 5, "Need at least five unacknowledged events past page 50");
     const first55 = [...first.events, ...second.events.slice(0, 5)];
 
     const backlog = await connect(streamUrl, owner.cookie, merchant);
