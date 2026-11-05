@@ -3,6 +3,8 @@ import { routes } from "./app.routes";
 import {
   formatUnits,
   lowStock,
+  stocktakeDifference,
+  validPhysicalCount,
   toMilliUnits,
   validStockInput,
 } from "./inventory.domain";
@@ -47,6 +49,12 @@ describe("merchant operations routes", () => {
       routes.find((route) => route.path === "inventory/:tenantId/:storeId")
         ?.loadComponent,
     ).toBeTypeOf("function");
+  });
+
+  it("lazy loads the scoped two-person Stocktake workflow", () => {
+    expect(routes.find((route) =>
+      route.path === "inventory/:tenantId/:storeId/stocktakes"
+    )?.loadComponent).toBeTypeOf("function");
   });
 
   it("does not expose a payment route", () => {
@@ -246,5 +254,22 @@ describe("exact inventory quantities and shortage indicators", () => {
         reorderAt: "10",
       }),
     ).toBe(false);
+  });
+});
+
+describe("two-person Stocktake client invariants", () => {
+  it("validates exact physical quantities and never allows negative stock", () => {
+    expect(validPhysicalCount("0")).toBe(true);
+    expect(validPhysicalCount("1000000000000")).toBe(true);
+    expect(validPhysicalCount("1000000000000.001")).toBe(false);
+    expect(validPhysicalCount("-0.001")).toBe(false);
+    expect(validPhysicalCount("10.0001")).toBe(false);
+    expect(validPhysicalCount("1e4")).toBe(false);
+  });
+  it("calculates adjustment preview with exact BigInt thousandths", () => {
+    expect(stocktakeDifference("975.500","1000.125")).toBe("-24.625");
+    expect(stocktakeDifference("1000.125","975.500")).toBe("+24.625");
+    expect(stocktakeDifference("100","100")).toBe("+0.000");
+    expect(stocktakeDifference(null,"100")).toBe("—");
   });
 });
