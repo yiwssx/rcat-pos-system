@@ -16,6 +16,8 @@ import { StaffAdministrationController } from "./merchant/staff-administration.c
 import { StaffAdministrationService } from "./merchant/staff-administration.service";
 import { CatalogController } from "./catalog/catalog.controller";
 import { CatalogService } from "./catalog/catalog.service";
+import { ProductMediaController } from "./catalog/product-media.controller";
+import { ProductMediaService } from "./catalog/product-media.service";
 import { TableOrderingController } from "./ordering/table-ordering.controller";
 import { TableOrderingService } from "./ordering/table-ordering.service";
 import { ProductModifiersController } from "./catalog/product-modifiers.controller";
@@ -45,6 +47,7 @@ import { InventoryService } from "./inventory/inventory.service";
     MerchantOnboardingController,
     StaffAdministrationController,
     CatalogController,
+    ProductMediaController,
     TableOrderingController,
     ProductModifiersController,
     GuestOrdersController,
@@ -64,6 +67,7 @@ import { InventoryService } from "./inventory/inventory.service";
     MerchantOnboardingService,
     StaffAdministrationService,
     CatalogService,
+    ProductMediaService,
     TableOrderingService,
     ProductModifiersService,
     GuestOrdersService,
