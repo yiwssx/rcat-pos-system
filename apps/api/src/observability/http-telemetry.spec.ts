@@ -2,7 +2,9 @@ import { EventEmitter } from "node:events";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { describe, expect, it } from "vitest";
 import {
-  httpRouteGroup, installHttpTelemetry, type HttpAccessRecord,
+  httpRouteGroup,
+  installHttpTelemetry,
+  type HttpAccessRecord,
 } from "./http-telemetry";
 
 describe("G4 HTTP access telemetry", () => {
@@ -17,7 +19,9 @@ describe("G4 HTTP access telemetry", () => {
     const headers = new Map<string, string>();
     const res = Object.assign(new EventEmitter(), {
       statusCode: 401,
-      setHeader: (name: string, value: string) => { headers.set(name, value); },
+      setHeader: (name: string, value: string) => {
+        headers.set(name, value);
+      },
     }) as unknown as ServerResponse;
     const logged: HttpAccessRecord[] = [];
     installHttpTelemetry(req, res, (event) => logged.push(event));
