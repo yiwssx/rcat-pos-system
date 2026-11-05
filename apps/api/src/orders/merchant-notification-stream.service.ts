@@ -5,7 +5,10 @@ import {
 } from "@nestjs/common";
 import { ServerResponse } from "node:http";
 import { ApiRequest } from "../auth/request-security";
-import { encodeOrderSse } from "./merchant-notification-stream.core";
+import {
+  encodeOrderSse,
+  writeBoundedSse,
+} from "./merchant-notification-stream.core";
 import {
   MerchantNotificationPage,
   MerchantNotificationsService,
@@ -65,13 +68,10 @@ export class MerchantNotificationStreamService {
     const onClose = (): void => stop();
 
     const write = (frame: string): boolean => {
-      if (!live || res.writableEnded || res.destroyed) {
-        stop();
-        return false;
-      }
+      if (!live) return false;
       // A slow reader must not accumulate unbounded buffers. Disconnect and
       // let EventSource reconnect from the persisted acknowledgement cursor.
-      if (!res.write(frame)) {
+      if (!writeBoundedSse(res, frame)) {
         stop(true);
         return false;
       }
