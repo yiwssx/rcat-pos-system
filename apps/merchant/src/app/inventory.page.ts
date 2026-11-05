@@ -50,8 +50,10 @@ function inventoryError(error: unknown): string {
         {{ store()?.storeName || "กำลังตรวจสอบสิทธิ์..." }}
         · ปริมาณใช้หน่วย g / ml / ชิ้น และจำนวนเต็มทศนิยมไม่เกิน 3 ตำแหน่ง
       </p>
-      <a class="inventory-stocktake-link"
-        [routerLink]="['/inventory',tenantId,storeId,'stocktakes']">
+      <a
+        class="inventory-stocktake-link"
+        [routerLink]="['/inventory', tenantId, storeId, 'stocktakes']"
+      >
         ตรวจนับสต็อก / Stocktake และอนุมัติปรับยอด
       </a>
       <p class="inventory-warning" role="note">

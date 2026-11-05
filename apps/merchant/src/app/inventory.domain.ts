@@ -99,34 +99,39 @@ export function inventoryPath(tenantId: string, storeId: string): string {
   );
 }
 
-export type StocktakeState = "open"|"submitted"|"approved"|"rejected";
+export type StocktakeState = "open" | "submitted" | "approved" | "rejected";
 export interface StocktakeRecord {
-  stocktakeId:string;
-  itemId:string;
-  state:StocktakeState;
-  baselineOnHand:string;
-  baselineVersion:string;
-  countedOnHand:string|null;
-  reason:string|null;
-  createdBy:string;
-  submittedBy:string|null;
-  reviewedBy:string|null;
-  createdAt:string;
-  submittedAt:string|null;
-  reviewedAt:string|null;
+  stocktakeId: string;
+  itemId: string;
+  state: StocktakeState;
+  baselineOnHand: string;
+  baselineVersion: string;
+  countedOnHand: string | null;
+  reason: string | null;
+  createdBy: string;
+  submittedBy: string | null;
+  reviewedBy: string | null;
+  createdAt: string;
+  submittedAt: string | null;
+  reviewedAt: string | null;
 }
-export interface StocktakeList {stocktakes:StocktakeRecord[]}
-export function validPhysicalCount(input:string):boolean {
-  return validStockInput(input,{zero:true,max:1000000000000n});
+export interface StocktakeList {
+  stocktakes: StocktakeRecord[];
+}
+export function validPhysicalCount(input: string): boolean {
+  return validStockInput(input, { zero: true, max: 1000000000000n });
 }
 export function stocktakeDifference(
-  counted:string|null,baseline:string,
-):string {
-  if(counted===null)return "—";
-  const next=toMilliUnits(counted),old=toMilliUnits(baseline);
-  if(next===null||old===null)return "—";
-  const delta=next-old;
-  const abs=delta<0n?-delta:delta;
-  const whole=abs/1000n,frac=(abs%1000n).toString().padStart(3,"0");
-  return (delta>=0n?"+":"-")+whole.toString()+"."+frac;
+  counted: string | null,
+  baseline: string,
+): string {
+  if (counted === null) return "—";
+  const next = toMilliUnits(counted),
+    old = toMilliUnits(baseline);
+  if (next === null || old === null) return "—";
+  const delta = next - old;
+  const abs = delta < 0n ? -delta : delta;
+  const whole = abs / 1000n,
+    frac = (abs % 1000n).toString().padStart(3, "0");
+  return (delta >= 0n ? "+" : "-") + whole.toString() + "." + frac;
 }

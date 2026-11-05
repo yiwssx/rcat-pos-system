@@ -52,9 +52,11 @@ describe("merchant operations routes", () => {
   });
 
   it("lazy loads the scoped two-person Stocktake workflow", () => {
-    expect(routes.find((route) =>
-      route.path === "inventory/:tenantId/:storeId/stocktakes"
-    )?.loadComponent).toBeTypeOf("function");
+    expect(
+      routes.find(
+        (route) => route.path === "inventory/:tenantId/:storeId/stocktakes",
+      )?.loadComponent,
+    ).toBeTypeOf("function");
   });
 
   it("does not expose a payment route", () => {
@@ -267,9 +269,9 @@ describe("two-person Stocktake client invariants", () => {
     expect(validPhysicalCount("1e4")).toBe(false);
   });
   it("calculates adjustment preview with exact BigInt thousandths", () => {
-    expect(stocktakeDifference("975.500","1000.125")).toBe("-24.625");
-    expect(stocktakeDifference("1000.125","975.500")).toBe("+24.625");
-    expect(stocktakeDifference("100","100")).toBe("+0.000");
-    expect(stocktakeDifference(null,"100")).toBe("—");
+    expect(stocktakeDifference("975.500", "1000.125")).toBe("-24.625");
+    expect(stocktakeDifference("1000.125", "975.500")).toBe("+24.625");
+    expect(stocktakeDifference("100", "100")).toBe("+0.000");
+    expect(stocktakeDifference(null, "100")).toBe("—");
   });
 });

@@ -135,28 +135,38 @@ export interface ReviewedStocktake {
 export function validateNewStocktake(raw: unknown): NewStocktake | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const body = raw as Record<string, unknown>;
-  if (!validInventoryId(body["itemId"]) ||
-      !validInventoryId(body["idempotencyKey"])) return null;
+  if (
+    !validInventoryId(body["itemId"]) ||
+    !validInventoryId(body["idempotencyKey"])
+  )
+    return null;
   return {
     itemId: body["itemId"],
     idempotencyKey: body["idempotencyKey"],
   };
 }
 
-export function validateSubmittedStocktake(raw: unknown): SubmittedStocktakeCount | null {
+export function validateSubmittedStocktake(
+  raw: unknown,
+): SubmittedStocktakeCount | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const body = raw as Record<string, unknown>;
-  if (!validQuantity(body["countedOnHand"],1000000000000n) ||
-      typeof body["reason"] !== "string" ||
-      body["reason"].trim().length < 3 ||
-      body["reason"].trim().length > 200) return null;
+  if (
+    !validQuantity(body["countedOnHand"], 1000000000000n) ||
+    typeof body["reason"] !== "string" ||
+    body["reason"].trim().length < 3 ||
+    body["reason"].trim().length > 200
+  )
+    return null;
   return {
     countedOnHand: body["countedOnHand"],
     reason: body["reason"].trim(),
   };
 }
 
-export function validateReviewedStocktake(raw: unknown): ReviewedStocktake | null {
+export function validateReviewedStocktake(
+  raw: unknown,
+): ReviewedStocktake | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const approve = (raw as Record<string, unknown>)["approve"];
   return typeof approve === "boolean" ? { approve } : null;

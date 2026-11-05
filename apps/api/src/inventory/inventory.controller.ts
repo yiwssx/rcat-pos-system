@@ -28,49 +28,61 @@ export class InventoryController {
   @Get("stocktakes")
   @Header("Cache-Control", "no-store")
   stocktakes(
-    @Req() req:ApiRequest,
-    @Param("tenantId") tenantId:string,
-    @Param("storeId") storeId:string,
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
   ) {
-    return this.inventory.stocktakes(req,tenantId,storeId);
+    return this.inventory.stocktakes(req, tenantId, storeId);
   }
 
   @Post("stocktakes")
   @Header("Cache-Control", "no-store")
   openStocktake(
-    @Req() req:ApiRequest,
-    @Param("tenantId") tenantId:string,
-    @Param("storeId") storeId:string,
-    @Body() body:unknown,
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Body() body: unknown,
   ) {
     requireAllowedOrigin(req);
-    return this.inventory.openStocktake(req,tenantId,storeId,body);
+    return this.inventory.openStocktake(req, tenantId, storeId, body);
   }
 
   @Post("stocktakes/:stocktakeId/count")
   @Header("Cache-Control", "no-store")
   submitStocktake(
-    @Req() req:ApiRequest,
-    @Param("tenantId") tenantId:string,
-    @Param("storeId") storeId:string,
-    @Param("stocktakeId") stocktakeId:string,
-    @Body() body:unknown,
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("stocktakeId") stocktakeId: string,
+    @Body() body: unknown,
   ) {
     requireAllowedOrigin(req);
-    return this.inventory.submitStocktake(req,tenantId,storeId,stocktakeId,body);
+    return this.inventory.submitStocktake(
+      req,
+      tenantId,
+      storeId,
+      stocktakeId,
+      body,
+    );
   }
 
   @Post("stocktakes/:stocktakeId/review")
   @Header("Cache-Control", "no-store")
   reviewStocktake(
-    @Req() req:ApiRequest,
-    @Param("tenantId") tenantId:string,
-    @Param("storeId") storeId:string,
-    @Param("stocktakeId") stocktakeId:string,
-    @Body() body:unknown,
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("stocktakeId") stocktakeId: string,
+    @Body() body: unknown,
   ) {
     requireAllowedOrigin(req);
-    return this.inventory.reviewStocktake(req,tenantId,storeId,stocktakeId,body);
+    return this.inventory.reviewStocktake(
+      req,
+      tenantId,
+      storeId,
+      stocktakeId,
+      body,
+    );
   }
 
   @Post("items")

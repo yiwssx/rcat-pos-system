@@ -270,9 +270,9 @@
   display: inline-flex;
   align-items: center;
   min-height: 46px;
-  padding: .6rem .95rem;
+  padding: 0.6rem 0.95rem;
   border: 1px solid #a9bdcd;
-  border-radius: .7rem;
+  border-radius: 0.7rem;
   color: #1b4e69;
   font-weight: 750;
   text-decoration: none;
