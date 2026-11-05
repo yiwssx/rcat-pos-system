@@ -179,3 +179,8 @@ jobs:
           CI: 'true'
           RCAT_LOAD_CLIENTS: '24'
         run: node scripts/load/concurrent-orders.mjs
+      - name: Exercise 64 concurrent requests with 16 live database sessions
+        env:
+          CI: 'true'
+          RCAT_LOAD_CLIENTS: '64'
+        run: node scripts/load/concurrent-orders.mjs
