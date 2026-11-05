@@ -14,6 +14,9 @@ import {
   validateItem,
   validateMovement,
   validRecipeQuantity,
+  validateNewStocktake,
+  validateSubmittedStocktake,
+  validateReviewedStocktake,
 } from "./inventory.core";
 
 function mapInventoryError(error: unknown): never {
@@ -24,6 +27,10 @@ function mapInventoryError(error: unknown): never {
   if (code === "42501" || code === "28000" || code === "23503") {
     throw new NotFoundException("Inventory unavailable");
   }
+  if (code === "P0006")
+    throw new ConflictException("Inventory has changed since stocktake opened; reject and recount");
+  if (code === "P0007")
+    throw new ConflictException("Stocktake state changed or two independent staff are required");
   if (code === "P0004")
     throw new ConflictException(
       "Insufficient inventory or stock quantity overflow",
@@ -253,6 +260,78 @@ export class InventoryService {
     } catch (error) {
       mapInventoryError(error);
     }
+  }
+
+  async stocktakes(req: ApiRequest,tenantId: string,storeId: string) {
+    this.checkScope(tenantId,storeId);
+    const session=await this.auth.session(req);
+    try {
+      const result=await this.database.auth((client)=>client.query<{
+        data: { stocktakes: Array<{
+          stocktakeId:string;itemId:string;state:string;
+          baselineOnHand:string;baselineVersion:string;
+          countedOnHand:string|null;reason:string|null;
+          createdBy:string;submittedBy:string|null;reviewedBy:string|null;
+        }> };
+      }>("SELECT rcat_private.inventory_stocktake_list($1,$2,$3) AS data",
+        [digestOpaqueSecret(session.token),tenantId,storeId]));
+      return result.rows[0]?.data;
+    } catch(error) { mapInventoryError(error); }
+  }
+
+  async openStocktake(
+    req:ApiRequest,tenantId:string,storeId:string,raw:unknown,
+  ) {
+    this.checkScope(tenantId,storeId);
+    const session=await this.auth.session(req);
+    this.auth.requireCsrf(req,session);
+    const input=validateNewStocktake(raw);
+    if(!input)throw new BadRequestException("Invalid stocktake request");
+    try {
+      const result=await this.database.auth((client)=>client.query<{
+        data:{stocktakeId:string;itemId:string;state:string;baselineOnHand:string;
+          baselineVersion:string;replayed:boolean};
+      }>("SELECT rcat_private.inventory_open_stocktake($1,$2,$3,$4,$5) AS data",
+        [digestOpaqueSecret(session.token),tenantId,storeId,input.itemId,input.idempotencyKey]));
+      return result.rows[0]?.data;
+    } catch(error) { mapInventoryError(error); }
+  }
+
+  async submitStocktake(
+    req:ApiRequest,tenantId:string,storeId:string,stocktakeId:string,raw:unknown,
+  ) {
+    this.checkScope(tenantId,storeId);
+    if(!validInventoryId(stocktakeId))throw new NotFoundException("Stocktake unavailable");
+    const session=await this.auth.session(req);
+    this.auth.requireCsrf(req,session);
+    const input=validateSubmittedStocktake(raw);
+    if(!input)throw new BadRequestException("Invalid stocktake count");
+    try {
+      const result=await this.database.auth((client)=>client.query<{
+        data:{stocktakeId:string;state:string;replayed:boolean};
+      }>("SELECT rcat_private.inventory_submit_stocktake($1,$2,$3,$4,$5::numeric,$6) AS data",
+        [digestOpaqueSecret(session.token),tenantId,storeId,stocktakeId,
+          input.countedOnHand,input.reason]));
+      return result.rows[0]?.data;
+    } catch(error) { mapInventoryError(error); }
+  }
+
+  async reviewStocktake(
+    req:ApiRequest,tenantId:string,storeId:string,stocktakeId:string,raw:unknown,
+  ) {
+    this.checkScope(tenantId,storeId);
+    if(!validInventoryId(stocktakeId))throw new NotFoundException("Stocktake unavailable");
+    const session=await this.auth.session(req);
+    this.auth.requireCsrf(req,session);
+    const input=validateReviewedStocktake(raw);
+    if(!input)throw new BadRequestException("Invalid stocktake review");
+    try {
+      const result=await this.database.auth((client)=>client.query<{
+        data:{stocktakeId:string;state:string;movementId:string|null;replayed:boolean};
+      }>("SELECT rcat_private.inventory_review_stocktake($1,$2,$3,$4,$5) AS data",
+        [digestOpaqueSecret(session.token),tenantId,storeId,stocktakeId,input.approve]));
+      return result.rows[0]?.data;
+    } catch(error) { mapInventoryError(error); }
   }
 
   async setRecipe(
