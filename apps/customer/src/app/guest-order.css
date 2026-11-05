@@ -417,9 +417,18 @@
   border-radius: 1rem;
   max-width: 36rem;
 }
-.guest-code-form h2 { font-size: 1.5rem; margin: 0; }
-.guest-code-form p { margin: 0; color: #52647b; line-height: 1.7; }
-.guest-code-form label { font-weight: 750; }
+.guest-code-form h2 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+.guest-code-form p {
+  margin: 0;
+  color: #52647b;
+  line-height: 1.7;
+}
+.guest-code-form label {
+  font-weight: 750;
+}
 .guest-code-form input {
   width: 100%;
   min-height: 54px;
@@ -442,12 +451,17 @@
   font-weight: 750;
   cursor: pointer;
 }
-.guest-code-form button:disabled { opacity: 0.55; cursor: not-allowed; }
-.guest-code-form :is(input,button):focus-visible {
+.guest-code-form button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.guest-code-form :is(input, button):focus-visible {
   outline: 3px solid #d99431;
   outline-offset: 3px;
 }
-.guest-code-form .guest-code-help { font-size: 0.88rem; }
+.guest-code-form .guest-code-help {
+  font-size: 0.88rem;
+}
 .guest-product-photo {
   width: 100%;
   aspect-ratio: 16/10;

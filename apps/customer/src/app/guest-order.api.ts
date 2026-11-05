@@ -33,7 +33,10 @@ export class GuestOrderApi {
   }
 
   redeemCode(
-    tenantId: string, storeId: string, tableId: string, code: string,
+    tenantId: string,
+    storeId: string,
+    tableId: string,
+    code: string,
   ): Promise<{ visitToken: string; expiresAt: string }> {
     return firstValueFrom(
       this.http.post<{ visitToken: string; expiresAt: string }>(

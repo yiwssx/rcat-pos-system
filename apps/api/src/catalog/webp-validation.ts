@@ -18,9 +18,12 @@ export function validateWebp(raw: unknown): {
   }
   const bytes = raw;
   if (bytes.length < 30 || bytes.length > MAX_WEBP_BYTES) bad();
-  if (bytes.toString("ascii", 0, 4) !== "RIFF" ||
-      bytes.toString("ascii", 8, 12) !== "WEBP" ||
-      bytes.readUInt32LE(4) !== bytes.length - 8) bad();
+  if (
+    bytes.toString("ascii", 0, 4) !== "RIFF" ||
+    bytes.toString("ascii", 8, 12) !== "WEBP" ||
+    bytes.readUInt32LE(4) !== bytes.length - 8
+  )
+    bad();
   const type = bytes.toString("ascii", 12, 16);
   const size = bytes.readUInt32LE(16);
   if (size < 10 || 20 + size + (size & 1) !== bytes.length) bad();

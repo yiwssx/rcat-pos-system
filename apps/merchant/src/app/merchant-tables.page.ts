@@ -51,20 +51,34 @@ import {
         <form class="tables-add" (ngSubmit)="createTable()">
           <h2>เพิ่มโต๊ะใหม่</h2>
           <label for="table-label">ชื่อโต๊ะ</label>
-          <input id="table-label" name="tableLabel"
-            [(ngModel)]="newLabel" maxlength="60" required
-            placeholder="เช่น โต๊ะ 1" [disabled]="busy()" />
+          <input
+            id="table-label"
+            name="tableLabel"
+            [(ngModel)]="newLabel"
+            maxlength="60"
+            required
+            placeholder="เช่น โต๊ะ 1"
+            [disabled]="busy()"
+          />
           <button type="submit" [disabled]="busy()">เพิ่มโต๊ะ</button>
         </form>
         <section class="tables-list" aria-labelledby="table-selection">
           <h2 id="table-selection">เลือกโต๊ะเพื่อพิมพ์ QR หรือออกโค้ดใหม่</h2>
           <div class="tables-grid">
             @for (table of tables(); track table.tableId) {
-              <article class="table-card" [class.selected]="selectedId() === table.tableId">
+              <article
+                class="table-card"
+                [class.selected]="selectedId() === table.tableId"
+              >
                 <h3>{{ table.label }}</h3>
                 <p>{{ table.active ? "ใช้งานอยู่" : "ปิดใช้งาน" }}</p>
-                <button type="button" [disabled]="busy() || !table.active"
-                  (click)="select(table)">เลือกโต๊ะนี้</button>
+                <button
+                  type="button"
+                  [disabled]="busy() || !table.active"
+                  (click)="select(table)"
+                >
+                  เลือกโต๊ะนี้
+                </button>
               </article>
             } @empty {
               <p role="status">ยังไม่มีโต๊ะ กรุณาเพิ่มโต๊ะใหม่</p>
@@ -79,14 +93,19 @@ import {
                 <p>QR ถาวร · สแกนแล้วกรอกรหัสรอบโต๊ะ</p>
               </div>
               <div class="table-actions">
-                <button type="button" [disabled]="busy()" (click)="print()">พิมพ์ QR ของโต๊ะนี้</button>
+                <button type="button" [disabled]="busy()" (click)="print()">
+                  พิมพ์ QR ของโต๊ะนี้
+                </button>
                 <button type="button" [disabled]="busy()" (click)="issueCode()">
                   ออกรหัสโต๊ะใหม่
                 </button>
               </div>
             </div>
-            <img class="table-qr" [src]="qrSrc(table.tableId)"
-              [alt]="'QR สำหรับสั่งอาหาร ' + table.label" />
+            <img
+              class="table-qr"
+              [src]="qrSrc(table.tableId)"
+              [alt]="'QR สำหรับสั่งอาหาร ' + table.label"
+            />
             <p class="table-url">{{ table.printedUrl }}</p>
             @if (latestCode(); as issued) {
               <div class="table-code" role="status">
@@ -130,7 +149,9 @@ export class MerchantTablesPage implements OnInit {
   readonly selectedId = signal<string | null>(null);
   readonly latestCode = signal<IssuedTableCode | null>(null);
   readonly selected = computed(
-    () => this.tables().find((table) => table.tableId === this.selectedId()) ?? null,
+    () =>
+      this.tables().find((table) => table.tableId === this.selectedId()) ??
+      null,
   );
   newLabel = "";
 
@@ -147,10 +168,14 @@ export class MerchantTablesPage implements OnInit {
     this.loading.set(true);
     try {
       const { stores } = await this.orders.stores();
-      this.authorized.set(stores.some(
-        (s) => s.tenantId === this.tenant && s.storeId === this.store &&
-          (s.role === "owner" || s.role === "manager"),
-      ));
+      this.authorized.set(
+        stores.some(
+          (s) =>
+            s.tenantId === this.tenant &&
+            s.storeId === this.store &&
+            (s.role === "owner" || s.role === "manager"),
+        ),
+      );
       if (!this.authorized()) {
         this.error.set("ต้องมีสิทธิ์เจ้าของร้านหรือผู้จัดการ");
         return;
@@ -184,7 +209,11 @@ export class MerchantTablesPage implements OnInit {
     this.busy.set(true);
     this.error.set("");
     try {
-      const data = await this.api.add(this.tenant, this.store, this.newLabel.trim());
+      const data = await this.api.add(
+        this.tenant,
+        this.store,
+        this.newLabel.trim(),
+      );
       this.newLabel = "";
       await this.refresh();
       this.selectedId.set(data.tableId);
@@ -200,8 +229,9 @@ export class MerchantTablesPage implements OnInit {
     const table = this.selected();
     if (!table || this.busy()) return;
     const approved = this.document.defaultView?.confirm(
-      "ออกรหัสใหม่สำหรับ " + table.label +
-      " ? การสั่งอาหารด้วยรหัส/Token รอบก่อนจะถูกยกเลิก แต่ Order เดิมไม่ถูกลบ",
+      "ออกรหัสใหม่สำหรับ " +
+        table.label +
+        " ? การสั่งอาหารด้วยรหัส/Token รอบก่อนจะถูกยกเลิก แต่ Order เดิมไม่ถูกลบ",
     );
     if (!approved) return;
     this.busy.set(true);
@@ -209,7 +239,11 @@ export class MerchantTablesPage implements OnInit {
     this.notice.set("");
     this.latestCode.set(null);
     try {
-      const data = await this.api.issueCode(this.tenant, this.store, table.tableId);
+      const data = await this.api.issueCode(
+        this.tenant,
+        this.store,
+        table.tableId,
+      );
       await this.refresh();
       this.latestCode.set(data);
       this.notice.set("ออกรหัสใหม่แล้ว ให้แจ้งรหัสแก่ลูกค้าที่นั่งโต๊ะ");

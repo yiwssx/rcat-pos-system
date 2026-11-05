@@ -5,5 +5,8 @@ declare module "qrcode" {
     margin: number;
     width: number;
   }
-  export function toString(text: string, options: SvgQrOptions): Promise<string>;
+  export function toString(
+    text: string,
+    options: SvgQrOptions,
+  ): Promise<string>;
 }

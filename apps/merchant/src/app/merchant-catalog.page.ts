@@ -230,23 +230,41 @@ function bahtInput(satang: number): string {
               </div>
               <div class="catalog-media" aria-label="รูปภาพสินค้า">
                 @if (product.hasImage) {
-                  <img [src]="imageUrl(product)" [alt]="'รูปสินค้า ' + product.name"
-                    class="catalog-media-preview" loading="lazy" />
+                  <img
+                    [src]="imageUrl(product)"
+                    [alt]="'รูปสินค้า ' + product.name"
+                    class="catalog-media-preview"
+                    loading="lazy"
+                  />
                 }
                 @if (!product.archivedAt) {
                   <div class="catalog-media-actions">
                     <label [attr.for]="'catalog-media-' + product.id">
-                      {{ product.hasImage ? "เปลี่ยนรูปสินค้า" : "เพิ่มรูปสินค้า" }}
+                      {{
+                        product.hasImage ? "เปลี่ยนรูปสินค้า" : "เพิ่มรูปสินค้า"
+                      }}
                     </label>
-                    <input [id]="'catalog-media-' + product.id"
-                      type="file" accept="image/jpeg,image/png,image/webp"
-                      [disabled]="saving()" (change)="uploadImage($event, product)" />
+                    <input
+                      [id]="'catalog-media-' + product.id"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      [disabled]="saving()"
+                      (change)="uploadImage($event, product)"
+                    />
                     @if (product.hasImage) {
-                      <button type="button" class="subtle"
-                        [disabled]="saving()" (click)="removeImage(product)">ลบรูปสินค้า</button>
+                      <button
+                        type="button"
+                        class="subtle"
+                        [disabled]="saving()"
+                        (click)="removeImage(product)"
+                      >
+                        ลบรูปสินค้า
+                      </button>
                     }
                   </div>
-                  <p>JPG / PNG / WebP · แปลงเป็น WebP ก่อนส่ง · สูงสุด 192 KB</p>
+                  <p>
+                    JPG / PNG / WebP · แปลงเป็น WebP ก่อนส่ง · สูงสุด 192 KB
+                  </p>
                 }
               </div>
               @if (editId() === product.id && !product.archivedAt) {
@@ -491,7 +509,10 @@ export class MerchantCatalogPage implements OnInit {
 
   imageUrl(product: CatalogProduct): string {
     return this.api.productImageUrl(
-      this.tenantId, this.storeId, product.id, product.revision,
+      this.tenantId,
+      this.storeId,
+      product.id,
+      product.revision,
     );
   }
 
@@ -503,18 +524,32 @@ export class MerchantCatalogPage implements OnInit {
     await this.mutate(async () => {
       const webp = await prepareProductWebp(file, this.document);
       await this.api.uploadImage(
-        this.tenantId, this.storeId, product.id, product.revision, webp,
+        this.tenantId,
+        this.storeId,
+        product.id,
+        product.revision,
+        webp,
       );
     }, "บันทึกรูปสินค้าแล้ว");
   }
 
   async removeImage(product: CatalogProduct): Promise<void> {
-    if (!this.document.defaultView?.confirm(
-      "ลบรูปภาพสินค้า " + product.name + " ?",
-    )) return;
-    await this.mutate(() => this.api.deleteImage(
-      this.tenantId, this.storeId, product.id, product.revision,
-    ), "ลบรูปสินค้าแล้ว");
+    if (
+      !this.document.defaultView?.confirm(
+        "ลบรูปภาพสินค้า " + product.name + " ?",
+      )
+    )
+      return;
+    await this.mutate(
+      () =>
+        this.api.deleteImage(
+          this.tenantId,
+          this.storeId,
+          product.id,
+          product.revision,
+        ),
+      "ลบรูปสินค้าแล้ว",
+    );
   }
 
   beginEdit(product: CatalogProduct): void {

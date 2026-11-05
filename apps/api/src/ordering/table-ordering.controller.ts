@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Header, Param, Post, Req, Res } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  Param,
+  Post,
+  Req,
+  Res,
+} from "@nestjs/common";
 import type { ServerResponse } from "node:http";
 import { ApiRequest, requireAllowedOrigin } from "../auth/request-security";
 import { TableOrderingService } from "./table-ordering.service";
@@ -43,7 +52,8 @@ export class TableOrderingController {
 
   @Get("tenants/:tenantId/stores/:storeId/tables/:tableId/print-qr.svg")
   async printQr(
-    @Req() req: ApiRequest, @Res() res: ServerResponse,
+    @Req() req: ApiRequest,
+    @Res() res: ServerResponse,
     @Param("tenantId") tenantId: string,
     @Param("storeId") storeId: string,
     @Param("tableId") tableId: string,

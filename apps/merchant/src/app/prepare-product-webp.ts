@@ -1,9 +1,14 @@
 // Client-side convenience conversion only. The server independently parses
 // and limits the WebP RIFF body, so MIME type or this transformation is never
 // used as an authorization/security boundary.
-export async function prepareProductWebp(file: File, document: Document): Promise<Blob> {
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
-      file.size > 8 * 1024 * 1024) {
+export async function prepareProductWebp(
+  file: File,
+  document: Document,
+): Promise<Blob> {
+  if (
+    !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+    file.size > 8 * 1024 * 1024
+  ) {
     throw new Error("รองรับ JPG, PNG และ WebP ที่มีขนาดต้นฉบับไม่เกิน 8 MB");
   }
   const win = document.defaultView;
@@ -17,12 +22,18 @@ export async function prepareProductWebp(file: File, document: Document): Promis
       element.onerror = () => reject(new Error("ไฟล์รูปภาพไม่ถูกต้อง"));
       element.src = src;
     });
-    if (image.naturalWidth < 1 || image.naturalHeight < 1 ||
-        image.naturalWidth * image.naturalHeight > 16000000) {
+    if (
+      image.naturalWidth < 1 ||
+      image.naturalHeight < 1 ||
+      image.naturalWidth * image.naturalHeight > 16000000
+    ) {
       throw new Error("ภาพมีขนาดใหญ่เกินไป");
     }
     const canvas = document.createElement("canvas");
-    const factor = Math.min(1, 1200 / Math.max(image.naturalWidth, image.naturalHeight));
+    const factor = Math.min(
+      1,
+      1200 / Math.max(image.naturalWidth, image.naturalHeight),
+    );
     let width = Math.max(1, Math.round(image.naturalWidth * factor));
     let height = Math.max(1, Math.round(image.naturalHeight * factor));
     for (let attempt = 0; attempt < 7; attempt += 1) {
@@ -35,8 +46,12 @@ export async function prepareProductWebp(file: File, document: Document): Promis
       const output = await new Promise<Blob | null>((resolve) =>
         canvas.toBlob(resolve, "image/webp", quality),
       );
-      if (output && output.type === "image/webp" &&
-          output.size >= 30 && output.size <= 196608) {
+      if (
+        output &&
+        output.type === "image/webp" &&
+        output.size >= 30 &&
+        output.size <= 196608
+      ) {
         return output;
       }
       width = Math.max(1, Math.round(width * 0.8));

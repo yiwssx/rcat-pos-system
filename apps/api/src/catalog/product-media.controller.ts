@@ -1,15 +1,25 @@
 import {
-  Controller, Delete, Get, Header, Param, Put, Req, Res,
+  Controller,
+  Delete,
+  Get,
+  Header,
+  Param,
+  Put,
+  Req,
+  Res,
   Body,
 } from "@nestjs/common";
 import type { ServerResponse } from "node:http";
 import { ApiRequest, requireAllowedOrigin } from "../auth/request-security";
 import { ProductMediaService } from "./product-media.service";
 
-function sendWebp(res: ServerResponse, data: {
-  webp: Buffer;
-  digest_sha256: Buffer;
-}): void {
+function sendWebp(
+  res: ServerResponse,
+  data: {
+    webp: Buffer;
+    digest_sha256: Buffer;
+  },
+): void {
   res.statusCode = 200;
   res.setHeader("Content-Type", "image/webp");
   res.setHeader("Content-Length", data.webp.length);
@@ -52,7 +62,8 @@ export class ProductMediaController {
 
   @Get("tenants/:tenantId/stores/:storeId/catalog/products/:productId/image")
   async staffRead(
-    @Req() req: ApiRequest, @Res() res: ServerResponse,
+    @Req() req: ApiRequest,
+    @Res() res: ServerResponse,
     @Param("tenantId") tenant: string,
     @Param("storeId") store: string,
     @Param("productId") product: string,

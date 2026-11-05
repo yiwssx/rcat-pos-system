@@ -77,7 +77,11 @@ function orderingUrl(token: string): string {
   return url.toString();
 }
 
-function printableUrl(tenantId: string, storeId: string, tableId: string): string {
+function printableUrl(
+  tenantId: string,
+  storeId: string,
+  tableId: string,
+): string {
   // QR has ONLY public immutable IDs. It is never a visit bearer.
   const url = new URL(orderingUrl(newOpaqueSecret()));
   url.hash = "";
@@ -87,13 +91,27 @@ function printableUrl(tenantId: string, storeId: string, tableId: string): strin
   return url.toString();
 }
 
-function codeDigest(tenant: string, store: string, table: string, code: string): Buffer {
+function codeDigest(
+  tenant: string,
+  store: string,
+  table: string,
+  code: string,
+): Buffer {
   const pepper = process.env["GUEST_TABLE_CODE_PEPPER"];
   if (!pepper || !/^[0-9a-f]{64}$/.test(pepper)) {
     throw new ServiceUnavailableException("Table code service not configured");
   }
   return createHmac("sha256", Buffer.from(pepper, "hex"))
-    .update("rcat-pos-table-code-v1\0" + tenant + "\0" + store + "\0" + table + "\0" + code)
+    .update(
+      "rcat-pos-table-code-v1\0" +
+        tenant +
+        "\0" +
+        store +
+        "\0" +
+        table +
+        "\0" +
+        code,
+    )
     .digest();
 }
 
@@ -176,21 +194,39 @@ export class TableOrderingService {
     const session = await this.auth.session(req);
     try {
       const result = await this.database.auth((client) =>
-        client.query<{ data: { tables: Array<{ tableId: string; label: string; active: boolean; codeExpiresAt: string | null }> } }>(
-          "SELECT rcat_private.list_printable_tables($1,$2,$3) AS data",
-          [digestOpaqueSecret(session.token), tenantId, storeId],
-        ),
+        client.query<{
+          data: {
+            tables: Array<{
+              tableId: string;
+              label: string;
+              active: boolean;
+              codeExpiresAt: string | null;
+            }>;
+          };
+        }>("SELECT rcat_private.list_printable_tables($1,$2,$3) AS data", [
+          digestOpaqueSecret(session.token),
+          tenantId,
+          storeId,
+        ]),
       );
       const tables = result.rows[0]?.data?.tables ?? [];
-      return { tables: tables.map((table) => ({
-        ...table, printedUrl: printableUrl(tenantId, storeId, table.tableId),
-      })) };
+      return {
+        tables: tables.map((table) => ({
+          ...table,
+          printedUrl: printableUrl(tenantId, storeId, table.tableId),
+        })),
+      };
     } catch (error) {
       safeError(error);
     }
   }
 
-  async printQr(req: ApiRequest, tenantId: string, storeId: string, tableId: string): Promise<string> {
+  async printQr(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    tableId: string,
+  ): Promise<string> {
     ids(tenantId, storeId, tableId);
     const session = await this.auth.session(req);
     try {
@@ -200,9 +236,13 @@ export class TableOrderingService {
           [digestOpaqueSecret(session.token), tenantId, storeId, tableId],
         ),
       );
-      if (!result.rows[0]?.data) throw new NotFoundException("Table unavailable");
+      if (!result.rows[0]?.data)
+        throw new NotFoundException("Table unavailable");
       return QRCode.toString(printableUrl(tenantId, storeId, tableId), {
-        type: "svg", errorCorrectionLevel: "M", margin: 4, width: 512,
+        type: "svg",
+        errorCorrectionLevel: "M",
+        margin: 4,
+        width: 512,
       });
     } catch (error) {
       safeError(error);
@@ -210,7 +250,10 @@ export class TableOrderingService {
   }
 
   async issueCode(
-    req: ApiRequest, tenantId: string, storeId: string, tableId: string,
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    tableId: string,
   ) {
     ids(tenantId, storeId, tableId);
     const session = await this.auth.session(req);
@@ -223,14 +266,24 @@ export class TableOrderingService {
       const result = await this.database.auth((client) =>
         client.query<{ data: { visitId: string; expiresAt: string } }>(
           "SELECT rcat_private.issue_table_code($1,$2,$3,$4,$5,$6) AS data",
-          [digestOpaqueSecret(session.token), tenantId, storeId, tableId,
-            digestOpaqueSecret(secret), digest],
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            tableId,
+            digestOpaqueSecret(secret),
+            digest,
+          ],
         ),
       );
       const data = result.rows[0]?.data;
       if (!data) throw new NotFoundException("Table unavailable");
-      return { ...data, code, expiresAt: data.expiresAt,
-        printedUrl: printableUrl(tenantId, storeId, tableId) };
+      return {
+        ...data,
+        code,
+        expiresAt: data.expiresAt,
+        printedUrl: printableUrl(tenantId, storeId, tableId),
+      };
     } catch (error) {
       safeError(error);
     }
@@ -238,12 +291,20 @@ export class TableOrderingService {
 
   async redeemCode(raw: unknown) {
     const input = requestObject(raw);
-    const tenant = input["tenantId"], store = input["storeId"];
-    const table = input["tableId"], code = input["code"];
-    if (typeof tenant !== "string" || typeof store !== "string" ||
-      typeof table !== "string" || typeof code !== "string" ||
-      !UUID.test(tenant) || !UUID.test(store) || !UUID.test(table) ||
-      !/^[0-9]{8}$/.test(code)) {
+    const tenant = input["tenantId"],
+      store = input["storeId"];
+    const table = input["tableId"],
+      code = input["code"];
+    if (
+      typeof tenant !== "string" ||
+      typeof store !== "string" ||
+      typeof table !== "string" ||
+      typeof code !== "string" ||
+      !UUID.test(tenant) ||
+      !UUID.test(store) ||
+      !UUID.test(table) ||
+      !/^[0-9]{8}$/.test(code)
+    ) {
       throw new NotFoundException("Ordering code unavailable");
     }
     const token = newOpaqueSecret();

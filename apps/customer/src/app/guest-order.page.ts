@@ -74,8 +74,8 @@ function guestError(error: unknown): string {
           <form class="guest-code-form" (submit)="submitTableCode($event)">
             <h2>กรอกรหัสรอบโต๊ะ</h2>
             <p>
-              QR ติดโต๊ะเป็นลิงก์สาธารณะ ยังสั่งอาหารไม่ได้
-              กรุณาขอรหัส 8 หลักจากพนักงานของร้านก่อน
+              QR ติดโต๊ะเป็นลิงก์สาธารณะ ยังสั่งอาหารไม่ได้ กรุณาขอรหัส 8
+              หลักจากพนักงานของร้านก่อน
             </p>
             <label for="table-code">รหัส 8 หลักที่พนักงานแจ้ง</label>
             <input
@@ -92,10 +92,15 @@ function guestError(error: unknown): string {
               (input)="updateTableCode($event)"
               [disabled]="busy()"
             />
-            <button type="submit" [disabled]="busy() || !online() || tableCode().length !== 8">
+            <button
+              type="submit"
+              [disabled]="busy() || !online() || tableCode().length !== 8"
+            >
               {{ busy() ? "กำลังตรวจรหัส..." : "ยืนยันรหัสและเปิดเมนู" }}
             </button>
-            <p class="guest-code-help">รหัสจะไม่ถูกส่งใน URL หรือ QR และไม่ได้ใช้ยืนยันการชำระเงิน</p>
+            <p class="guest-code-help">
+              รหัสจะไม่ถูกส่งใน URL หรือ QR และไม่ได้ใช้ยืนยันการชำระเงิน
+            </p>
           </form>
         }
       }
@@ -143,9 +148,14 @@ function guestError(error: unknown): string {
             @for (product of products(); track product.id) {
               <article class="guest-product" [attr.aria-label]="product.name">
                 @if (product.hasImage) {
-                  <img class="guest-product-photo" loading="lazy"
-                    [src]="productImageUrl(visit.tenantId, visit.storeId, product.id)"
-                    [alt]="'รูปภาพเมนู ' + product.name" />
+                  <img
+                    class="guest-product-photo"
+                    loading="lazy"
+                    [src]="
+                      productImageUrl(visit.tenantId, visit.storeId, product.id)
+                    "
+                    [alt]="'รูปภาพเมนู ' + product.name"
+                  />
                 }
                 <div class="guest-product-head">
                   <div>
@@ -292,7 +302,11 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly category = signal("");
   readonly selected = signal<Record<string, string[]>>({});
   readonly online = signal(true);
-  readonly staticTable = signal<{ tenantId: string; storeId: string; tableId: string } | null>(null);
+  readonly staticTable = signal<{
+    tenantId: string;
+    storeId: string;
+    tableId: string;
+  } | null>(null);
   readonly tableCode = signal("");
   readonly money = formatSatang;
   private scanToken: string | null = null;
@@ -342,11 +356,19 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       const tenantId = query.get("tenant");
       const storeId = query.get("store");
       const tableId = query.get("table");
-      const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const uuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       this.loading.set(false);
       this.session.invalidateVisit();
-      if (query.keys.length !== 3 || !tenantId || !storeId || !tableId ||
-          !uuid.test(tenantId) || !uuid.test(storeId) || !uuid.test(tableId)) {
+      if (
+        query.keys.length !== 3 ||
+        !tenantId ||
+        !storeId ||
+        !tableId ||
+        !uuid.test(tenantId) ||
+        !uuid.test(storeId) ||
+        !uuid.test(tableId)
+      ) {
         this.error.set("QR ติดโต๊ะไม่ถูกต้อง กรุณาสแกน QR ใหม่");
         return;
       }
@@ -407,12 +429,16 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     event.preventDefault();
     const table = this.staticTable();
     const code = this.tableCode();
-    if (!table || !/^[0-9]{8}$/.test(code) || this.busy() || !this.online()) return;
+    if (!table || !/^[0-9]{8}$/.test(code) || this.busy() || !this.online())
+      return;
     this.busy.set(true);
     this.error.set("");
     try {
       const grant = await this.api.redeemCode(
-        table.tenantId, table.storeId, table.tableId, code,
+        table.tenantId,
+        table.storeId,
+        table.tableId,
+        code,
       );
       this.tableCode.set("");
       this.scanToken = grant.visitToken;
@@ -429,8 +455,14 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   }
 
   productImageUrl(tenant: string, store: string, product: string): string {
-    return "/api/guest/catalog-media/" + encodeURIComponent(tenant) +
-      "/" + encodeURIComponent(store) + "/" + encodeURIComponent(product);
+    return (
+      "/api/guest/catalog-media/" +
+      encodeURIComponent(tenant) +
+      "/" +
+      encodeURIComponent(store) +
+      "/" +
+      encodeURIComponent(product)
+    );
   }
 
   onSearch(event: Event): void {

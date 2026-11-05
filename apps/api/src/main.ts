@@ -6,7 +6,9 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { installHttpTelemetry } from "./observability/http-telemetry";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: false });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: false,
+  });
   const origins = (process.env["CORS_ORIGINS"] ?? "")
     .split(",")
     .map((origin) => origin.trim())

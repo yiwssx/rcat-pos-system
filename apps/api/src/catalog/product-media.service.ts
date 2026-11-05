@@ -52,7 +52,11 @@ export class ProductMediaService {
   ) {}
 
   async put(
-    req: ApiRequest, tenant: string, store: string, product: string, raw: unknown,
+    req: ApiRequest,
+    tenant: string,
+    store: string,
+    product: string,
+    raw: unknown,
   ) {
     ids(tenant, store, product);
     const session = await this.auth.session(req);
@@ -66,7 +70,17 @@ export class ProductMediaService {
       const result = await this.database.auth((client) =>
         client.query<{ data: { revision: number; hasImage: boolean } }>(
           "SELECT rcat_private.put_menu_product_media($1,$2,$3,$4,$5,$6,$7,$8,$9) AS data",
-          [digestOpaqueSecret(session.token),tenant,store,product,rev,bytes,digest,width,height],
+          [
+            digestOpaqueSecret(session.token),
+            tenant,
+            store,
+            product,
+            rev,
+            bytes,
+            digest,
+            width,
+            height,
+          ],
         ),
       );
       return result.rows[0]?.data;
@@ -75,7 +89,12 @@ export class ProductMediaService {
     }
   }
 
-  async remove(req: ApiRequest, tenant: string, store: string, product: string) {
+  async remove(
+    req: ApiRequest,
+    tenant: string,
+    store: string,
+    product: string,
+  ) {
     ids(tenant, store, product);
     const session = await this.auth.session(req);
     this.auth.requireCsrf(req, session);
@@ -83,7 +102,13 @@ export class ProductMediaService {
       const result = await this.database.auth((client) =>
         client.query<{ data: { revision: number; hasImage: boolean } }>(
           "SELECT rcat_private.remove_menu_product_media($1,$2,$3,$4,$5) AS data",
-          [digestOpaqueSecret(session.token),tenant,store,product,revision(req)],
+          [
+            digestOpaqueSecret(session.token),
+            tenant,
+            store,
+            product,
+            revision(req),
+          ],
         ),
       );
       return result.rows[0]?.data;
@@ -98,27 +123,34 @@ export class ProductMediaService {
       const result = await this.database.auth((client) =>
         client.query<{ webp: Buffer; digest_sha256: Buffer }>(
           "SELECT * FROM rcat_private.read_public_menu_media($1,$2,$3)",
-          [tenant,store,product],
+          [tenant, store, product],
         ),
       );
-      if (!result.rows[0]) throw new NotFoundException("Product image unavailable");
+      if (!result.rows[0])
+        throw new NotFoundException("Product image unavailable");
       return result.rows[0];
     } catch (error) {
       mediaError(error);
     }
   }
 
-  async readStaff(req: ApiRequest, tenant: string, store: string, product: string) {
+  async readStaff(
+    req: ApiRequest,
+    tenant: string,
+    store: string,
+    product: string,
+  ) {
     ids(tenant, store, product);
     const session = await this.auth.session(req);
     try {
       const result = await this.database.auth((client) =>
         client.query<{ webp: Buffer; digest_sha256: Buffer }>(
           "SELECT * FROM rcat_private.read_staff_menu_media($1,$2,$3,$4)",
-          [digestOpaqueSecret(session.token),tenant,store,product],
+          [digestOpaqueSecret(session.token), tenant, store, product],
         ),
       );
-      if (!result.rows[0]) throw new NotFoundException("Product image unavailable");
+      if (!result.rows[0])
+        throw new NotFoundException("Product image unavailable");
       return result.rows[0];
     } catch (error) {
       mediaError(error);

@@ -226,7 +226,10 @@
   align-content: start;
   max-width: 100%;
 }
-.catalog-media-actions label { font-weight: 700; color: #214e67; }
+.catalog-media-actions label {
+  font-weight: 700;
+  color: #214e67;
+}
 .catalog-media-actions input {
   display: block;
   max-width: 100%;

@@ -27,14 +27,18 @@ describe("G2 bounded WebP media validation", () => {
   });
 
   it("rejects SVG, invalid RIFF length, forbidden VP8X metadata and concatenated files", () => {
-    expect(() => validateWebp(Buffer.from('<svg onload="alert(1)">'))).toThrow();
+    expect(() =>
+      validateWebp(Buffer.from('<svg onload="alert(1)">')),
+    ).toThrow();
     const wrong = vp8(320, 240);
     wrong.writeUInt32LE(21, 4);
     expect(() => validateWebp(wrong)).toThrow();
     const extended = vp8(320, 240);
     extended.write("VP8X", 12);
     expect(() => validateWebp(extended)).toThrow();
-    expect(() => validateWebp(Buffer.concat([vp8(100, 100), vp8(50, 50)]))).toThrow();
+    expect(() =>
+      validateWebp(Buffer.concat([vp8(100, 100), vp8(50, 50)])),
+    ).toThrow();
   });
 
   it("rejects oversized, zero-dimension and untrusted non-buffer inputs", () => {
