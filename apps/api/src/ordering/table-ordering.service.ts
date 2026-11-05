@@ -1,3 +1,5 @@
+import { createHmac, randomInt } from "node:crypto";
+import * as QRCode from "qrcode";
 import {
   BadRequestException,
   ConflictException,
@@ -75,6 +77,26 @@ function orderingUrl(token: string): string {
   return url.toString();
 }
 
+function printableUrl(tenantId: string, storeId: string, tableId: string): string {
+  // QR has ONLY public immutable IDs. It is never a visit bearer.
+  const url = new URL(orderingUrl(newOpaqueSecret()));
+  url.hash = "";
+  url.searchParams.set("tenant", tenantId);
+  url.searchParams.set("store", storeId);
+  url.searchParams.set("table", tableId);
+  return url.toString();
+}
+
+function codeDigest(tenant: string, store: string, table: string, code: string): Buffer {
+  const pepper = process.env["GUEST_TABLE_CODE_PEPPER"];
+  if (!pepper || !/^[0-9a-f]{64}$/.test(pepper)) {
+    throw new ServiceUnavailableException("Table code service not configured");
+  }
+  return createHmac("sha256", Buffer.from(pepper, "hex"))
+    .update("rcat-pos-table-code-v1\0" + tenant + "\0" + store + "\0" + table + "\0" + code)
+    .digest();
+}
+
 @Injectable()
 export class TableOrderingService {
   constructor(
@@ -144,6 +166,98 @@ export class TableOrderingService {
         expiresAt: current.expires_at,
         orderingUrl: url,
       };
+    } catch (error) {
+      safeError(error);
+    }
+  }
+
+  async tables(req: ApiRequest, tenantId: string, storeId: string) {
+    ids(tenantId, storeId);
+    const session = await this.auth.session(req);
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: { tables: Array<{ tableId: string; label: string; active: boolean; codeExpiresAt: string | null }> } }>(
+          "SELECT rcat_private.list_printable_tables($1,$2,$3) AS data",
+          [digestOpaqueSecret(session.token), tenantId, storeId],
+        ),
+      );
+      const tables = result.rows[0]?.data?.tables ?? [];
+      return { tables: tables.map((table) => ({
+        ...table, printedUrl: printableUrl(tenantId, storeId, table.tableId),
+      })) };
+    } catch (error) {
+      safeError(error);
+    }
+  }
+
+  async printQr(req: ApiRequest, tenantId: string, storeId: string, tableId: string): Promise<string> {
+    ids(tenantId, storeId, tableId);
+    const session = await this.auth.session(req);
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: { tableId: string; label: string } }>(
+          "SELECT rcat_private.printable_table_detail($1,$2,$3,$4) AS data",
+          [digestOpaqueSecret(session.token), tenantId, storeId, tableId],
+        ),
+      );
+      if (!result.rows[0]?.data) throw new NotFoundException("Table unavailable");
+      return QRCode.toString(printableUrl(tenantId, storeId, tableId), {
+        type: "svg", errorCorrectionLevel: "M", margin: 4, width: 512,
+      });
+    } catch (error) {
+      safeError(error);
+    }
+  }
+
+  async issueCode(
+    req: ApiRequest, tenantId: string, storeId: string, tableId: string,
+  ) {
+    ids(tenantId, storeId, tableId);
+    const session = await this.auth.session(req);
+    this.auth.requireCsrf(req, session);
+    // A new staff-issued code revokes the previous visit and all guest grants.
+    const code = randomInt(0, 100000000).toString().padStart(8, "0");
+    const secret = newOpaqueSecret();
+    const digest = codeDigest(tenantId, storeId, tableId, code);
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: { visitId: string; expiresAt: string } }>(
+          "SELECT rcat_private.issue_table_code($1,$2,$3,$4,$5,$6) AS data",
+          [digestOpaqueSecret(session.token), tenantId, storeId, tableId,
+            digestOpaqueSecret(secret), digest],
+        ),
+      );
+      const data = result.rows[0]?.data;
+      if (!data) throw new NotFoundException("Table unavailable");
+      return { ...data, code, expiresAt: data.expiresAt,
+        printedUrl: printableUrl(tenantId, storeId, tableId) };
+    } catch (error) {
+      safeError(error);
+    }
+  }
+
+  async redeemCode(raw: unknown) {
+    const input = requestObject(raw);
+    const tenant = input["tenantId"], store = input["storeId"];
+    const table = input["tableId"], code = input["code"];
+    if (typeof tenant !== "string" || typeof store !== "string" ||
+      typeof table !== "string" || typeof code !== "string" ||
+      !UUID.test(tenant) || !UUID.test(store) || !UUID.test(table) ||
+      !/^[0-9]{8}$/.test(code)) {
+      throw new NotFoundException("Ordering code unavailable");
+    }
+    const token = newOpaqueSecret();
+    const digest = codeDigest(tenant, store, table, code);
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: { ok: boolean; expiresAt?: string } }>(
+          "SELECT rcat_private.redeem_table_code($1,$2,$3,$4,$5) AS data",
+          [tenant, store, table, digest, digestOpaqueSecret(token)],
+        ),
+      );
+      if (!result.rows[0]?.data?.ok)
+        throw new NotFoundException("Ordering code unavailable");
+      return { visitToken: token, expiresAt: result.rows[0].data.expiresAt };
     } catch (error) {
       safeError(error);
     }
