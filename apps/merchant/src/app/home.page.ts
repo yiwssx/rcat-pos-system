@@ -78,6 +78,11 @@ import { MerchantOrderApi } from "./merchant-order.api";
               >
               <a
                 class="store-report-link"
+                [routerLink]="['/tables', store.tenantId, store.storeId]"
+                >พิมพ์ QR โต๊ะและออกรหัสรอบโต๊ะ</a
+              >
+              <a
+                class="store-report-link"
                 [routerLink]="['/reports', store.tenantId, store.storeId]"
                 >ดูรายงานออเดอร์ (ไม่ใช่รายรับ)</a
               >
