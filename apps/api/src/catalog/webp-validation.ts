@@ -13,8 +13,10 @@ export function validateWebp(raw: unknown): {
   const bad = (): never => {
     throw new BadRequestException("Invalid WebP image");
   };
-  if (!Buffer.isBuffer(raw)) bad();
-  const bytes: Buffer = raw;
+  if (!Buffer.isBuffer(raw)) {
+    throw new BadRequestException("Invalid WebP image");
+  }
+  const bytes = raw;
   if (bytes.length < 30 || bytes.length > MAX_WEBP_BYTES) bad();
   if (bytes.toString("ascii", 0, 4) !== "RIFF" ||
       bytes.toString("ascii", 8, 12) !== "WEBP" ||
@@ -22,8 +24,8 @@ export function validateWebp(raw: unknown): {
   const type = bytes.toString("ascii", 12, 16);
   const size = bytes.readUInt32LE(16);
   if (size < 10 || 20 + size + (size & 1) !== bytes.length) bad();
-  let width: number;
-  let height: number;
+  let width = 0;
+  let height = 0;
   if (type === "VP8 ") {
     if (bytes[23] !== 0x9d || bytes[24] !== 0x01 || bytes[25] !== 0x2a) bad();
     width = bytes.readUInt16LE(26) & 0x3fff;
