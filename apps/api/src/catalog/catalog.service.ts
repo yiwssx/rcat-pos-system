@@ -57,7 +57,9 @@ function mapping(error: unknown): never {
     throw new NotFoundException("Catalog unavailable");
   }
   if (code === "P0009") {
-    throw new ConflictException("Product was updated or archived; refresh catalog");
+    throw new ConflictException(
+      "Product was updated or archived; refresh catalog",
+    );
   }
   if (code === "23505") {
     throw new ConflictException("Catalog item already exists");
@@ -197,8 +199,14 @@ export class CatalogService {
         client.query<{ data: Record<string, unknown> }>(
           "SELECT rcat_private.update_menu_product($1,$2,$3,$4,$5,$6,$7,$8) AS data",
           [
-            digestOpaqueSecret(session.token), tenantId, storeId,
-            productId, expectedRevision, name, categoryId, priceSatang,
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            productId,
+            expectedRevision,
+            name,
+            categoryId,
+            priceSatang,
           ],
         ),
       );
@@ -234,8 +242,11 @@ export class CatalogService {
         client.query<{ data: Record<string, unknown> }>(
           "SELECT rcat_private.archive_menu_product($1,$2,$3,$4,$5) AS data",
           [
-            digestOpaqueSecret(session.token), tenantId, storeId,
-            productId, expectedRevision,
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            productId,
+            expectedRevision,
           ],
         ),
       );
