@@ -143,6 +143,38 @@ export class MerchantCatalogApi {
     );
   }
 
+  productImageUrl(tenantId: string, storeId: string, productId: string, revision: number): string {
+    return scope(tenantId, storeId) +
+      "/products/" + encodeURIComponent(productId) + "/image?v=" +
+      encodeURIComponent(String(revision));
+  }
+
+  uploadImage(
+    tenantId: string, storeId: string, productId: string,
+    revision: number, image: Blob,
+  ): Promise<{ revision: number; hasImage: boolean }> {
+    return firstValueFrom(
+      this.http.put<{ revision: number; hasImage: boolean }>(
+        scope(tenantId, storeId) + "/products/" + encodeURIComponent(productId) + "/image",
+        image,
+        { headers: { ...this.csrfHeaders(), "X-Expected-Revision": String(revision),
+            "Content-Type": "image/webp" }, withCredentials: true },
+      ),
+    );
+  }
+
+  deleteImage(
+    tenantId: string, storeId: string, productId: string, revision: number,
+  ): Promise<{ revision: number; hasImage: boolean }> {
+    return firstValueFrom(
+      this.http.delete<{ revision: number; hasImage: boolean }>(
+        scope(tenantId, storeId) + "/products/" + encodeURIComponent(productId) + "/image",
+        { headers: { ...this.csrfHeaders(), "X-Expected-Revision": String(revision) },
+          withCredentials: true },
+      ),
+    );
+  }
+
   availability(
     tenantId: string,
     storeId: string,
