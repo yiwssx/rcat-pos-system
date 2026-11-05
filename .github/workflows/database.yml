@@ -132,6 +132,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-stock-shortage.sql
       - name: Verify dual-control stocktakes, stale revisions, audit and tenant isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/inventory-stocktake.sql
+      - name: Verify exceptional post-preparation stock returns, dual approval and exact allocation ceiling
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-exception-stock-return.sql
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
