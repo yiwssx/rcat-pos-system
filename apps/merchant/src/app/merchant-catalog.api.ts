@@ -17,6 +17,7 @@ export interface CatalogProduct {
   available: boolean;
   revision: number;
   archivedAt: string | null;
+  hasImage: boolean;
 }
 
 export interface MerchantCatalogSnapshot {
