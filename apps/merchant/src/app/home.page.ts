@@ -73,6 +73,11 @@ import { MerchantOrderApi } from "./merchant-order.api";
             @if (store.role === "owner" || store.role === "manager") {
               <a
                 class="store-report-link"
+                [routerLink]="['/catalog', store.tenantId, store.storeId]"
+                >จัดการเมนูและราคาสินค้า</a
+              >
+              <a
+                class="store-report-link"
                 [routerLink]="['/reports', store.tenantId, store.storeId]"
                 >ดูรายงานออเดอร์ (ไม่ใช่รายรับ)</a
               >

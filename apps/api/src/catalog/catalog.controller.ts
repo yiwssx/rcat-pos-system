@@ -49,6 +49,32 @@ export class CatalogController {
     return this.catalog.addProduct(req, tenantId, storeId, body);
   }
 
+  @Patch("products/:productId")
+  @Header("Cache-Control", "no-store")
+  updateProduct(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("productId") productId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.catalog.updateProduct(req, tenantId, storeId, productId, body);
+  }
+
+  @Post("products/:productId/archive")
+  @Header("Cache-Control", "no-store")
+  archiveProduct(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("productId") productId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.catalog.archiveProduct(req, tenantId, storeId, productId, body);
+  }
+
   @Patch("products/:productId/availability")
   @Header("Cache-Control", "no-store")
   availability(

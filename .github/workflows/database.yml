@@ -104,6 +104,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/google-workspace-identity.sql
       - name: Verify catalog scope, satang integrity and RLS using PostgreSQL
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/catalog.sql
+      - name: Verify merchant catalog versioned edit, soft archive, RLS and immutable old Order snapshots
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/catalog-product-lifecycle.sql
       - name: Verify per-visit ordering tokens and tenant isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/ordering-visits.sql
       - name: Verify product modifiers, tenant isolation and guest visibility
@@ -162,7 +164,8 @@ jobs:
         run: node scripts/smoke-auth.mjs
       - name: Verify new tenant and invitation audit events
         run: |
-          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events" | grep -qx '24'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action NOT IN ('catalog.product.updated','catalog.product.archived')" | grep -qx '24'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action IN ('catalog.product.updated','catalog.product.archived')" | grep -qx '2'
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(DISTINCT action) FROM rcat.audit_events WHERE action IN ('tenant.created','staff.invited','staff.invitation.accepted','staff.role.changed','staff.removed')" | grep -qx '5'
       - name: Provision isolated RCAT Workspace staff after legacy audit-count tests
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/google-http-fixtures.sql

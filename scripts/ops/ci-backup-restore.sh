@@ -55,10 +55,14 @@ for db in "$source_db" "$restore_db"; do
 done
 diff -u "$work/$source_db.txt" "$work/$restore_db.txt"
 
-# Replaying the complete migration manifest must skip all 25 unchanged
+# Replaying the complete migration manifest must skip all unchanged
 # checksummed migrations; a missing or modified ledger causes an error.
 PGDATABASE="$restore_db" bash "$ROOT/scripts/db/migrate.sh" > "$work/migrate-verify.log"
-grep -q 'Skipping unchanged migration 025_order_exception_stock_returns.sql' "$work/migrate-verify.log"
+latest="$(find "$ROOT/db/migrations" -maxdepth 1 -name '[0-9][0-9][0-9]_*.sql' -printf '%f\n' | sort | tail -n 1)"
+test -n "$latest"
+grep -Fq "Skipping unchanged migration $latest" "$work/migrate-verify.log"
+expected_migrations="$(find "$ROOT/db/migrations" -maxdepth 1 -name '[0-9][0-9][0-9]_*.sql' | wc -l | tr -d '[:space:]')"
 PGDATABASE="$restore_db" psql -X -v ON_ERROR_STOP=1 \
+  -v "expected_migrations=$expected_migrations" \
   -f "$ROOT/tests/db/g4-restored-integrity.sql"
 echo "PASS: pg_dump/pg_restore parity for ${#tables[@]} persisted tables, checksummed migrations, staff replay and RLS"
