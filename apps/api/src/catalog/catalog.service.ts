@@ -56,6 +56,9 @@ function mapping(error: unknown): never {
   if (code === "42501" || code === "28000" || code === "23503") {
     throw new NotFoundException("Catalog unavailable");
   }
+  if (code === "P0009") {
+    throw new ConflictException("Product was updated or archived; refresh catalog");
+  }
   if (code === "23505") {
     throw new ConflictException("Catalog item already exists");
   }
@@ -154,6 +157,89 @@ export class CatalogService {
         ),
       );
       return { productId: result.rows[0]?.id };
+    } catch (error) {
+      mapping(error);
+    }
+  }
+
+  async updateProduct(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    productId: string,
+    raw: unknown,
+  ) {
+    validateIds(tenantId, storeId);
+    if (!UUID.test(productId))
+      throw new NotFoundException("Catalog unavailable");
+    const session = await this.auth.session(req);
+    this.auth.requireCsrf(req, session);
+    const data = bodyObject(raw);
+    const name = nameField(data["name"], 160);
+    const categoryId = data["categoryId"];
+    const priceSatang = data["priceSatang"];
+    const expectedRevision = data["expectedRevision"];
+    if (
+      typeof categoryId !== "string" ||
+      !UUID.test(categoryId) ||
+      typeof priceSatang !== "number" ||
+      !Number.isSafeInteger(priceSatang) ||
+      priceSatang < 1 ||
+      priceSatang > 100000000 ||
+      typeof expectedRevision !== "number" ||
+      !Number.isSafeInteger(expectedRevision) ||
+      expectedRevision < 0
+    ) {
+      throw new BadRequestException("Invalid catalog product edit");
+    }
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.update_menu_product($1,$2,$3,$4,$5,$6,$7,$8) AS data",
+          [
+            digestOpaqueSecret(session.token), tenantId, storeId,
+            productId, expectedRevision, name, categoryId, priceSatang,
+          ],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      mapping(error);
+    }
+  }
+
+  async archiveProduct(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    productId: string,
+    raw: unknown,
+  ) {
+    validateIds(tenantId, storeId);
+    if (!UUID.test(productId))
+      throw new NotFoundException("Catalog unavailable");
+    const session = await this.auth.session(req);
+    this.auth.requireCsrf(req, session);
+    const data = bodyObject(raw);
+    const expectedRevision = data["expectedRevision"];
+    if (
+      typeof expectedRevision !== "number" ||
+      !Number.isSafeInteger(expectedRevision) ||
+      expectedRevision < 0
+    ) {
+      throw new BadRequestException("Invalid catalog archive request");
+    }
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.archive_menu_product($1,$2,$3,$4,$5) AS data",
+          [
+            digestOpaqueSecret(session.token), tenantId, storeId,
+            productId, expectedRevision,
+          ],
+        ),
+      );
+      return result.rows[0]?.data;
     } catch (error) {
       mapping(error);
     }
