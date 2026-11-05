@@ -8,6 +8,7 @@ import {
   InventorySnapshot,
   InventoryUnit,
   inventoryPath,
+  StocktakeList,
 } from "./inventory.domain";
 
 @Injectable({ providedIn: "root" })
@@ -135,6 +136,83 @@ export class InventoryApi {
           "/items/" +
           encodeURIComponent(itemId),
         { quantityPerProduct },
+        { headers: this.csrf(), withCredentials: true },
+      ),
+    );
+  }
+
+  stocktakes(tenantId: string, storeId: string): Promise<StocktakeList> {
+    return firstValueFrom(
+      this.http.get<StocktakeList>(
+        inventoryPath(tenantId, storeId) + "/stocktakes",
+        { withCredentials: true },
+      ),
+    );
+  }
+
+  openStocktake(
+    tenantId: string,
+    storeId: string,
+    itemId: string,
+    idempotencyKey: string,
+  ) {
+    return firstValueFrom(
+      this.http.post<{
+        stocktakeId: string;
+        itemId: string;
+        baselineOnHand: string;
+        baselineVersion: string;
+        state: string;
+        replayed: boolean;
+      }>(
+        inventoryPath(tenantId, storeId) + "/stocktakes",
+        { itemId, idempotencyKey },
+        { headers: this.csrf(), withCredentials: true },
+      ),
+    );
+  }
+
+  submitStocktake(
+    tenantId: string,
+    storeId: string,
+    stocktakeId: string,
+    countedOnHand: string,
+    reason: string,
+  ) {
+    return firstValueFrom(
+      this.http.post<{
+        stocktakeId: string;
+        state: string;
+        replayed: boolean;
+      }>(
+        inventoryPath(tenantId, storeId) +
+          "/stocktakes/" +
+          encodeURIComponent(stocktakeId) +
+          "/count",
+        { countedOnHand, reason },
+        { headers: this.csrf(), withCredentials: true },
+      ),
+    );
+  }
+
+  reviewStocktake(
+    tenantId: string,
+    storeId: string,
+    stocktakeId: string,
+    approve: boolean,
+  ) {
+    return firstValueFrom(
+      this.http.post<{
+        stocktakeId: string;
+        state: string;
+        movementId: string | null;
+        replayed: boolean;
+      }>(
+        inventoryPath(tenantId, storeId) +
+          "/stocktakes/" +
+          encodeURIComponent(stocktakeId) +
+          "/review",
+        { approve },
         { headers: this.csrf(), withCredentials: true },
       ),
     );

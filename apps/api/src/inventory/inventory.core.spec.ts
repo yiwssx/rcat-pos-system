@@ -5,6 +5,9 @@ import {
   validRecipeQuantity,
   validateItem,
   validateMovement,
+  validateNewStocktake,
+  validateSubmittedStocktake,
+  validateReviewedStocktake,
 } from "./inventory.core";
 
 const ITEM = "10000000-0000-4000-8000-000000000001";
@@ -85,5 +88,61 @@ describe("G3 stock amount and replay input safety", () => {
     expect(validRecipeQuantity("1000000000")).toBe(true);
     expect(validRecipeQuantity("-1")).toBe(false);
     expect(validRecipeQuantity("1000000001")).toBe(false);
+  });
+});
+
+describe("G3 stocktake domain", () => {
+  const itemId = "10000000-0000-4000-8000-000000000001";
+  const idempotencyKey = "33333333-3333-4333-8333-333333333333";
+  it("requires two correct UUIDs to open an idempotent count", () => {
+    expect(validateNewStocktake({ itemId, idempotencyKey })).toEqual({
+      itemId,
+      idempotencyKey,
+    });
+    expect(validateNewStocktake({ itemId, idempotencyKey: "garbage" })).toBe(
+      null,
+    );
+    expect(validateNewStocktake({ itemId: "../foreign", idempotencyKey })).toBe(
+      null,
+    );
+  });
+  it("accepts bounded exact physical counts and mandatory audit reason", () => {
+    expect(
+      validateSubmittedStocktake({
+        countedOnHand: "0.000",
+        reason: " no stock ",
+      }),
+    ).toEqual({ countedOnHand: "0.000", reason: "no stock" });
+    expect(
+      validateSubmittedStocktake({
+        countedOnHand: "1000000000000",
+        reason: "counted",
+      }),
+    ).not.toBe(null);
+    for (const countedOnHand of [
+      "-1",
+      "1.0001",
+      "1e5",
+      "NaN",
+      1.2,
+      "1000000000000.001",
+    ]) {
+      expect(
+        validateSubmittedStocktake({ countedOnHand, reason: "counted" }),
+      ).toBe(null);
+    }
+    expect(
+      validateSubmittedStocktake({ countedOnHand: "1", reason: "  " }),
+    ).toBe(null);
+  });
+  it("only accepts explicit boolean approval decision", () => {
+    expect(validateReviewedStocktake({ approve: true })).toEqual({
+      approve: true,
+    });
+    expect(validateReviewedStocktake({ approve: false })).toEqual({
+      approve: false,
+    });
+    expect(validateReviewedStocktake({ approve: "true" })).toBe(null);
+    expect(validateReviewedStocktake({ decision: "approved" })).toBe(null);
   });
 });

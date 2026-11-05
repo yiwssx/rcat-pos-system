@@ -176,7 +176,49 @@ try {
   const after=(await (await request(inventory,{headers:{Cookie:owner.Cookie}})).json());
   assert.equal(after.recipes.some((x)=>x.productId===productId),false);
   assert.equal(after.items.find((x)=>x.itemId===itemId).onHand,"1000.000");
-  console.log("PASS: inventory HTTP tenant auth, CSRF, exact ledger, opt-in stock, Modifier recipe and safe disable");
+  const stocktakes=inventory+"/stocktakes";
+  assert.equal((await request(stocktakes)).status,401,
+    "Anonymous staff read Stocktake history");
+  assert.equal((await request(stocktakes,{
+    headers:{Cookie:outsider.Cookie},
+  })).status,404,"Other tenant read Stocktake history");
+  const takeRequest={itemId,idempotencyKey:randomUUID()};
+  assert.equal((await write(stocktakes,"POST",
+    {Cookie:owner.Cookie},takeRequest)).status,403,
+    "Stocktake opening without CSRF was accepted");
+  const opened=await write(stocktakes,"POST",owner,takeRequest);
+  assert.equal(opened.status,201,await opened.clone().text());
+  const stocktake=await opened.json();
+  assert.equal(stocktake.state,"open");
+  assert.equal(stocktake.baselineOnHand,"1000.000");
+  const reopened=await write(stocktakes,"POST",owner,takeRequest);
+  assert.equal(reopened.status,201,await reopened.clone().text());
+  assert.equal((await reopened.json()).replayed,true);
+  const listing=await request(stocktakes,{headers:{Cookie:owner.Cookie}});
+  assert.equal(listing.status,200,await listing.clone().text());
+  assert.equal(listing.headers.get("cache-control"),"no-store");
+  const {stocktakes:history}=await listing.json();
+  assert.ok(history.some((entry)=>entry.stocktakeId===stocktake.stocktakeId));
+  assert.equal((await write(stocktakes+"/"+stocktake.stocktakeId+
+    "/count","POST",outsider,{countedOnHand:"999.000",
+      reason:"Unauthorized count"})).status,404);
+  const count=await write(stocktakes+"/"+stocktake.stocktakeId+
+    "/count","POST",owner,{countedOnHand:"999.000",
+      reason:"Physical count verified"});
+  assert.equal(count.status,201,await count.clone().text());
+  assert.equal((await count.json()).state,"submitted");
+  assert.equal((await write(stocktakes+"/"+stocktake.stocktakeId+
+    "/review","POST",owner,{approve:true})).status,409,
+    "Same staff member was allowed to approve their own count");
+  assert.equal((await write(stocktakes+"/"+stocktake.stocktakeId+
+    "/review","POST",outsider,{approve:true})).status,404,
+    "Other tenant approved Stocktake");
+  const still=(await (await request(inventory,{
+    headers:{Cookie:owner.Cookie},
+  })).json());
+  assert.equal(still.items.find((i)=>i.itemId===itemId).onHand,
+    "1000.000","Unapproved physical count changed live stock");
+  console.log("PASS: inventory HTTP tenant auth, CSRF, exact ledger, opt-in stock, Modifier recipe and safe disable, Stocktake RBAC, CSRF and no self-approval");
 } finally {
   server.kill("SIGTERM");
 }
