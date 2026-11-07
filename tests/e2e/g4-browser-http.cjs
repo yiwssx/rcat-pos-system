@@ -281,6 +281,43 @@ async function browserFlow(fixture) {
       context.fillRect(0, 0, 320, 180);
       return canvas.toDataURL("image/png").split(",")[1];
     });
+    // Decode only public format metadata from the deterministic CI-generated
+    // 320x180 test fixture. Never capture image data or customer content.
+    const browserWebp = await second.evaluate(async (png) => {
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = "data:image/png;base64," + png;
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d", { alpha: false });
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", 0.8));
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const view = new DataView(bytes.buffer);
+      const ascii = (at, len) => String.fromCharCode(...bytes.slice(at, at + len));
+      const chunks = [];
+      for (let offset = 12; offset + 8 <= bytes.length && chunks.length < 8;) {
+        const kind = ascii(offset, 4);
+        const size = view.getUint32(offset + 4, true);
+        chunks.push({ kind, size });
+        offset += 8 + size + (size & 1);
+      }
+      return {
+        bytes: bytes.length,
+        firstChunk: ascii(12, 4),
+        flags: bytes[20],
+        vp8xCanvasWidth: (bytes[24] | (bytes[25] << 8) | (bytes[26] << 16)) + 1,
+        vp8xCanvasHeight: (bytes[27] | (bytes[28] << 8) | (bytes[29] << 16)) + 1,
+        chunks,
+      };
+    }, sourcePng);
+    console.log(JSON.stringify({ diagnostic: "G2_CI_WEBP_STRUCTURE", ...browserWebp }));
     const mediaReplies = [];
     second.on("response", async (response) => {
       if (response.url().endsWith("/image") && response.request().method() === "PUT") {
