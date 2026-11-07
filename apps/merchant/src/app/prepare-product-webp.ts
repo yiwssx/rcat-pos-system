@@ -39,8 +39,14 @@ export async function prepareProductWebp(
     for (let attempt = 0; attempt < 7; attempt += 1) {
       canvas.width = width;
       canvas.height = height;
-      const context = canvas.getContext("2d");
+      // Flatten all alpha over white. Chromium's default alpha-enabled
+      // canvas may emit extended VP8X/ALPH chunks, which our strict
+      // single-frame WebP ingestion deliberately rejects. An opaque canvas
+      // emits a canonical baseline VP8 chunk without hidden metadata.
+      const context = canvas.getContext("2d", { alpha: false });
       if (!context) throw new Error("เบราว์เซอร์ไม่รองรับการเตรียมรูปภาพ");
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, width, height);
       context.drawImage(image, 0, 0, width, height);
       const quality = Math.max(0.48, 0.8 - attempt * 0.05);
       const output = await new Promise<Blob | null>((resolve) =>
