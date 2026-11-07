@@ -51,8 +51,10 @@ real-money settlement or Production deployment.
   CSRF and `X-Expected-Revision`. No base64 or arbitrary file paths.
 - API's separate raw body parser caps WebP requests at **192 KiB** while
   leaving JSON limits unchanged. Server rejects RIFF mismatches,
-  multi-chunk/polyglot/VP8X/metadata/animated/unknown signatures,
-  dimensions outside 1–1600 and anything over 196608 bytes. Browser-side
+  unsupported multi-chunk/polyglot/metadata/animated/unknown signatures,
+  dimensions outside 1–1600 and anything over 196608 bytes. Canonical
+  VP8/VP8L and metadata-free VP8X with only an optional alpha chunk
+  are supported for Chromium-generated WebP. Browser-side
   processing is **not** a security boundary.
 - PostgreSQL `rcat.menu_product_media` has exactly one current image per
   product, tenant/store/product foreign keys, digest, immutable bytes during
