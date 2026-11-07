@@ -288,7 +288,6 @@ async function browserFlow(fixture) {
         try { detail = (await response.text()).slice(0, 450); }
         catch { detail = "(body unavailable)"; }
         mediaReplies.push({ status: response.status(), detail });
-      });
       }
     });
     await revisedItem.locator('input[type="file"]').setInputFiles({
