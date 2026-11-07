@@ -78,7 +78,9 @@ describe("G2 bounded WebP media validation", () => {
     for (const alpha of [false, true]) {
       const data = extended(320, 180, alpha);
       expect(validateWebp(data)).toEqual({
-        bytes: data, width: 320, height: 180,
+        bytes: data,
+        width: 320,
+        height: 180,
       });
     }
   });

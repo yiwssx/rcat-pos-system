@@ -23,8 +23,12 @@ function chunkAt(bytes: Buffer, at: number): Chunk {
   const payload = at + 8;
   const end = payload + length;
   const next = end + (length & 1);
-  if (end > bytes.length || next > bytes.length ||
-      (length & 1) === 1 && bytes[end] !== 0) invalid();
+  if (
+    end > bytes.length ||
+    next > bytes.length ||
+    ((length & 1) === 1 && bytes[end] !== 0)
+  )
+    invalid();
   return {
     fourCC: bytes.toString("ascii", at, at + 4),
     payload,
@@ -33,14 +37,20 @@ function chunkAt(bytes: Buffer, at: number): Chunk {
   };
 }
 
-function imageSize(bytes: Buffer, chunk: Chunk): { width: number; height: number } {
+function imageSize(
+  bytes: Buffer,
+  chunk: Chunk,
+): { width: number; height: number } {
   let width = 0;
   let height = 0;
   if (chunk.fourCC === "VP8 ") {
-    if (chunk.length < 10 ||
-        bytes[chunk.payload + 3] !== 0x9d ||
-        bytes[chunk.payload + 4] !== 0x01 ||
-        bytes[chunk.payload + 5] !== 0x2a) invalid();
+    if (
+      chunk.length < 10 ||
+      bytes[chunk.payload + 3] !== 0x9d ||
+      bytes[chunk.payload + 4] !== 0x01 ||
+      bytes[chunk.payload + 5] !== 0x2a
+    )
+      invalid();
     width = bytes.readUInt16LE(chunk.payload + 6) & 0x3fff;
     height = bytes.readUInt16LE(chunk.payload + 8) & 0x3fff;
   } else if (chunk.fourCC === "VP8L") {
@@ -62,10 +72,14 @@ export function validateWebp(raw: unknown): {
 } {
   if (!Buffer.isBuffer(raw)) invalid();
   const bytes: Buffer = raw;
-  if (bytes.length < 30 || bytes.length > MAX_WEBP_BYTES ||
-      bytes.toString("ascii", 0, 4) !== "RIFF" ||
-      bytes.toString("ascii", 8, 12) !== "WEBP" ||
-      bytes.readUInt32LE(4) !== bytes.length - 8) invalid();
+  if (
+    bytes.length < 30 ||
+    bytes.length > MAX_WEBP_BYTES ||
+    bytes.toString("ascii", 0, 4) !== "RIFF" ||
+    bytes.toString("ascii", 8, 12) !== "WEBP" ||
+    bytes.readUInt32LE(4) !== bytes.length - 8
+  )
+    invalid();
 
   let chunk = chunkAt(bytes, 12);
   if (chunk.fourCC !== "VP8X") {
@@ -78,15 +92,21 @@ export function validateWebp(raw: unknown): {
   // XMP=0x04, animation=0x02. All except alpha are disallowed.
   if (chunk.length !== 10) invalid();
   const flags = bytes[chunk.payload];
-  if (flags === undefined || (flags & ~0x10) !== 0 ||
-      bytes[chunk.payload + 1] !== 0 ||
-      bytes[chunk.payload + 2] !== 0 ||
-      bytes[chunk.payload + 3] !== 0) invalid();
-  const width = 1 +
+  if (
+    flags === undefined ||
+    (flags & ~0x10) !== 0 ||
+    bytes[chunk.payload + 1] !== 0 ||
+    bytes[chunk.payload + 2] !== 0 ||
+    bytes[chunk.payload + 3] !== 0
+  )
+    invalid();
+  const width =
+    1 +
     bytes[chunk.payload + 4] +
     (bytes[chunk.payload + 5] << 8) +
     (bytes[chunk.payload + 6] << 16);
-  const height = 1 +
+  const height =
+    1 +
     bytes[chunk.payload + 7] +
     (bytes[chunk.payload + 8] << 8) +
     (bytes[chunk.payload + 9] << 16);
@@ -105,7 +125,11 @@ export function validateWebp(raw: unknown): {
   if (alphaSeen && chunk.fourCC !== "VP8 ") invalid();
   if (flags === 0x10 && chunk.fourCC === "VP8 " && !alphaSeen) invalid();
   const image = imageSize(bytes, chunk);
-  if (image.width !== width || image.height !== height ||
-      chunk.next !== bytes.length) invalid();
+  if (
+    image.width !== width ||
+    image.height !== height ||
+    chunk.next !== bytes.length
+  )
+    invalid();
   return { bytes, width, height };
 }

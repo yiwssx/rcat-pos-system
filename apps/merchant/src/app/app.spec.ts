@@ -308,7 +308,9 @@ describe("G2 Chromium WebP metadata canonicalization", () => {
     head.write(tag, 0, "ascii");
     head.writeUInt32LE(payload.length, 4);
     return Buffer.concat([
-      head, payload, payload.length % 2 ? Buffer.alloc(1) : Buffer.alloc(0),
+      head,
+      payload,
+      payload.length % 2 ? Buffer.alloc(1) : Buffer.alloc(0),
     ]);
   }
 
@@ -351,8 +353,12 @@ describe("G2 Chromium WebP metadata canonicalization", () => {
     expect(bytes.toString("ascii", 12, 16)).toBe("VP8 ");
     const payload = Buffer.from(await sample().arrayBuffer());
     payload[20] = 0x28; // ICC + EXIF; must never survive conversion.
-    await expect(canonicalizeCanvasWebp(new Blob([payload], {
-      type: "image/webp",
-    }))).rejects.toThrow();
+    await expect(
+      canonicalizeCanvasWebp(
+        new Blob([payload], {
+          type: "image/webp",
+        }),
+      ),
+    ).rejects.toThrow();
   });
 });

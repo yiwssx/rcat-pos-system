@@ -12,8 +12,13 @@ export async function canonicalizeCanvasWebp(blob: Blob): Promise<Blob> {
   };
   const ascii = (from: number, length: number): string =>
     String.fromCharCode(...input.subarray(from, from + length));
-  if (input.length < 30 || input.length > 196608 ||
-      ascii(0, 4) !== "RIFF" || ascii(8, 4) !== "WEBP") invalid();
+  if (
+    input.length < 30 ||
+    input.length > 196608 ||
+    ascii(0, 4) !== "RIFF" ||
+    ascii(8, 4) !== "WEBP"
+  )
+    invalid();
   const view = new DataView(input.buffer, input.byteOffset, input.byteLength);
   if (view.getUint32(4, true) !== input.length - 8) invalid();
 
@@ -29,36 +34,50 @@ export async function canonicalizeCanvasWebp(blob: Blob): Promise<Blob> {
     const size = view.getUint32(at + 4, true);
     const end = at + 8 + size;
     const next = end + (size & 1);
-    if (next > input.length || (size & 1) === 1 && input[end] !== 0)
+    if (next > input.length || ((size & 1) === 1 && input[end] !== 0))
       invalid();
     chunks.push({
-      type: ascii(at, 4), payload: at + 8, size, offset: at, next,
+      type: ascii(at, 4),
+      payload: at + 8,
+      size,
+      offset: at,
+      next,
     });
     at = next;
   }
   const frame = chunks[chunks.length - 1];
-  if (!frame || (frame.type !== "VP8 " && frame.type !== "VP8L"))
-    invalid();
+  if (!frame || (frame.type !== "VP8 " && frame.type !== "VP8L")) invalid();
   if (chunks.length === 1) return blob;
 
   const extended = chunks[0];
-  if (!extended || extended.type !== "VP8X" || extended.size !== 10)
-    invalid();
+  if (!extended || extended.type !== "VP8X" || extended.size !== 10) invalid();
   const flags = input[extended.payload];
-  if ((flags !== 0x00 && flags !== 0x20) ||
-      input[extended.payload + 1] !== 0 ||
-      input[extended.payload + 2] !== 0 ||
-      input[extended.payload + 3] !== 0) invalid();
-  const width = 1 + input[extended.payload + 4] +
+  if (
+    (flags !== 0x00 && flags !== 0x20) ||
+    input[extended.payload + 1] !== 0 ||
+    input[extended.payload + 2] !== 0 ||
+    input[extended.payload + 3] !== 0
+  )
+    invalid();
+  const width =
+    1 +
+    input[extended.payload + 4] +
     (input[extended.payload + 5] << 8) +
     (input[extended.payload + 6] << 16);
-  const height = 1 + input[extended.payload + 7] +
+  const height =
+    1 +
+    input[extended.payload + 7] +
     (input[extended.payload + 8] << 8) +
     (input[extended.payload + 9] << 16);
   if (width > 1600 || height > 1600) invalid();
   if (flags === 0x20) {
-    if (chunks.length !== 3 || chunks[1].type !== "ICCP" ||
-        chunks[1].size < 1 || chunks[1].size > 8192) invalid();
+    if (
+      chunks.length !== 3 ||
+      chunks[1].type !== "ICCP" ||
+      chunks[1].size < 1 ||
+      chunks[1].size > 8192
+    )
+      invalid();
   } else if (chunks.length !== 2) {
     invalid();
   }
