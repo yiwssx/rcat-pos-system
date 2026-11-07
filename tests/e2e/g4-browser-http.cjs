@@ -281,12 +281,27 @@ async function browserFlow(fixture) {
       context.fillRect(0, 0, 320, 180);
       return canvas.toDataURL("image/png").split(",")[1];
     });
+    const mediaReplies = [];
+    second.on("response", async (response) => {
+      if (response.url().endsWith("/image") && response.request().method() === "PUT") {
+        let detail;
+        try { detail = (await response.text()).slice(0, 450); }
+        catch { detail = "(body unavailable)"; }
+        mediaReplies.push({ status: response.status(), detail });
+      }
+    });
     await revisedItem.locator('input[type="file"]').setInputFiles({
       name: "catalog-menu-test.png",
       mimeType: "image/png",
       buffer: Buffer.from(sourcePng, "base64"),
     });
-    await second.getByText("บันทึกรูปสินค้าแล้ว").waitFor();
+    try {
+      await second.getByText("บันทึกรูปสินค้าแล้ว").waitFor({ timeout: 10000 });
+    } catch {
+      const uiError = await second.locator(".catalog-error").allTextContents();
+      throw new Error("WebP upload did not succeed. UI=" +
+        JSON.stringify(uiError) + " responses=" + JSON.stringify(mediaReplies));
+    }
     const imageInputId = await revisedItem.locator('input[type="file"]').getAttribute("id");
     const mediaProductId = imageInputId.replace("catalog-media-", "");
     const publicMediaUrl = customer + "/api/guest/catalog-media/" + tenant + "/" + store + "/" + mediaProductId;
