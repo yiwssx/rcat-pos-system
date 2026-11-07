@@ -49,6 +49,12 @@ real-money settlement or Production deployment.
   Browser Canvas decodes, resizes and re-encodes to WebP (lossy, no source
   EXIF), and sends raw `image/webp` bytes with secure Session, Origin,
   CSRF and `X-Expected-Revision`. No base64 or arbitrary file paths.
+- Chromium's Canvas encoder may insert an sRGB ICCP profile even for
+  opaque output. The Merchant client rebuilds a baseline RIFF WebP
+  from the single encoded VP8/VP8L image chunk, removing its VP8X/ICCP
+  wrapper and profile bytes before upload. Unsupported ICC/EXIF/XMP/
+  animation combinations fail closed. The API independently rejects
+  any remaining metadata instead of storing it; CI covers this behavior.
 - API's separate raw body parser caps WebP requests at **192 KiB** while
   leaving JSON limits unchanged. Server rejects RIFF mismatches,
   unsupported multi-chunk/polyglot/metadata/animated/unknown signatures,
