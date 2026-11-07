@@ -56,7 +56,7 @@ export class ProductMediaController {
         value?.length ?? 0,
         value && value.length >= 20 ? value.toString("ascii", 12, 16) : "?",
         value && value.length >= 8 ? value.readUInt32LE(4) + 8 : 0,
-      ].join("|"));;
+      ].join("|"));
     }
     return this.media.put(req, tenant, store, product, raw);
   }
