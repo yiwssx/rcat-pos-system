@@ -43,21 +43,8 @@ export class ProductMediaController {
     @Param("storeId") store: string,
     @Param("productId") product: string,
     @Body() raw: unknown,
-    @Res({ passthrough: true }) res: ServerResponse,
   ) {
     requireAllowedOrigin(req);
-    // CI-only diagnostic: format metadata only, never image bytes, URLs,
-    // cookies or identities. Removed after validating the upload parser.
-    if (process.env["CI"] === "true" &&
-        process.env["PGDATABASE"] === "rcat_ci_test") {
-      const value = Buffer.isBuffer(raw) ? raw : null;
-      res.setHeader("X-G2-CI-Format", [
-        value ? "buffer" : (raw === undefined ? "undefined" : typeof raw),
-        value?.length ?? 0,
-        value && value.length >= 20 ? value.toString("ascii", 12, 16) : "?",
-        value && value.length >= 8 ? value.readUInt32LE(4) + 8 : 0,
-      ].join("|"));
-    }
     return this.media.put(req, tenant, store, product, raw);
   }
 
