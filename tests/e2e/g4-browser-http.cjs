@@ -281,65 +281,14 @@ async function browserFlow(fixture) {
       context.fillRect(0, 0, 320, 180);
       return canvas.toDataURL("image/png").split(",")[1];
     });
-    // Decode only public format metadata from the deterministic CI-generated
-    // 320x180 test fixture. Never capture image data or customer content.
-    const browserWebp = await second.evaluate(async (png) => {
-      const img = new Image();
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = "data:image/png;base64," + png;
-      });
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d", { alpha: false });
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", 0.8));
-      const bytes = new Uint8Array(await blob.arrayBuffer());
-      const view = new DataView(bytes.buffer);
-      const ascii = (at, len) => String.fromCharCode(...bytes.slice(at, at + len));
-      const chunks = [];
-      for (let offset = 12; offset + 8 <= bytes.length && chunks.length < 8;) {
-        const kind = ascii(offset, 4);
-        const size = view.getUint32(offset + 4, true);
-        chunks.push({ kind, size });
-        offset += 8 + size + (size & 1);
-      }
-      return {
-        bytes: bytes.length,
-        firstChunk: ascii(12, 4),
-        flags: bytes[20],
-        vp8xCanvasWidth: (bytes[24] | (bytes[25] << 8) | (bytes[26] << 16)) + 1,
-        vp8xCanvasHeight: (bytes[27] | (bytes[28] << 8) | (bytes[29] << 16)) + 1,
-        chunks,
-      };
-    }, sourcePng);
-    console.log(JSON.stringify({ diagnostic: "G2_CI_WEBP_STRUCTURE", ...browserWebp }));
     const mediaReplies = [];
     second.on("response", async (response) => {
       if (response.url().endsWith("/image") && response.request().method() === "PUT") {
         let detail;
         try { detail = (await response.text()).slice(0, 450); }
         catch { detail = "(body unavailable)"; }
-        const uploaded = response.request().postDataBuffer();
-        // Only deterministic CI test-image format metadata; never log
-        // real images, cookies, file bytes, or customer data.
-        const format = uploaded && uploaded.length >= 20
-          ? {
-              length: uploaded.length,
-              declaredRiffSize: uploaded.readUInt32LE(4),
-              fourCC: uploaded.toString("ascii", 12, 16),
-              chunkSize: uploaded.readUInt32LE(16),
-              mime: response.request().headers()["content-type"],
-            }
-          : { length: uploaded?.length ?? 0 };
-        mediaReplies.push({
-          status: response.status(), detail, format,
-          parser: response.headers()["x-g2-ci-format"] ?? "(missing)",
-        });
+        mediaReplies.push({ status: response.status(), detail });
+      });
       }
     });
     await revisedItem.locator('input[type="file"]').setInputFiles({
@@ -436,8 +385,16 @@ async function browserFlow(fixture) {
     const tokens = await Promise.all(grants.map((r) => r.json()));
     assert.notEqual(tokens[0].visitToken, tokens[1].visitToken,
       "Two guests received a shared bearer token");
+    const rotatedResponse = second.waitForResponse((response) =>
+      response.url().includes("/issue-code") &&
+      response.request().method() === "POST",
+    );
     second.once("dialog", (dialog) => dialog.accept());
     await second.getByRole("button", { name: "ออกรหัสโต๊ะใหม่" }).click();
+    const rotated = await rotatedResponse;
+    assert.equal(rotated.status(), 201, await rotated.text());
+    await second.getByText("ออกรหัสใหม่แล้ว ให้แจ้งรหัสแก่ลูกค้าที่นั่งโต๊ะ").waitFor();
+    await second.locator(".table-code strong").waitFor();
     const revokedGrant = await post(
       customer + "/api/guest/ordering-visit/resolve",
       { token: tokens[0].visitToken },
