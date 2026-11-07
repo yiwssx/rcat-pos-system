@@ -204,3 +204,41 @@
     flex-direction: column;
   }
 }
+
+.catalog-media {
+  margin: 1rem 0 0;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.catalog-media-preview {
+  width: min(100%, 220px);
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  border-radius: 0.7rem;
+  border: 1px solid #c6d6e0;
+  background: #f1f4f7;
+}
+.catalog-media-actions {
+  display: grid;
+  gap: 0.65rem;
+  align-content: start;
+  max-width: 100%;
+}
+.catalog-media-actions label {
+  font-weight: 700;
+  color: #214e67;
+}
+.catalog-media-actions input {
+  display: block;
+  max-width: 100%;
+  font-size: 0.88rem;
+}
+.catalog-media p {
+  color: #63748a;
+  font-size: 0.82rem;
+  margin: 0;
+  line-height: 1.6;
+  width: 100%;
+}

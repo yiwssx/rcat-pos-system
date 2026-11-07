@@ -32,6 +32,20 @@ export class GuestOrderApi {
     );
   }
 
+  redeemCode(
+    tenantId: string,
+    storeId: string,
+    tableId: string,
+    code: string,
+  ): Promise<{ visitToken: string; expiresAt: string }> {
+    return firstValueFrom(
+      this.http.post<{ visitToken: string; expiresAt: string }>(
+        "/api/guest/ordering-code/redeem",
+        { tenantId, storeId, tableId, code },
+      ),
+    );
+  }
+
   checkout(
     token: string,
     items: readonly CartLine[],

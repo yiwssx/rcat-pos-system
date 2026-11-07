@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { routes } from "./app.routes";
+import { canonicalizeCanvasWebp } from "./prepare-product-webp";
 import {
   formatUnits,
   lowStock,
@@ -298,5 +299,66 @@ describe("G3 exceptional return Merchant safeguards", () => {
     expect(validRecoverableReturnQuantity("1000000001", "1000000001")).toBe(
       false,
     );
+  });
+});
+
+describe("G2 Chromium WebP metadata canonicalization", () => {
+  function part(tag: string, payload: Buffer): Buffer {
+    const head = Buffer.alloc(8);
+    head.write(tag, 0, "ascii");
+    head.writeUInt32LE(payload.length, 4);
+    return Buffer.concat([
+      head,
+      payload,
+      payload.length % 2 ? Buffer.alloc(1) : Buffer.alloc(0),
+    ]);
+  }
+
+  function sample(includeMetadata = true): Blob {
+    const ext = Buffer.alloc(10);
+    ext[0] = includeMetadata ? 0x20 : 0x00;
+    ext.writeUIntLE(319, 4, 3);
+    ext.writeUIntLE(179, 7, 3);
+    const vp8 = Buffer.alloc(10);
+    vp8[3] = 0x9d;
+    vp8[4] = 0x01;
+    vp8[5] = 0x2a;
+    vp8.writeUInt16LE(320, 6);
+    vp8.writeUInt16LE(180, 8);
+    const content = Buffer.concat([
+      part("VP8X", ext),
+      ...(includeMetadata ? [part("ICCP", Buffer.alloc(456, 0x25))] : []),
+      part("VP8 ", vp8),
+    ]);
+    const header = Buffer.alloc(12);
+    header.write("RIFF", 0, "ascii");
+    header.writeUInt32LE(content.length + 4, 4);
+    header.write("WEBP", 8, "ascii");
+    return new Blob([header, content], { type: "image/webp" });
+  }
+
+  it("strips Chromium-inserted ICCP and VP8X while preserving the VP8 frame", async () => {
+    const source = sample();
+    const output = await canonicalizeCanvasWebp(source);
+    const bytes = Buffer.from(await output.arrayBuffer());
+    expect(source.size).toBeGreaterThan(output.size);
+    expect(bytes.toString("ascii", 12, 16)).toBe("VP8 ");
+    expect(bytes.readUInt32LE(4)).toBe(bytes.length - 8);
+    expect(bytes.includes(Buffer.from("ICCP"))).toBe(false);
+  });
+
+  it("also simplifies empty VP8X and rejects unsupported WebP extensions", async () => {
+    const clean = await canonicalizeCanvasWebp(sample(false));
+    const bytes = Buffer.from(await clean.arrayBuffer());
+    expect(bytes.toString("ascii", 12, 16)).toBe("VP8 ");
+    const payload = Buffer.from(await sample().arrayBuffer());
+    payload[20] = 0x28; // ICC + EXIF; must never survive conversion.
+    await expect(
+      canonicalizeCanvasWebp(
+        new Blob([payload], {
+          type: "image/webp",
+        }),
+      ),
+    ).rejects.toThrow();
   });
 });

@@ -1,11 +1,14 @@
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "./app.module";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { installHttpTelemetry } from "./observability/http-telemetry";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, { bufferLogs: false });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: false,
+  });
   const origins = (process.env["CORS_ORIGINS"] ?? "")
     .split(",")
     .map((origin) => origin.trim())
@@ -21,6 +24,10 @@ async function bootstrap(): Promise<void> {
     installHttpTelemetry(req, res);
     next();
   });
+
+  // Raw WebP parser has a separate 192 KiB cap; standard JSON limits remain
+  // unchanged. No base64 uploads or multipart paths reach this route.
+  app.useBodyParser("raw", { type: "image/webp", limit: "192kb" });
 
   app.setGlobalPrefix("api");
   app.enableShutdownHooks();

@@ -269,6 +269,56 @@ async function browserFlow(fixture) {
       hasText: "เมนูทดสอบแก้ไขแล้ว",
     });
     await revisedItem.getByText("99.50 บาท").waitFor();
+    // Real Chromium canvas PNG -> bounded WebP conversion -> restricted
+    // binary upload. Public active-only media must load as an image and be
+    // denied for foreign tenancy or after this product is archived.
+    const sourcePng = await second.evaluate(() => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 320;
+      canvas.height = 180;
+      const context = canvas.getContext("2d");
+      context.fillStyle = "#db8532";
+      context.fillRect(0, 0, 320, 180);
+      return canvas.toDataURL("image/png").split(",")[1];
+    });
+    const mediaReplies = [];
+    second.on("response", async (response) => {
+      if (response.url().endsWith("/image") && response.request().method() === "PUT") {
+        let detail;
+        try { detail = (await response.text()).slice(0, 450); }
+        catch { detail = "(body unavailable)"; }
+        mediaReplies.push({ status: response.status(), detail });
+      }
+    });
+    await revisedItem.locator('input[type="file"]').setInputFiles({
+      name: "catalog-menu-test.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(sourcePng, "base64"),
+    });
+    try {
+      await second.getByText("บันทึกรูปสินค้าแล้ว").waitFor({ timeout: 10000 });
+    } catch {
+      const uiError = await second.locator(".catalog-error").allTextContents();
+      throw new Error("WebP upload did not succeed. UI=" +
+        JSON.stringify(uiError) + " responses=" + JSON.stringify(mediaReplies));
+    }
+    const imageInputId = await revisedItem.locator('input[type="file"]').getAttribute("id");
+    const mediaProductId = imageInputId.replace("catalog-media-", "");
+    const publicMediaUrl = customer + "/api/guest/catalog-media/" + tenant + "/" + store + "/" + mediaProductId;
+    const activeMedia = await secondContext.request.get(publicMediaUrl);
+    assert.equal(activeMedia.status(), 200, await activeMedia.text().catch(() => ""));
+    assert.match(activeMedia.headers()["content-type"] ?? "", /^image\/webp/);
+    assert.equal(activeMedia.headers()["x-content-type-options"], "nosniff");
+    await revisedItem.locator(".catalog-media-preview").waitFor();
+    assert.ok(await revisedItem.locator(".catalog-media-preview")
+      .evaluate((img) => img.complete && img.naturalWidth > 0),
+    "Browser failed to decode generated WebP product photo");
+    const foreignMedia = await secondContext.request.get(
+      customer + "/api/guest/catalog-media/" + tenant +
+        "/20000000-0000-4000-8000-000000000002/" + mediaProductId,
+    );
+    assert.equal(foreignMedia.status(), 404);
+
     second.once("dialog", (dialog) => dialog.accept());
     await revisedItem.getByRole("button", { name: "เก็บถาวร" }).click();
     await second.getByText("เก็บสินค้าถาวรแล้ว").waitFor();
@@ -276,6 +326,82 @@ async function browserFlow(fixture) {
     await second.locator(".catalog-product", {
       hasText: "เมนูทดสอบแก้ไขแล้ว",
     }).getByText("เก็บถาวร").waitFor();
+    assert.equal((await secondContext.request.get(publicMediaUrl)).status(), 404,
+      "Archived image must no longer be publicly served");
+
+    // Printed static QR contains only PUBLIC table identifiers. Scanning
+    // does not authorize Orders: the 8-digit staff code is required, with
+    // a separately minted 256-bit guest token per client.
+    await second.goto(merchant + "/tables/" + tenant + "/" + store);
+    await second.getByRole("heading", { name: "QR สั่งอาหารติดโต๊ะ" }).waitFor();
+    await second.getByLabel("ชื่อโต๊ะ").fill("QR code E2E");
+    await second.getByRole("button", { name: "เพิ่มโต๊ะ" }).click();
+    await second.getByText("เพิ่มโต๊ะแล้ว").waitFor();
+    const tableUrl = (await second.locator(".table-url").innerText()).trim();
+    const scanned = new URL(tableUrl);
+    assert.equal(scanned.origin, customer);
+    assert.equal(scanned.pathname, "/order");
+    assert.equal(scanned.hash, "", "Static printable QR contained a bearer");
+    assert.deepEqual([...scanned.searchParams.keys()].sort(), ["store", "table", "tenant"]);
+    const printedId = scanned.searchParams.get("table");
+    const svgResponse = await secondContext.request.get(
+      merchant + orderScope + "/tables/" + printedId + "/print-qr.svg",
+    );
+    assert.equal(svgResponse.status(), 200, await svgResponse.text());
+    const qrSvg = await svgResponse.text();
+    assert.match(svgResponse.headers()["content-type"], /^image\/svg\+xml/);
+    assert.match(qrSvg, /<svg/);
+    assert.match(qrSvg, /<path/);
+    assert.ok(await second.locator(".table-qr")
+      .evaluate((img) => img.complete && img.naturalWidth > 0),
+    "Printable QR SVG did not render");
+    second.once("dialog", (dialog) => dialog.accept());
+    await second.getByRole("button", { name: "ออกรหัสโต๊ะใหม่" }).click();
+    const tableCode = (await second.locator(".table-code strong").innerText()).trim();
+    assert.match(tableCode, /^[0-9]{8}$/);
+    assert.ok(!tableUrl.includes(tableCode), "Static URL leaked the short staff code");
+    assert.ok(!qrSvg.includes(tableCode), "QR SVG leaked the short staff code");
+
+    await guest.goto(tableUrl);
+    await guest.getByRole("heading", { name: "กรอกรหัสรอบโต๊ะ" }).waitFor();
+    assert.equal(await guest.locator(".guest-product").count(), 0,
+      "Printed QR alone authorized product menu");
+    const wrong = tableCode === "00000000" ? "00000001" : "00000000";
+    await guest.getByLabel("รหัส 8 หลักที่พนักงานแจ้ง").fill(wrong);
+    await guest.getByRole("button", { name: "ยืนยันรหัสและเปิดเมนู" }).click();
+    await guest.getByText("รหัสไม่ถูกต้อง").waitFor();
+    await guest.getByLabel("รหัส 8 หลักที่พนักงานแจ้ง").fill(tableCode);
+    await guest.getByRole("button", { name: "ยืนยันรหัสและเปิดเมนู" }).click();
+    await guest.locator(".guest-product", { hasText: fixture.name }).waitFor();
+    assert.equal(new URL(guest.url()).hash, "", "Guest grant leaked as fragment");
+    assert.equal(new URL(guest.url()).searchParams.has("token"), false,
+      "Guest grant leaked in URL query");
+    const grants = await Promise.all([0,1].map(() => post(
+      customer + "/api/guest/ordering-code/redeem",
+      { tenantId: tenant, storeId: store, tableId: printedId, code: tableCode },
+    )));
+    assert.ok(grants.every((r) => r.status === 201));
+    const tokens = await Promise.all(grants.map((r) => r.json()));
+    assert.notEqual(tokens[0].visitToken, tokens[1].visitToken,
+      "Two guests received a shared bearer token");
+    const rotatedResponse = second.waitForResponse((response) =>
+      response.url().includes("/issue-code") &&
+      response.request().method() === "POST",
+    );
+    second.once("dialog", (dialog) => dialog.accept());
+    await second.getByRole("button", { name: "ออกรหัสโต๊ะใหม่" }).click();
+    const rotated = await rotatedResponse;
+    assert.equal(rotated.status(), 201, await rotated.text());
+    await second.getByText("ออกรหัสใหม่แล้ว ให้แจ้งรหัสแก่ลูกค้าที่นั่งโต๊ะ").waitFor();
+    await second.locator(".table-code strong").waitFor();
+    const revokedGrant = await post(
+      customer + "/api/guest/ordering-visit/resolve",
+      { token: tokens[0].visitToken },
+    );
+    assert.equal(revokedGrant.status, 404,
+      "Staff code rotation did not revoke previous guest grants");
+
+
 
     // Expire the first merchant session with real logout + CSRF, then
     // refresh the browser to prove stale tab access is no longer authorized.
@@ -293,7 +419,7 @@ async function browserFlow(fixture) {
       browser: "Chromium", viewport: "mobile customer + desktop/mobile merchant",
       result: "PASS",
       scenarios: ["QR URL scrub", "offline submit block", "tracked checkout",
-        "independent merchant tabs", "order status propagation", "mobile catalog create/edit/archive", "expired session denied"],
+        "independent merchant tabs", "order status propagation", "mobile catalog WebP conversion + guest photo", "mobile catalog create/edit/archive", "static printed QR and staff code redemption/revocation", "expired session denied"],
     }));
   } catch (error) {
     for (const [name, page] of [["guest", guest], ["merchant", board], ["second", second]]) {
