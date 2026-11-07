@@ -287,7 +287,19 @@ async function browserFlow(fixture) {
         let detail;
         try { detail = (await response.text()).slice(0, 450); }
         catch { detail = "(body unavailable)"; }
-        mediaReplies.push({ status: response.status(), detail });
+        const uploaded = response.request().postDataBuffer();
+        // Only deterministic CI test-image format metadata; never log
+        // real images, cookies, file bytes, or customer data.
+        const format = uploaded && uploaded.length >= 20
+          ? {
+              length: uploaded.length,
+              declaredRiffSize: uploaded.readUInt32LE(4),
+              fourCC: uploaded.toString("ascii", 12, 16),
+              chunkSize: uploaded.readUInt32LE(16),
+              mime: response.request().headers()["content-type"],
+            }
+          : { length: uploaded?.length ?? 0 };
+        mediaReplies.push({ status: response.status(), detail, format });
       }
     });
     await revisedItem.locator('input[type="file"]').setInputFiles({
