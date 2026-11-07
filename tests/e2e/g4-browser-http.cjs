@@ -299,7 +299,10 @@ async function browserFlow(fixture) {
               mime: response.request().headers()["content-type"],
             }
           : { length: uploaded?.length ?? 0 };
-        mediaReplies.push({ status: response.status(), detail, format });
+        mediaReplies.push({
+          status: response.status(), detail, format,
+          parser: response.headers()["x-g2-ci-format"] ?? "(missing)",
+        });
       }
     });
     await revisedItem.locator('input[type="file"]').setInputFiles({
