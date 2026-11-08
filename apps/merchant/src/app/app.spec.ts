@@ -1,4 +1,3 @@
-import "./format-probe.spec";
 import { describe, expect, it } from "vitest";
 import { routes } from "./app.routes";
 import { canonicalizeCanvasWebp } from "./prepare-product-webp";
