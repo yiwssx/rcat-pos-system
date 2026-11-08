@@ -62,7 +62,12 @@ export class ProductModifiersController {
   ) {
     requireAllowedOrigin(req);
     return this.modifiers.updateGroup(
-      req, tenantId, storeId, productId, groupId, body,
+      req,
+      tenantId,
+      storeId,
+      productId,
+      groupId,
+      body,
     );
   }
 
@@ -79,7 +84,13 @@ export class ProductModifiersController {
   ) {
     requireAllowedOrigin(req);
     return this.modifiers.updateOption(
-      req, tenantId, storeId, productId, groupId, optionId, body,
+      req,
+      tenantId,
+      storeId,
+      productId,
+      groupId,
+      optionId,
+      body,
     );
   }
 
