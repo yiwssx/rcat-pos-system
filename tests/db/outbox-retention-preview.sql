@@ -31,9 +31,11 @@ BEGIN
    jsonb_build_object('items',jsonb_build_array(
      jsonb_build_object('productId',product,'quantity',1,
        'optionIds','[]'::jsonb))));
- SELECT e.id INTO first_id
- FROM rcat.order_outbox_events e
- WHERE e.order_id=(first_order->>'orderId')::uuid;
+ SELECT (item->>'eventId')::bigint INTO first_id
+ FROM jsonb_array_elements(
+   rcat_private.merchant_order_notifications(staff,a,st,NULL,50)->'events'
+ ) item
+ WHERE item->>'orderId'=first_order->>'orderId';
  IF first_id IS NULL THEN RAISE EXCEPTION 'Missing first Outbox event'; END IF;
  PERFORM rcat_private.ack_merchant_order_notification(staff,a,st,first_id);
  PERFORM set_config('test.retention_first',first_order->>'orderId',true);
