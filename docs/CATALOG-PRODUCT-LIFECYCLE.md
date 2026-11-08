@@ -99,3 +99,27 @@ checkout, or real PromptPay Payment. These remain tracked under #38,
 - **Scope limitation:** this is server-side keyset pagination for Merchant
   products, not for the anonymous Guest menu. Large-store page latency/soak,
   mobile scanner tests and operational staging signoff remain open. No Payment.
+
+
+## Category and Modifier editing (8 Nov 2026; PR #69)
+
+- Owner/Manager can now edit a category's Thai name and stable within-store
+  slug, add/edit modifier groups (name, slug, min/max select), and add/edit
+  modifier options (name, signed integer-satang delta, availability) from the
+  Merchant Catalog. All mutations require staff Session, Origin and CSRF.
+- Each update runs as a single SECURITY DEFINER PostgreSQL transaction with
+  explicit tenant/store/product/group constraints, a row lock, previous-field
+  compare-and-swap and an audit event on real change only. If another manager
+  changes the item, the stale draft fails with HTTP 409 and must be reloaded.
+- Product UUIDs, category IDs, option IDs and **historical Order snapshots**
+  remain untouched. A new checkout uses the current available modifiers and
+  is repriced by the server. The editor does not assert any Payment success.
+- Modifier input supports a signed amount in baht but converts it to safe
+  integer satang; SQL constraints and checkout validation remain authoritative.
+  Editing modifiers of archived products is disallowed.
+- New SQL and unit regressions cover stale requests, cross-tenant writes,
+  no-op audit, invalid selection bounds and price parsing.
+
+**Not yet operator-verified:** physical device/weak-network accessibility,
+large-store load, cross-replica edge throttling and real Staging deployment.
+No Production and no PromptPay module in this increment.
