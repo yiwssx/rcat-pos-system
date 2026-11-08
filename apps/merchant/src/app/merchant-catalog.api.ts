@@ -25,6 +25,16 @@ export interface MerchantCatalogSnapshot {
   products: CatalogProduct[];
 }
 
+export interface CatalogCursor {
+  createdAt: string;
+  id: string;
+}
+
+export interface CatalogPageResult extends MerchantCatalogSnapshot {
+  hasMore: boolean;
+  nextCursor: CatalogCursor | null;
+}
+
 export interface CatalogEdit {
   expectedRevision: number;
   name: string;
@@ -65,6 +75,34 @@ export class MerchantCatalogApi {
   ): Promise<MerchantCatalogSnapshot> {
     return firstValueFrom(
       this.http.get<MerchantCatalogSnapshot>(scope(tenantId, storeId), {
+        withCredentials: true,
+      }),
+    );
+  }
+
+  page(
+    tenantId: string,
+    storeId: string,
+    filters: {
+      search: string;
+      categoryId: string;
+      includeArchived: boolean;
+      cursor: CatalogCursor | null;
+    },
+  ): Promise<CatalogPageResult> {
+    const params: Record<string, string> = {
+      search: filters.search,
+      includeArchived: String(filters.includeArchived),
+      limit: "20",
+    };
+    if (filters.categoryId) params["categoryId"] = filters.categoryId;
+    if (filters.cursor) {
+      params["cursorCreatedAt"] = filters.cursor.createdAt;
+      params["cursorId"] = filters.cursor.id;
+    }
+    return firstValueFrom(
+      this.http.get<CatalogPageResult>(scope(tenantId, storeId) + "/products/page", {
+        params,
         withCredentials: true,
       }),
     );
