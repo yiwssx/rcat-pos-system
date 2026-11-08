@@ -64,9 +64,7 @@ describe("merchant catalog filtering and pagination", () => {
   it("paginates 55 products into bounded non-overlapping pages", () => {
     const items = Array.from({ length: 55 }, (_, index) => product(index + 1));
     expect(catalogPageCount(items.length)).toBe(3);
-    const pages = [1, 2, 3].map((page) =>
-      paginateCatalogProducts(items, page),
-    );
+    const pages = [1, 2, 3].map((page) => paginateCatalogProducts(items, page));
     expect(pages.map((page) => page.length)).toEqual([20, 20, 15]);
     expect(new Set(pages.flat().map((item) => item.id)).size).toBe(55);
     expect(paginateCatalogProducts(items, 99)).toEqual(pages[2]);
