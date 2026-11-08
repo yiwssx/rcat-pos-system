@@ -37,7 +37,7 @@ Linked PR, relevant tests pass, tenant/permission and transaction invariants ver
 | Track | Issue | State | Evidence / blocker |
 | --- | --- | --- | --- |
 | A — Coding | [#80](https://github.com/yiwssx/rcat-pos-system/issues/80) | **Closed (code-only)** | PR #83/#84/#85 CI artifacts and code merged; not a host acceptance |
-| Lean evidence/CI | [#86](https://github.com/yiwssx/rcat-pos-system/issues/86) | In progress | [Rules, impact gates and register](LEAN-EVIDENCE-DELIVERY.md) |
+| Lean evidence/CI | [#86](https://github.com/yiwssx/rcat-pos-system/issues/86) | See GitHub issue | [Rules, impact gates and register](LEAN-EVIDENCE-DELIVERY.md) |
 | B — Staging deployment | [#81](https://github.com/yiwssx/rcat-pos-system/issues/81) | **Open** | Real RCAT IOT/RMS host capacity, DNS/TLS/OAuth/backup/restore/QR not verified |
 | C — Policies/Acceptance | [#82](https://github.com/yiwssx/rcat-pos-system/issues/82) | **Open** | Owner must approve stock/retention/SLO/RPO/RTO and B signoff |
 
