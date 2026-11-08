@@ -487,7 +487,11 @@ export class MerchantCatalogPage implements OnInit {
   }
 
   displayedProducts(): CatalogProduct[] {
-    return paginateCatalogProducts(this.filteredProducts(), this.page(), this.pageSize);
+    return paginateCatalogProducts(
+      this.filteredProducts(),
+      this.page(),
+      this.pageSize,
+    );
   }
 
   pageCount(): number {
