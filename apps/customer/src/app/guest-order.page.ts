@@ -218,7 +218,8 @@ function guestError(error: unknown): string {
             }
           </div>
           <div class="guest-menu-progress" role="status" aria-live="polite">
-            แสดง {{ products().length }} จาก {{ filteredProducts().length }} เมนู
+            แสดง {{ products().length }} จาก
+            {{ filteredProducts().length }} เมนู
           </div>
           @if (hiddenProducts() > 0) {
             <button
@@ -233,7 +234,8 @@ function guestError(error: unknown): string {
             >
               แสดงเมนูเพิ่มเติม ({{
                 hiddenProducts() > pageSize ? pageSize : hiddenProducts()
-              }} รายการ)
+              }}
+              รายการ)
             </button>
           }
         }
