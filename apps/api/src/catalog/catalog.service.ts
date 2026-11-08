@@ -197,8 +197,13 @@ export class CatalogService {
           "SELECT rcat_private.edit_catalog_category($1,$2,$3,$4,$5,$6,$7,$8) AS data",
           [
             digestOpaqueSecret(session.token),
-            tenantId, storeId, categoryId,
-            expectedName, expectedSlug, name, slug,
+            tenantId,
+            storeId,
+            categoryId,
+            expectedName,
+            expectedSlug,
+            name,
+            slug,
           ],
         ),
       );
