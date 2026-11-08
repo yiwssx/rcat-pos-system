@@ -138,6 +138,97 @@ export function selectedOptionError(
   return null;
 }
 
+/**
+ * Never infer approval from the cart's aggregate total alone. Different
+ * products/modifiers may have compensating price changes, while a Merchant
+ * can rename an item without changing its price. Ask for a fresh review when
+ * anything relevant to a submitted cart changed since the guest saw it.
+ * The PostgreSQL checkout remains authoritative under concurrent edits.
+ */
+export function cartNeedsReview(
+  reviewed: GuestVisit,
+  current: GuestVisit,
+  lines: readonly CartLine[],
+): boolean {
+  if (
+    reviewed.visitId !== current.visitId ||
+    reviewed.tableId !== current.tableId ||
+    reviewed.storeId !== current.storeId ||
+    lines.length === 0
+  )
+    return true;
+
+  const before = estimateSatang(reviewed, lines);
+  const after = estimateSatang(current, lines);
+  if (
+    !Number.isSafeInteger(before) ||
+    !Number.isSafeInteger(after) ||
+    before !== after ||
+    before < 1 ||
+    after > 100000000
+  )
+    return true;
+
+  for (const line of lines) {
+    if (
+      selectedOptionError(reviewed, line.productId, line.optionIds) ||
+      selectedOptionError(current, line.productId, line.optionIds)
+    )
+      return true;
+    const a = reviewed.products.find((p) => p.id === line.productId);
+    const b = current.products.find((p) => p.id === line.productId);
+    if (
+      !a ||
+      !b ||
+      a.name !== b.name ||
+      a.categoryId !== b.categoryId ||
+      a.priceSatang !== b.priceSatang
+    )
+      return true;
+
+    const catA = reviewed.categories.find((c) => c.id === a.categoryId);
+    const catB = current.categories.find((c) => c.id === b.categoryId);
+    if (!catA || !catB || catA.name !== catB.name) return true;
+
+    const oldGroups = reviewed.modifierGroups
+      .filter((g) => g.productId === line.productId)
+      .sort((x, y) => x.id.localeCompare(y.id));
+    const newGroups = current.modifierGroups
+      .filter((g) => g.productId === line.productId)
+      .sort((x, y) => x.id.localeCompare(y.id));
+    if (
+      oldGroups.length !== newGroups.length ||
+      oldGroups.some((g, i) => {
+        const next = newGroups[i];
+        return (
+          !next ||
+          g.id !== next.id ||
+          g.name !== next.name ||
+          g.slug !== next.slug ||
+          g.minSelect !== next.minSelect ||
+          g.maxSelect !== next.maxSelect
+        );
+      })
+    )
+      return true;
+
+    for (const id of line.optionIds) {
+      const oldOption = reviewed.modifierOptions.find((o) => o.id === id);
+      const newOption = current.modifierOptions.find((o) => o.id === id);
+      if (
+        !oldOption ||
+        !newOption ||
+        oldOption.productId !== newOption.productId ||
+        oldOption.groupId !== newOption.groupId ||
+        oldOption.name !== newOption.name ||
+        oldOption.priceDeltaSatang !== newOption.priceDeltaSatang
+      )
+        return true;
+    }
+  }
+  return false;
+}
+
 export function addToCart(
   visit: GuestVisit,
   current: readonly CartLine[],
