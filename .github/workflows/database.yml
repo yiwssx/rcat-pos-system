@@ -106,6 +106,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/catalog.sql
       - name: Verify merchant catalog versioned edit, soft archive, RLS and immutable old Order snapshots
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/catalog-product-lifecycle.sql
+      - name: Verify 45-item staff Catalog keyset paging and tenant/store isolation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/catalog-keyset-paging.sql
       - name: Verify printable QR code rotation, per-device grants, failed-attempt cap and Order continuity
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/printable-table-codes.sql
       - name: Verify restricted WebP product images, archived/sold-out reads and size cap
