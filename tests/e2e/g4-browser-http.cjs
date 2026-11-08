@@ -504,13 +504,15 @@ async function httpLoad(fixture) {
     "SELECT count(*)::int AS total FROM rcat.orders WHERE tenant_id=$1 AND store_id=$2 AND table_id=$3 AND status='submitted'",
     [tenant, store, fixture.tableId],
   );
-  // The browser's Order may be accepted, leaving 1 shared + 24 unique submitted.
-  assert.equal(result.rows[0].total, batchSize + 1);
+  // Browser's initial Order is accepted, but the reconnect scenario
+  // creates one more submitted Order. Include it in both Inbox and Outbox.
+  const resumedSubmitted = 1;
+  assert.equal(result.rows[0].total, batchSize + 1 + resumedSubmitted);
   const outbox = await db.query(
     "SELECT count(*)::int AS total FROM rcat.order_outbox_events WHERE tenant_id=$1 AND store_id=$2 AND table_id=$3 AND event_type='order.submitted'",
     [tenant, store, fixture.tableId],
   );
-  assert.equal(outbox.rows[0].total, batchSize + 2, "HTTP retries duplicated outbox");
+  assert.equal(outbox.rows[0].total, batchSize + 2 + resumedSubmitted, "HTTP retries duplicated outbox");
   const oldToken = fixture.token;
   await fixture.rotate();
   const denied = await burst(
@@ -526,7 +528,7 @@ async function httpLoad(fixture) {
     "SELECT count(*)::int AS total FROM rcat.orders WHERE tenant_id=$1 AND store_id=$2 AND table_id=$3",
     [tenant, store, fixture.tableId],
   );
-  assert.equal(final.rows[0].total, batchSize + 2);
+  assert.equal(final.rows[0].total, batchSize + 2 + resumedSubmitted);
   console.log("PASS: real HTTP idempotency, scoped Order snapshots, transactional Outbox, revoked QR");
 }
 
