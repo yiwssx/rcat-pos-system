@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "repository": "yiwssx/rcat-pos-system",
+  "updated": "2026-11-09",
+  "principles": [
+    "Reuse only evidence tied to exact tested source and corresponding environment",
+    "If impacted source or security boundary changes, new relevant CI is required; prior PR results do not cover new code",
+    "Synthetic CI cannot certify real RMS/IOT TLS, Google OAuth, encrypted offsite restore or physical devices",
+    "No staging or production actions are authorized by this register"
+  ],
+  "claims": [
+    {
+      "id": "G4-A1-PACKAGING",
+      "scope": "ci",
+      "status": "verified_ci",
+      "issue": 80,
+      "pr": 83,
+      "head_sha": "f3d07e0534c84a55f25e657e9a9351e49ed7f4e2",
+      "merge_sha": "175180d5939dc94710b2692195854e27d32fd478",
+      "run_id": 42485890942,
+      "workflow": "On-prem staging container packaging",
+      "covers": [
+        "Angular Customer/Merchant/Admin and NestJS image targets build",
+        "Private Docker network and safe staging preflight tested with synthetic secrets"
+      ],
+      "excludes": [
+        "Real RMS/IOT connectivity and firewall",
+        "Actual staging deployment, Google OAuth and Production"
+      ]
+    },
+    {
+      "id": "G4-A2-A3-OPS",
+      "scope": "ci",
+      "status": "verified_ci",
+      "issue": 80,
+      "pr": 84,
+      "head_sha": "864bb2e8411de6f3492df7d4fc86e4171df78ac7",
+      "merge_sha": "6ade26cea2c99fc2eadb4d61f9fd979a0bc2fa97",
+      "run_id": 42487075623,
+      "workflow": "Foundation checks",
+      "covers": [
+        "Opt-in backup and Guest cleanup script guards",
+        "Synthetic readiness, freshness and scheduler template validation"
+      ],
+      "excludes": [
+        "Encrypted offsite backup taken or restored on IOT",
+        "Actual alert delivery or installed timer"
+      ]
+    },
+    {
+      "id": "G4-A4-A5-QUALIFICATION",
+      "scope": "ci",
+      "status": "verified_ci",
+      "issue": 80,
+      "pr": 85,
+      "head_sha": "a7eff711336d6d08be2a594dc61eb01457f79786",
+      "merge_sha": "905577f130737b91ce213efb3d88b5d4fcab2119",
+      "run_id": 42489346961,
+      "workflow": "G4 Browser and HTTP Ordering E2E",
+      "covers": [
+        "Synthetic 501-product keyset pages and bounded SSE probe guards",
+        "Chromium Guest/Merchant keyboard flow and existing HTTP/Order CI"
+      ],
+      "excludes": [
+        "Physical Android/iOS/Safari",
+        "Real RMS two-replica sustained traffic and Production load SLO"
+      ]
+    },
+    {
+      "id": "G4-B-REAL-STAGING",
+      "scope": "onprem_staging",
+      "status": "pending_external",
+      "issue": 81,
+      "covers": [],
+      "excludes": [
+        "IOT host and RMS/DNS/TLS not deployed or verified",
+        "Live Google Workspace OAuth, email, restore, physical-device and sustained SSE qualification"
+      ]
+    },
+    {
+      "id": "G4-C-OWNER-POLICY",
+      "scope": "operator_policy",
+      "status": "pending_owner",
+      "issue": 82,
+      "covers": [],
+      "excludes": [
+        "Stock availability policy changes and backup retention/RPO/RTO/SLO signoff require explicit owner decisions"
+      ]
+    },
+    {
+      "id": "G5-G6-PAYMENT-RELEASE",
+      "scope": "production",
+      "status": "not_started",
+      "issue": 7,
+      "covers": [],
+      "excludes": [
+        "Payment/PromptPay implementation and real-money Production approval"
+      ]
+    }
+  ]
+}
