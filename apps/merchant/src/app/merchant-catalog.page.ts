@@ -573,35 +573,54 @@ function bahtInput(satang: number): string {
                             }
                           </div>
                         }
-                        <form
-                          class="catalog-edit"
-                          (ngSubmit)="addOption(product, group)"
+                        <button
+                          type="button"
+                          class="subtle"
+                          [disabled]="saving()"
+                          [attr.aria-expanded]="newOptionGroupId() === group.id"
+                          [attr.aria-controls]="'new-option-form-' + group.id"
+                          (click)="beginNewOption(group.id)"
                         >
-                          <h5>เพิ่มตัวเลือกใน {{ group.name }}</h5>
-                          <label for="new-option-name">ชื่อตัวเลือก</label>
-                          <input
-                            id="new-option-name"
-                            name="newOptionName"
-                            [(ngModel)]="newOption.name"
-                            maxlength="120"
-                            required
-                            [disabled]="saving()"
-                          />
-                          <label for="new-option-price"
-                            >ราคาเพิ่ม/ลด (บาท)</label
-                          >
-                          <input
-                            id="new-option-price"
-                            name="newOptionPrice"
-                            [(ngModel)]="newOption.priceDeltaBaht"
-                            required
-                            inputmode="decimal"
-                            [disabled]="saving()"
-                          />
-                          <button type="submit" [disabled]="saving()">
-                            เพิ่มตัวเลือก
-                          </button>
-                        </form>
+                          {{
+                            newOptionGroupId() === group.id
+                              ? "ยกเลิกเพิ่มตัวเลือก"
+                              : "เพิ่มตัวเลือก"
+                          }}
+                        </button>
+                        @if (newOptionGroupId() === group.id) {
+                          @if (newOptionDrafts[group.id]; as draft) {
+                            <form
+                              class="catalog-edit"
+                              [attr.id]="'new-option-form-' + group.id"
+                              (ngSubmit)="addOption(product, group)"
+                            >
+                              <h5>เพิ่มตัวเลือกใน {{ group.name }}</h5>
+                              <label for="new-option-name">ชื่อตัวเลือก</label>
+                              <input
+                                id="new-option-name"
+                                name="newOptionName"
+                                [(ngModel)]="draft.name"
+                                maxlength="120"
+                                required
+                                [disabled]="saving()"
+                              />
+                              <label for="new-option-price"
+                                >ราคาเพิ่ม/ลด (บาท)</label
+                              >
+                              <input
+                                id="new-option-price"
+                                name="newOptionPrice"
+                                [(ngModel)]="draft.priceDeltaBaht"
+                                required
+                                inputmode="decimal"
+                                [disabled]="saving()"
+                              />
+                              <button type="submit" [disabled]="saving()">
+                                บันทึกตัวเลือกใหม่
+                              </button>
+                            </form>
+                          }
+                        }
                       </div>
                     } @empty {
                       <p>ยังไม่มีกลุ่มตัวเลือก</p>
@@ -712,6 +731,7 @@ export class MerchantCatalogPage implements OnInit {
   readonly modifierProductId = signal<string | null>(null);
   readonly groupEditId = signal<string | null>(null);
   readonly optionEditId = signal<string | null>(null);
+  readonly newOptionGroupId = signal<string | null>(null);
   readonly modifierGroups = signal<CatalogModifierGroup[]>([]);
   readonly modifierOptions = signal<CatalogModifierOption[]>([]);
   private categoryBefore: CatalogCategory | null = null;
@@ -720,7 +740,8 @@ export class MerchantCatalogPage implements OnInit {
   categoryEdit = { name: "", slug: "" };
   newGroup = { name: "", slug: "", minSelect: 0, maxSelect: 1 };
   groupEdit = { name: "", slug: "", minSelect: 0, maxSelect: 1 };
-  newOption = { name: "", priceDeltaBaht: "0.00" };
+  newOptionDrafts: Record<string, { name: string; priceDeltaBaht: string }> =
+    {};
   optionEdit = { name: "", priceDeltaBaht: "0.00", available: true };
   readonly pageLoading = signal(false);
   readonly hasMore = signal(false);
@@ -815,6 +836,8 @@ export class MerchantCatalogPage implements OnInit {
       this.categoryEditId.set(null);
       this.groupEditId.set(null);
       this.optionEditId.set(null);
+      this.newOptionGroupId.set(null);
+      this.newOptionDrafts = {};
     } catch {
       if (version === this.latestRequest) {
         this.error.set("ไม่สามารถโหลดข้อมูลเมนูล่าสุดได้");
@@ -1098,6 +1121,24 @@ export class MerchantCatalogPage implements OnInit {
     );
     this.groupEditId.set(null);
     this.optionEditId.set(null);
+    this.newOptionGroupId.set(null);
+    this.newOptionDrafts = {};
+  }
+
+  beginNewOption(groupId: string): void {
+    const previous = this.newOptionGroupId();
+    if (previous) delete this.newOptionDrafts[previous];
+    if (previous === groupId) {
+      this.newOptionGroupId.set(null);
+      return;
+    }
+    // Each group owns a distinct draft object. A delayed ngModel event
+    // from the old form cannot overwrite the newly opened group's fields.
+    this.newOptionDrafts[groupId] = {
+      name: "",
+      priceDeltaBaht: "0.00",
+    };
+    this.newOptionGroupId.set(groupId);
   }
 
   groupsFor(productId: string): CatalogModifierGroup[] {
@@ -1189,8 +1230,9 @@ export class MerchantCatalogPage implements OnInit {
     product: CatalogProduct,
     group: CatalogModifierGroup,
   ): Promise<void> {
-    const delta = parseDeltaBaht(this.newOption.priceDeltaBaht);
-    if (!this.newOption.name.trim() || delta === null) {
+    const draft = this.newOptionDrafts[group.id];
+    const delta = draft ? parseDeltaBaht(draft.priceDeltaBaht) : null;
+    if (!draft || !draft.name.trim() || delta === null) {
       this.error.set("ชื่อหรือราคาเพิ่ม/ลดของตัวเลือกไม่ถูกต้อง");
       return;
     }
@@ -1202,12 +1244,13 @@ export class MerchantCatalogPage implements OnInit {
             this.storeId,
             product.id,
             group.id,
-            { name: this.newOption.name.trim(), priceDeltaSatang: delta },
+            { name: draft.name.trim(), priceDeltaSatang: delta },
           ),
         "เพิ่มตัวเลือกสินค้าแล้ว",
       )
     ) {
-      this.newOption = { name: "", priceDeltaBaht: "0.00" };
+      delete this.newOptionDrafts[group.id];
+      this.newOptionGroupId.set(null);
     }
   }
 
