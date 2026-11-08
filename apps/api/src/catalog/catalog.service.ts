@@ -96,6 +96,59 @@ export class CatalogService {
     }
   }
 
+  async page(req: ApiRequest, tenantId: string, storeId: string, raw: unknown) {
+    validateIds(tenantId, storeId);
+    const session = await this.auth.session(req);
+    const data = bodyObject(raw);
+    const search = data["search"] ?? "";
+    const categoryId = data["categoryId"] ?? null;
+    const includeArchived = data["includeArchived"] ?? "false";
+    const cursorCreatedAt = data["cursorCreatedAt"] ?? null;
+    const cursorId = data["cursorId"] ?? null;
+    const limit = data["limit"] ?? "20";
+    if (
+      typeof search !== "string" ||
+      search.trim().length > 80 ||
+      (categoryId !== null &&
+        (typeof categoryId !== "string" || !UUID.test(categoryId))) ||
+      (includeArchived !== "true" && includeArchived !== "false") ||
+      typeof limit !== "string" ||
+      !/^(?:[1-9]|[1-4][0-9]|50)$/.test(limit) ||
+      (cursorCreatedAt === null) !== (cursorId === null) ||
+      (cursorId !== null &&
+        (typeof cursorId !== "string" || !UUID.test(cursorId))) ||
+      (cursorCreatedAt !== null &&
+        (typeof cursorCreatedAt !== "string" ||
+          !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(
+            cursorCreatedAt,
+          ) ||
+          !Number.isFinite(Date.parse(cursorCreatedAt))))
+    ) {
+      throw new BadRequestException("Invalid catalog page request");
+    }
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.catalog_products_page($1,$2,$3,$4,$5,$6,$7,$8,$9) AS data",
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            search.trim(),
+            categoryId,
+            includeArchived === "true",
+            cursorCreatedAt,
+            cursorId,
+            Number(limit),
+          ],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      mapping(error);
+    }
+  }
+
   async addCategory(
     req: ApiRequest,
     tenantId: string,

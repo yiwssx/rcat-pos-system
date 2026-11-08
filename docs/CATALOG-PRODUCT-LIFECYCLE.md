@@ -76,3 +76,26 @@ checkout, or real PromptPay Payment. These remain tracked under #38,
   is required before treating large-store performance as completed (#38).
 - No changes to prices, order snapshots, inventory or Payment. No Staging or
   Production claim is made from this UI-only increment.
+
+
+## G2 server-side keyset pagination (8 Nov 2026; #38)
+
+- Merchant Catalog now requests only **20 product records per page** via authenticated
+  `GET /api/tenants/:tenantId/stores/:storeId/catalog/products/page`.
+  The existing full `GET /catalog` snapshot remains for legacy consumers.
+- Database `rcat_private.catalog_products_page` enforces verified staff
+  membership, tenant/store scoping, a hard limit of 50, bounded search and
+  paired keyset cursor `(created_at,id)`, even for identical timestamps.
+- Request filters: `search` (literal Thai/Unicode substring), `categoryId`,
+  `includeArchived`, `limit`, `cursorCreatedAt`, `cursorId`.
+  Response includes `products`, `categories`, page-specific
+  `modifierGroups` and `modifierOptions`, `hasMore`, `nextCursor`.
+- Frontend keeps cursor history to navigate back, resets the cursor on
+  search/category/archive changes, and re-fetches authoritatively after mutation.
+  Pending display edits cannot silently carry over between pages.
+- SQL regression exercises a 45-product set, stable pages with shared creation
+  timestamps, no duplicates, negative tenant tests, invalid cursors, category
+  and Thai search, archived visibility, and hard page-size caps.
+- **Scope limitation:** this is server-side keyset pagination for Merchant
+  products, not for the anonymous Guest menu. Large-store page latency/soak,
+  mobile scanner tests and operational staging signoff remain open. No Payment.

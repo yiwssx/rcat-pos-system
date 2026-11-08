@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
 } from "@nestjs/common";
 import { ApiRequest, requireAllowedOrigin } from "../auth/request-security";
@@ -23,6 +24,17 @@ export class CatalogController {
     @Param("storeId") storeId: string,
   ) {
     return this.catalog.snapshot(req, tenantId, storeId);
+  }
+
+  @Get("products/page")
+  @Header("Cache-Control", "no-store")
+  page(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Query() query: unknown,
+  ) {
+    return this.catalog.page(req, tenantId, storeId, query);
   }
 
   @Post("categories")
