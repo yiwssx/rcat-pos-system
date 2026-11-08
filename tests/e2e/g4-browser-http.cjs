@@ -230,6 +230,46 @@ async function browserFlow(fixture) {
     await board.locator(selector).getByText("รับออเดอร์แล้ว").waitFor({ timeout: 20000 });
     await second.locator(selector).getByText("รับออเดอร์แล้ว").waitFor({ timeout: 20000 });
 
+    // G3: simulate a mobile Merchant suspended in the background with the
+    // connection offline. A distinct submitted Order must not be lost while
+    // its SSE stream is paused; resuming must reconcile the real DB Inbox.
+    await secondContext.setOffline(true);
+    await second.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => "hidden",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+      window.dispatchEvent(new Event("offline"));
+    });
+    await second.getByText("การเชื่อมต่อขาด", { exact: false })
+      .waitFor({ timeout: 15000 });
+    const resumedOrder = await post(customer + "/api/guest/orders", {
+      visitToken: fixture.token,
+      items: [{ productId: fixture.productId, quantity: 1, optionIds: [] }],
+    }, { "Idempotency-Key": "resume-" + randomUUID() });
+    assert.equal(resumedOrder.status, 201, await resumedOrder.clone().text());
+    const { orderId: resumedOrderId, paymentState: resumedPaymentState } =
+      await resumedOrder.json();
+    assert.equal(resumedPaymentState, "not_requested");
+    const resumedSelector =
+      'article[aria-label^="ออเดอร์ ' + resumedOrderId.slice(0, 8) + '"]';
+    assert.equal(await second.locator(resumedSelector).count(), 0,
+      "Suspended offline Merchant must not invent unseen Orders");
+    await secondContext.setOffline(false);
+    await second.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        get: () => "visible",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+      window.dispatchEvent(new Event("online"));
+      window.dispatchEvent(new Event("focus"));
+    });
+    await second.locator(resumedSelector).waitFor({ timeout: 20000 });
+    await second.locator(resumedSelector).getByText("ส่งคำสั่งซื้อแล้ว")
+      .waitFor({ timeout: 15000 });
+
     // A foreground refresh should pick up the new status on the guest tab
     // without claiming the Order has been paid or losing the tracking secret.
     await guest.getByRole("button", { name: "ตรวจสถานะล่าสุด" }).click();
@@ -419,7 +459,7 @@ async function browserFlow(fixture) {
       browser: "Chromium", viewport: "mobile customer + desktop/mobile merchant",
       result: "PASS",
       scenarios: ["QR URL scrub", "offline submit block", "tracked checkout",
-        "independent merchant tabs", "order status propagation", "mobile catalog WebP conversion + guest photo", "mobile catalog create/edit/archive", "static printed QR and staff code redemption/revocation", "expired session denied"],
+        "independent merchant tabs", "order status propagation", "Merchant offline/sleep resume reconciliation", "mobile catalog WebP conversion + guest photo", "mobile catalog create/edit/archive", "static printed QR and staff code redemption/revocation", "expired session denied"],
     }));
   } catch (error) {
     for (const [name, page] of [["guest", guest], ["merchant", board], ["second", second]]) {
