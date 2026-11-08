@@ -17,7 +17,7 @@
       "command": "pnpm exec tsc --noEmit -p apps/merchant/tsconfig.app.json"
     },
     "test": {
-      "command": "pnpm exec vitest run apps/merchant/src/app/app.spec.ts && node tests/pwa-service-worker.mjs"
+      "command": "pnpm exec vitest run apps/merchant/src/app/app.spec.ts apps/merchant/src/app/catalog-list.spec.ts && node tests/pwa-service-worker.mjs"
     },
     "lint": {
       "command": "pnpm exec prettier --check 'apps/merchant/src/**/*.{ts,css,html}'"
