@@ -16,7 +16,7 @@ DECLARE
  foreign_secret bytea:=decode(repeat('f6',32),'hex');
  bucket_subject bytea:=decode(repeat('f7',32),'hex');
  another_subject bytea:=decode(repeat('f8',32),'hex');
- category uuid;tbl uuid;visit_id uuid;product_id uuid;
+ category uuid;tbl uuid;v_visit_id uuid;product_id uuid;
  i integer;batch integer;n integer:=0;
  page jsonb;item jsonb;
  seen uuid[]:=ARRAY[]::uuid[];
@@ -29,9 +29,9 @@ BEGIN
      'เมนูทดสอบ '||lpad(i::text,3,'0'),1000+i);
  END LOOP;
  tbl:=rcat_private.create_ordering_table(owner,a,st,'G2 Guest Budget Table');
- SELECT visit_id INTO visit_id FROM rcat_private.rotate_ordering_visit(
-   owner,a,st,tbl,visit_secret);
- IF visit_id IS NULL THEN RAISE EXCEPTION 'Could not rotate visit'; END IF;
+ SELECT rotation.visit_id INTO v_visit_id FROM rcat_private.rotate_ordering_visit(
+   owner,a,st,tbl,visit_secret) AS rotation;
+ IF v_visit_id IS NULL THEN RAISE EXCEPTION 'Could not rotate visit'; END IF;
 
  FOR batch IN 1..3 LOOP
    page:=rcat_private.guest_catalog_page(
@@ -43,7 +43,7 @@ BEGIN
    IF (page->>'hasMore')::boolean IS DISTINCT FROM (batch<3)
      THEN RAISE EXCEPTION 'Wrong Guest page termination'; END IF;
    IF page->>'tenantId'<>a::text OR page->>'storeId'<>st::text
-      OR page->>'visitId'<>visit_id::text
+      OR page->>'visitId'<>v_visit_id::text
       OR jsonb_array_length(page->'categories')=0 THEN
      RAISE EXCEPTION 'Guest page missing visit or tenant scope';
    END IF;
