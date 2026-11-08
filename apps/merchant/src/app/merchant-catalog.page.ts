@@ -157,6 +157,41 @@ function parseDeltaBaht(value: string): number | null {
           </form>
         </div>
 
+        <section class="catalog-panel" aria-labelledby="category-editor-title">
+          <h2 id="category-editor-title">แก้ไขหมวดหมู่ที่มีอยู่</h2>
+          @for (category of categories(); track category.id) {
+            <div class="catalog-editor-item">
+              <div class="catalog-toolbar">
+                <span>{{ category.name }} ({{ category.slug }})</span>
+                <button type="button" class="subtle"
+                  [disabled]="saving()" (click)="beginCategoryEdit(category)">
+                  แก้ไขหมวดหมู่
+                </button>
+              </div>
+              @if (categoryEditId() === category.id) {
+                <form class="catalog-edit" (ngSubmit)="saveCategoryEdit()">
+                  <label for="category-edit-name">ชื่อหมวดหมู่</label>
+                  <input id="category-edit-name" name="editCategoryName"
+                    [(ngModel)]="categoryEdit.name" required maxlength="120"
+                    [disabled]="saving()" />
+                  <label for="category-edit-slug">รหัสหมวดหมู่</label>
+                  <input id="category-edit-slug" name="editCategorySlug"
+                    [(ngModel)]="categoryEdit.slug" required maxlength="48"
+                    pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                    [disabled]="saving()" />
+                  <div class="catalog-actions">
+                    <button type="submit" [disabled]="saving()">บันทึกหมวดหมู่</button>
+                    <button type="button" class="subtle" [disabled]="saving()"
+                      (click)="categoryEditId.set(null)">ยกเลิก</button>
+                  </div>
+                </form>
+              }
+            </div>
+          } @empty {
+            <p>ยังไม่มีหมวดหมู่</p>
+          }
+        </section>
+
         <section
           class="catalog-panel catalog-products"
           aria-labelledby="products-title"
@@ -319,6 +354,117 @@ function parseDeltaBaht(value: string): number | null {
                   </p>
                 }
               </div>
+              @if (!product.archivedAt) {
+                <button type="button" class="subtle catalog-editor-toggle"
+                  [disabled]="saving()" (click)="toggleModifierEditor(product)">
+                  {{ modifierProductId() === product.id ? "ซ่อนตัวเลือกสินค้า" : "จัดการตัวเลือกสินค้า" }}
+                </button>
+                @if (modifierProductId() === product.id) {
+                  <section class="catalog-edit catalog-modifier-panel">
+                    <h4>ตัวเลือกเพิ่มเติมของ {{ product.name }}</h4>
+                    <form class="catalog-edit" (ngSubmit)="addGroup(product)">
+                      <h5>เพิ่มกลุ่มตัวเลือก</h5>
+                      <label for="new-group-name">ชื่อกลุ่ม</label>
+                      <input id="new-group-name" name="newGroupName"
+                        [(ngModel)]="newGroup.name" required maxlength="120"
+                        [disabled]="saving()" />
+                      <label for="new-group-slug">รหัสกลุ่ม</label>
+                      <input id="new-group-slug" name="newGroupSlug"
+                        [(ngModel)]="newGroup.slug" required
+                        pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="48"
+                        [disabled]="saving()" />
+                      <label for="new-group-min">เลือกขั้นต่ำ</label>
+                      <input id="new-group-min" name="newGroupMin" type="number"
+                        min="0" max="8" [(ngModel)]="newGroup.minSelect"
+                        [disabled]="saving()" />
+                      <label for="new-group-max">เลือกสูงสุด</label>
+                      <input id="new-group-max" name="newGroupMax" type="number"
+                        min="1" max="8" [(ngModel)]="newGroup.maxSelect"
+                        [disabled]="saving()" />
+                      <button type="submit" [disabled]="saving()">เพิ่มกลุ่ม</button>
+                    </form>
+                    @for (group of groupsFor(product.id); track group.id) {
+                      <div class="catalog-editor-item">
+                        <div class="catalog-toolbar">
+                          <h5>{{ group.name }} · เลือก {{ group.minSelect }}–{{ group.maxSelect }}</h5>
+                          <button type="button" class="subtle" [disabled]="saving()"
+                            (click)="beginGroupEdit(group)">แก้ไขกลุ่ม</button>
+                        </div>
+                        @if (groupEditId() === group.id) {
+                          <form class="catalog-edit" (ngSubmit)="saveGroupEdit(product)">
+                            <label for="group-edit-name">ชื่อกลุ่ม</label>
+                            <input id="group-edit-name" name="groupEditName"
+                              [(ngModel)]="groupEdit.name" required maxlength="120"
+                              [disabled]="saving()" />
+                            <label for="group-edit-slug">รหัสกลุ่ม</label>
+                            <input id="group-edit-slug" name="groupEditSlug"
+                              [(ngModel)]="groupEdit.slug" required maxlength="48"
+                              pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                              [disabled]="saving()" />
+                            <label for="group-edit-min">เลือกขั้นต่ำ</label>
+                            <input id="group-edit-min" name="groupEditMin"
+                              type="number" min="0" max="8"
+                              [(ngModel)]="groupEdit.minSelect" [disabled]="saving()" />
+                            <label for="group-edit-max">เลือกสูงสุด</label>
+                            <input id="group-edit-max" name="groupEditMax"
+                              type="number" min="1" max="8"
+                              [(ngModel)]="groupEdit.maxSelect" [disabled]="saving()" />
+                            <div class="catalog-actions">
+                              <button type="submit" [disabled]="saving()">บันทึกกลุ่ม</button>
+                              <button type="button" class="subtle" [disabled]="saving()"
+                                (click)="groupEditId.set(null)">ยกเลิก</button>
+                            </div>
+                          </form>
+                        }
+                        @for (option of optionsFor(group.id); track option.id) {
+                          <div class="catalog-modifier-option">
+                            <span>{{ option.name }} · {{ money(option.priceDeltaSatang) }} บาท ·
+                              {{ option.available ? "เปิดขาย" : "ปิดขาย" }}</span>
+                            <button type="button" class="subtle" [disabled]="saving()"
+                              (click)="beginOptionEdit(option)">แก้ไขตัวเลือก</button>
+                            @if (optionEditId() === option.id) {
+                              <form class="catalog-edit" (ngSubmit)="saveOptionEdit(product)">
+                                <label for="option-edit-name">ชื่อตัวเลือก</label>
+                                <input id="option-edit-name" name="optionEditName"
+                                  [(ngModel)]="optionEdit.name" maxlength="120"
+                                  required [disabled]="saving()" />
+                                <label for="option-edit-price">ราคาเพิ่ม/ลด (บาท)</label>
+                                <input id="option-edit-price" name="optionEditPrice"
+                                  [(ngModel)]="optionEdit.priceDeltaBaht"
+                                  required inputmode="decimal" [disabled]="saving()" />
+                                <label>
+                                  <input type="checkbox" name="optionEditAvailable"
+                                    [(ngModel)]="optionEdit.available" [disabled]="saving()" />
+                                  เปิดให้เลือก
+                                </label>
+                                <div class="catalog-actions">
+                                  <button type="submit" [disabled]="saving()">บันทึกตัวเลือก</button>
+                                  <button type="button" class="subtle" [disabled]="saving()"
+                                    (click)="optionEditId.set(null)">ยกเลิก</button>
+                                </div>
+                              </form>
+                            }
+                          </div>
+                        }
+                        <form class="catalog-edit" (ngSubmit)="addOption(product, group)">
+                          <h5>เพิ่มตัวเลือกใน {{ group.name }}</h5>
+                          <label for="new-option-name">ชื่อตัวเลือก</label>
+                          <input id="new-option-name" name="newOptionName"
+                            [(ngModel)]="newOption.name" maxlength="120" required
+                            [disabled]="saving()" />
+                          <label for="new-option-price">ราคาเพิ่ม/ลด (บาท)</label>
+                          <input id="new-option-price" name="newOptionPrice"
+                            [(ngModel)]="newOption.priceDeltaBaht" required
+                            inputmode="decimal" [disabled]="saving()" />
+                          <button type="submit" [disabled]="saving()">เพิ่มตัวเลือก</button>
+                        </form>
+                      </div>
+                    } @empty {
+                      <p>ยังไม่มีกลุ่มตัวเลือก</p>
+                    }
+                  </section>
+                }
+              }
               @if (editId() === product.id && !product.archivedAt) {
                 <form class="catalog-edit" (ngSubmit)="saveEdit()">
                   <p>
