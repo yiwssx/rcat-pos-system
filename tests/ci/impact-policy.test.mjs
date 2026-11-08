@@ -73,6 +73,11 @@ test("evidence register is complete, immutable-commit-linked and never marks hos
       assert.ok(Number.isInteger(entry.run_id) && entry.run_id > 0);
       assert.ok(entry.workflow.length > 8);
       assert.ok(entry.covers.length > 0);
+      assert.ok(Array.isArray(entry.supporting_runs));
+      for (const run of entry.supporting_runs) {
+        assert.ok(Number.isInteger(run.run_id) && run.run_id > 0);
+        assert.ok(run.workflow.length > 8);
+      }
     } else {
       assert.ok(["pending_external", "pending_owner", "not_started"].includes(entry.status));
       assert.ok(entry.scope !== "ci");
