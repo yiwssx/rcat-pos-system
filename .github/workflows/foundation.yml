@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Verify operator safety checks and bounded staging-read qualification harness
+        run: node --test tests/ops/g4-maintenance-soak.test.mjs
       - name: Verify required files, metadata, license and source pins
         shell: bash
         run: |
