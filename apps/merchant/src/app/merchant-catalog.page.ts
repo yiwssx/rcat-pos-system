@@ -362,7 +362,9 @@ function bahtInput(satang: number): string {
               >
                 ← ก่อนหน้า
               </button>
-              <span aria-live="polite">หน้า {{ page() }} / {{ pageCount() }}</span>
+              <span aria-live="polite"
+                >หน้า {{ page() }} / {{ pageCount() }}</span
+              >
               <button
                 type="button"
                 class="subtle"
