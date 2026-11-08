@@ -16,8 +16,8 @@ import {
   cartNeedsReview,
   estimateSatang,
   formatSatang,
-  filterGuestMenu,
   GUEST_MENU_BATCH_SIZE,
+  GuestCatalogCursor,
   GuestModifierGroup,
   GuestModifierOption,
   GuestProduct,
@@ -142,7 +142,7 @@ function guestError(error: unknown): string {
           </label>
         </div>
 
-        @if (products().length === 0) {
+        @if (products().length === 0 && !loading()) {
           <div class="guest-status" role="status">
             ไม่มีสินค้าในหมวดหมู่นี้หรือไม่พบเมนูที่ค้นหา
           </div>
@@ -218,24 +218,17 @@ function guestError(error: unknown): string {
             }
           </div>
           <div class="guest-menu-progress" role="status" aria-live="polite">
-            แสดง {{ products().length }} จาก
-            {{ filteredProducts().length }} เมนู
+            แสดง {{ products().length }} เมนู
+            @if (hasMore()) { · ยังมีเมนูเพิ่มเติม }
           </div>
-          @if (hiddenProducts() > 0) {
+          @if (hasMore()) {
             <button
               class="guest-show-more"
               type="button"
+              [disabled]="loadingMore() || loading() || !online()"
               (click)="showMore()"
-              [attr.aria-label]="
-                'แสดงเมนูเพิ่มเติม ' +
-                (hiddenProducts() > pageSize ? pageSize : hiddenProducts()) +
-                ' รายการ'
-              "
             >
-              แสดงเมนูเพิ่มเติม ({{
-                hiddenProducts() > pageSize ? pageSize : hiddenProducts()
-              }}
-              รายการ)
+              {{ loadingMore() ? "กำลังโหลดเมนู..." : "แสดงเมนูเพิ่มเติม" }}
             </button>
           }
         }
@@ -293,7 +286,7 @@ function guestError(error: unknown): string {
             <button
               class="guest-checkout"
               type="button"
-              [disabled]="busy() || !online()"
+              [disabled]="busy() || loading() || !online()"
               (click)="checkout()"
             >
               {{
@@ -324,7 +317,9 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly notice = signal("");
   readonly search = signal("");
   readonly category = signal("");
-  readonly visibleLimit = signal(GUEST_MENU_BATCH_SIZE);
+  readonly hasMore = signal(false);
+  readonly loadingMore = signal(false);
+  readonly nextCursor = signal<GuestCatalogCursor | null>(null);
   readonly selected = signal<Record<string, string[]>>({});
   readonly online = signal(true);
   readonly staticTable = signal<{
@@ -337,16 +332,9 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly pageSize = GUEST_MENU_BATCH_SIZE;
   private scanToken: string | null = null;
   private readonly win = this.document.defaultView;
-  readonly filteredProducts = computed(() => {
-    const visit = this.session.visit();
-    return visit ? filterGuestMenu(visit, this.search(), this.category()) : [];
-  });
-  readonly products = computed(() =>
-    this.filteredProducts().slice(0, this.visibleLimit()),
-  );
-  readonly hiddenProducts = computed(() =>
-    Math.max(0, this.filteredProducts().length - this.products().length),
-  );
+  readonly products = signal<GuestProduct[]>([]);
+  private requestVersion = 0;
+  private searchTimer?: ReturnType<typeof setTimeout>;
   readonly cartQty = computed(() =>
     this.session.cart().reduce((sum, item) => sum + item.quantity, 0),
   );
@@ -415,6 +403,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.win?.removeEventListener("online", this.goneOnline);
     this.win?.removeEventListener("offline", this.goneOffline);
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.requestVersion += 1;
   }
 
   async reload(): Promise<void> {
@@ -427,23 +417,52 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   }
 
   private async load(token: string): Promise<void> {
+    const version = ++this.requestVersion;
     this.loading.set(true);
+    this.loadingMore.set(false);
     this.error.set("");
     try {
-      const visit = await this.api.resolve(token);
-      this.session.setVisit(token, visit);
+      const page = await this.api.page(
+        token,
+        this.search(),
+        this.category() || null,
+      );
+      if (version !== this.requestVersion) return;
+      this.session.setPage(token, page);
+      this.products.set(page.products);
+      this.nextCursor.set(page.nextCursor);
+      this.hasMore.set(page.hasMore);
       this.selected.set({});
     } catch (error) {
+      if (version !== this.requestVersion) return;
       if (error instanceof HttpErrorResponse && error.status === 404) {
         this.session.invalidateVisit();
         this.scanToken = null;
       }
-      // Network/5xx failures are retryable with the in-memory visit token.
-      // Never persist QR bearer in URL query, logs or localStorage.
       this.error.set(guestError(error));
     } finally {
-      this.loading.set(false);
+      if (version === this.requestVersion) this.loading.set(false);
     }
+  }
+
+  private scheduleSearchReload(delay: number): void {
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    // Invalidate in-flight pages immediately, before the debounce expires.
+    this.requestVersion += 1;
+    this.products.set([]);
+    this.hasMore.set(false);
+    this.nextCursor.set(null);
+    this.loadingMore.set(false);
+    this.loading.set(true);
+    const token = this.session.visitToken() ?? this.scanToken;
+    if (!token) {
+      this.loading.set(false);
+      return;
+    }
+    this.searchTimer = setTimeout(() => {
+      this.searchTimer = undefined;
+      void this.load(token);
+    }, delay);
   }
 
   updateTableCode(event: Event): void {
@@ -495,18 +514,48 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   onSearch(event: Event): void {
     if (event.target instanceof HTMLInputElement) {
       this.search.set(event.target.value);
-      this.visibleLimit.set(GUEST_MENU_BATCH_SIZE);
+      this.scheduleSearchReload(300);
     }
   }
+
   onCategory(event: Event): void {
     if (event.target instanceof HTMLSelectElement) {
       this.category.set(event.target.value);
-      this.visibleLimit.set(GUEST_MENU_BATCH_SIZE);
+      this.scheduleSearchReload(0);
     }
   }
-  showMore(): void {
-    this.visibleLimit.update((limit) => limit + GUEST_MENU_BATCH_SIZE);
+
+  async showMore(): Promise<void> {
+    const token = this.session.visitToken();
+    const cursor = this.nextCursor();
+    if (!token || !cursor || this.loadingMore() || this.loading() ||
+        this.busy() || !this.online()) return;
+    const version = this.requestVersion;
+    this.loadingMore.set(true);
+    this.notice.set("");
+    try {
+      const page = await this.api.page(
+        token, this.search(), this.category() || null, cursor,
+      );
+      if (version !== this.requestVersion) return;
+      if (!page.products.length && page.hasMore) {
+        throw new Error("เมนูของร้านเปลี่ยนระหว่างโหลด กรุณาค้นหาใหม่");
+      }
+      this.session.setPage(token, page);
+      const already = new Set(this.products().map((p) => p.id));
+      this.products.update((old) => [
+        ...old,
+        ...page.products.filter((p) => !already.has(p.id)),
+      ]);
+      this.nextCursor.set(page.nextCursor);
+      this.hasMore.set(page.hasMore);
+    } catch (error) {
+      if (version === this.requestVersion) this.notice.set(guestError(error));
+    } finally {
+      if (version === this.requestVersion) this.loadingMore.set(false);
+    }
   }
+
   groups(productId: string): GuestModifierGroup[] {
     return (
       this.session
@@ -605,7 +654,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     const token = this.session.visitToken();
     const visit = this.session.visit();
     const lines = this.session.cart();
-    if (!token || !visit || !lines.length || this.busy() || !this.online())
+    if (!token || !visit || !lines.length || this.busy() || this.loading() || !this.online())
       return;
     if (Date.now() >= new Date(visit.expiresAt).getTime()) {
       this.notice.set("QR โต๊ะหมดอายุแล้ว กรุณาสแกนใหม่");
