@@ -280,3 +280,62 @@
     flex: 1 1 auto;
   }
 }
+
+.catalog-editor-item {
+  padding: 0.9rem 0;
+  border-top: 1px solid #dce4ed;
+  display: grid;
+  gap: 0.7rem;
+}
+.catalog-editor-toggle {
+  min-height: 44px;
+  margin: 0.5rem 0;
+  background: #f1f7fa;
+  border: 1px solid #bdd1dc;
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.9rem;
+  font: inherit;
+  color: #124a63;
+  font-weight: 700;
+  cursor: pointer;
+}
+.catalog-modifier-panel {
+  max-width: none;
+  background: #f7f9fc;
+}
+.catalog-modifier-panel h4,
+.catalog-modifier-panel h5 {
+  margin: 0;
+  color: #203f5d;
+}
+.catalog-modifier-option {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  border-top: 1px solid #d9e3ed;
+  padding: 0.75rem 0;
+}
+.catalog-modifier-option form {
+  flex-basis: 100%;
+}
+.catalog-edit input[type="checkbox"] {
+  min-height: 22px;
+  min-width: 22px;
+  width: 22px;
+  height: 22px;
+  accent-color: #153956;
+  margin-right: 0.45rem;
+  vertical-align: middle;
+}
+.catalog-modifier-option .subtle {
+  min-height: 44px;
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+  color: #1e4c62;
+  border: 1px solid #a8c2d4;
+  background: #f7fbfe;
+}
