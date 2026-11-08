@@ -96,12 +96,7 @@ export class CatalogService {
     }
   }
 
-  async page(
-    req: ApiRequest,
-    tenantId: string,
-    storeId: string,
-    raw: unknown,
-  ) {
+  async page(req: ApiRequest, tenantId: string, storeId: string, raw: unknown) {
     validateIds(tenantId, storeId);
     const session = await this.auth.session(req);
     const data = bodyObject(raw);
@@ -119,7 +114,7 @@ export class CatalogService {
       (includeArchived !== "true" && includeArchived !== "false") ||
       typeof limit !== "string" ||
       !/^(?:[1-9]|[1-4][0-9]|50)$/.test(limit) ||
-      ((cursorCreatedAt === null) !== (cursorId === null)) ||
+      (cursorCreatedAt === null) !== (cursorId === null) ||
       (cursorId !== null &&
         (typeof cursorId !== "string" || !UUID.test(cursorId))) ||
       (cursorCreatedAt !== null &&
