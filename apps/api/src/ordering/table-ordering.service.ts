@@ -387,9 +387,7 @@ export class TableOrderingService {
       ) {
         throw new BadRequestException("Invalid Guest cart review");
       }
-      const ids = (line["optionIds"] as string[]).map((id) =>
-        id.toLowerCase(),
-      );
+      const ids = (line["optionIds"] as string[]).map((id) => id.toLowerCase());
       if (new Set(ids).size !== ids.length) {
         throw new BadRequestException("Duplicate modifiers");
       }
