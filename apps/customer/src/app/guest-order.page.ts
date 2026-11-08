@@ -221,7 +221,9 @@ function guestError(error: unknown): string {
           </div>
           <div class="guest-menu-progress" role="status" aria-live="polite">
             แสดง {{ products().length }} เมนู
-            @if (hasMore()) { · ยังมีเมนูเพิ่มเติม }
+            @if (hasMore()) {
+              · ยังมีเมนูเพิ่มเติม
+            }
           </div>
           @if (hasMore()) {
             <button
@@ -530,14 +532,24 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   async showMore(): Promise<void> {
     const token = this.session.visitToken();
     const cursor = this.nextCursor();
-    if (!token || !cursor || this.loadingMore() || this.loading() ||
-        this.busy() || !this.online()) return;
+    if (
+      !token ||
+      !cursor ||
+      this.loadingMore() ||
+      this.loading() ||
+      this.busy() ||
+      !this.online()
+    )
+      return;
     const version = this.requestVersion;
     this.loadingMore.set(true);
     this.notice.set("");
     try {
       const page = await this.api.page(
-        token, this.search(), this.category() || null, cursor,
+        token,
+        this.search(),
+        this.category() || null,
+        cursor,
       );
       if (version !== this.requestVersion) return;
       if (!page.products.length && page.hasMore) {
@@ -656,7 +668,14 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     const token = this.session.visitToken();
     const visit = this.session.visit();
     const lines = this.session.cart();
-    if (!token || !visit || !lines.length || this.busy() || this.loading() || !this.online())
+    if (
+      !token ||
+      !visit ||
+      !lines.length ||
+      this.busy() ||
+      this.loading() ||
+      !this.online()
+    )
       return;
     if (Date.now() >= new Date(visit.expiresAt).getTime()) {
       this.notice.set("QR โต๊ะหมดอายุแล้ว กรุณาสแกนใหม่");
