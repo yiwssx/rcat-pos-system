@@ -18,6 +18,7 @@ import {
   formatSatang,
   GUEST_MENU_BATCH_SIZE,
   GuestCatalogCursor,
+  mergeCartReview,
   GuestModifierGroup,
   GuestModifierOption,
   GuestProduct,
@@ -695,12 +696,24 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     this.busy.set(true);
     this.notice.set("");
     try {
-      // Recheck the visit and merchant's current catalog before committing.
-      // A changed product/option identity or price requires explicit
-      // reconfirmation, even when the aggregate total is unchanged.
-      const latest = await this.api.resolve(token);
+      // The scoped review fetches only selected cart products and choices,
+      // not an unbounded store-wide menu snapshot. Checkout remains the
+      // final transactional validation; changes require fresh confirmation.
+      const latest = await this.api.reviewCart(token, lines);
       if (cartNeedsReview(visit, latest, lines)) {
-        this.session.setVisit(token, latest);
+        const merged = mergeCartReview(visit, latest, lines);
+        this.session.setVisit(token, merged);
+        const fresh = new Map(latest.products.map((p) => [p.id, p]));
+        const selected = new Set(lines.map((line) => line.productId));
+        this.products.update((old) =>
+          old.flatMap((item) =>
+            selected.has(item.id)
+              ? fresh.has(item.id)
+                ? [fresh.get(item.id)!]
+                : []
+              : [item],
+          ),
+        );
         this.notice.set(
           "เมนู ราคา หรือความพร้อมเปลี่ยนไป โปรดตรวจสอบตะกร้าก่อนยืนยันอีกครั้ง",
         );
