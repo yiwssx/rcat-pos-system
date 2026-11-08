@@ -1,0 +1,12 @@
+# UNINSTALLED EXAMPLE — requires C policy approval and B operator review.
+[Unit]
+Description=Daily encrypted offsite backup for RCAT POS staging
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+RandomizedDelaySec=15min
+Persistent=true
+Unit=rcat-pos-staging-ops@backup.service
+
+[Install]
+WantedBy=timers.target
