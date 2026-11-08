@@ -37,7 +37,7 @@ async function executeNode(script, env) {
 test("backups and privileged retention never run without explicit --apply", () => {
   const help = execute("bash", [ops, "--help"]);
   assert.equal(help.status, 0, help.stderr);
-  assert.match(help.stdout, /no automatic scheduling/i);
+  assert.match(help.stdout, /does not install schedulers|no automatic scheduling/i);
   const backup = execute("bash", [ops, "backup"]);
   assert.notEqual(backup.status, 0);
   assert.match(backup.stderr, /--apply required/);
