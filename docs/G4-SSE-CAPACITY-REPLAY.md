@@ -57,3 +57,20 @@ tokens into URLs.
 
 G5 per-Order PromptPay is still LAST. No Production deployment, live Payment
 QR, bank account, or public Merchant session is exercised here.
+
+## Update: cross-process SSE consistency (8 Nov 2026)
+
+The CI probe now also opens **both** an authenticated primary HTTPS
+Merchant-proxied stream and an isolated second NestJS API stream at the
+same time. A single newly committed Order must appear in both with the
+same durable event ID. After an authoritative scoped Merchant Order
+lookup, the primary HTTP endpoint acknowledges the event; the second
+API's feed immediately observes the shared PostgreSQL acknowledgement.
+This establishes **two-process event/cursor correctness in CI**, not a
+sustained multi-replica capacity or physical Staging SLO.
+
+A separate operator-only PostgreSQL retention preview is described in
+[the G3 Outbox retention document](./G3-OUTBOX-RETENTION-PREVIEW.md). It
+reports old events and recorded ack watermarks without deleting
+unacknowledged data or granting runtime SQL access. Production retention
+policy and maintenance scheduling remain open.

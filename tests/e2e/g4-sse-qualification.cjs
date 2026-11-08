@@ -366,8 +366,23 @@ module.exports = async function qualifySse({
     // remaining capacity probes to avoid unnecessary CI database polling.
     for (let i = 1; i < MAX_SSE; i += 1) close(opens[i]);
 
-    // An Order committed while the SSE was open must arrive on its 3s
-    // polling cycle, even if the browser was previously behind on events.
+    // Two independent NestJS servers must see the same committed Outbox
+    // event, including the same cursor. The live authenticated primary
+    // stream runs behind the real CI HTTPS Merchant proxy while the
+    // isolated second server uses a separate HTTP listener and pool.
+    const primaryReplica = await connect(
+      merchant + orderScope + "/notifications/stream",
+      owner.cookie, merchant,
+    );
+    all.push(primaryReplica);
+    assert.equal(primaryReplica.status, 200);
+    const primaryStart = await untilEvent(
+      primaryReplica, (f) => f.kind === "order-event", 5000);
+    assert.equal(primaryStart.id, expectedHead,
+      "Primary replica did not read the shared persisted ack cursor");
+
+    // An Order committed while both replicas have SSE open must arrive
+    // on both 3s polling cycles, never from a process-local event queue.
     const fresh = await submit(customer, currentVisitToken, productId, "sse-live");
     const record = await db.query(
       "SELECT id::text AS id FROM rcat.order_outbox_events WHERE order_id=$1 AND event_type='order.submitted'",
@@ -381,6 +396,39 @@ module.exports = async function qualifySse({
     );
     assert.equal(live.id, record.rows[0].id,
       "SSE did not deliver the committed Order's durable event");
+    const mirrored = await untilEvent(
+      primaryReplica,
+      (f) => f.kind === "order-event" && f.data.orderId === fresh.orderId,
+      15000,
+    );
+    assert.equal(mirrored.id, live.id,
+      "Two API replicas disagree about committed Order event ID");
+    assert.equal(mirrored.data.status, "submitted");
+    assert.equal(mirrored.raw.includes("trackingToken"), false);
+    // Acknowledgement may be persisted ONLY after an authoritative scoped
+    // Order lookup, never merely on receiving an SSE notification.
+    const latest = await jsonGet(
+      merchant + orderScope + "/orders/lookup?ids=" + fresh.orderId,
+      owner.cookie,
+    );
+    assert.equal(latest.orders.length, 1);
+    assert.equal(latest.orders[0].orderId, fresh.orderId);
+    const primaryAck = await fetch(merchant + orderScope + "/notifications/ack", {
+      method: "POST",
+      headers: {
+        Origin: merchant, Cookie: owner.cookie,
+        "Content-Type": "application/json", "X-CSRF-Token": owner.csrf,
+      },
+      body: JSON.stringify({ eventId: live.id }),
+      signal: AbortSignal.timeout(12000),
+    });
+    assert.equal(primaryAck.status, 201, await primaryAck.clone().text());
+    assert.equal((await primaryAck.json()).acknowledgedCursor, live.id);
+    const secondAfterAck = await jsonGet(notificationUrl + "?limit=50", owner.cookie);
+    assert.equal(secondAfterAck.acknowledgedCursor, live.id,
+      "Primary replica ack was not visible on second replica");
+    assert.equal(secondAfterAck.events.length, 0,
+      "Already acknowledged event was replayed by second replica");
 
     // Revoke current session from the server while stream is connected.
     // The next DB poll must send access-revoked and terminate the feed.
@@ -416,6 +464,8 @@ module.exports = async function qualifySse({
       replantedAfterDisconnect: true,
       forgedLastEventIdSkipped: false,
       committedOrderDelivered: fresh.orderId === live.data.orderId,
+      crossReplicaEventAndAck: mirrored.id === live.id &&
+        secondAfterAck.acknowledgedCursor === live.id,
       revokedStreamTerminated: true,
       nginxProxyRestartReplayed: true,
       elapsedMs: Math.round(performance.now() - started),
