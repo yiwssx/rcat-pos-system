@@ -16,6 +16,8 @@ import {
   CatalogCategory,
   CatalogCursor,
   CatalogProduct,
+  CatalogModifierGroup,
+  CatalogModifierOption,
   MerchantCatalogApi,
 } from "./merchant-catalog.api";
 
@@ -31,6 +33,16 @@ function bahtInput(satang: number): string {
   return (
     Math.floor(satang / 100) + "." + (satang % 100).toString().padStart(2, "0")
   );
+}
+
+function parseDeltaBaht(value: string): number | null {
+  const match = /^(-?)(0|[1-9]\\d{0,6})(?:\\.(\\d{1,2}))?$/.exec(
+    value.trim(),
+  );
+  if (!match) return null;
+  const amount = Number(match[2]) * 100 +
+    Number((match[3] ?? "").padEnd(2, "0"));
+  return amount <= 100000000 ? (match[1] ? -amount : amount) : null;
 }
 
 @Component({
@@ -406,6 +418,20 @@ export class MerchantCatalogPage implements OnInit {
   readonly editId = signal<string | null>(null);
   readonly page = signal(1);
   readonly pageSize = CATALOG_PAGE_SIZE;
+  readonly categoryEditId = signal<string | null>(null);
+  readonly modifierProductId = signal<string | null>(null);
+  readonly groupEditId = signal<string | null>(null);
+  readonly optionEditId = signal<string | null>(null);
+  readonly modifierGroups = signal<CatalogModifierGroup[]>([]);
+  readonly modifierOptions = signal<CatalogModifierOption[]>([]);
+  private categoryBefore: CatalogCategory | null = null;
+  private groupBefore: CatalogModifierGroup | null = null;
+  private optionBefore: CatalogModifierOption | null = null;
+  categoryEdit = { name: "", slug: "" };
+  newGroup = { name: "", slug: "", minSelect: 0, maxSelect: 1 };
+  groupEdit = { name: "", slug: "", minSelect: 0, maxSelect: 1 };
+  newOption = { name: "", priceDeltaBaht: "0.00" };
+  optionEdit = { name: "", priceDeltaBaht: "0.00", available: true };
   readonly pageLoading = signal(false);
   readonly hasMore = signal(false);
   readonly nextCursor = signal<CatalogCursor | null>(null);
@@ -473,6 +499,8 @@ export class MerchantCatalogPage implements OnInit {
       if (version !== this.latestRequest) return;
       this.categories.set(result.categories);
       this.products.set(result.products);
+      this.modifierGroups.set(result.modifierGroups ?? []);
+      this.modifierOptions.set(result.modifierOptions ?? []);
       this.hasMore.set(result.hasMore);
       this.nextCursor.set(result.nextCursor);
       if (
@@ -494,6 +522,9 @@ export class MerchantCatalogPage implements OnInit {
         this.newProduct.categoryId = result.categories[0]?.id ?? "";
       }
       this.editId.set(null);
+      this.categoryEditId.set(null);
+      this.groupEditId.set(null);
+      this.optionEditId.set(null);
     } catch {
       if (version === this.latestRequest) {
         this.error.set("ไม่สามารถโหลดข้อมูลเมนูล่าสุดได้");
@@ -572,7 +603,7 @@ export class MerchantCatalogPage implements OnInit {
     } catch (error) {
       this.error.set(
         error instanceof HttpErrorResponse && error.status === 409
-          ? "ข้อมูลสินค้านี้มีการเปลี่ยนแปลง กรุณาโหลดใหม่แล้วตรวจสอบก่อนบันทึก"
+          ? "ข้อมูลถูกแก้ไขโดยผู้อื่นแล้ว กรุณาโหลดรายการล่าสุดและตรวจสอบก่อนบันทึก"
           : error instanceof HttpErrorResponse && error.status === 403
             ? "ไม่มีสิทธิ์หรือ Session หมดอายุ กรุณาเข้าสู่ระบบใหม่"
             : error instanceof Error && !(error instanceof HttpErrorResponse)
@@ -746,4 +777,138 @@ export class MerchantCatalogPage implements OnInit {
       "เก็บสินค้าถาวรแล้ว และคงประวัติออเดอร์เดิม",
     );
   }
+  beginCategoryEdit(category: CatalogCategory): void {
+    this.categoryBefore = { ...category };
+    this.categoryEdit = { name: category.name, slug: category.slug };
+    this.categoryEditId.set(category.id);
+  }
+
+  async saveCategoryEdit(): Promise<void> {
+    const previous = this.categoryBefore;
+    if (!previous || !this.categoryEdit.name.trim()) return;
+    await this.mutate(
+      () => this.api.updateCategory(
+        this.tenantId, this.storeId, previous.id, previous,
+        {
+          name: this.categoryEdit.name.trim(),
+          slug: this.categoryEdit.slug.trim(),
+        },
+      ),
+      "บันทึกหมวดหมู่แล้ว",
+    );
+  }
+
+  toggleModifierEditor(product: CatalogProduct): void {
+    this.modifierProductId.update((id) => id === product.id ? null : product.id);
+    this.groupEditId.set(null);
+    this.optionEditId.set(null);
+  }
+
+  groupsFor(productId: string): CatalogModifierGroup[] {
+    return this.modifierGroups().filter((group) => group.productId === productId);
+  }
+
+  optionsFor(groupId: string): CatalogModifierOption[] {
+    return this.modifierOptions().filter((option) => option.groupId === groupId);
+  }
+
+  async addGroup(product: CatalogProduct): Promise<void> {
+    const values = { ...this.newGroup };
+    if (
+      !values.name.trim() ||
+      !Number.isInteger(values.minSelect) ||
+      !Number.isInteger(values.maxSelect) ||
+      values.minSelect < 0 || values.maxSelect < 1 ||
+      values.maxSelect > 8 || values.minSelect > values.maxSelect
+    ) {
+      this.error.set("กรุณาระบุชื่อและจำนวนตัวเลือกให้ถูกต้อง");
+      return;
+    }
+    if (await this.mutate(
+      () => this.api.addModifierGroup(this.tenantId, this.storeId, product.id, {
+        ...values, name: values.name.trim(), slug: values.slug.trim(),
+      }),
+      "เพิ่มกลุ่มตัวเลือกแล้ว",
+    )) {
+      this.newGroup = { name: "", slug: "", minSelect: 0, maxSelect: 1 };
+    }
+  }
+
+  beginGroupEdit(group: CatalogModifierGroup): void {
+    this.groupBefore = { ...group };
+    this.groupEdit = {
+      name: group.name, slug: group.slug,
+      minSelect: group.minSelect, maxSelect: group.maxSelect,
+    };
+    this.groupEditId.set(group.id);
+  }
+
+  async saveGroupEdit(product: CatalogProduct): Promise<void> {
+    const old = this.groupBefore;
+    const values = { ...this.groupEdit };
+    if (!old || !values.name.trim() ||
+      !Number.isInteger(values.minSelect) ||
+      !Number.isInteger(values.maxSelect) ||
+      values.minSelect < 0 || values.maxSelect < 1 ||
+      values.maxSelect > 8 || values.minSelect > values.maxSelect) {
+      this.error.set("จำนวนตัวเลือกไม่ถูกต้อง");
+      return;
+    }
+    await this.mutate(
+      () => this.api.editModifierGroup(this.tenantId, this.storeId,
+        product.id, old, {
+          ...values, name: values.name.trim(), slug: values.slug.trim(),
+        }),
+      "บันทึกกลุ่มตัวเลือกแล้ว",
+    );
+  }
+
+  async addOption(product: CatalogProduct, group: CatalogModifierGroup): Promise<void> {
+    const delta = parseDeltaBaht(this.newOption.priceDeltaBaht);
+    if (!this.newOption.name.trim() || delta === null) {
+      this.error.set("ชื่อหรือราคาเพิ่ม/ลดของตัวเลือกไม่ถูกต้อง");
+      return;
+    }
+    if (await this.mutate(
+      () => this.api.addModifierOption(
+        this.tenantId, this.storeId, product.id, group.id,
+        { name: this.newOption.name.trim(), priceDeltaSatang: delta },
+      ),
+      "เพิ่มตัวเลือกสินค้าแล้ว",
+    )) {
+      this.newOption = { name: "", priceDeltaBaht: "0.00" };
+    }
+  }
+
+  beginOptionEdit(option: CatalogModifierOption): void {
+    this.optionBefore = { ...option };
+    this.optionEdit = {
+      name: option.name,
+      priceDeltaBaht: bahtInput(Math.abs(option.priceDeltaSatang)),
+      available: option.available,
+    };
+    if (option.priceDeltaSatang < 0) {
+      this.optionEdit.priceDeltaBaht = "-" + this.optionEdit.priceDeltaBaht;
+    }
+    this.optionEditId.set(option.id);
+  }
+
+  async saveOptionEdit(product: CatalogProduct): Promise<void> {
+    const old = this.optionBefore;
+    const delta = parseDeltaBaht(this.optionEdit.priceDeltaBaht);
+    if (!old || !this.optionEdit.name.trim() || delta === null) {
+      this.error.set("ชื่อหรือราคาเพิ่ม/ลดของตัวเลือกไม่ถูกต้อง");
+      return;
+    }
+    await this.mutate(
+      () => this.api.editModifierOption(this.tenantId, this.storeId,
+        product.id, old, {
+          name: this.optionEdit.name.trim(),
+          priceDeltaSatang: delta,
+          available: this.optionEdit.available,
+        }),
+      "บันทึกตัวเลือกสินค้าแล้ว",
+    );
+  }
+
 }
