@@ -60,7 +60,8 @@ jobs:
         run: node scripts/ci/impact-policy.mjs "$BASE_SHA" "$GITHUB_SHA"
       - name: Reuse previous image evidence for operator-only changes
         if: steps.impact.outputs.onprem_images == 'false'
-        run: echo "No Docker image inputs changed; Foundation runs the affected operations safety tests."      - name: Build API and three independent Angular/Nginx staging images
+        run: echo "No Docker image inputs changed; Foundation runs the affected operations safety tests."
+      - name: Build API and three independent Angular/Nginx staging images
         if: steps.impact.outputs.onprem_images == 'true'
         run: |
           set -euo pipefail
