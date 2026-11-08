@@ -17,13 +17,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Determine whether operator safeguards changed
+        id: impact
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: node scripts/ci/impact-policy.mjs "$BASE_SHA" "$GITHUB_SHA"
+      - name: Verify the evidence ledger and impact classification
+        run: node --test tests/ci/impact-policy.test.mjs
       - name: Verify operator safety checks and bounded staging-read qualification harness
+        if: steps.impact.outputs.onprem_ops == 'true'
         run: node --test tests/ops/g4-maintenance-soak.test.mjs
       - name: Verify RCAT On-prem staging package boundaries, operator gates and Compose syntax
+        if: steps.impact.outputs.onprem_ops == 'true'
         run: node --test tests/ops/onprem-staging.test.mjs
       - name: Verify safe on-prem maintenance jobs, backup checks and readiness monitor
+        if: steps.impact.outputs.onprem_ops == 'true'
         run: node --test tests/ops/onprem-operations.test.mjs
       - name: Qualify bounded staging-only large Guest catalogue and SSE read probes
+        if: steps.impact.outputs.onprem_ops == 'true'
         run: node --test tests/ops/onprem-qualification.test.mjs
       - name: Verify required files, metadata, license and source pins
         shell: bash
@@ -72,4 +86,4 @@ jobs:
 
           print(f'Validated {len(required)} docs, {len(project_skills)} local and {len(vendor_skills)} upstream skills')
           PY
-# Application tests will be added under issue #2; this workflow is docs-and-skills validation only.
+# This lightweight stable check reuses docs evidence and runs operator tests only on relevant changes.
