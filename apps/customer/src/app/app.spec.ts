@@ -99,34 +99,59 @@ describe("customer route security and QR ordering", () => {
   it("reconfirms renamed products, category labels and option names even at unchanged totals", () => {
     const cart = [{ productId: "p1", optionIds: ["o1"], quantity: 1 }];
     expect(cartNeedsReview(VISIT, VISIT, cart)).toBe(false);
-    expect(cartNeedsReview(VISIT, {
-      ...VISIT,
-      products: VISIT.products.map((p) =>
-        p.id === "p1" ? { ...p, name: "ข้าวจานใหม่" } : p,
+    expect(
+      cartNeedsReview(
+        VISIT,
+        {
+          ...VISIT,
+          products: VISIT.products.map((p) =>
+            p.id === "p1" ? { ...p, name: "ข้าวจานใหม่" } : p,
+          ),
+        },
+        cart,
       ),
-    }, cart)).toBe(true);
-    expect(cartNeedsReview(VISIT, {
-      ...VISIT,
-      categories: [{ ...VISIT.categories[0]!, name: "เมนูหลัก" }],
-    }, cart)).toBe(true);
-    expect(cartNeedsReview(VISIT, {
-      ...VISIT,
-      modifierOptions: VISIT.modifierOptions.map((o) =>
-        o.id === "o1" ? { ...o, name: "ไข่พิเศษ" } : o,
+    ).toBe(true);
+    expect(
+      cartNeedsReview(
+        VISIT,
+        {
+          ...VISIT,
+          categories: [{ ...VISIT.categories[0]!, name: "เมนูหลัก" }],
+        },
+        cart,
       ),
-    }, cart)).toBe(true);
+    ).toBe(true);
+    expect(
+      cartNeedsReview(
+        VISIT,
+        {
+          ...VISIT,
+          modifierOptions: VISIT.modifierOptions.map((o) =>
+            o.id === "o1" ? { ...o, name: "ไข่พิเศษ" } : o,
+          ),
+        },
+        cart,
+      ),
+    ).toBe(true);
   });
 
   it("does not accept offsetting price deltas or per-line swaps masked by a matching grand total", () => {
-    const selected = [{ productId: "p1", optionIds: ["o1", "o2"], quantity: 1 }];
+    const selected = [
+      { productId: "p1", optionIds: ["o1", "o2"], quantity: 1 },
+    ];
     const moved = {
       ...VISIT,
       modifierOptions: VISIT.modifierOptions.map((o) =>
-        o.id === "o1" ? { ...o, priceDeltaSatang: 2000 } :
-        o.id === "o2" ? { ...o, priceDeltaSatang: -1500 } : o,
+        o.id === "o1"
+          ? { ...o, priceDeltaSatang: 2000 }
+          : o.id === "o2"
+            ? { ...o, priceDeltaSatang: -1500 }
+            : o,
       ),
     };
-    expect(estimateSatang(VISIT, selected)).toBe(estimateSatang(moved, selected));
+    expect(estimateSatang(VISIT, selected)).toBe(
+      estimateSatang(moved, selected),
+    );
     expect(cartNeedsReview(VISIT, moved, selected)).toBe(true);
 
     const twoLines = [
@@ -136,11 +161,14 @@ describe("customer route security and QR ordering", () => {
     const changedPrices = {
       ...VISIT,
       products: VISIT.products.map((p) =>
-        p.id === "p1" ? { ...p, priceSatang: p.priceSatang + 500 } :
-        { ...p, priceSatang: p.priceSatang - 500 },
+        p.id === "p1"
+          ? { ...p, priceSatang: p.priceSatang + 500 }
+          : { ...p, priceSatang: p.priceSatang - 500 },
       ),
     };
-    expect(estimateSatang(VISIT, twoLines)).toBe(estimateSatang(changedPrices, twoLines));
+    expect(estimateSatang(VISIT, twoLines)).toBe(
+      estimateSatang(changedPrices, twoLines),
+    );
     expect(cartNeedsReview(VISIT, changedPrices, twoLines)).toBe(true);
   });
 
@@ -148,20 +176,42 @@ describe("customer route security and QR ordering", () => {
     const cart = [{ productId: "p1", optionIds: ["o1"], quantity: 1 }];
     const required = {
       ...VISIT,
-      modifierGroups: [...VISIT.modifierGroups, {
-        id: "g2", productId: "p1", slug: "spice",
-        name: "ระดับเผ็ด", minSelect: 1, maxSelect: 1,
-      }],
+      modifierGroups: [
+        ...VISIT.modifierGroups,
+        {
+          id: "g2",
+          productId: "p1",
+          slug: "spice",
+          name: "ระดับเผ็ด",
+          minSelect: 1,
+          maxSelect: 1,
+        },
+      ],
     };
     expect(cartNeedsReview(VISIT, required, cart)).toBe(true);
-    expect(cartNeedsReview(VISIT, {
-      ...VISIT,
-      modifierOptions: VISIT.modifierOptions.filter((o) => o.id !== "o1"),
-    }, cart)).toBe(true);
-    expect(cartNeedsReview(VISIT, { ...VISIT, tableId: "different" }, cart)).toBe(true);
-    expect(cartNeedsReview(VISIT, {
-      ...VISIT, products: VISIT.products.filter((p) => p.id !== "p1"),
-    }, cart)).toBe(true);
+    expect(
+      cartNeedsReview(
+        VISIT,
+        {
+          ...VISIT,
+          modifierOptions: VISIT.modifierOptions.filter((o) => o.id !== "o1"),
+        },
+        cart,
+      ),
+    ).toBe(true);
+    expect(
+      cartNeedsReview(VISIT, { ...VISIT, tableId: "different" }, cart),
+    ).toBe(true);
+    expect(
+      cartNeedsReview(
+        VISIT,
+        {
+          ...VISIT,
+          products: VISIT.products.filter((p) => p.id !== "p1"),
+        },
+        cart,
+      ),
+    ).toBe(true);
   });
 
   it("rejects invalid totals, quantity overflow and overly large carts", () => {
