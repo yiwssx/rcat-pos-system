@@ -39,6 +39,13 @@ const TRACK_INTERVAL_MS = 15_000;
         ยังไม่เปิดรับการชำระเงินในระบบนี้ (Payment: not_requested)
       </div>
 
+      @if (!online()) {
+        <p class="guest-warning" role="status">
+          ออฟไลน์ · สถานะออเดอร์ล่าสุดอาจเปลี่ยนแล้ว
+          ระบบจะตรวจสอบใหม่เมื่อเชื่อมต่ออินเทอร์เน็ต
+        </p>
+      }
+
       @if (!session.tracking()) {
         <div class="guest-status" role="status">
           ไม่พบคำสั่งซื้อที่ติดตามได้ในแท็บนี้ โปรดเปิดหน้าเมนูจาก QR
@@ -81,7 +88,11 @@ const TRACK_INTERVAL_MS = 15_000;
             </ol>
           }
           <div class="guest-track-actions">
-            <button type="button" [disabled]="loading()" (click)="refresh()">
+            <button
+              type="button"
+              [disabled]="loading() || !online()"
+              (click)="refresh()"
+            >
               {{ loading() ? "กำลังโหลด..." : "ตรวจสถานะล่าสุด" }}
             </button>
             <button type="button" class="guest-subtle" (click)="clear()">
@@ -108,11 +119,13 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   readonly history = signal<GuestOrderHistory | null>(null);
   readonly error = signal("");
   readonly loading = signal(false);
+  readonly online = signal(true);
   readonly money = formatSatang;
   readonly statusLabel = ORDER_STATUS_LABEL;
 
   ngOnInit(): void {
     this.session.recoverTracking();
+    this.online.set(this.window?.navigator.onLine ?? true);
     this.interval = setInterval(() => {
       if (
         this.document.visibilityState === "visible" &&
@@ -122,6 +135,7 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     }, TRACK_INTERVAL_MS);
     this.window?.addEventListener("focus", this.onResume);
     this.window?.addEventListener("online", this.onResume);
+    this.window?.addEventListener("offline", this.onOffline);
     this.document.addEventListener("visibilitychange", this.onResume);
     void this.refresh();
   }
@@ -131,11 +145,19 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     if (this.interval) clearInterval(this.interval);
     this.window?.removeEventListener("focus", this.onResume);
     this.window?.removeEventListener("online", this.onResume);
+    this.window?.removeEventListener("offline", this.onOffline);
     this.document.removeEventListener("visibilitychange", this.onResume);
   }
 
+  private readonly onOffline = () => {
+    this.online.set(false);
+  };
+
   private readonly onResume = () => {
-    if (this.document.visibilityState === "visible") void this.refresh();
+    this.online.set(this.window?.navigator.onLine ?? true);
+    if (this.document.visibilityState === "visible" && this.online()) {
+      void this.refresh();
+    }
   };
 
   formatDate(value: string): string {
@@ -151,6 +173,7 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   async refresh(): Promise<void> {
     const tracked = this.session.recoverTracking();
     if (!tracked || this.loading() || this.destroyed) return;
+    if (!this.online()) return;
     this.loading.set(true);
     this.error.set("");
     try {
