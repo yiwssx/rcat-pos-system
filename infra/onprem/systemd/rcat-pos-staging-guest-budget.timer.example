@@ -1,0 +1,12 @@
+# UNINSTALLED EXAMPLE — delete expired Guest HMAC budgets ONLY with approved C policy.
+[Unit]
+Description=Daily expired Guest request budget cleanup for RCAT POS staging
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+RandomizedDelaySec=15min
+Persistent=true
+Unit=rcat-pos-staging-ops@prune-guest-budgets.service
+
+[Install]
+WantedBy=timers.target
