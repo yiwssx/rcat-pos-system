@@ -246,3 +246,17 @@ tenant isolation and duplicate-ID rejection. HTTP integration verifies
 staff-only access, cross-tenant denial and current immutable Order
 snapshots. Angular tests cover targeted recovery from a simulated
 1,200-Order backlog.
+
+## G3 suspended/offline Merchant replay CI (8 Nov 2026; #8)
+
+The existing Playwright Chromium suite now includes a second independent
+mobile Merchant context which goes offline, simulates a background-suspended
+document (visibilitychange), misses a **real HTTP submitted Order**, then
+resumes online/visible and must reconcile the new Order from the actual
+PostgreSQL-backed Merchant Inbox. It must not show phantom Orders while
+offline. This exercises browser event handlers, advisory SSE cancellation and
+durable authoritative Order retrieval without changing Payment states.
+
+This is a **simulated suspension in CI**, not proof of Android/iOS process
+eviction, background scheduling, Service Worker lifecycle, real weak mobile
+radio or multi-replica Soak. Those still need physical Staging evidence.
