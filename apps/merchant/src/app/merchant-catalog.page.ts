@@ -11,11 +11,13 @@ import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { prepareProductWebp } from "./prepare-product-webp";
 import { MerchantOrderApi } from "./merchant-order.api";
-import { CATALOG_PAGE_SIZE } from "./catalog-list";
+import { CATALOG_PAGE_SIZE, parseDeltaBaht } from "./catalog-list";
 import {
   CatalogCategory,
   CatalogCursor,
   CatalogProduct,
+  CatalogModifierGroup,
+  CatalogModifierOption,
   MerchantCatalogApi,
 } from "./merchant-catalog.api";
 
@@ -144,6 +146,63 @@ function bahtInput(satang: number): string {
             </button>
           </form>
         </div>
+
+        <section class="catalog-panel" aria-labelledby="category-editor-title">
+          <h2 id="category-editor-title">แก้ไขหมวดหมู่ที่มีอยู่</h2>
+          @for (category of categories(); track category.id) {
+            <div class="catalog-editor-item">
+              <div class="catalog-toolbar">
+                <span>{{ category.name }} ({{ category.slug }})</span>
+                <button
+                  type="button"
+                  class="subtle"
+                  [disabled]="saving()"
+                  (click)="beginCategoryEdit(category)"
+                >
+                  แก้ไขหมวดหมู่
+                </button>
+              </div>
+              @if (categoryEditId() === category.id) {
+                <form class="catalog-edit" (ngSubmit)="saveCategoryEdit()">
+                  <label for="category-edit-name">ชื่อหมวดหมู่</label>
+                  <input
+                    id="category-edit-name"
+                    name="editCategoryName"
+                    [(ngModel)]="categoryEdit.name"
+                    required
+                    maxlength="120"
+                    [disabled]="saving()"
+                  />
+                  <label for="category-edit-slug">รหัสหมวดหมู่</label>
+                  <input
+                    id="category-edit-slug"
+                    name="editCategorySlug"
+                    [(ngModel)]="categoryEdit.slug"
+                    required
+                    maxlength="48"
+                    pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                    [disabled]="saving()"
+                  />
+                  <div class="catalog-actions">
+                    <button type="submit" [disabled]="saving()">
+                      บันทึกหมวดหมู่
+                    </button>
+                    <button
+                      type="button"
+                      class="subtle"
+                      [disabled]="saving()"
+                      (click)="categoryEditId.set(null)"
+                    >
+                      ยกเลิก
+                    </button>
+                  </div>
+                </form>
+              }
+            </div>
+          } @empty {
+            <p>ยังไม่มีหมวดหมู่</p>
+          }
+        </section>
 
         <section
           class="catalog-panel catalog-products"
@@ -307,6 +366,249 @@ function bahtInput(satang: number): string {
                   </p>
                 }
               </div>
+              @if (!product.archivedAt) {
+                <button
+                  type="button"
+                  class="subtle catalog-editor-toggle"
+                  [disabled]="saving()"
+                  (click)="toggleModifierEditor(product)"
+                >
+                  {{
+                    modifierProductId() === product.id
+                      ? "ซ่อนตัวเลือกสินค้า"
+                      : "จัดการตัวเลือกสินค้า"
+                  }}
+                </button>
+                @if (modifierProductId() === product.id) {
+                  <section class="catalog-edit catalog-modifier-panel">
+                    <h4>ตัวเลือกเพิ่มเติมของ {{ product.name }}</h4>
+                    <form class="catalog-edit" (ngSubmit)="addGroup(product)">
+                      <h5>เพิ่มกลุ่มตัวเลือก</h5>
+                      <label for="new-group-name">ชื่อกลุ่ม</label>
+                      <input
+                        id="new-group-name"
+                        name="newGroupName"
+                        [(ngModel)]="newGroup.name"
+                        required
+                        maxlength="120"
+                        [disabled]="saving()"
+                      />
+                      <label for="new-group-slug">รหัสกลุ่ม</label>
+                      <input
+                        id="new-group-slug"
+                        name="newGroupSlug"
+                        [(ngModel)]="newGroup.slug"
+                        required
+                        pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                        maxlength="48"
+                        [disabled]="saving()"
+                      />
+                      <label for="new-group-min">เลือกขั้นต่ำ</label>
+                      <input
+                        id="new-group-min"
+                        name="newGroupMin"
+                        type="number"
+                        min="0"
+                        max="8"
+                        [(ngModel)]="newGroup.minSelect"
+                        [disabled]="saving()"
+                      />
+                      <label for="new-group-max">เลือกสูงสุด</label>
+                      <input
+                        id="new-group-max"
+                        name="newGroupMax"
+                        type="number"
+                        min="1"
+                        max="8"
+                        [(ngModel)]="newGroup.maxSelect"
+                        [disabled]="saving()"
+                      />
+                      <button type="submit" [disabled]="saving()">
+                        เพิ่มกลุ่ม
+                      </button>
+                    </form>
+                    @for (group of groupsFor(product.id); track group.id) {
+                      <div class="catalog-editor-item">
+                        <div class="catalog-toolbar">
+                          <h5>
+                            {{ group.name }} · เลือก {{ group.minSelect }}–{{
+                              group.maxSelect
+                            }}
+                          </h5>
+                          <button
+                            type="button"
+                            class="subtle"
+                            [disabled]="saving()"
+                            (click)="beginGroupEdit(group)"
+                          >
+                            แก้ไขกลุ่ม
+                          </button>
+                        </div>
+                        @if (groupEditId() === group.id) {
+                          <form
+                            class="catalog-edit"
+                            (ngSubmit)="saveGroupEdit(product)"
+                          >
+                            <label for="group-edit-name">ชื่อกลุ่ม</label>
+                            <input
+                              id="group-edit-name"
+                              name="groupEditName"
+                              [(ngModel)]="groupEdit.name"
+                              required
+                              maxlength="120"
+                              [disabled]="saving()"
+                            />
+                            <label for="group-edit-slug">รหัสกลุ่ม</label>
+                            <input
+                              id="group-edit-slug"
+                              name="groupEditSlug"
+                              [(ngModel)]="groupEdit.slug"
+                              required
+                              maxlength="48"
+                              pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                              [disabled]="saving()"
+                            />
+                            <label for="group-edit-min">เลือกขั้นต่ำ</label>
+                            <input
+                              id="group-edit-min"
+                              name="groupEditMin"
+                              type="number"
+                              min="0"
+                              max="8"
+                              [(ngModel)]="groupEdit.minSelect"
+                              [disabled]="saving()"
+                            />
+                            <label for="group-edit-max">เลือกสูงสุด</label>
+                            <input
+                              id="group-edit-max"
+                              name="groupEditMax"
+                              type="number"
+                              min="1"
+                              max="8"
+                              [(ngModel)]="groupEdit.maxSelect"
+                              [disabled]="saving()"
+                            />
+                            <div class="catalog-actions">
+                              <button type="submit" [disabled]="saving()">
+                                บันทึกกลุ่ม
+                              </button>
+                              <button
+                                type="button"
+                                class="subtle"
+                                [disabled]="saving()"
+                                (click)="groupEditId.set(null)"
+                              >
+                                ยกเลิก
+                              </button>
+                            </div>
+                          </form>
+                        }
+                        @for (option of optionsFor(group.id); track option.id) {
+                          <div class="catalog-modifier-option">
+                            <span
+                              >{{ option.name }} ·
+                              {{ money(option.priceDeltaSatang) }} บาท ·
+                              {{
+                                option.available ? "เปิดขาย" : "ปิดขาย"
+                              }}</span
+                            >
+                            <button
+                              type="button"
+                              class="subtle"
+                              [disabled]="saving()"
+                              (click)="beginOptionEdit(option)"
+                            >
+                              แก้ไขตัวเลือก
+                            </button>
+                            @if (optionEditId() === option.id) {
+                              <form
+                                class="catalog-edit"
+                                (ngSubmit)="saveOptionEdit(product)"
+                              >
+                                <label for="option-edit-name"
+                                  >ชื่อตัวเลือก</label
+                                >
+                                <input
+                                  id="option-edit-name"
+                                  name="optionEditName"
+                                  [(ngModel)]="optionEdit.name"
+                                  maxlength="120"
+                                  required
+                                  [disabled]="saving()"
+                                />
+                                <label for="option-edit-price"
+                                  >ราคาเพิ่ม/ลด (บาท)</label
+                                >
+                                <input
+                                  id="option-edit-price"
+                                  name="optionEditPrice"
+                                  [(ngModel)]="optionEdit.priceDeltaBaht"
+                                  required
+                                  inputmode="decimal"
+                                  [disabled]="saving()"
+                                />
+                                <label>
+                                  <input
+                                    type="checkbox"
+                                    name="optionEditAvailable"
+                                    [(ngModel)]="optionEdit.available"
+                                    [disabled]="saving()"
+                                  />
+                                  เปิดให้เลือก
+                                </label>
+                                <div class="catalog-actions">
+                                  <button type="submit" [disabled]="saving()">
+                                    บันทึกตัวเลือก
+                                  </button>
+                                  <button
+                                    type="button"
+                                    class="subtle"
+                                    [disabled]="saving()"
+                                    (click)="optionEditId.set(null)"
+                                  >
+                                    ยกเลิก
+                                  </button>
+                                </div>
+                              </form>
+                            }
+                          </div>
+                        }
+                        <form
+                          class="catalog-edit"
+                          (ngSubmit)="addOption(product, group)"
+                        >
+                          <h5>เพิ่มตัวเลือกใน {{ group.name }}</h5>
+                          <label for="new-option-name">ชื่อตัวเลือก</label>
+                          <input
+                            id="new-option-name"
+                            name="newOptionName"
+                            [(ngModel)]="newOption.name"
+                            maxlength="120"
+                            required
+                            [disabled]="saving()"
+                          />
+                          <label for="new-option-price"
+                            >ราคาเพิ่ม/ลด (บาท)</label
+                          >
+                          <input
+                            id="new-option-price"
+                            name="newOptionPrice"
+                            [(ngModel)]="newOption.priceDeltaBaht"
+                            required
+                            inputmode="decimal"
+                            [disabled]="saving()"
+                          />
+                          <button type="submit" [disabled]="saving()">
+                            เพิ่มตัวเลือก
+                          </button>
+                        </form>
+                      </div>
+                    } @empty {
+                      <p>ยังไม่มีกลุ่มตัวเลือก</p>
+                    }
+                  </section>
+                }
+              }
               @if (editId() === product.id && !product.archivedAt) {
                 <form class="catalog-edit" (ngSubmit)="saveEdit()">
                   <p>
@@ -406,6 +708,20 @@ export class MerchantCatalogPage implements OnInit {
   readonly editId = signal<string | null>(null);
   readonly page = signal(1);
   readonly pageSize = CATALOG_PAGE_SIZE;
+  readonly categoryEditId = signal<string | null>(null);
+  readonly modifierProductId = signal<string | null>(null);
+  readonly groupEditId = signal<string | null>(null);
+  readonly optionEditId = signal<string | null>(null);
+  readonly modifierGroups = signal<CatalogModifierGroup[]>([]);
+  readonly modifierOptions = signal<CatalogModifierOption[]>([]);
+  private categoryBefore: CatalogCategory | null = null;
+  private groupBefore: CatalogModifierGroup | null = null;
+  private optionBefore: CatalogModifierOption | null = null;
+  categoryEdit = { name: "", slug: "" };
+  newGroup = { name: "", slug: "", minSelect: 0, maxSelect: 1 };
+  groupEdit = { name: "", slug: "", minSelect: 0, maxSelect: 1 };
+  newOption = { name: "", priceDeltaBaht: "0.00" };
+  optionEdit = { name: "", priceDeltaBaht: "0.00", available: true };
   readonly pageLoading = signal(false);
   readonly hasMore = signal(false);
   readonly nextCursor = signal<CatalogCursor | null>(null);
@@ -473,6 +789,8 @@ export class MerchantCatalogPage implements OnInit {
       if (version !== this.latestRequest) return;
       this.categories.set(result.categories);
       this.products.set(result.products);
+      this.modifierGroups.set(result.modifierGroups ?? []);
+      this.modifierOptions.set(result.modifierOptions ?? []);
       this.hasMore.set(result.hasMore);
       this.nextCursor.set(result.nextCursor);
       if (
@@ -494,6 +812,9 @@ export class MerchantCatalogPage implements OnInit {
         this.newProduct.categoryId = result.categories[0]?.id ?? "";
       }
       this.editId.set(null);
+      this.categoryEditId.set(null);
+      this.groupEditId.set(null);
+      this.optionEditId.set(null);
     } catch {
       if (version === this.latestRequest) {
         this.error.set("ไม่สามารถโหลดข้อมูลเมนูล่าสุดได้");
@@ -572,7 +893,7 @@ export class MerchantCatalogPage implements OnInit {
     } catch (error) {
       this.error.set(
         error instanceof HttpErrorResponse && error.status === 409
-          ? "ข้อมูลสินค้านี้มีการเปลี่ยนแปลง กรุณาโหลดใหม่แล้วตรวจสอบก่อนบันทึก"
+          ? "ข้อมูลถูกแก้ไขโดยผู้อื่นแล้ว กรุณาโหลดรายการล่าสุดและตรวจสอบก่อนบันทึก"
           : error instanceof HttpErrorResponse && error.status === 403
             ? "ไม่มีสิทธิ์หรือ Session หมดอายุ กรุณาเข้าสู่ระบบใหม่"
             : error instanceof Error && !(error instanceof HttpErrorResponse)
@@ -744,6 +1065,186 @@ export class MerchantCatalogPage implements OnInit {
           product.revision,
         ),
       "เก็บสินค้าถาวรแล้ว และคงประวัติออเดอร์เดิม",
+    );
+  }
+  beginCategoryEdit(category: CatalogCategory): void {
+    this.categoryBefore = { ...category };
+    this.categoryEdit = { name: category.name, slug: category.slug };
+    this.categoryEditId.set(category.id);
+  }
+
+  async saveCategoryEdit(): Promise<void> {
+    const previous = this.categoryBefore;
+    if (!previous || !this.categoryEdit.name.trim()) return;
+    await this.mutate(
+      () =>
+        this.api.updateCategory(
+          this.tenantId,
+          this.storeId,
+          previous.id,
+          previous,
+          {
+            name: this.categoryEdit.name.trim(),
+            slug: this.categoryEdit.slug.trim(),
+          },
+        ),
+      "บันทึกหมวดหมู่แล้ว",
+    );
+  }
+
+  toggleModifierEditor(product: CatalogProduct): void {
+    this.modifierProductId.update((id) =>
+      id === product.id ? null : product.id,
+    );
+    this.groupEditId.set(null);
+    this.optionEditId.set(null);
+  }
+
+  groupsFor(productId: string): CatalogModifierGroup[] {
+    return this.modifierGroups().filter(
+      (group) => group.productId === productId,
+    );
+  }
+
+  optionsFor(groupId: string): CatalogModifierOption[] {
+    return this.modifierOptions().filter(
+      (option) => option.groupId === groupId,
+    );
+  }
+
+  async addGroup(product: CatalogProduct): Promise<void> {
+    const values = { ...this.newGroup };
+    if (
+      !values.name.trim() ||
+      !Number.isInteger(values.minSelect) ||
+      !Number.isInteger(values.maxSelect) ||
+      values.minSelect < 0 ||
+      values.maxSelect < 1 ||
+      values.maxSelect > 8 ||
+      values.minSelect > values.maxSelect
+    ) {
+      this.error.set("กรุณาระบุชื่อและจำนวนตัวเลือกให้ถูกต้อง");
+      return;
+    }
+    if (
+      await this.mutate(
+        () =>
+          this.api.addModifierGroup(this.tenantId, this.storeId, product.id, {
+            ...values,
+            name: values.name.trim(),
+            slug: values.slug.trim(),
+          }),
+        "เพิ่มกลุ่มตัวเลือกแล้ว",
+      )
+    ) {
+      this.newGroup = { name: "", slug: "", minSelect: 0, maxSelect: 1 };
+    }
+  }
+
+  beginGroupEdit(group: CatalogModifierGroup): void {
+    this.groupBefore = { ...group };
+    this.groupEdit = {
+      name: group.name,
+      slug: group.slug,
+      minSelect: group.minSelect,
+      maxSelect: group.maxSelect,
+    };
+    this.groupEditId.set(group.id);
+  }
+
+  async saveGroupEdit(product: CatalogProduct): Promise<void> {
+    const old = this.groupBefore;
+    const values = { ...this.groupEdit };
+    if (
+      !old ||
+      !values.name.trim() ||
+      !Number.isInteger(values.minSelect) ||
+      !Number.isInteger(values.maxSelect) ||
+      values.minSelect < 0 ||
+      values.maxSelect < 1 ||
+      values.maxSelect > 8 ||
+      values.minSelect > values.maxSelect
+    ) {
+      this.error.set("จำนวนตัวเลือกไม่ถูกต้อง");
+      return;
+    }
+    await this.mutate(
+      () =>
+        this.api.editModifierGroup(
+          this.tenantId,
+          this.storeId,
+          product.id,
+          old,
+          {
+            ...values,
+            name: values.name.trim(),
+            slug: values.slug.trim(),
+          },
+        ),
+      "บันทึกกลุ่มตัวเลือกแล้ว",
+    );
+  }
+
+  async addOption(
+    product: CatalogProduct,
+    group: CatalogModifierGroup,
+  ): Promise<void> {
+    const delta = parseDeltaBaht(this.newOption.priceDeltaBaht);
+    if (!this.newOption.name.trim() || delta === null) {
+      this.error.set("ชื่อหรือราคาเพิ่ม/ลดของตัวเลือกไม่ถูกต้อง");
+      return;
+    }
+    if (
+      await this.mutate(
+        () =>
+          this.api.addModifierOption(
+            this.tenantId,
+            this.storeId,
+            product.id,
+            group.id,
+            { name: this.newOption.name.trim(), priceDeltaSatang: delta },
+          ),
+        "เพิ่มตัวเลือกสินค้าแล้ว",
+      )
+    ) {
+      this.newOption = { name: "", priceDeltaBaht: "0.00" };
+    }
+  }
+
+  beginOptionEdit(option: CatalogModifierOption): void {
+    this.optionBefore = { ...option };
+    this.optionEdit = {
+      name: option.name,
+      priceDeltaBaht: bahtInput(Math.abs(option.priceDeltaSatang)),
+      available: option.available,
+    };
+    if (option.priceDeltaSatang < 0) {
+      this.optionEdit.priceDeltaBaht = "-" + this.optionEdit.priceDeltaBaht;
+    }
+    this.optionEditId.set(option.id);
+  }
+
+  async saveOptionEdit(product: CatalogProduct): Promise<void> {
+    const old = this.optionBefore;
+    const delta = parseDeltaBaht(this.optionEdit.priceDeltaBaht);
+    if (!old || !this.optionEdit.name.trim() || delta === null) {
+      this.error.set("ชื่อหรือราคาเพิ่ม/ลดของตัวเลือกไม่ถูกต้อง");
+      return;
+    }
+    await this.mutate(
+      () =>
+        this.api.editModifierOption(
+          this.tenantId,
+          this.storeId,
+          product.id,
+          old,
+          {
+            name: this.optionEdit.name.trim(),
+            priceDeltaSatang: delta,
+            available: this.optionEdit.available,
+          },
+        ),
+      "บันทึกตัวเลือกสินค้าแล้ว",
     );
   }
 }

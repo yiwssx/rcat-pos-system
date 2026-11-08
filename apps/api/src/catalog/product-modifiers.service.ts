@@ -33,6 +33,9 @@ function safeError(error: unknown): never {
   if (code === "42501" || code === "28000" || code === "23503") {
     throw new NotFoundException("Modifier unavailable");
   }
+  if (code === "P0009") {
+    throw new ConflictException("Modifier changed; reload the catalog");
+  }
   if (code === "23505") {
     throw new ConflictException("Modifier already exists");
   }
@@ -188,6 +191,126 @@ export class ProductModifiersService {
         ),
       );
       return { optionId, available: result.rows[0]?.available };
+    } catch (error) {
+      safeError(error);
+    }
+  }
+  async updateGroup(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    productId: string,
+    groupId: string,
+    raw: unknown,
+  ) {
+    validateIds(tenantId, storeId, productId, groupId);
+    const session = await this.auth.session(req);
+    this.auth.requireCsrf(req, session);
+    const data = dataObject(raw);
+    const name = nameField(data["name"]);
+    const expectedName = nameField(data["expectedName"]);
+    const slug = data["slug"];
+    const expectedSlug = data["expectedSlug"];
+    const minSelect = data["minSelect"];
+    const maxSelect = data["maxSelect"];
+    const expectedMin = data["expectedMinSelect"];
+    const expectedMax = data["expectedMaxSelect"];
+    if (
+      typeof slug !== "string" ||
+      !SLUG.test(slug) ||
+      slug.length < 3 ||
+      slug.length > 48 ||
+      typeof expectedSlug !== "string" ||
+      !SLUG.test(expectedSlug) ||
+      expectedSlug.length < 3 ||
+      expectedSlug.length > 48 ||
+      ![minSelect, maxSelect, expectedMin, expectedMax].every(
+        (n) => typeof n === "number" && Number.isInteger(n) && n >= 0 && n <= 8,
+      ) ||
+      (minSelect as number) > (maxSelect as number) ||
+      (maxSelect as number) < 1
+    ) {
+      throw new BadRequestException("Invalid modifier group edit");
+    }
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.edit_modifier_group($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) AS data",
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            productId,
+            groupId,
+            expectedName,
+            expectedSlug,
+            expectedMin,
+            expectedMax,
+            name,
+            slug,
+            minSelect,
+            maxSelect,
+          ],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      safeError(error);
+    }
+  }
+
+  async updateOption(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    productId: string,
+    groupId: string,
+    optionId: string,
+    raw: unknown,
+  ) {
+    validateIds(tenantId, storeId, productId, groupId, optionId);
+    const session = await this.auth.session(req);
+    this.auth.requireCsrf(req, session);
+    const data = dataObject(raw);
+    const name = nameField(data["name"]);
+    const expectedName = nameField(data["expectedName"]);
+    const delta = data["priceDeltaSatang"];
+    const expectedDelta = data["expectedPriceDeltaSatang"];
+    const available = data["available"];
+    const expectedAvailable = data["expectedAvailable"];
+    if (
+      typeof delta !== "number" ||
+      !Number.isSafeInteger(delta) ||
+      Math.abs(delta) > 100000000 ||
+      typeof expectedDelta !== "number" ||
+      !Number.isSafeInteger(expectedDelta) ||
+      Math.abs(expectedDelta) > 100000000 ||
+      typeof available !== "boolean" ||
+      typeof expectedAvailable !== "boolean"
+    ) {
+      throw new BadRequestException("Invalid modifier option edit");
+    }
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.edit_modifier_option($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) AS data",
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            productId,
+            groupId,
+            optionId,
+            expectedName,
+            expectedDelta,
+            expectedAvailable,
+            name,
+            delta,
+            available,
+          ],
+        ),
+      );
+      return result.rows[0]?.data;
     } catch (error) {
       safeError(error);
     }

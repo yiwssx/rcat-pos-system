@@ -5,6 +5,7 @@ import {
   catalogPageCount,
   filterCatalogProducts,
   paginateCatalogProducts,
+  parseDeltaBaht,
 } from "./catalog-list";
 
 function product(
@@ -78,5 +79,17 @@ describe("merchant catalog filtering and pagination", () => {
     expect(CATALOG_PAGE_SIZE).toBe(20);
     expect(() => catalogPageCount(3, 0)).toThrow(RangeError);
     expect(() => catalogPageCount(-1)).toThrow(RangeError);
+  });
+});
+
+describe("signed THB modifier inputs", () => {
+  it("preserves exact satang and rejects fractional/oversized/exponent values", () => {
+    expect(parseDeltaBaht("-12.50")).toBe(-1250);
+    expect(parseDeltaBaht("0.05")).toBe(5);
+    expect(parseDeltaBaht("1000000.00")).toBe(100000000);
+    expect(parseDeltaBaht("-1000000.01")).toBeNull();
+    expect(parseDeltaBaht("0.001")).toBeNull();
+    expect(parseDeltaBaht("1e5")).toBeNull();
+    expect(parseDeltaBaht("")).toBeNull();
   });
 });
