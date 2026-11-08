@@ -152,7 +152,10 @@ function bahtInput(satang: number): string {
           <div class="catalog-toolbar">
             <div>
               <h2 id="products-title">สินค้าทั้งหมด</h2>
-              <p>แสดง {{ products().length }} รายการในหน้านี้ · ราคาที่แสดงเป็นบาท</p>
+              <p>
+                แสดง {{ products().length }} รายการในหน้านี้ ·
+                ราคาที่แสดงเป็นบาท
+              </p>
             </div>
             <div class="catalog-actions">
               <button type="button" class="subtle" (click)="toggleArchived()">
@@ -198,14 +201,20 @@ function bahtInput(satang: number): string {
             </div>
           </div>
           <div class="catalog-actions">
-            <button type="button" class="subtle"
-              (click)="applyFilters()" [disabled]="pageLoading() || saving()">
+            <button
+              type="button"
+              class="subtle"
+              (click)="applyFilters()"
+              [disabled]="pageLoading() || saving()"
+            >
               ค้นหาสินค้า
             </button>
           </div>
           <p class="catalog-page-status" role="status" aria-live="polite">
             หน้า {{ page() }} · สูงสุด {{ pageSize }} รายการต่อหน้า
-            @if (pageLoading()) { · กำลังโหลด... }
+            @if (pageLoading()) {
+              · กำลังโหลด...
+            }
           </p>
 
           @for (product of displayedProducts(); track product.id) {
@@ -453,9 +462,8 @@ export class MerchantCatalogPage implements OnInit {
     const version = ++this.latestRequest;
     this.pageLoading.set(true);
     try {
-      const cursor = this.page() > 1
-        ? this.cursorHistory[this.page() - 2] ?? null
-        : null;
+      const cursor =
+        this.page() > 1 ? (this.cursorHistory[this.page() - 2] ?? null) : null;
       const result = await this.api.page(this.tenantId, this.storeId, {
         search: this.search,
         categoryId: this.categoryFilter,
@@ -482,9 +490,7 @@ export class MerchantCatalogPage implements OnInit {
         await this.refresh();
         return;
       }
-      if (
-        !result.categories.some((c) => c.id === this.newProduct.categoryId)
-      ) {
+      if (!result.categories.some((c) => c.id === this.newProduct.categoryId)) {
         this.newProduct.categoryId = result.categories[0]?.id ?? "";
       }
       this.editId.set(null);
@@ -537,7 +543,8 @@ export class MerchantCatalogPage implements OnInit {
 
   nextPage(): void {
     const cursor = this.nextCursor();
-    if (this.saving() || this.pageLoading() || !this.hasMore() || !cursor) return;
+    if (this.saving() || this.pageLoading() || !this.hasMore() || !cursor)
+      return;
     this.cursorHistory.push(cursor);
     this.page.update((current) => current + 1);
     this.editId.set(null);
