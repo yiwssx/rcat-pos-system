@@ -36,8 +36,8 @@ BEGIN
  FOR batch IN 1..3 LOOP
    page:=rcat_private.guest_catalog_page(
      visit_secret,'',NULL,cursor_time,cursor_id,20);
-   IF jsonb_array_length(page->'products') <>
-      CASE WHEN batch=3 THEN 15 ELSE 20 END THEN
+   IF (batch<3 AND jsonb_array_length(page->'products')<>20)
+      OR (batch=3 AND jsonb_array_length(page->'products')<>15) THEN
      RAISE EXCEPTION 'Wrong Guest page size at %',batch;
    END IF;
    IF (page->>'hasMore')::boolean IS DISTINCT FROM (batch<3)
