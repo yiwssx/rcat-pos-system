@@ -50,6 +50,39 @@ export class ProductModifiersController {
     );
   }
 
+  @Patch(":groupId")
+  @Header("Cache-Control", "no-store")
+  updateGroup(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("productId") productId: string,
+    @Param("groupId") groupId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.modifiers.updateGroup(
+      req, tenantId, storeId, productId, groupId, body,
+    );
+  }
+
+  @Patch(":groupId/options/:optionId")
+  @Header("Cache-Control", "no-store")
+  updateOption(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("productId") productId: string,
+    @Param("groupId") groupId: string,
+    @Param("optionId") optionId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.modifiers.updateOption(
+      req, tenantId, storeId, productId, groupId, optionId, body,
+    );
+  }
+
   @Patch(":groupId/options/:optionId/availability")
   @Header("Cache-Control", "no-store")
   availability(
