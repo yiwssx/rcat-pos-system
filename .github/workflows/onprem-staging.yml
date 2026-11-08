@@ -11,6 +11,11 @@ on:
       - 'scripts/ops/onprem-*'
       - 'tests/ops/onprem-*'
       - 'apps/**'
+      - '.node-version'
+      - 'angular.json'
+      - 'nx.json'
+      - 'tsconfig.base.json'
+      - 'pnpm-workspace.yaml'
       - 'libs/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -21,6 +26,7 @@ on:
       - 'Dockerfile.staging'
       - 'compose.staging.yaml'
       - '.dockerignore'
+      - '.env.staging.example'
       - 'infra/onprem/**'
       - 'scripts/ops/onprem-*'
       - 'tests/ops/onprem-*'
@@ -45,10 +51,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           persist-credentials: false
-      - name: Validate command preflight and Compose parser with synthetic fixtures
-        run: node --test tests/ops/onprem-staging.test.mjs
+      - name: Determine whether image contents changed
+        id: impact
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: node scripts/ci/impact-policy.mjs "$BASE_SHA" "$GITHUB_SHA"
+      - name: Reuse previous image evidence for operator-only changes
+        if: steps.impact.outputs.onprem_images == 'false'
+        run: echo "No Docker image inputs changed; Foundation runs the affected operations safety tests."
       - name: Build API and three independent Angular/Nginx staging images
+        if: steps.impact.outputs.onprem_images == 'true'
         run: |
           set -euo pipefail
           docker build -f Dockerfile.staging --target api -t rcat-pos-api:staging-ci .
@@ -56,6 +70,7 @@ jobs:
             docker build -f Dockerfile.staging --target "$app" -t "rcat-pos-$app:staging-ci" .
           done
       - name: Verify non-root compiled API and three static Nginx sites
+        if: steps.impact.outputs.onprem_images == 'true'
         run: |
           set -euo pipefail
           docker run --rm --network none --entrypoint node rcat-pos-api:staging-ci -e "require('fs').accessSync('/work/dist/apps/api/src/main.js'); if(process.getuid()===0) process.exit(1)"
@@ -67,7 +82,3 @@ jobs:
           for app in customer admin; do
             docker run --rm --entrypoint sh "rcat-pos-$app:staging-ci" -c 'test ! -e /usr/share/nginx/html/sw.js'
           done
-      - name: Assert staging automation remains fail-closed
-        run: |
-          set -euo pipefail
-          node --test tests/ops/onprem-staging.test.mjs tests/ops/onprem-operations.test.mjs

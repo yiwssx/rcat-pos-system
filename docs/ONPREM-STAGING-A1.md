@@ -49,3 +49,8 @@ The committed `compose.db.yaml` is **development-only** and must not be used as 
 - A2/A3: production-grade backup job, retention, observability alert delivery and a safe offsite target under #80 and owner policy #82. Existing DBA CLI only prunes **expired Guest budget buckets**; never unacknowledged Outbox.
 - A4/A5: extended sustained load, two-replica proxy SSE and device test harness. Physical iOS/Safari cannot be certified by Chromium CI.
 - This packaging does not provision secret stores, SMTP/Resend, Google Accounts, external DNS, RMS or the IOT host. They belong in #81 with explicit operator evidence.
+
+
+## Lean delivery addendum — 9 Nov 2026
+
+A1–A5 code-only #80 is now closed through merged PR #83/#84/#85; the historic "A2/A3/A4/A5 continues" notes above describe the original work plan, **not unfinished code**. Refer to [Lean Evidence-Based Delivery](./LEAN-EVIDENCE-DELIVERY.md) and [evidence register](./evidence-register.json) for current gates. Do **not** rerun Nx/Unit/DB/RLS/Browser CI on IOT. B1 should recheck only current host capacity/port headroom and the new RMS→POS path, plus protected runtime configuration; external OAuth, isolated restore, observed PWA and physical mobile checks remain host-specific. Code CI success cannot close #81/#82 or authorize Production. Docker CI verification images are not currently published as deployable release artifacts; operator `build --apply` still builds a unique staging tag when authorized.
