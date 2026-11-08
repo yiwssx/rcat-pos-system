@@ -194,6 +194,16 @@ async function browserFlow(fixture) {
     await guest.locator(".guest-product", { hasText: fixture.name }).waitFor();
     assert.equal(new URL(guest.url()).hash, "", "QR token leaked into URL after load");
     assert.ok(await guest.getByText("ยังไม่มีการชำระเงินผ่าน PromptPay").count());
+    // G2: a narrow 320px viewport must retain searchable menu and
+    // checkout without a horizontal document scrollbar.
+    await guest.setViewportSize({ width: 320, height: 700 });
+    assert.equal(await guest.getByRole("searchbox", { name: "ค้นหาเมนู" }).count(), 1);
+    const viewport = await guest.evaluate(() => ({
+      visible: window.innerWidth,
+      documentWidth: document.documentElement.scrollWidth,
+    }));
+    assert.ok(viewport.documentWidth <= viewport.visible + 1,
+      "Guest menu overflows 320px screen: " + JSON.stringify(viewport));
 
     // iPhone offline: do not submit an Order or silently mutate cart;
     // reconnect and submit through the visible Angular button.
@@ -214,6 +224,21 @@ async function browserFlow(fixture) {
       .match(/[a-f0-9]{8}/i)?.[0];
     assert.ok(orderIdPrefix, "Customer tracking page missing Order ID");
     assert.ok((await guest.locator(".guest-order-state").innerText()).length > 0);
+    // G2: tracking is explicitly marked stale when the device drops the
+    // connection. Reconnecting should revalidate server status, not
+    // claim Payment success or expose the Order bearer.
+    await guestContext.setOffline(true);
+    await guest.evaluate(() => window.dispatchEvent(new Event("offline")));
+    await guest.getByText("ออฟไลน์ · สถานะออเดอร์ล่าสุดอาจเปลี่ยนแล้ว", {
+      exact: false,
+    }).waitFor();
+    assert.ok(await guest.locator(".guest-track-actions button").first().isDisabled());
+    await guestContext.setOffline(false);
+    await guest.evaluate(() => window.dispatchEvent(new Event("online")));
+    await guest.waitForFunction(() => {
+      const btn = document.querySelector(".guest-track-actions button");
+      return !!btn && !btn.disabled && btn.textContent.includes("ตรวจสถานะล่าสุด");
+    }, { timeout: 20000 });
 
     // Two real independent merchant browser contexts, each with its own
     // HttpOnly session, CSRF cookie and SSE/periodic order board.
@@ -523,7 +548,7 @@ async function browserFlow(fixture) {
     console.log(JSON.stringify({
       browser: "Chromium", viewport: "mobile customer + desktop/mobile merchant",
       result: "PASS",
-      scenarios: ["QR URL scrub", "offline submit block", "tracked checkout",
+      scenarios: ["QR URL scrub", "320px keyboard/search a11y", "offline submit block", "tracked checkout", "offline tracking and revalidation",
         "independent merchant tabs", "order status propagation", "Merchant offline/sleep resume reconciliation", "mobile catalog WebP conversion + guest photo", "mobile catalog create/edit/archive", "static printed QR and staff code redemption/revocation", "expired session denied"],
     }));
   } catch (error) {
