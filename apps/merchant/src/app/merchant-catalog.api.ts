@@ -158,7 +158,9 @@ export class MerchantCatalogApi {
   ): Promise<{ categoryId: string; changed: boolean }> {
     return firstValueFrom(
       this.http.patch<{ categoryId: string; changed: boolean }>(
-        scope(tenantId, storeId) + "/categories/" + encodeURIComponent(categoryId),
+        scope(tenantId, storeId) +
+          "/categories/" +
+          encodeURIComponent(categoryId),
         {
           expectedName: expected.name,
           expectedSlug: expected.slug,
@@ -170,19 +172,32 @@ export class MerchantCatalogApi {
   }
 
   private modifierPath(
-    tenantId: string, storeId: string, productId: string,
+    tenantId: string,
+    storeId: string,
+    productId: string,
   ): string {
-    return scope(tenantId,storeId) + "/products/" +
-      encodeURIComponent(productId) + "/modifier-groups";
+    return (
+      scope(tenantId, storeId) +
+      "/products/" +
+      encodeURIComponent(productId) +
+      "/modifier-groups"
+    );
   }
 
   addModifierGroup(
-    tenantId: string, storeId: string, productId: string,
-    values: { slug: string; name: string; minSelect: number; maxSelect: number },
+    tenantId: string,
+    storeId: string,
+    productId: string,
+    values: {
+      slug: string;
+      name: string;
+      minSelect: number;
+      maxSelect: number;
+    },
   ): Promise<{ groupId: string }> {
     return firstValueFrom(
       this.http.post<{ groupId: string }>(
-        this.modifierPath(tenantId,storeId,productId),
+        this.modifierPath(tenantId, storeId, productId),
         values,
         { headers: this.csrfHeaders(), withCredentials: true },
       ),
@@ -190,13 +205,22 @@ export class MerchantCatalogApi {
   }
 
   editModifierGroup(
-    tenantId: string, storeId: string, productId: string,
+    tenantId: string,
+    storeId: string,
+    productId: string,
     group: CatalogModifierGroup,
-    values: { slug: string; name: string; minSelect: number; maxSelect: number },
+    values: {
+      slug: string;
+      name: string;
+      minSelect: number;
+      maxSelect: number;
+    },
   ): Promise<{ groupId: string; changed: boolean }> {
     return firstValueFrom(
       this.http.patch<{ groupId: string; changed: boolean }>(
-        this.modifierPath(tenantId,storeId,productId) + "/" + encodeURIComponent(group.id),
+        this.modifierPath(tenantId, storeId, productId) +
+          "/" +
+          encodeURIComponent(group.id),
         {
           expectedName: group.name,
           expectedSlug: group.slug,
@@ -210,13 +234,18 @@ export class MerchantCatalogApi {
   }
 
   addModifierOption(
-    tenantId: string, storeId: string, productId: string, groupId: string,
+    tenantId: string,
+    storeId: string,
+    productId: string,
+    groupId: string,
     values: { name: string; priceDeltaSatang: number },
   ): Promise<{ optionId: string }> {
     return firstValueFrom(
       this.http.post<{ optionId: string }>(
-        this.modifierPath(tenantId,storeId,productId) + "/" +
-        encodeURIComponent(groupId) + "/options",
+        this.modifierPath(tenantId, storeId, productId) +
+          "/" +
+          encodeURIComponent(groupId) +
+          "/options",
         values,
         { headers: this.csrfHeaders(), withCredentials: true },
       ),
@@ -224,14 +253,18 @@ export class MerchantCatalogApi {
   }
 
   editModifierOption(
-    tenantId: string, storeId: string, productId: string,
+    tenantId: string,
+    storeId: string,
+    productId: string,
     option: CatalogModifierOption,
     values: { name: string; priceDeltaSatang: number; available: boolean },
   ): Promise<{ optionId: string; changed: boolean }> {
     return firstValueFrom(
       this.http.patch<{ optionId: string; changed: boolean }>(
-        this.modifierPath(tenantId,storeId,productId) + "/" +
-          encodeURIComponent(option.groupId) + "/options/" +
+        this.modifierPath(tenantId, storeId, productId) +
+          "/" +
+          encodeURIComponent(option.groupId) +
+          "/options/" +
           encodeURIComponent(option.id),
         {
           expectedName: option.name,
