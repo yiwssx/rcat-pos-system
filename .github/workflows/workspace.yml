@@ -40,14 +40,6 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Display Nx projects
         run: pnpm exec nx show projects
-      - name: Temporary exact Prettier diagnostics
-        run: |
-          for file in apps/api/src/catalog/catalog.controller.ts apps/api/src/catalog/catalog.service.ts apps/api/src/catalog/product-modifiers.controller.ts apps/api/src/catalog/product-modifiers.service.ts apps/merchant/src/app/catalog-list.ts apps/merchant/src/app/merchant-catalog.api.ts apps/merchant/src/app/merchant-catalog.page.ts; do
-            echo "FORMAT_BEGIN:$file"
-            pnpm exec prettier "$file" | base64 -w0
-            echo
-            echo "FORMAT_END:$file"
-          done
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request'
         env:
