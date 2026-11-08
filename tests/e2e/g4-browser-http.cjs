@@ -336,10 +336,19 @@ async function browserFlow(fixture) {
     await modifiers.getByRole("button", { name: "เพิ่มตัวเลือก", exact: true })
       .first().click();
     await modifiers.getByLabel("ชื่อตัวเลือก", { exact: true }).fill("ข้อความค้าง E2E");
-    // Switching the active group must discard the previous unsent draft,
-    // leaving just one uniquely labelled new-option form in the DOM.
+    const previousOptionFormId =
+      await modifiers.locator('form[id^="new-option-form-"]').getAttribute("id");
+    assert.ok(previousOptionFormId);
+    // Switching groups is async in the Angular view. Wait for the DOM to
+    // mount the second group's uniquely identified form before asserting.
     await modifiers.getByRole("button", { name: "เพิ่มตัวเลือก", exact: true })
       .click();
+    await second.waitForFunction((oldId) => {
+      const form = document.querySelector(
+        '.catalog-modifier-panel form[id^="new-option-form-"]',
+      );
+      return form && form.id !== oldId;
+    }, previousOptionFormId, { timeout: 15000 });
     const activeName = modifiers.locator('input[name="newOptionName"]');
     assert.equal(await activeName.count(), 1);
     assert.equal(await activeName.inputValue(), "",
