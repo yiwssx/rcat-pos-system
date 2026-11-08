@@ -53,12 +53,9 @@ export function paginateCatalogProducts<T>(
 
 /** Signed modifier deltas are UI-only input; PostgreSQL still recalculates Order totals. */
 export function parseDeltaBaht(value: string): number | null {
-  const match = /^(-?)(0|[1-9]\d{0,6})(?:\.(\d{1,2}))?$/.exec(
-    value.trim(),
-  );
+  const match = /^(-?)(0|[1-9]\d{0,6})(?:\.(\d{1,2}))?$/.exec(value.trim());
   if (!match) return null;
-  const amount = Number(match[2]) * 100 +
-    Number((match[3] ?? "").padEnd(2, "0"));
+  const amount =
+    Number(match[2]) * 100 + Number((match[3] ?? "").padEnd(2, "0"));
   return amount <= 100000000 ? (match[1] ? -amount : amount) : null;
 }
-
