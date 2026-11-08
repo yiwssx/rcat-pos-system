@@ -26,7 +26,12 @@ BEGIN
  detail:=rcat_private.list_printable_tables(staff,a,st);
  IF jsonb_array_length(detail->'tables')<>1
     OR detail#>>'{tables,0,label}'<>'QR print table 1'
-    OR detail::text LIKE '%55%' THEN
+    -- A random table UUID can contain "55". Match the exact allowed keys,
+    -- not substrings in the entire JSON document (which caused flaky CI).
+    OR (SELECT array_agg(k ORDER BY k)
+        FROM jsonb_object_keys(detail->'tables'->0) AS keys(k))
+       IS DISTINCT FROM ARRAY['active','codeExpiresAt','label','tableId']::text[]
+ THEN
    RAISE EXCEPTION 'Printable table list leaked code or table info'; END IF;
  detail:=rcat_private.printable_table_detail(staff,a,st,t);
  IF detail->>'label'<>'QR print table 1' THEN
