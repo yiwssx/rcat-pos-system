@@ -59,7 +59,13 @@ export class CatalogController {
     @Body() body: unknown,
   ) {
     requireAllowedOrigin(req);
-    return this.catalog.updateCategory(req, tenantId, storeId, categoryId, body);
+    return this.catalog.updateCategory(
+      req,
+      tenantId,
+      storeId,
+      categoryId,
+      body,
+    );
   }
 
   @Post("products")
