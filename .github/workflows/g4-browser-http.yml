@@ -101,6 +101,8 @@ jobs:
             -subj '/CN=localhost' \
             -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1'
           chmod 600 /tmp/rcat-g4-key.pem
+      - name: Exercise Merchant Service Worker cache and activation invariants
+        run: node tests/pwa-service-worker.mjs
       - name: Exercise Chromium mobile/desktop and real HTTP checkout
         run: node tests/e2e/g4-browser-http.cjs
       - name: Upload UI failure screenshots (CI dummy data only)
