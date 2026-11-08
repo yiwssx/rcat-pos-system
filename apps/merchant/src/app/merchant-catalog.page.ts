@@ -12,6 +12,12 @@ import { ActivatedRoute, RouterLink } from "@angular/router";
 import { prepareProductWebp } from "./prepare-product-webp";
 import { MerchantOrderApi } from "./merchant-order.api";
 import {
+  CATALOG_PAGE_SIZE,
+  filterCatalogProducts,
+  paginateCatalogProducts,
+  catalogPageCount,
+} from "./catalog-list";
+import {
   CatalogCategory,
   CatalogProduct,
   MerchantCatalogApi,
@@ -168,14 +174,37 @@ function bahtInput(satang: number): string {
               </button>
             </div>
           </div>
-          <label for="catalog-search">ค้นหาชื่อสินค้า</label>
-          <input
-            id="catalog-search"
-            name="catalogSearch"
-            [(ngModel)]="search"
-            placeholder="พิมพ์ชื่อสินค้า..."
-            autocomplete="off"
-          />
+          <div class="catalog-filters">
+            <div>
+              <label for="catalog-search">ค้นหาชื่อสินค้า</label>
+              <input
+                id="catalog-search"
+                name="catalogSearch"
+                [(ngModel)]="search"
+                (ngModelChange)="resetPage()"
+                placeholder="พิมพ์ชื่อสินค้า..."
+                autocomplete="off"
+              />
+            </div>
+            <div>
+              <label for="catalog-category-filter">กรองตามหมวดหมู่</label>
+              <select
+                id="catalog-category-filter"
+                name="catalogCategoryFilter"
+                [(ngModel)]="categoryFilter"
+                (ngModelChange)="resetPage()"
+              >
+                <option value="">ทุกหมวดหมู่</option>
+                @for (category of categories(); track category.id) {
+                  <option [value]="category.id">{{ category.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <p class="catalog-page-status" role="status" aria-live="polite">
+            พบ {{ filteredProducts().length }} รายการ · หน้า {{ page() }} จาก
+            {{ pageCount() }} (หน้าละ {{ pageSize }} รายการ)
+          </p>
 
           @for (product of displayedProducts(); track product.id) {
             <article class="catalog-product">
@@ -323,6 +352,27 @@ function bahtInput(satang: number): string {
               ไม่พบสินค้าที่ตรงกับเงื่อนไข
             </p>
           }
+          @if (filteredProducts().length > pageSize) {
+            <nav class="catalog-pagination" aria-label="แบ่งหน้ารายการสินค้า">
+              <button
+                type="button"
+                class="subtle"
+                [disabled]="saving() || page() <= 1"
+                (click)="previousPage()"
+              >
+                ← ก่อนหน้า
+              </button>
+              <span aria-live="polite">หน้า {{ page() }} / {{ pageCount() }}</span>
+              <button
+                type="button"
+                class="subtle"
+                [disabled]="saving() || page() >= pageCount()"
+                (click)="nextPage()"
+              >
+                ถัดไป →
+              </button>
+            </nav>
+          }
         </section>
       }
     </section>
@@ -343,8 +393,11 @@ export class MerchantCatalogPage implements OnInit {
   readonly error = signal("");
   readonly success = signal("");
   readonly editId = signal<string | null>(null);
+  readonly page = signal(1);
+  readonly pageSize = CATALOG_PAGE_SIZE;
 
   search = "";
+  categoryFilter = "";
   newCategory = { name: "", slug: "" };
   newProduct = { name: "", categoryId: "", priceBaht: "" };
   edit = { name: "", categoryId: "", priceBaht: "", revision: 0 };
@@ -394,6 +447,13 @@ export class MerchantCatalogPage implements OnInit {
       this.categories.set(snapshot.categories);
       this.products.set(snapshot.products);
       if (
+        this.categoryFilter &&
+        !snapshot.categories.some((c) => c.id === this.categoryFilter)
+      ) {
+        this.categoryFilter = "";
+      }
+      this.page.update((current) => Math.min(current, this.pageCount()));
+      if (
         !snapshot.categories.some((c) => c.id === this.newProduct.categoryId)
       ) {
         this.newProduct.categoryId = snapshot.categories[0]?.id ?? "";
@@ -418,17 +478,40 @@ export class MerchantCatalogPage implements OnInit {
     });
   }
 
+  filteredProducts(): CatalogProduct[] {
+    return filterCatalogProducts(this.products(), {
+      search: this.search,
+      categoryId: this.categoryFilter,
+      includeArchived: this.showArchived(),
+    });
+  }
+
   displayedProducts(): CatalogProduct[] {
-    const term = this.search.trim().toLocaleLowerCase("th-TH");
-    return this.products().filter(
-      (product) =>
-        (this.showArchived() || !product.archivedAt) &&
-        (!term || product.name.toLocaleLowerCase("th-TH").includes(term)),
-    );
+    return paginateCatalogProducts(this.filteredProducts(), this.page(), this.pageSize);
+  }
+
+  pageCount(): number {
+    return catalogPageCount(this.filteredProducts().length, this.pageSize);
+  }
+
+  resetPage(): void {
+    this.page.set(1);
+    this.editId.set(null);
+  }
+
+  previousPage(): void {
+    this.page.update((current) => Math.max(1, current - 1));
+    this.editId.set(null);
+  }
+
+  nextPage(): void {
+    this.page.update((current) => Math.min(this.pageCount(), current + 1));
+    this.editId.set(null);
   }
 
   toggleArchived(): void {
     this.showArchived.update((value) => !value);
+    this.resetPage();
   }
 
   private async mutate(
