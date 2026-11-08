@@ -1,0 +1,163 @@
+# RCAT POS non-payment ON-PREMISES STAGING only. Not a Production manifest.
+# Never publish NestJS or PostgreSQL ports. RMS-only firewall is an operator gate.
+name: rcat-pos-staging
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rcat_pos_staging
+      POSTGRES_USER: rcat_pos_staging_dba
+      POSTGRES_PASSWORD_FILE: /run/secrets/staging_pg_password
+    secrets: [staging_pg_password]
+    volumes:
+      - staging_postgres_data:/var/lib/postgresql/data
+    networks: [database_private]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U rcat_pos_staging_dba -d rcat_pos_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  api:
+    image: rcat-pos-api:${RCAT_POS_RELEASE:?Provide a unique staging release tag}
+    build:
+      context: .
+      dockerfile: Dockerfile.staging
+      target: api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      RCAT_API_BIND_HOST: "0.0.0.0"
+      ENABLE_DEVELOPMENT_AUTH: "false"
+      AUTH_DATABASE_URL: ${AUTH_DATABASE_URL:?Provide restricted auth login URL}
+      TENANT_DATABASE_URL: ${TENANT_DATABASE_URL:?Provide restricted tenant login URL}
+      AUTH_ALLOWED_ORIGINS: ${AUTH_ALLOWED_ORIGINS:?Provide trusted HTTPS origins}
+      CORS_ORIGINS: ${CORS_ORIGINS:?Provide trusted HTTPS origins}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:?Provide staging OAuth client id}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:?Provide staging OAuth secret}
+      GOOGLE_OAUTH_REDIRECT_URI: ${GOOGLE_OAUTH_REDIRECT_URI:?Provide staging callback HTTPS URL}
+      GUEST_TABLE_CODE_PEPPER: ${GUEST_TABLE_CODE_PEPPER:?Provide independent 32 byte pepper}
+      GUEST_ORDER_BASE_URL: ${GUEST_ORDER_BASE_URL:?Provide staging customer HTTPS base}
+      GUEST_TRUSTED_PROXY_CIDRS: ${GUEST_TRUSTED_PROXY_CIDRS:-}
+      MAIL_PROVIDER: ${MAIL_PROVIDER:-}
+      MAIL_FROM_EMAIL: ${MAIL_FROM_EMAIL:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_ACTION_BASE_URL: ${EMAIL_ACTION_BASE_URL:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [app_private, database_private]
+    security_opt: ["no-new-privileges:true"]
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+
+  customer:
+    image: rcat-pos-customer:${RCAT_POS_RELEASE:?}
+    build:
+      context: .
+      dockerfile: Dockerfile.staging
+      target: customer
+    restart: unless-stopped
+    depends_on: [api]
+    ports:
+      - "${RCAT_POS_HOST_BIND_IP:?Required local or approved IOT LAN bind}:${RCAT_POS_CUSTOMER_PORT:-11880}:8080"
+    networks: [app_private]
+    security_opt: ["no-new-privileges:true"]
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:rw,nosuid,size=32m
+      - /var/run:rw,nosuid,size=8m
+    healthcheck:
+      test: [CMD-SHELL, "wget -q -O /dev/null http://127.0.0.1:8080/"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+
+  merchant:
+    image: rcat-pos-merchant:${RCAT_POS_RELEASE:?}
+    build:
+      context: .
+      dockerfile: Dockerfile.staging
+      target: merchant
+    restart: unless-stopped
+    depends_on: [api]
+    ports:
+      - "${RCAT_POS_HOST_BIND_IP:?}:${RCAT_POS_MERCHANT_PORT:-11881}:8080"
+    networks: [app_private]
+    security_opt: ["no-new-privileges:true"]
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:rw,nosuid,size=32m
+      - /var/run:rw,nosuid,size=8m
+    healthcheck:
+      test: [CMD-SHELL, "wget -q -O /dev/null http://127.0.0.1:8080/"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+
+  admin:
+    image: rcat-pos-admin:${RCAT_POS_RELEASE:?}
+    build:
+      context: .
+      dockerfile: Dockerfile.staging
+      target: admin
+    restart: unless-stopped
+    depends_on: [api]
+    ports:
+      - "${RCAT_POS_HOST_BIND_IP:?}:${RCAT_POS_ADMIN_PORT:-11882}:8080"
+    networks: [app_private]
+    security_opt: ["no-new-privileges:true"]
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:rw,nosuid,size=32m
+      - /var/run:rw,nosuid,size=8m
+    healthcheck:
+      test: [CMD-SHELL, "wget -q -O /dev/null http://127.0.0.1:8080/"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+
+  # Operator-only, NEVER part of automatic deploy.
+  # Runs checksum-protected SQL migrations with the privileged staging DBA.
+  migrator:
+    image: postgres:16-bookworm
+    profiles: [ops]
+    entrypoint: [/bin/bash, -euo, pipefail, -c]
+    command:
+      - 'export PGPASSWORD="$$(cat /run/secrets/staging_pg_password)"; exec bash /workspace/scripts/db/migrate.sh'
+    environment:
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGDATABASE: rcat_pos_staging
+      PGUSER: rcat_pos_staging_dba
+    secrets: [staging_pg_password]
+    volumes:
+      - ./db/migrations:/workspace/db/migrations:ro
+      - ./scripts/db/migrate.sh:/workspace/scripts/db/migrate.sh:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [database_private]
+    security_opt: ["no-new-privileges:true"]
+
+secrets:
+  staging_pg_password:
+    file: ${RCAT_POS_DB_PASSWORD_FILE:?Point to restricted PostgreSQL password file}
+
+networks:
+  app_private: {}
+  database_private:
+    internal: true
+
+volumes:
+  staging_postgres_data:

@@ -1,0 +1,69 @@
+name: On-prem staging container packaging
+
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile.staging'
+      - 'compose.staging.yaml'
+      - '.dockerignore'
+      - '.env.staging.example'
+      - 'infra/onprem/**'
+      - 'apps/**'
+      - 'libs/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/onprem-staging.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'Dockerfile.staging'
+      - 'compose.staging.yaml'
+      - '.dockerignore'
+      - 'infra/onprem/**'
+      - 'apps/**'
+      - 'libs/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/onprem-staging.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: onprem-staging-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-inspect:
+    name: Stage images, Nginx configuration and isolation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate command preflight and Compose parser with synthetic fixtures
+        run: node --test tests/ops/onprem-staging.test.mjs
+      - name: Build API and three independent Angular/Nginx staging images
+        run: |
+          set -euo pipefail
+          docker build -f Dockerfile.staging --target api -t rcat-pos-api:staging-ci .
+          for app in customer merchant admin; do
+            docker build -f Dockerfile.staging --target "$app" -t "rcat-pos-$app:staging-ci" .
+          done
+      - name: Verify non-root compiled API and three static Nginx sites
+        run: |
+          set -euo pipefail
+          docker run --rm --network none --entrypoint node rcat-pos-api:staging-ci -e "require('fs').accessSync('/work/dist/apps/api/src/main.js'); if(process.getuid()===0) process.exit(1)"
+          for app in customer merchant admin; do
+            docker run --rm --entrypoint nginx "rcat-pos-$app:staging-ci" -t
+            docker run --rm --entrypoint sh "rcat-pos-$app:staging-ci" -c 'test -s /usr/share/nginx/html/index.html'
+          done
+          docker run --rm --entrypoint sh rcat-pos-merchant:staging-ci -c 'test -s /usr/share/nginx/html/sw.js'
+          for app in customer admin; do
+            docker run --rm --entrypoint sh "rcat-pos-$app:staging-ci" -c 'test ! -e /usr/share/nginx/html/sw.js'
+          done
+      - name: Assert no API or database ports published by the image build
+        run: |
+          set -euo pipefail
+          node --test tests/ops/onprem-staging.test.mjs

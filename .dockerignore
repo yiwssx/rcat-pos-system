@@ -1,0 +1,20 @@
+# Never place host secrets or irrelevant workspaces in Docker build context.
+.git
+.github
+.agents
+.env
+.env.*
+!.env.example
+!.env.*.example
+.secrets
+*.pem
+*.key
+*.p12
+node_modules
+dist
+coverage
+.nx
+.angular
+tmp
+temp
+*.log

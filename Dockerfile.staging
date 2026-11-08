@@ -1,0 +1,32 @@
+# RCAT On-prem staging — source build only; no runtime secrets in the image.
+# Build/tag and deployment are operator-controlled; do not deploy Production.
+FROM node:24.15.0-bookworm-slim AS build
+WORKDIR /work
+RUN npm install --global pnpm@10.23.0
+COPY . .
+RUN pnpm install --frozen-lockfile && pnpm run build
+
+FROM node:24.15.0-bookworm-slim AS api
+ENV NODE_ENV=production PORT=3000
+WORKDIR /work
+COPY --from=build /work/node_modules ./node_modules
+COPY --from=build /work/dist ./dist
+COPY --from=build /work/package.json ./package.json
+USER node
+EXPOSE 3000
+CMD ["node", "dist/apps/api/src/main.js"]
+
+FROM nginx:stable-alpine AS customer
+COPY infra/onprem/nginx-static-api.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /work/dist/apps/customer/browser/ /usr/share/nginx/html/
+EXPOSE 8080
+
+FROM nginx:stable-alpine AS merchant
+COPY infra/onprem/nginx-static-api.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /work/dist/apps/merchant/browser/ /usr/share/nginx/html/
+EXPOSE 8080
+
+FROM nginx:stable-alpine AS admin
+COPY infra/onprem/nginx-static-api.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /work/dist/apps/admin/browser/ /usr/share/nginx/html/
+EXPOSE 8080

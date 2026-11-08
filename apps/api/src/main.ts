@@ -37,7 +37,14 @@ async function bootstrap(): Promise<void> {
     throw new Error("PORT must be a valid TCP port");
   }
 
-  await app.listen(port, "127.0.0.1");
+  // Default loopback for direct host/CI execution. Container orchestration may
+  // explicitly bind to all container interfaces ONLY when ports are unpublished
+  // and the API is reachable solely via the private Docker reverse proxy.
+  const bindHost = process.env["RCAT_API_BIND_HOST"] ?? "127.0.0.1";
+  if (bindHost !== "127.0.0.1" && bindHost !== "0.0.0.0") {
+    throw new Error("RCAT_API_BIND_HOST must be 127.0.0.1 or 0.0.0.0");
+  }
+  await app.listen(port, bindHost);
 }
 
 bootstrap().catch((error: unknown) => {
