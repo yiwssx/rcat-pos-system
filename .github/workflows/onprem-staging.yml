@@ -8,6 +8,8 @@ on:
       - '.dockerignore'
       - '.env.staging.example'
       - 'infra/onprem/**'
+      - 'scripts/ops/onprem-*'
+      - 'tests/ops/onprem-*'
       - 'apps/**'
       - 'libs/**'
       - 'package.json'
@@ -20,6 +22,8 @@ on:
       - 'compose.staging.yaml'
       - '.dockerignore'
       - 'infra/onprem/**'
+      - 'scripts/ops/onprem-*'
+      - 'tests/ops/onprem-*'
       - 'apps/**'
       - 'libs/**'
       - 'package.json'
@@ -63,7 +67,7 @@ jobs:
           for app in customer admin; do
             docker run --rm --entrypoint sh "rcat-pos-$app:staging-ci" -c 'test ! -e /usr/share/nginx/html/sw.js'
           done
-      - name: Assert no API or database ports published by the image build
+      - name: Assert staging automation remains fail-closed
         run: |
           set -euo pipefail
-          node --test tests/ops/onprem-staging.test.mjs
+          node --test tests/ops/onprem-staging.test.mjs tests/ops/onprem-operations.test.mjs

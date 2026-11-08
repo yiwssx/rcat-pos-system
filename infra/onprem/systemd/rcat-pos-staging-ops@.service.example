@@ -1,0 +1,24 @@
+# Operator-installable example ONLY: NOT installed/enabled by the repository.
+# Instance names: backup, prune-guest-budgets, readiness.
+# A Docker group account is effectively root: restrict and audit membership.
+[Unit]
+Description=RCAT POS staging operator task (%i)
+After=docker.service network-online.target
+Wants=network-online.target
+ConditionPathExists=/opt/rcat-pos-system/.env.staging
+
+[Service]
+Type=oneshot
+User=rcat_pos_ops
+Group=rcat_pos_ops
+SupplementaryGroups=docker
+WorkingDirectory=/opt/rcat-pos-system
+Environment=RCAT_POS_ENV_FILE=/opt/rcat-pos-system/.env.staging
+ExecStart=/usr/bin/bash /opt/rcat-pos-system/scripts/ops/onprem-operations.sh %i --apply
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+TimeoutStartSec=20min
+# No Restart; missing policy approval fails closed. Monitoring routing is
+# an operator-defined OnFailure= dependency, not wired to a real channel here.
