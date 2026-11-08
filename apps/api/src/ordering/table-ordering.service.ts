@@ -374,13 +374,16 @@ export class TableOrderingService {
       (cursor !== null &&
         (typeof cursor !== "object" ||
           Array.isArray(cursor) ||
-          typeof (cursor as Record<string, unknown>)["createdAt"] !== "string" ||
+          typeof (cursor as Record<string, unknown>)["createdAt"] !==
+            "string" ||
           typeof (cursor as Record<string, unknown>)["id"] !== "string" ||
           !UUID.test((cursor as { id: string }).id) ||
           !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?(?:Z|[+-]\\d{2}:\\d{2})$/.test(
             (cursor as { createdAt: string }).createdAt,
           ) ||
-          !Number.isFinite(Date.parse((cursor as { createdAt: string }).createdAt))))
+          !Number.isFinite(
+            Date.parse((cursor as { createdAt: string }).createdAt),
+          )))
     ) {
       throw new BadRequestException("Invalid guest catalog page request");
     }
