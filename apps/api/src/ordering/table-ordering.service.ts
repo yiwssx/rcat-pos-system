@@ -14,6 +14,7 @@ import {
 import { AuthService } from "../auth/auth.service";
 import { ApiRequest } from "../auth/request-security";
 import { DatabaseAccess } from "../database/db-access";
+import { GuestRequestBudgetService } from "./guest-request-budget.service";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -120,6 +121,7 @@ export class TableOrderingService {
   constructor(
     private readonly database: DatabaseAccess,
     private readonly auth: AuthService,
+    private readonly guestBudget: GuestRequestBudgetService,
   ) {}
 
   async create(
@@ -289,7 +291,7 @@ export class TableOrderingService {
     }
   }
 
-  async redeemCode(raw: unknown) {
+  async redeemCode(req: ApiRequest, raw: unknown) {
     const input = requestObject(raw);
     const tenant = input["tenantId"],
       store = input["storeId"];
@@ -307,6 +309,7 @@ export class TableOrderingService {
     ) {
       throw new NotFoundException("Ordering code unavailable");
     }
+    await this.guestBudget.consume(req, "redeem", table);
     const token = newOpaqueSecret();
     const digest = codeDigest(tenant, store, table, code);
     try {
@@ -324,11 +327,12 @@ export class TableOrderingService {
     }
   }
 
-  async resolve(raw: unknown) {
+  async resolve(req: ApiRequest, raw: unknown) {
     const token = requestObject(raw)["token"];
     if (typeof token !== "string") {
       throw new NotFoundException("Ordering visit unavailable");
     }
+    await this.guestBudget.consume(req, "resolve", token);
     let digest: Buffer;
     try {
       digest = digestOpaqueSecret(token);
@@ -340,6 +344,65 @@ export class TableOrderingService {
         client.query<{ data: Record<string, unknown> }>(
           "SELECT rcat_private.resolve_ordering_visit($1) AS data",
           [digest],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      safeError(error);
+    }
+  }
+
+  async page(req: ApiRequest, raw: unknown) {
+    const data = requestObject(raw);
+    const token = data["token"];
+    if (typeof token !== "string") {
+      throw new NotFoundException("Ordering visit unavailable");
+    }
+    const search = data["search"] ?? "";
+    const categoryId = data["categoryId"] ?? null;
+    const limit = data["limit"] ?? 24;
+    const cursor = data["cursor"] ?? null;
+    if (
+      typeof search !== "string" ||
+      search.trim().length > 80 ||
+      (categoryId !== null &&
+        (typeof categoryId !== "string" || !UUID.test(categoryId))) ||
+      typeof limit !== "number" ||
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > 50 ||
+      (cursor !== null &&
+        (typeof cursor !== "object" ||
+          Array.isArray(cursor) ||
+          typeof (cursor as Record<string, unknown>)["createdAt"] !== "string" ||
+          typeof (cursor as Record<string, unknown>)["id"] !== "string" ||
+          !UUID.test((cursor as { id: string }).id) ||
+          !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?(?:Z|[+-]\\d{2}:\\d{2})$/.test(
+            (cursor as { createdAt: string }).createdAt,
+          ) ||
+          !Number.isFinite(Date.parse((cursor as { createdAt: string }).createdAt))))
+    ) {
+      throw new BadRequestException("Invalid guest catalog page request");
+    }
+    await this.guestBudget.consume(req, "page", token);
+    let digest: Buffer;
+    try {
+      digest = digestOpaqueSecret(token);
+    } catch {
+      throw new NotFoundException("Ordering visit unavailable");
+    }
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.guest_catalog_page($1,$2,$3,$4,$5,$6) AS data",
+          [
+            digest,
+            search.trim(),
+            categoryId,
+            cursor ? (cursor as { createdAt: string }).createdAt : null,
+            cursor ? (cursor as { id: string }).id : null,
+            limit,
+          ],
         ),
       );
       return result.rows[0]?.data;
