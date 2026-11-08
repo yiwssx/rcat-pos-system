@@ -23,6 +23,8 @@ jobs:
         run: node --test tests/ops/onprem-staging.test.mjs
       - name: Verify safe on-prem maintenance jobs, backup checks and readiness monitor
         run: node --test tests/ops/onprem-operations.test.mjs
+      - name: Qualify bounded staging-only large Guest catalogue and SSE read probes
+        run: node --test tests/ops/onprem-qualification.test.mjs
       - name: Verify required files, metadata, license and source pins
         shell: bash
         run: |
