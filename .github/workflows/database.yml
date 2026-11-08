@@ -72,6 +72,7 @@ jobs:
       PGUSER: postgres
       PGDATABASE: rcat_ci_test
       PGPASSWORD: test-only-ci-password
+      GUEST_TABLE_CODE_PEPPER: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
     steps:
       - uses: actions/checkout@v4
         with:
@@ -110,6 +111,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/catalog-keyset-paging.sql
       - name: Verify audited CAS editing for categories and Modifier group/options
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/catalog-editor.sql
+      - name: Verify shared Guest rate budgets and 55-row tenant-isolated Guest keyset pages
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/guest-catalog-budgets.sql
       - name: Verify printable QR code rotation, per-device grants, failed-attempt cap and Order continuity
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/printable-table-codes.sql
       - name: Verify restricted WebP product images, archived/sold-out reads and size cap

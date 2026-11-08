@@ -83,13 +83,20 @@ export class TableOrderingController {
   @Header("Cache-Control", "no-store")
   redeemCode(@Req() req: ApiRequest, @Body() body: unknown) {
     requireAllowedOrigin(req);
-    return this.ordering.redeemCode(body);
+    return this.ordering.redeemCode(req, body);
+  }
+
+  @Post("guest/ordering-visit/page")
+  @Header("Cache-Control", "no-store")
+  page(@Req() req: ApiRequest, @Body() body: unknown) {
+    requireAllowedOrigin(req);
+    return this.ordering.page(req, body);
   }
 
   @Post("guest/ordering-visit/resolve")
   @Header("Cache-Control", "no-store")
   resolve(@Req() req: ApiRequest, @Body() body: unknown) {
     requireAllowedOrigin(req);
-    return this.ordering.resolve(body);
+    return this.ordering.resolve(req, body);
   }
 }

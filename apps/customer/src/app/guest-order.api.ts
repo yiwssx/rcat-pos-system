@@ -4,6 +4,8 @@ import { inject, Injectable, signal } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 import {
   CartLine,
+  GuestCatalogCursor,
+  GuestCatalogPage,
   GuestCheckout,
   GuestOrderHistory,
   GuestOrderStatus,
@@ -28,6 +30,23 @@ export class GuestOrderApi {
     return firstValueFrom(
       this.http.post<GuestVisit>("/api/guest/ordering-visit/resolve", {
         token,
+      }),
+    );
+  }
+
+  page(
+    token: string,
+    search = "",
+    categoryId: string | null = null,
+    cursor: GuestCatalogCursor | null = null,
+  ): Promise<GuestCatalogPage> {
+    return firstValueFrom(
+      this.http.post<GuestCatalogPage>("/api/guest/ordering-visit/page", {
+        token,
+        search,
+        categoryId,
+        cursor,
+        limit: 24,
       }),
     );
   }
@@ -88,6 +107,48 @@ export class GuestOrderSession {
   readonly cart = signal<CartLine[]>([]);
   readonly tracking = signal<GuestTracking | null>(null);
   private pending: { key: string; payload: string } | null = null;
+
+  setPage(token: string, page: GuestCatalogPage): void {
+    const old = this.visit();
+    if (!old || this.visitToken() !== token || old.visitId !== page.visitId) {
+      this.setVisit(token, page);
+      return;
+    }
+    // Selected cart items keep the exact product/modifier snapshot originally
+    // reviewed by the guest, even when a filter/page refresh sees new data.
+    // Checkout compares those against the authoritative fresh full resolver.
+    const frozenProducts = new Set(this.cart().map((line) => line.productId));
+    const mergeById = <T extends { id: string }>(
+      previous: T[],
+      incoming: T[],
+      freeze: (value: T) => boolean,
+    ): T[] => {
+      const rows = new Map(previous.map((value) => [value.id, value]));
+      for (const value of incoming) {
+        const prior = rows.get(value.id);
+        if (!prior || !freeze(prior)) rows.set(value.id, value);
+      }
+      return [...rows.values()];
+    };
+    this.visit.set({
+      ...old,
+      ...page,
+      categories: this.cart().length ? old.categories : page.categories,
+      products: mergeById(old.products, page.products, (value) =>
+        frozenProducts.has(value.id),
+      ),
+      modifierGroups: mergeById(
+        old.modifierGroups,
+        page.modifierGroups,
+        (value) => frozenProducts.has(value.productId),
+      ),
+      modifierOptions: mergeById(
+        old.modifierOptions,
+        page.modifierOptions,
+        (value) => frozenProducts.has(value.productId),
+      ),
+    });
+  }
 
   setVisit(token: string, visit: GuestVisit): void {
     // A new QR replaces the current cart, preventing cross-table checkout.

@@ -20,6 +20,7 @@ import { ProductMediaController } from "./catalog/product-media.controller";
 import { ProductMediaService } from "./catalog/product-media.service";
 import { TableOrderingController } from "./ordering/table-ordering.controller";
 import { TableOrderingService } from "./ordering/table-ordering.service";
+import { GuestRequestBudgetService } from "./ordering/guest-request-budget.service";
 import { ProductModifiersController } from "./catalog/product-modifiers.controller";
 import { ProductModifiersService } from "./catalog/product-modifiers.service";
 import { GuestOrdersController } from "./orders/guest-orders.controller";
@@ -69,6 +70,7 @@ import { InventoryService } from "./inventory/inventory.service";
     CatalogService,
     ProductMediaService,
     TableOrderingService,
+    GuestRequestBudgetService,
     ProductModifiersService,
     GuestOrdersService,
     MerchantOrdersService,

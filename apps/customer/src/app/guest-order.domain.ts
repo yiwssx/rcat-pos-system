@@ -38,6 +38,16 @@ export interface GuestVisit {
   modifierGroups: GuestModifierGroup[];
   modifierOptions: GuestModifierOption[];
 }
+export interface GuestCatalogCursor {
+  createdAt: string;
+  id: string;
+}
+
+export interface GuestCatalogPage extends GuestVisit {
+  hasMore: boolean;
+  nextCursor: GuestCatalogCursor | null;
+}
+
 export interface CartLine {
   productId: string;
   optionIds: string[];

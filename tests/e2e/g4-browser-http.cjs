@@ -160,7 +160,8 @@ async function apiSetup() {
     assert.match(token, /^[A-Za-z0-9_-]{43}$/);
     return token;
   }
-  return { name, productId, tableId, token: await rotate(), rotate };
+  return { name, productId, tableId, categoryId, merchantHeaders: headers,
+    token: await rotate(), rotate };
 }
 
 async function browserFlow(fixture) {
@@ -565,6 +566,74 @@ async function browserFlow(fixture) {
   }
 }
 
+async function guestCatalogHttp(fixture) {
+  // Real merchant HTTP creates 30 extra menu items after the first Browser
+  // Ordering scenario. No fake order/money state or direct SQL catalog writes.
+  const items = await Promise.all(Array.from({ length: 30 }, async (_, i) => {
+    const started = performance.now();
+    const res = await fetch(merchant + orderScope + "/catalog/products", {
+      method: "POST",
+      headers: fixture.merchantHeaders,
+      body: JSON.stringify({
+        categoryId: fixture.categoryId,
+        name: "G2 paged รายการ " + String(i).padStart(2, "0"),
+        priceSatang: 2200 + i,
+      }),
+    });
+    assert.equal(res.status, 201, await res.clone().text());
+    return performance.now() - started;
+  }));
+  const requestPage = async (data) => {
+    const started = performance.now();
+    const response = await post(customer + "/api/guest/ordering-visit/page", {
+      token: fixture.token, limit: 20, search: "", categoryId: null,
+      cursor: null, ...data,
+    });
+    const body = await response.json();
+    assert.equal(response.status, 201, JSON.stringify(body));
+    return { body, ms: performance.now() - started };
+  };
+  const first = await requestPage({});
+  const second = await requestPage({ cursor: first.body.nextCursor });
+  assert.equal(first.body.products.length, 20);
+  assert.equal(second.body.products.length, 11);
+  assert.equal(first.body.hasMore, true);
+  assert.equal(second.body.hasMore, false);
+  assert.equal(second.body.nextCursor, null);
+  assert.equal(first.body.tableId, fixture.tableId);
+  assert.equal(first.body.tenantId, tenant);
+  const ids = [...first.body.products, ...second.body.products].map((p) => p.id);
+  assert.equal(new Set(ids).size, 31);
+  assert.ok(first.body.products.every((p) => typeof p.priceSatang === "number"));
+  const search = await requestPage({ search: "G2 paged", limit: 50 });
+  assert.equal(search.body.products.length, 30);
+  const foreignCategory = await requestPage({
+    categoryId: "00000000-0000-4000-8000-000000000002",
+  });
+  assert.equal(foreignCategory.body.products.length, 0);
+  const malformed = await post(customer + "/api/guest/ordering-visit/page", {
+    token: fixture.token, limit: 51,
+  });
+  assert.equal(malformed.status, 400);
+  const denied = await post(customer + "/api/guest/ordering-visit/page", {
+    token: "A".repeat(43), limit: 24,
+  });
+  assert.equal(denied.status, 404);
+  const forbidden = await post(customer + "/api/guest/ordering-visit/page", {
+    token: fixture.token,
+  }, { Origin: "https://untrusted.example" });
+  assert.equal(forbidden.status, 403);
+  console.log(JSON.stringify({
+    scenario: "G2 server-side Guest keyset + real HTTP menu load",
+    products: ids.length,
+    catalogCreateP95Ms: percentile(items, 95),
+    pageFirstMs: Math.round(first.ms),
+    pageNextMs: Math.round(second.ms),
+    searchMs: Math.round(search.ms),
+    crossStoreAndBadOrigin: "denied",
+  }));
+}
+
 async function httpLoad(fixture) {
   const batchSize = 24;
   const payload = {
@@ -648,6 +717,7 @@ async function main() {
 
   const fixture = await apiSetup();
   await browserFlow(fixture);
+  await guestCatalogHttp(fixture);
   await httpLoad(fixture);
   // Shares the same ephemeral Order journey and live NestJS/HTTPS services.
   // Kept after the existing HTTP burst to force a realistic 50+ event backlog.
