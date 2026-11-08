@@ -10,6 +10,9 @@ coverage/
 *.tsbuildinfo
 
 # Local secrets and env
+.secrets/
+*.dump
+*.backup
 .env
 .env.*
 !.env.example
