@@ -11,14 +11,10 @@ import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { prepareProductWebp } from "./prepare-product-webp";
 import { MerchantOrderApi } from "./merchant-order.api";
-import {
-  CATALOG_PAGE_SIZE,
-  filterCatalogProducts,
-  paginateCatalogProducts,
-  catalogPageCount,
-} from "./catalog-list";
+import { CATALOG_PAGE_SIZE } from "./catalog-list";
 import {
   CatalogCategory,
+  CatalogCursor,
   CatalogProduct,
   MerchantCatalogApi,
 } from "./merchant-catalog.api";
@@ -156,7 +152,7 @@ function bahtInput(satang: number): string {
           <div class="catalog-toolbar">
             <div>
               <h2 id="products-title">สินค้าทั้งหมด</h2>
-              <p>สินค้า {{ products().length }} รายการ · ราคาที่แสดงเป็นบาท</p>
+              <p>แสดง {{ products().length }} รายการในหน้านี้ · ราคาที่แสดงเป็นบาท</p>
             </div>
             <div class="catalog-actions">
               <button type="button" class="subtle" (click)="toggleArchived()">
@@ -180,8 +176,8 @@ function bahtInput(satang: number): string {
               <input
                 id="catalog-search"
                 name="catalogSearch"
-                [(ngModel)]="search"
-                (ngModelChange)="resetPage()"
+                [(ngModel)]="searchDraft"
+                (keyup.enter)="applyFilters()"
                 placeholder="พิมพ์ชื่อสินค้า..."
                 autocomplete="off"
               />
@@ -192,7 +188,7 @@ function bahtInput(satang: number): string {
                 id="catalog-category-filter"
                 name="catalogCategoryFilter"
                 [(ngModel)]="categoryFilter"
-                (ngModelChange)="resetPage()"
+                (ngModelChange)="applyFilters()"
               >
                 <option value="">ทุกหมวดหมู่</option>
                 @for (category of categories(); track category.id) {
@@ -201,9 +197,15 @@ function bahtInput(satang: number): string {
               </select>
             </div>
           </div>
+          <div class="catalog-actions">
+            <button type="button" class="subtle"
+              (click)="applyFilters()" [disabled]="pageLoading() || saving()">
+              ค้นหาสินค้า
+            </button>
+          </div>
           <p class="catalog-page-status" role="status" aria-live="polite">
-            พบ {{ filteredProducts().length }} รายการ · หน้า {{ page() }} จาก
-            {{ pageCount() }} (หน้าละ {{ pageSize }} รายการ)
+            หน้า {{ page() }} · สูงสุด {{ pageSize }} รายการต่อหน้า
+            @if (pageLoading()) { · กำลังโหลด... }
           </p>
 
           @for (product of displayedProducts(); track product.id) {
@@ -352,23 +354,21 @@ function bahtInput(satang: number): string {
               ไม่พบสินค้าที่ตรงกับเงื่อนไข
             </p>
           }
-          @if (filteredProducts().length > pageSize) {
+          @if (page() > 1 || hasMore()) {
             <nav class="catalog-pagination" aria-label="แบ่งหน้ารายการสินค้า">
               <button
                 type="button"
                 class="subtle"
-                [disabled]="saving() || page() <= 1"
+                [disabled]="saving() || pageLoading() || page() <= 1"
                 (click)="previousPage()"
               >
                 ← ก่อนหน้า
               </button>
-              <span aria-live="polite"
-                >หน้า {{ page() }} / {{ pageCount() }}</span
-              >
+              <span aria-live="polite">หน้า {{ page() }}</span>
               <button
                 type="button"
                 class="subtle"
-                [disabled]="saving() || page() >= pageCount()"
+                [disabled]="saving() || pageLoading() || !hasMore()"
                 (click)="nextPage()"
               >
                 ถัดไป →
@@ -397,7 +397,13 @@ export class MerchantCatalogPage implements OnInit {
   readonly editId = signal<string | null>(null);
   readonly page = signal(1);
   readonly pageSize = CATALOG_PAGE_SIZE;
+  readonly pageLoading = signal(false);
+  readonly hasMore = signal(false);
+  readonly nextCursor = signal<CatalogCursor | null>(null);
+  private cursorHistory: CatalogCursor[] = [];
+  private latestRequest = 0;
 
+  searchDraft = "";
   search = "";
   categoryFilter = "";
   newCategory = { name: "", slug: "" };
@@ -444,25 +450,50 @@ export class MerchantCatalogPage implements OnInit {
 
   async refresh(): Promise<void> {
     if (!this.canManage()) return;
+    const version = ++this.latestRequest;
+    this.pageLoading.set(true);
     try {
-      const snapshot = await this.api.snapshot(this.tenantId, this.storeId);
-      this.categories.set(snapshot.categories);
-      this.products.set(snapshot.products);
+      const cursor = this.page() > 1
+        ? this.cursorHistory[this.page() - 2] ?? null
+        : null;
+      const result = await this.api.page(this.tenantId, this.storeId, {
+        search: this.search,
+        categoryId: this.categoryFilter,
+        includeArchived: this.showArchived(),
+        cursor,
+      });
+      if (version !== this.latestRequest) return;
+      this.categories.set(result.categories);
+      this.products.set(result.products);
+      this.hasMore.set(result.hasMore);
+      this.nextCursor.set(result.nextCursor);
       if (
         this.categoryFilter &&
-        !snapshot.categories.some((c) => c.id === this.categoryFilter)
+        !result.categories.some((c) => c.id === this.categoryFilter)
       ) {
         this.categoryFilter = "";
+        this.resetPage();
+        await this.refresh();
+        return;
       }
-      this.page.update((current) => Math.min(current, this.pageCount()));
+      if (result.products.length === 0 && this.page() > 1) {
+        this.cursorHistory.pop();
+        this.page.update((current) => current - 1);
+        await this.refresh();
+        return;
+      }
       if (
-        !snapshot.categories.some((c) => c.id === this.newProduct.categoryId)
+        !result.categories.some((c) => c.id === this.newProduct.categoryId)
       ) {
-        this.newProduct.categoryId = snapshot.categories[0]?.id ?? "";
+        this.newProduct.categoryId = result.categories[0]?.id ?? "";
       }
       this.editId.set(null);
     } catch {
-      this.error.set("ไม่สามารถโหลดข้อมูลเมนูล่าสุดได้");
+      if (version === this.latestRequest) {
+        this.error.set("ไม่สามารถโหลดข้อมูลเมนูล่าสุดได้");
+      }
+    } finally {
+      if (version === this.latestRequest) this.pageLoading.set(false);
     }
   }
 
@@ -480,44 +511,42 @@ export class MerchantCatalogPage implements OnInit {
     });
   }
 
-  filteredProducts(): CatalogProduct[] {
-    return filterCatalogProducts(this.products(), {
-      search: this.search,
-      categoryId: this.categoryFilter,
-      includeArchived: this.showArchived(),
-    });
-  }
-
   displayedProducts(): CatalogProduct[] {
-    return paginateCatalogProducts(
-      this.filteredProducts(),
-      this.page(),
-      this.pageSize,
-    );
-  }
-
-  pageCount(): number {
-    return catalogPageCount(this.filteredProducts().length, this.pageSize);
+    return this.products();
   }
 
   resetPage(): void {
+    this.cursorHistory = [];
     this.page.set(1);
     this.editId.set(null);
   }
 
+  applyFilters(): void {
+    this.search = this.searchDraft.trim();
+    this.resetPage();
+    void this.refresh();
+  }
+
   previousPage(): void {
-    this.page.update((current) => Math.max(1, current - 1));
+    if (this.saving() || this.pageLoading() || this.page() <= 1) return;
+    this.cursorHistory.pop();
+    this.page.update((current) => current - 1);
     this.editId.set(null);
+    void this.refresh();
   }
 
   nextPage(): void {
-    this.page.update((current) => Math.min(this.pageCount(), current + 1));
+    const cursor = this.nextCursor();
+    if (this.saving() || this.pageLoading() || !this.hasMore() || !cursor) return;
+    this.cursorHistory.push(cursor);
+    this.page.update((current) => current + 1);
     this.editId.set(null);
+    void this.refresh();
   }
 
   toggleArchived(): void {
     this.showArchived.update((value) => !value);
-    this.resetPage();
+    this.applyFilters();
   }
 
   private async mutate(
