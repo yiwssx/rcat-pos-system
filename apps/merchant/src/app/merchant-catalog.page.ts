@@ -740,7 +740,8 @@ export class MerchantCatalogPage implements OnInit {
   categoryEdit = { name: "", slug: "" };
   newGroup = { name: "", slug: "", minSelect: 0, maxSelect: 1 };
   groupEdit = { name: "", slug: "", minSelect: 0, maxSelect: 1 };
-  newOptionDrafts: Record<string, { name: string; priceDeltaBaht: string }> = {};
+  newOptionDrafts: Record<string, { name: string; priceDeltaBaht: string }> =
+    {};
   optionEdit = { name: "", priceDeltaBaht: "0.00", available: true };
   readonly pageLoading = signal(false);
   readonly hasMore = signal(false);
