@@ -125,3 +125,24 @@ offline tracking/reconnect; Vitest exercises 70-product Thai filtering.
 pagination, transfer-size optimization or measured real-device bandwidth.
 Physical printed-QR/weak-network/screenreader and large-catalog staging
 performance remain open G2 acceptance gates.
+
+## Server-paged Guest menu and shared API budgets (8 Nov 2026; G2/#38)
+
+Guest browsing now uses `POST /api/guest/ordering-visit/page` and 24-product
+server-side keyset pages. Category and debounced Thai search are applied
+inside PostgreSQL and issue fresh page requests; subsequent pages are fetched
+only on demand. A previously reviewed cart line keeps its item and Modifier
+snapshot across filter/page changes. Checkout's full re-resolution and
+transactional order engine still reject stale/changed items or prices;
+a partial page is not the authority to place an Order.
+
+All public guest resolve, printed-code redemption, catalog page, checkout,
+and tracking endpoints use atomic HMAC-anonymized shared PostgreSQL rate
+budgets (fixed per-peer and per-token lanes). Explicit HTTP 429 responses
+tell clients to retry later. The previous per-Visit failed-code cap remains.
+See [G2 Guest paging and budgets](G2-GUEST-PAGING-AND-BUDGETS.md) for limits,
+SQL/HTTP tests, ingress NAT caveats and the daily maintenance requirement.
+
+The old full Guest resolver remains for backward compatibility and cart
+reconfirmation; physical mobile/printed-QR, production edge rate limits and
+large-store load evidence are still outstanding. No Payment or Production.
