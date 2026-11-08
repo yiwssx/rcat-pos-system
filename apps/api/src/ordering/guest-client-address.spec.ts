@@ -11,9 +11,9 @@ function req(peer: string, forwarded?: string): IncomingMessage {
 
 describe("G4 trusted Guest proxy attribution", () => {
   it("ignores spoofed XFF when peer is not explicitly trusted", () => {
-    expect(
-      guestClientAddress(req("203.0.113.15", "1.1.1.1"), undefined),
-    ).toBe("203.0.113.15");
+    expect(guestClientAddress(req("203.0.113.15", "1.1.1.1"), undefined)).toBe(
+      "203.0.113.15",
+    );
     expect(
       guestClientAddress(req("203.0.113.15", "1.1.1.1"), "10.10.1.0/24"),
     ).toBe("203.0.113.15");
