@@ -8,6 +8,8 @@ on:
       - '.dockerignore'
       - '.env.staging.example'
       - 'infra/onprem/**'
+      - 'scripts/ops/onprem-*'
+      - 'tests/ops/onprem-*'
       - 'apps/**'
       - 'libs/**'
       - 'package.json'
