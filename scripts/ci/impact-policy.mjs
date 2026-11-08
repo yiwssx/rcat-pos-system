@@ -18,6 +18,7 @@ const IMAGE = [
   /^(?:Dockerfile\.staging|compose\.staging\.yaml|\.dockerignore|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|nx\.json|angular\.json|tsconfig\.base\.json|\.node-version)$/,
   /^infra\/onprem\/nginx-static-api\.conf$/,
   /^scripts\/ops\/g4-retention-maintenance\.mjs$/,
+  /^\.github\/workflows\/onprem-staging\.yml$/,
 ];
 const OPS = [
   /^(?:scripts\/ops|tests\/ops|scripts\/ci|tests\/ci)\//,
