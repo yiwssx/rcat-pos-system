@@ -629,6 +629,47 @@ async function guestCatalogHttp(fixture) {
     token: fixture.token,
   }, { Origin: "https://untrusted.example" });
   assert.equal(forbidden.status, 403);
+  const selected = [{ productId: fixture.productId, quantity: 1, optionIds: [] }];
+  const reviewStarted = performance.now();
+  const reviewed = await post(customer + "/api/guest/ordering-visit/review-cart", {
+    token: fixture.token, items: selected,
+  });
+  const reviewedText = await reviewed.text();
+  assert.equal(reviewed.status, 201, reviewedText);
+  const reviewMs = Math.round(performance.now() - reviewStarted);
+  const reviewedData = JSON.parse(reviewedText);
+  assert.equal(reviewedData.products.length, 1, "Scoped review returned full menu");
+  assert.equal(reviewedData.products[0].id, fixture.productId);
+  assert.equal(reviewedData.tenantId, tenant);
+  const full = await post(customer + "/api/guest/ordering-visit/resolve", {
+    token: fixture.token,
+  });
+  assert.equal(full.status, 201);
+  const fullText = await full.text();
+  assert.ok(
+    Buffer.byteLength(reviewedText) < Buffer.byteLength(fullText),
+    "Cart-only preflight did not reduce Guest response bytes",
+  );
+  const badCart = await post(customer + "/api/guest/ordering-visit/review-cart", {
+    token: fixture.token, items: Array.from({ length: 21 }, () => selected[0]),
+  });
+  assert.equal(badCart.status, 400);
+  const badBearer = await post(customer + "/api/guest/ordering-visit/review-cart", {
+    token: "A".repeat(43), items: selected,
+  });
+  assert.equal(badBearer.status, 404);
+  const badOrigin = await post(customer + "/api/guest/ordering-visit/review-cart", {
+    token: fixture.token, items: selected,
+  }, { Origin: "https://untrusted.example" });
+  assert.equal(badOrigin.status, 403);
+  console.log(JSON.stringify({
+    scenario: "G2 scoped checkout preflight",
+    reviewMs,
+    selectedItems: selected.length,
+    reviewBytes: Buffer.byteLength(reviewedText),
+    fullCatalogBytes: Buffer.byteLength(fullText),
+    malformedAndForged: "denied",
+  }));
   console.log(JSON.stringify({
     scenario: "G2 server-side Guest keyset + real HTTP menu load",
     products: ids.length,
