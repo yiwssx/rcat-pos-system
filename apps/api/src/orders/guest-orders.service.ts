@@ -7,6 +7,8 @@ import {
 } from "@nestjs/common";
 import { digestOpaqueSecret } from "../../../../libs/server-auth/src";
 import { DatabaseAccess } from "../database/db-access";
+import { ApiRequest } from "../auth/request-security";
+import { GuestRequestBudgetService } from "../ordering/guest-request-budget.service";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const KEY = /^[A-Za-z0-9_-]{16,96}$/;
@@ -110,13 +112,17 @@ function mapOrderFailure(error: unknown): never {
 
 @Injectable()
 export class GuestOrdersService {
-  constructor(private readonly database: DatabaseAccess) {}
+  constructor(
+    private readonly database: DatabaseAccess,
+    private readonly guestBudget: GuestRequestBudgetService,
+  ) {}
 
-  async place(raw: unknown, key: string | undefined) {
+  async place(req: ApiRequest, raw: unknown, key: string | undefined) {
     if (!key || !KEY.test(key)) {
       throw new BadRequestException("Invalid Idempotency-Key");
     }
     const { visitDigest, visitToken, cart } = parseCart(raw);
+    await this.guestBudget.consume(req, "checkout", visitToken);
     // The table-visit secret AND unpredictable retry-stable checkout key are
     // required to derive an order-only bearer. No new server-wide key and no
     // raw tracking secrets are stored in the database.
@@ -151,7 +157,11 @@ export class GuestOrdersService {
     }
   }
 
-  async status(orderId: string, authorization: string | undefined) {
+  async status(
+    req: ApiRequest,
+    orderId: string,
+    authorization: string | undefined,
+  ) {
     if (!UUID.test(orderId)) {
       throw new NotFoundException("Order unavailable");
     }
@@ -159,6 +169,7 @@ export class GuestOrdersService {
     if (!token) {
       throw new NotFoundException("Order unavailable");
     }
+    await this.guestBudget.consume(req, "tracking", token);
     let trackingDigest: Buffer;
     try {
       trackingDigest = digestOpaqueSecret(token);
@@ -178,7 +189,11 @@ export class GuestOrdersService {
     }
   }
 
-  async history(orderId: string, authorization: string | undefined) {
+  async history(
+    req: ApiRequest,
+    orderId: string,
+    authorization: string | undefined,
+  ) {
     if (!UUID.test(orderId)) {
       throw new NotFoundException("Order unavailable");
     }
@@ -186,6 +201,7 @@ export class GuestOrdersService {
     if (!token) {
       throw new NotFoundException("Order unavailable");
     }
+    await this.guestBudget.consume(req, "tracking", token);
     let trackingDigest: Buffer;
     try {
       trackingDigest = digestOpaqueSecret(token);
