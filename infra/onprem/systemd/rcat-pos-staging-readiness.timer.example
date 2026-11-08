@@ -1,0 +1,12 @@
+# UNINSTALLED EXAMPLE — check local HTTP endpoints every five minutes.
+# Failing systemd unit must be connected to an approved alert receiver by B.
+[Unit]
+Description=Periodic RCAT POS staging readiness and non-payment invariant check
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+Unit=rcat-pos-staging-ops@readiness.service
+
+[Install]
+WantedBy=timers.target
