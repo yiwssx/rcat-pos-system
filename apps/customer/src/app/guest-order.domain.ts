@@ -83,6 +83,23 @@ export const ORDER_STATUS_LABEL: Readonly<
 const MAX_CART_LINES = 20;
 const MAX_TOTAL_QTY = 100;
 
+// Progressive rendering only: this does not change the authoritative server
+// menu snapshot or Checkout validation. Filtering preserves the server order.
+export const GUEST_MENU_BATCH_SIZE = 24;
+
+export function filterGuestMenu(
+  visit: GuestVisit,
+  search: string,
+  categoryId: string,
+): GuestProduct[] {
+  const normalized = search.trim().toLocaleLowerCase("th-TH");
+  return visit.products.filter(
+    (product) =>
+      (!categoryId || product.categoryId === categoryId) &&
+      product.name.toLocaleLowerCase("th-TH").includes(normalized),
+  );
+}
+
 export function estimateSatang(
   visit: GuestVisit,
   lines: readonly CartLine[],
