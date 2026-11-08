@@ -61,3 +61,18 @@ validation, printable fixed QR + fresh visit challenge, menu search at large
 scale, catalog history/archival restoration, kitchen stock reservation at
 checkout, or real PromptPay Payment. These remain tracked under #38,
 #5/#9 and the final Payment #7. No production deployment.
+
+## G2 follow-up: Merchant Catalog local filters and paging (8 Nov 2026)
+
+- The authorized Merchant Catalog snapshot can now be filtered by product name,
+  category, and the existing archived visibility switch, with a 20-item page
+  size and accessible previous/next navigation. Search/filter changes reset
+  page number and close edits to avoid acting on an invisible item.
+- Filter/paging behavior is tested with archived rows, Thai names, category
+  combinations, empty results and page boundaries.
+- This is **client-side display pagination**, not an API/database scalability
+  guarantee: `GET /catalog` still downloads the whole scoped snapshot. A
+  future server-side cursor/search API with tenant-aware limits and load tests
+  is required before treating large-store performance as completed (#38).
+- No changes to prices, order snapshots, inventory or Payment. No Staging or
+  Production claim is made from this UI-only increment.
