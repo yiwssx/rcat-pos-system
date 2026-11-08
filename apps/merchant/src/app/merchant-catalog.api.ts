@@ -101,10 +101,13 @@ export class MerchantCatalogApi {
       params["cursorId"] = filters.cursor.id;
     }
     return firstValueFrom(
-      this.http.get<CatalogPageResult>(scope(tenantId, storeId) + "/products/page", {
-        params,
-        withCredentials: true,
-      }),
+      this.http.get<CatalogPageResult>(
+        scope(tenantId, storeId) + "/products/page",
+        {
+          params,
+          withCredentials: true,
+        },
+      ),
     );
   }
 
