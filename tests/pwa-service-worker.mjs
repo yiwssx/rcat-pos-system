@@ -168,4 +168,26 @@ const neverCached = request("/chunk-ABCDEFGK.js", {
 });
 await assert.rejects(runFetch(neverCached), /offline/);
 assert.equal(runFetch(request("/orders/tenant/store", { method: "POST" })), undefined);
+
+const deletedCaches = [];
+let claimed = 0;
+ctx.caches.keys = async () => [
+  "rcat-pos-merchant-static-legacy",
+  "rcat-pos-merchant-static-v1",
+  "unrelated-service-cache",
+];
+ctx.caches.delete = async (key) => {
+  deletedCaches.push(key);
+  return true;
+};
+ctx.self.clients.claim = async () => { claimed += 1; };
+let activation;
+handlers.get("activate")({
+  waitUntil(promise) { activation = promise; },
+});
+await activation;
+assert.deepEqual(deletedCaches, ["rcat-pos-merchant-static-legacy"],
+  "New Service Worker must delete only prior Merchant static caches");
+assert.equal(claimed, 1, "New Service Worker must take control after activation");
+
 console.log("PASS: PWA offline page, static-only caching, no API/SSE/order buffering");

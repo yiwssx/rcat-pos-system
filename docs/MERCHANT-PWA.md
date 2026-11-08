@@ -69,3 +69,37 @@ Offline navigation still shows only the warning page, with **no Order data**.
 
 Real physical Service Worker update lifecycle, mobile process eviction and
 multi-replica SSE staging soak remain operational acceptance gates.
+
+## Real Browser Service Worker lifecycle qualification (8 Nov 2026; G3/#8)
+
+A separate authenticated Chromium mobile-width Merchant session installs
+and activates `/sw.js` over test-only HTTPS and reloads into a
+Service-Worker-controlled Order Board. While the browser context is
+disconnected, the app marks its Order data as potentially stale, and the
+test reads actual Chromium Cache Storage to verify that `/offline.html`
+is available, contains only an informational warning, and never leaks
+an Order ID. It asserts that the browser cache contains no `/api`,
+`/orders/` or `/auth` resources. On reconnect it reloads the live
+PostgreSQL-backed Merchant Order Board.
+
+The deterministic Node Service Worker test separately invokes the
+`fetch` handler with a failing network and verifies that an
+offline navigation produces the informational page, **not** cached Orders.
+It also tests worker activation: only obsolete
+`rcat-pos-merchant-static-*` cache versions can be deleted, the current
+cache and unrelated application caches are preserved, and clients are
+claimed. The G4 E2E workflow executes this suite explicitly.
+
+**CI limitation:** Chromium page-context offline emulation does not
+reliably emulate the separate Service Worker network target in this
+configuration. Browser tests therefore verify the real offline resource,
+stale warning and reconnection; the offline navigation fallback is proven
+at the isolated worker-handler level, **not** in a live offline-navigation
+browser test. The Playwright launcher bypasses certificate errors ONLY
+for the ephemeral self-signed CI loopback origin; no Production TLS bypass
+exists.
+
+**Not yet proven:** physical Android/iOS offline navigation, mobile
+process eviction, iOS Safari PWA, real proxy SSE buffering, multi-replica
+staging soak or Production worker update behavior. No Payment or
+Production signoff.

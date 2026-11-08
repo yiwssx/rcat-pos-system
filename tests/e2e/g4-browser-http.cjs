@@ -165,7 +165,13 @@ async function apiSetup() {
 }
 
 async function browserFlow(fixture) {
-  browser = await chromium.launch({ headless: true });
+  // CI-only ephemeral self-signed HTTPS certificate. Service Worker script
+  // downloads use Chromium's network verifier, not Playwright's context
+  // ignoreHTTPSErrors flag. Never apply this browser flag to real devices.
+  browser = await chromium.launch({
+    headless: true,
+    args: ["--ignore-certificate-errors"],
+  });
   const guestContext = await browser.newContext({
     ...devices["iPhone 13"],
     browserName: undefined,
@@ -634,6 +640,88 @@ async function guestCatalogHttp(fixture) {
   }));
 }
 
+async function browserPwaOfflineRecovery() {
+  // A separate authenticated Chromium context exercises the real SW, not
+  // only the node:vm mock. Cached navigation must never show stale Orders.
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    baseURL: merchant,
+    ignoreHTTPSErrors: true,
+    serviceWorkers: "allow",
+  });
+  const page = await context.newPage();
+  const route = merchant + "/orders/" + tenant + "/" + store;
+  try {
+    await merchantLoginRequest(context);
+    await page.goto(route);
+    await page.locator(".order-card").first().waitFor({ timeout: 20000 });
+    const liveOrder = await page.locator(".order-card").first().getAttribute("aria-label");
+    assert.ok(liveOrder?.startsWith("ออเดอร์ "), "Missing current Merchant Order");
+
+    const registration = await page.evaluate(async () => {
+      const worker = await navigator.serviceWorker.register("/sw.js", {
+        scope: "/",
+      });
+      await navigator.serviceWorker.ready;
+      return worker.active?.state === "activated";
+    });
+    assert.equal(registration, true, "Merchant Service Worker never activated");
+    await page.reload();
+    await page.waitForFunction(
+      () => navigator.serviceWorker.controller !== null,
+      undefined,
+      { timeout: 15000 },
+    );
+    await page.locator(".order-card").first().waitFor();
+    await context.setOffline(true);
+    await page.evaluate(() => window.dispatchEvent(new Event("offline")));
+    await page.getByText("การเชื่อมต่อขาด", { exact: false })
+      .waitFor({ timeout: 15000 });
+    // Inspect the real Chromium Cache Storage while its browser context is
+    // disconnected. Offline navigation interception itself is verified in
+    // the deterministic SW fetch-handler test (network emulation can differ
+    // for a browser worker target versus a page target).
+    const cachedOfflineHtml = await page.evaluate(async () => {
+      const offline = await caches.match("/offline.html");
+      return offline ? offline.text() : "";
+    });
+    assert.ok(cachedOfflineHtml.includes("อุปกรณ์ขาดการเชื่อมต่อ"),
+      "Offline warning page unavailable from real Service Worker Cache Storage");
+    assert.ok(!cachedOfflineHtml.includes(liveOrder),
+      "Cached informational offline page leaked an Order identifier");
+    const cachedNames = await page.evaluate(async () => {
+      const names = [];
+      for (const key of await caches.keys()) {
+        const cache = await caches.open(key);
+        for (const request of await cache.keys()) {
+          names.push(new URL(request.url).pathname);
+        }
+      }
+      return names;
+    });
+    assert.ok(cachedNames.includes("/offline.html"));
+    assert.ok(cachedNames.every((path) =>
+      !path.startsWith("/api") && !path.startsWith("/orders/") &&
+      !path.startsWith("/auth")),
+    "PWA cache contained private application data: " + JSON.stringify(cachedNames));
+    await context.setOffline(false);
+    await page.evaluate(() => window.dispatchEvent(new Event("online")));
+    await page.goto(route);
+    await page.locator(".order-card").first().waitFor({ timeout: 20000 });
+    assert.ok((await page.locator(".order-card").first().getAttribute("aria-label"))
+      ?.startsWith("ออเดอร์ "),
+    "Merchant PWA did not reconcile real Orders after offline navigation");
+    console.log(JSON.stringify({
+      scenario: "G3 Chromium activated SW offline cache audit + reconnect",
+      result: "PASS",
+      privateOrderCache: "none",
+      offlinePageCache: "informational only",
+    }));
+  } finally {
+    await context.close();
+  }
+}
+
 async function httpLoad(fixture) {
   const batchSize = 24;
   const payload = {
@@ -717,6 +805,7 @@ async function main() {
 
   const fixture = await apiSetup();
   await browserFlow(fixture);
+  await browserPwaOfflineRecovery();
   await guestCatalogHttp(fixture);
   await httpLoad(fixture);
   // Shares the same ephemeral Order journey and live NestJS/HTTPS services.
