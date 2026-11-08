@@ -32,7 +32,8 @@ BEGIN
  FOR batch IN 1..3 LOOP
    page:=rcat_private.catalog_products_page(owner,a,store_a,
      '',NULL,false,cursor_created,cursor_id,20);
-   IF jsonb_array_length(page->'products')<>CASE WHEN batch=3 THEN 5 ELSE 20 END
+   IF (batch<3 AND jsonb_array_length(page->'products')<>20)
+     OR (batch=3 AND jsonb_array_length(page->'products')<>5)
    THEN RAISE EXCEPTION 'Unexpected page length at %',batch; END IF;
    IF (page->>'hasMore')::boolean<>(batch<3)
    THEN RAISE EXCEPTION 'Incorrect hasMore flag at %',batch; END IF;
