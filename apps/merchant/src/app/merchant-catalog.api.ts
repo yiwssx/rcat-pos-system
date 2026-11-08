@@ -25,12 +25,32 @@ export interface MerchantCatalogSnapshot {
   products: CatalogProduct[];
 }
 
+export interface CatalogModifierGroup {
+  id: string;
+  productId: string;
+  slug: string;
+  name: string;
+  minSelect: number;
+  maxSelect: number;
+}
+
+export interface CatalogModifierOption {
+  id: string;
+  productId: string;
+  groupId: string;
+  name: string;
+  priceDeltaSatang: number;
+  available: boolean;
+}
+
 export interface CatalogCursor {
   createdAt: string;
   id: string;
 }
 
 export interface CatalogPageResult extends MerchantCatalogSnapshot {
+  modifierGroups: CatalogModifierGroup[];
+  modifierOptions: CatalogModifierOption[];
   hasMore: boolean;
   nextCursor: CatalogCursor | null;
 }
@@ -125,6 +145,101 @@ export class MerchantCatalogApi {
           headers: this.csrfHeaders(),
           withCredentials: true,
         },
+      ),
+    );
+  }
+
+  updateCategory(
+    tenantId: string,
+    storeId: string,
+    categoryId: string,
+    expected: CatalogCategory,
+    values: { name: string; slug: string },
+  ): Promise<{ categoryId: string; changed: boolean }> {
+    return firstValueFrom(
+      this.http.patch<{ categoryId: string; changed: boolean }>(
+        scope(tenantId, storeId) + "/categories/" + encodeURIComponent(categoryId),
+        {
+          expectedName: expected.name,
+          expectedSlug: expected.slug,
+          ...values,
+        },
+        { headers: this.csrfHeaders(), withCredentials: true },
+      ),
+    );
+  }
+
+  private modifierPath(
+    tenantId: string, storeId: string, productId: string,
+  ): string {
+    return scope(tenantId,storeId) + "/products/" +
+      encodeURIComponent(productId) + "/modifier-groups";
+  }
+
+  addModifierGroup(
+    tenantId: string, storeId: string, productId: string,
+    values: { slug: string; name: string; minSelect: number; maxSelect: number },
+  ): Promise<{ groupId: string }> {
+    return firstValueFrom(
+      this.http.post<{ groupId: string }>(
+        this.modifierPath(tenantId,storeId,productId),
+        values,
+        { headers: this.csrfHeaders(), withCredentials: true },
+      ),
+    );
+  }
+
+  editModifierGroup(
+    tenantId: string, storeId: string, productId: string,
+    group: CatalogModifierGroup,
+    values: { slug: string; name: string; minSelect: number; maxSelect: number },
+  ): Promise<{ groupId: string; changed: boolean }> {
+    return firstValueFrom(
+      this.http.patch<{ groupId: string; changed: boolean }>(
+        this.modifierPath(tenantId,storeId,productId) + "/" + encodeURIComponent(group.id),
+        {
+          expectedName: group.name,
+          expectedSlug: group.slug,
+          expectedMinSelect: group.minSelect,
+          expectedMaxSelect: group.maxSelect,
+          ...values,
+        },
+        { headers: this.csrfHeaders(), withCredentials: true },
+      ),
+    );
+  }
+
+  addModifierOption(
+    tenantId: string, storeId: string, productId: string, groupId: string,
+    values: { name: string; priceDeltaSatang: number },
+  ): Promise<{ optionId: string }> {
+    return firstValueFrom(
+      this.http.post<{ optionId: string }>(
+        this.modifierPath(tenantId,storeId,productId) + "/" +
+        encodeURIComponent(groupId) + "/options",
+        values,
+        { headers: this.csrfHeaders(), withCredentials: true },
+      ),
+    );
+  }
+
+  editModifierOption(
+    tenantId: string, storeId: string, productId: string,
+    option: CatalogModifierOption,
+    values: { name: string; priceDeltaSatang: number; available: boolean },
+  ): Promise<{ optionId: string; changed: boolean }> {
+    return firstValueFrom(
+      this.http.patch<{ optionId: string; changed: boolean }>(
+        this.modifierPath(tenantId,storeId,productId) + "/" +
+          encodeURIComponent(option.groupId) + "/options/" +
+          encodeURIComponent(option.id),
+        {
+          expectedName: option.name,
+          expectedPriceDeltaSatang: option.priceDeltaSatang,
+          expectedAvailable: option.available,
+          ...values,
+        },
+        { headers: this.csrfHeaders(), withCredentials: true },
       ),
     );
   }
