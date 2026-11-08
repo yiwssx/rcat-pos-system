@@ -19,6 +19,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Verify operator safety checks and bounded staging-read qualification harness
         run: node --test tests/ops/g4-maintenance-soak.test.mjs
+      - name: Verify RCAT On-prem staging package boundaries, operator gates and Compose syntax
+        run: node --test tests/ops/onprem-staging.test.mjs
       - name: Verify required files, metadata, license and source pins
         shell: bash
         run: |
