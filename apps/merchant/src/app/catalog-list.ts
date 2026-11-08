@@ -52,7 +52,7 @@ export function paginateCatalogProducts<T>(
 }
 
 /** Signed modifier deltas are UI-only input; PostgreSQL still recalculates Order totals. */
-function parseDeltaBaht(value: string): number | null {
+export function parseDeltaBaht(value: string): number | null {
   const match = /^(-?)(0|[1-9]\d{0,6})(?:\.(\d{1,2}))?$/.exec(
     value.trim(),
   );
