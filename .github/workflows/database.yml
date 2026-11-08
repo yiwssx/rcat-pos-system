@@ -72,6 +72,7 @@ jobs:
       PGUSER: postgres
       PGDATABASE: rcat_ci_test
       PGPASSWORD: test-only-ci-password
+      GUEST_TABLE_CODE_PEPPER: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
     steps:
       - uses: actions/checkout@v4
         with:
