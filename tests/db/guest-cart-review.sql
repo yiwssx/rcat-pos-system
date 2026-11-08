@@ -49,13 +49,13 @@ BEGIN
 
  -- Public availability is explicit, not an implied inventory reservation.
  -- A withdrawn product must be absent even while the bearer remains valid.
- PERFORM rcat_private.set_product_availability(owner,a,st,pid,false);
+ PERFORM rcat_private.set_menu_product_availability(owner,a,st,pid,false);
  result:=rcat_private.guest_cart_review(guest,ARRAY[pid],ARRAY[opt]);
  IF jsonb_array_length(result->'products')<>0
    OR jsonb_array_length(result->'modifierGroups')<>0
    OR jsonb_array_length(result->'modifierOptions')<>0 THEN
    RAISE EXCEPTION 'Withdrawn product remains orderable in cart review'; END IF;
- PERFORM rcat_private.set_product_availability(owner,a,st,pid,true);
+ PERFORM rcat_private.set_menu_product_availability(owner,a,st,pid,true);
 
  denied:=false;
  BEGIN
@@ -70,7 +70,7 @@ BEGIN
  denied:=false;
  BEGIN
    PERFORM rcat_private.guest_cart_review(
-     guest,ARRAY(SELECT pid FROM generate_series(1,21)),ARRAY[]::uuid[]);
+     guest,array_fill(pid,ARRAY[21]),ARRAY[]::uuid[]);
  EXCEPTION WHEN invalid_parameter_value THEN denied:=true; END;
  IF NOT denied THEN RAISE EXCEPTION 'Unbounded cart accepted'; END IF;
  denied:=false;
