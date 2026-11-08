@@ -50,7 +50,7 @@ enable Payment/PromptPay and does not deploy Production or Staging.
   | redeem code | 30 / 5 min | 60 / 5 min |
   | resolve visit | 300 / min | 120 / min |
   | page | 300 / min | 120 / min |
-  | checkout | 120 / min | 75 / min |
+  | checkout | 600 / min | 150 / min |
   | tracking | 600 / min | 180 / min |
 
   A limit rejection returns HTTP **429**; a shared staff QR address does
