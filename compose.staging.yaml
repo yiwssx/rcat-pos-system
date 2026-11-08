@@ -127,6 +127,30 @@ services:
       timeout: 5s
       retries: 6
 
+  # Operator-only, NEVER part of automatic deploy or API startup.
+  # DBA password is mounted ONLY in this opt-in process, not the runtime API.
+  budget_maintenance:
+    image: rcat-pos-api:${RCAT_POS_RELEASE:?}
+    profiles: [ops]
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - 'export PGPASSWORD="$(cat /run/secrets/staging_pg_password)"; exec node /work/scripts/ops/g4-retention-maintenance.mjs prune-guest-budgets --apply'
+    environment:
+      NODE_ENV: staging
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGDATABASE: rcat_pos_staging
+      PGUSER: rcat_pos_staging_dba
+    secrets: [staging_pg_password]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [database_private]
+    security_opt: ["no-new-privileges:true"]
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+
   # Operator-only, NEVER part of automatic deploy.
   # Runs checksum-protected SQL migrations with the privileged staging DBA.
   migrator:
