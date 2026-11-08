@@ -16,6 +16,8 @@ import {
   cartNeedsReview,
   estimateSatang,
   formatSatang,
+  filterGuestMenu,
+  GUEST_MENU_BATCH_SIZE,
   GuestModifierGroup,
   GuestModifierOption,
   GuestProduct,
@@ -215,6 +217,25 @@ function guestError(error: unknown): string {
               </article>
             }
           </div>
+          <div class="guest-menu-progress" role="status" aria-live="polite">
+            แสดง {{ products().length }} จาก {{ filteredProducts().length }} เมนู
+          </div>
+          @if (hiddenProducts() > 0) {
+            <button
+              class="guest-show-more"
+              type="button"
+              (click)="showMore()"
+              [attr.aria-label]="
+                'แสดงเมนูเพิ่มเติม ' +
+                (hiddenProducts() > pageSize ? pageSize : hiddenProducts()) +
+                ' รายการ'
+              "
+            >
+              แสดงเมนูเพิ่มเติม ({{
+                hiddenProducts() > pageSize ? pageSize : hiddenProducts()
+              }} รายการ)
+            </button>
+          }
         }
 
         <section class="guest-cart" aria-labelledby="cart-title">
@@ -301,6 +322,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly notice = signal("");
   readonly search = signal("");
   readonly category = signal("");
+  readonly visibleLimit = signal(GUEST_MENU_BATCH_SIZE);
   readonly selected = signal<Record<string, string[]>>({});
   readonly online = signal(true);
   readonly staticTable = signal<{
@@ -310,16 +332,18 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   } | null>(null);
   readonly tableCode = signal("");
   readonly money = formatSatang;
+  readonly pageSize = GUEST_MENU_BATCH_SIZE;
   private scanToken: string | null = null;
   private readonly win = this.document.defaultView;
+  readonly filteredProducts = computed(() => {
+    const visit = this.session.visit();
+    return visit ? filterGuestMenu(visit, this.search(), this.category()) : [];
+  });
   readonly products = computed(() =>
-    (this.session.visit()?.products ?? []).filter(
-      (product) =>
-        (!this.category() || product.categoryId === this.category()) &&
-        product.name
-          .toLocaleLowerCase("th-TH")
-          .includes(this.search().trim().toLocaleLowerCase("th-TH")),
-    ),
+    this.filteredProducts().slice(0, this.visibleLimit()),
+  );
+  readonly hiddenProducts = computed(() =>
+    Math.max(0, this.filteredProducts().length - this.products().length),
   );
   readonly cartQty = computed(() =>
     this.session.cart().reduce((sum, item) => sum + item.quantity, 0),
@@ -467,12 +491,19 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   }
 
   onSearch(event: Event): void {
-    if (event.target instanceof HTMLInputElement)
+    if (event.target instanceof HTMLInputElement) {
       this.search.set(event.target.value);
+      this.visibleLimit.set(GUEST_MENU_BATCH_SIZE);
+    }
   }
   onCategory(event: Event): void {
-    if (event.target instanceof HTMLSelectElement)
+    if (event.target instanceof HTMLSelectElement) {
       this.category.set(event.target.value);
+      this.visibleLimit.set(GUEST_MENU_BATCH_SIZE);
+    }
+  }
+  showMore(): void {
+    this.visibleLimit.update((limit) => limit + GUEST_MENU_BATCH_SIZE);
   }
   groups(productId: string): GuestModifierGroup[] {
     return (
