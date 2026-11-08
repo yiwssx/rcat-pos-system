@@ -174,6 +174,40 @@ export class CatalogService {
     }
   }
 
+  async updateCategory(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    categoryId: string,
+    raw: unknown,
+  ) {
+    validateIds(tenantId, storeId);
+    if (!UUID.test(categoryId))
+      throw new NotFoundException("Category unavailable");
+    const session = await this.auth.session(req);
+    this.auth.requireCsrf(req, session);
+    const data = bodyObject(raw);
+    const expectedName = nameField(data["expectedName"], 120);
+    const expectedSlug = slugField(data["expectedSlug"]);
+    const name = nameField(data["name"], 120);
+    const slug = slugField(data["slug"]);
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.edit_catalog_category($1,$2,$3,$4,$5,$6,$7,$8) AS data",
+          [
+            digestOpaqueSecret(session.token),
+            tenantId, storeId, categoryId,
+            expectedName, expectedSlug, name, slug,
+          ],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      mapping(error);
+    }
+  }
+
   async addProduct(
     req: ApiRequest,
     tenantId: string,
