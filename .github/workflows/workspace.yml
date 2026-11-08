@@ -38,6 +38,10 @@ jobs:
           cache: pnpm
       - name: Install from committed lockfile
         run: pnpm install --frozen-lockfile
+      - name: Temporary proxy formatter diff (remove before merge)
+        run: |
+          pnpm exec prettier apps/api/src/ordering/guest-client-address.ts | diff -u apps/api/src/ordering/guest-client-address.ts - || true
+          pnpm exec prettier apps/api/src/ordering/guest-client-address.spec.ts | diff -u apps/api/src/ordering/guest-client-address.spec.ts - || true
       - name: Display Nx projects
         run: pnpm exec nx show projects
       - name: Test changed projects in PR
