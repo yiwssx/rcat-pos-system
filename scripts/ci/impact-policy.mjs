@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // CI-only evidence/impact routing. It cannot authorize an operational deploy.
 // A missing/invalid git base FAILS CLOSED by running all expensive checks.
-import { appendFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
@@ -77,7 +77,33 @@ function changedFiles(base, head) {
   }
 }
 
-export function formatSummary(result) {
+// Historical CI success is scoped to its tested source; each new commit
+// invalidates only claims whose guarded inputs have changed since the merge.
+export function evaluateHistoricalEvidence(register, diffForCommit) {
+  if (register?.schema_version !== 1 || !Array.isArray(register.claims)) {
+    throw new Error("Evidence register schema invalid");
+  }
+  return register.claims.map((claim) => {
+    if (claim.status !== "verified_ci") {
+      return { id: claim.id, state: "pending_external_or_owner" };
+    }
+    if (!/^[0-9a-f]{40}$/i.test(claim.merge_sha ?? "") ||
+        !Array.isArray(claim.invalidated_by) ||
+        claim.invalidated_by.length === 0) {
+      return { id: claim.id, state: "requires_new_ci" };
+    }
+    const difference = diffForCommit(claim.merge_sha);
+    if (difference.uncertain || difference.paths.some((path) =>
+      claim.invalidated_by.some((match) => path === match ||
+        (match.endsWith("/") && path.startsWith(match)) ||
+        (match.endsWith("-") && path.startsWith(match))))) {
+      return { id: claim.id, state: "requires_new_ci" };
+    }
+    return { id: claim.id, state: "reusable_ci_scope_only" };
+  });
+}
+
+export function formatSummary(result, evidenceStates = []) {
   return [
     "### RCAT POS Lean CI impact",
     "",
@@ -89,6 +115,8 @@ export function formatSummary(result) {
     "| Operations safety tests | " + (result.onpremOps ? "RUN" : "SKIP — unrelated") + " |",
     "| Security-sensitive source changed | " + (result.criticalBoundaryChanged ? "YES — keep specialized SQL/HTTP gates" : "NO") + " |",
     "",
+    "Historical evidence: " + evidenceStates.map((entry) => entry.id + "=" + entry.state).join("; "),
+    "",
     "A green/skipped CI job **does not** approve On-prem Staging, external OAuth, real restore, physical devices, Payment or Production.",
     "",
   ].join("\n");
@@ -98,6 +126,16 @@ async function main() {
   const [base, head] = process.argv.slice(2);
   const diff = changedFiles(base, head);
   const result = classify(diff.paths, { uncertain: diff.uncertain });
+  let evidenceStates;
+  try {
+    const register = JSON.parse(readFileSync(new URL("../../docs/evidence-register.json", import.meta.url), "utf8"));
+    evidenceStates = evaluateHistoricalEvidence(register,
+      (mergeSha) => changedFiles(mergeSha, head));
+  } catch {
+    // Missing/malformed ledger is not a reason to reuse prior evidence.
+    evidenceStates = [{ id: "ALL", state: "requires_new_ci" }];
+  }
+  result.historicalEvidence = evidenceStates;
   process.stdout.write(JSON.stringify(result) + "\n");
   if (process.env.GITHUB_OUTPUT) {
     appendFileSync(process.env.GITHUB_OUTPUT, [
@@ -109,7 +147,7 @@ async function main() {
     ].join("\n") + "\n");
   }
   if (process.env.GITHUB_STEP_SUMMARY) {
-    appendFileSync(process.env.GITHUB_STEP_SUMMARY, formatSummary(result));
+    appendFileSync(process.env.GITHUB_STEP_SUMMARY, formatSummary(result, evidenceStates));
   }
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
