@@ -123,3 +123,22 @@ checkout, or real PromptPay Payment. These remain tracked under #38,
 **Not yet operator-verified:** physical device/weak-network accessibility,
 large-store load, cross-replica edge throttling and real Staging deployment.
 No Production and no PromptPay module in this increment.
+
+## Modifier add-form isolation and accessible labels (8 Nov 2026; #38)
+
+The Merchant editor previously rendered a simultaneously editable **new
+option form for every Modifier group**, but bound all those forms to the same
+`newOption` draft and repeated identical HTML input IDs. This could make
+labels point to a different group's field and allow accidental cross-group
+submission.
+
+Only the selected group's new-option form is now mounted. Switching groups
+discards the unsent draft, updates `aria-expanded`, and leaves one
+`new-option-name` / `new-option-price` pair in the DOM. A real mobile
+Chromium regression creates two groups, enters a draft in the first, switches
+to the second, verifies the draft was cleared and only one accessible input
+pair exists, then verifies PostgreSQL persisted the new option against
+**only the selected group** and maintained integer-satang pricing.
+
+This test is CI evidence, not a substitute for physical accessibility or
+screen-reader acceptance on operator devices.
