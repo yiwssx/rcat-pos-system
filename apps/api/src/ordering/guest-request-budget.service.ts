@@ -7,13 +7,14 @@ import {
 } from "@nestjs/common";
 import { ApiRequest } from "../auth/request-security";
 import { DatabaseAccess } from "../database/db-access";
+import { guestClientAddress } from "./guest-client-address";
 
 type GuestLane = "redeem" | "resolve" | "page" | "checkout" | "tracking";
 
 /**
  * Shared PostgreSQL rate budgets, not per-process Maps. The network peer
- * comes from the socket, never user-supplied X-Forwarded-For. A trusted
- * ingress must separately enforce real-client limits when proxying.
+ * defaults to the socket peer. Explicitly configured trusted proxy CIDRs
+ * permit right-to-left XFF attribution without trusting forged client hops.
  */
 @Injectable()
 export class GuestRequestBudgetService {
@@ -24,7 +25,10 @@ export class GuestRequestBudgetService {
     lane: GuestLane,
     token?: string,
   ): Promise<void> {
-    const ip = req.socket.remoteAddress;
+    const ip = guestClientAddress(
+      req,
+      process.env["GUEST_TRUSTED_PROXY_CIDRS"],
+    );
     const pepper = process.env["GUEST_TABLE_CODE_PEPPER"];
     if (!ip || !pepper || !/^[0-9a-f]{64}$/.test(pepper)) {
       // Public Guest endpoints cannot silently bypass abuse protection.
