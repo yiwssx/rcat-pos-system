@@ -90,3 +90,18 @@ until non-payment security, auth and release gates are qualified.
 - Payment/PromptPay per **Order** stays explicitly deferred to G5 (#7),
   after merchant/reporting/reliability/staging work. An Ordering QR is not
   a payment QR.
+
+## G2 cart re-confirmation guard (8 Nov 2026; #5/#38)
+
+Checkout no longer compares only total satang after re-resolving the guest
+visit. Even an unchanged grand total must trigger customer review when a
+selected product is renamed/recategorized/repriced, a selected option is
+renamed/repriced/removed, a relevant Modifier group's label/min/max changes,
+or the table/visit changes. Two offsetting price updates **must not cancel
+each other out** as a false match. The page preserves the cart and displays a
+Thai re-confirmation notice; it never sends a changed item without review.
+PostgreSQL still validates and snapshots all selected items and amounts.
+
+Vitest covers same-total rename/offsetting deltas, new mandatory Modifier
+groups, removed options and cross-visit/table changes. This does not add
+a Payment state, QR payment or Checkout-time stock reservation.
