@@ -155,7 +155,8 @@ export function cartNeedsReview(
     reviewed.tableId !== current.tableId ||
     reviewed.storeId !== current.storeId ||
     lines.length === 0
-  ) return true;
+  )
+    return true;
 
   const before = estimateSatang(reviewed, lines);
   const after = estimateSatang(current, lines);
@@ -165,21 +166,25 @@ export function cartNeedsReview(
     before !== after ||
     before < 1 ||
     after > 100000000
-  ) return true;
+  )
+    return true;
 
   for (const line of lines) {
     if (
       selectedOptionError(reviewed, line.productId, line.optionIds) ||
       selectedOptionError(current, line.productId, line.optionIds)
-    ) return true;
+    )
+      return true;
     const a = reviewed.products.find((p) => p.id === line.productId);
     const b = current.products.find((p) => p.id === line.productId);
     if (
-      !a || !b ||
+      !a ||
+      !b ||
       a.name !== b.name ||
       a.categoryId !== b.categoryId ||
       a.priceSatang !== b.priceSatang
-    ) return true;
+    )
+      return true;
 
     const catA = reviewed.categories.find((c) => c.id === a.categoryId);
     const catB = current.categories.find((c) => c.id === b.categoryId);
@@ -195,22 +200,30 @@ export function cartNeedsReview(
       oldGroups.length !== newGroups.length ||
       oldGroups.some((g, i) => {
         const next = newGroups[i];
-        return !next || g.id !== next.id ||
-          g.name !== next.name || g.slug !== next.slug ||
-          g.minSelect !== next.minSelect || g.maxSelect !== next.maxSelect;
+        return (
+          !next ||
+          g.id !== next.id ||
+          g.name !== next.name ||
+          g.slug !== next.slug ||
+          g.minSelect !== next.minSelect ||
+          g.maxSelect !== next.maxSelect
+        );
       })
-    ) return true;
+    )
+      return true;
 
     for (const id of line.optionIds) {
       const oldOption = reviewed.modifierOptions.find((o) => o.id === id);
       const newOption = current.modifierOptions.find((o) => o.id === id);
       if (
-        !oldOption || !newOption ||
+        !oldOption ||
+        !newOption ||
         oldOption.productId !== newOption.productId ||
         oldOption.groupId !== newOption.groupId ||
         oldOption.name !== newOption.name ||
         oldOption.priceDeltaSatang !== newOption.priceDeltaSatang
-      ) return true;
+      )
+        return true;
     }
   }
   return false;
