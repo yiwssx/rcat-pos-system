@@ -1,4 +1,7 @@
-import { BadRequestException, ServiceUnavailableException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ServiceUnavailableException,
+} from "@nestjs/common";
 import { BlockList, isIP } from "node:net";
 import type { ApiRequest } from "../auth/request-security";
 
