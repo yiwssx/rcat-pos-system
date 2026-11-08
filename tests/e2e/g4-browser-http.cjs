@@ -165,7 +165,13 @@ async function apiSetup() {
 }
 
 async function browserFlow(fixture) {
-  browser = await chromium.launch({ headless: true });
+  // CI-only ephemeral self-signed HTTPS certificate. Service Worker script
+  // downloads use Chromium's network verifier, not Playwright's context
+  // ignoreHTTPSErrors flag. Never apply this browser flag to real devices.
+  browser = await chromium.launch({
+    headless: true,
+    args: ["--ignore-certificate-errors"],
+  });
   const guestContext = await browser.newContext({
     ...devices["iPhone 13"],
     browserName: undefined,
@@ -661,9 +667,11 @@ async function browserPwaOfflineRecovery() {
     });
     assert.equal(registration, true, "Merchant Service Worker never activated");
     await page.reload();
-    await page.waitForFunction(() => navigator.serviceWorker.controller !== null, {
-      timeout: 15000,
-    });
+    await page.waitForFunction(
+      () => navigator.serviceWorker.controller !== null,
+      undefined,
+      { timeout: 15000 },
+    );
     await page.locator(".order-card").first().waitFor();
     await context.setOffline(true);
     await page.goto(route, { waitUntil: "domcontentloaded", timeout: 15000 });
