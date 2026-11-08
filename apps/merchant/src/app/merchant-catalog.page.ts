@@ -11,7 +11,7 @@ import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { prepareProductWebp } from "./prepare-product-webp";
 import { MerchantOrderApi } from "./merchant-order.api";
-import { CATALOG_PAGE_SIZE } from "./catalog-list";
+import { CATALOG_PAGE_SIZE, parseDeltaBaht } from "./catalog-list";
 import {
   CatalogCategory,
   CatalogCursor,
@@ -33,16 +33,6 @@ function bahtInput(satang: number): string {
   return (
     Math.floor(satang / 100) + "." + (satang % 100).toString().padStart(2, "0")
   );
-}
-
-function parseDeltaBaht(value: string): number | null {
-  const match = /^(-?)(0|[1-9]\d{0,6})(?:\.(\d{1,2}))?$/.exec(
-    value.trim(),
-  );
-  if (!match) return null;
-  const amount = Number(match[2]) * 100 +
-    Number((match[3] ?? "").padEnd(2, "0"));
-  return amount <= 100000000 ? (match[1] ? -amount : amount) : null;
 }
 
 @Component({
