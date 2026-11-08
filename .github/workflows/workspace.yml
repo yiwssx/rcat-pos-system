@@ -40,13 +40,6 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Display Nx projects
         run: pnpm exec nx show projects
-      - name: Temporary formatter diagnostics
-        run: |
-          for file in apps/api/src/catalog/catalog.service.ts apps/merchant/src/app/merchant-catalog.api.ts apps/merchant/src/app/merchant-catalog.page.ts; do
-            echo "::group::$file"
-            pnpm exec prettier "$file" | diff -u "$file" - || true
-            echo "::endgroup::"
-          done
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request'
         env:
