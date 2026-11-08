@@ -50,6 +50,7 @@ preflight() {
      "${ENABLE_RECOVERY_TEST_MODE:-false}" != true ]] || fail "Test auth/recovery prohibited"
 
   need RCAT_POS_DB_PASSWORD_FILE
+  [[ "$RCAT_POS_DB_PASSWORD_FILE" == /* ]] || fail "DBA password file must use an absolute path"
   [[ -f "$RCAT_POS_DB_PASSWORD_FILE" && ! -L "$RCAT_POS_DB_PASSWORD_FILE" ]] ||
     fail "Missing DBA password file or symlink refused"
   mode="$(stat -c '%a' "$RCAT_POS_DB_PASSWORD_FILE")"
