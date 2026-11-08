@@ -27,7 +27,7 @@ BEGIN
   ('redeem-ip',30,300),('redeem-token',60,300),
   ('resolve-ip',300,60),('resolve-token',120,60),
   ('page-ip',300,60),('page-token',120,60),
-  ('checkout-ip',120,60),('checkout-token',75,60),
+  ('checkout-ip',600,60),('checkout-token',150,60),
   ('tracking-ip',600,60),('tracking-token',180,60)
  ) AS policy(lane,max_hits,window_seconds)
  WHERE policy.lane=p_lane;
