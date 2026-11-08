@@ -36,6 +36,29 @@ node scripts/ops/g4-retention-maintenance.mjs prune-guest-budgets --apply
   identity, install an appropriately monitored daily scheduler, and
   provide execution/backup/restore evidence on Staging before signing G4.
 
+## Trusted proxy attribution and ingress contract (Batch B)
+
+- Guest abuse budgets continue to use the TCP socket peer by default. A
+  staging operator may **optionally** configure
+  `GUEST_TRUSTED_PROXY_CIDRS` to a comma-separated list of exact trusted
+  reverse-proxy subnet CIDRs, preferably `/32` single IPv4 ingress nodes
+  or `/128` IPv6 peers. This is **not** an IP allowlist for customers;
+  it identifies only internal ingress systems permitted to append or
+  overwrite `X-Forwarded-For`.
+- For a genuinely trusted socket peer the app validates a bounded XFF
+  chain and walks right-to-left to choose the first untrusted hop. Forged
+  prefixes are ignored. For an untrusted socket peer it ignores XFF
+  altogether; malformed trust configuration fails closed.
+- **Required external configuration:** the trusted ingress must replace or
+  append the **actual incoming peer address** to XFF, block direct bypass
+  of the ingress, and also provide client-IP network-layer throttling.
+  Never trust arbitrary Cloudflare/proxy ranges or Internet-scale
+  `0.0.0.0/0`, never expose the Nest listener to direct public traffic
+  while claiming XFF identity assurance.
+- CI tests forged XFF, multiple trusted hops, IPv4-mapped IPv6 and malformed
+  policy rejection. Real reverse-proxy/NAT fairness must still be
+  confirmed on the staging network by an operator before G4 signoff.
+
 ## Safe staging Guest read-load qualification (Batch C)
 
 This script sends only read-only, Origin-validated Guest catalog page
