@@ -309,6 +309,59 @@ async function browserFlow(fixture) {
       hasText: "เมนูทดสอบแก้ไขแล้ว",
     });
     await revisedItem.getByText("99.50 บาท").waitFor();
+    // G2 multi-group editor: a draft typed for one group must never be
+    // submitted to another group. Only one option form may own input IDs.
+    await revisedItem.getByRole("button", { name: "จัดการตัวเลือกสินค้า" }).click();
+    const modifiers = revisedItem.locator(".catalog-modifier-panel");
+    const createGroup = modifiers.locator("form").first();
+    for (const group of [
+      { name: "ความหวาน E2E", slug: "e2e-sweet" },
+      { name: "เพิ่มท็อปปิ้ง E2E", slug: "e2e-toppings" },
+    ]) {
+      await createGroup.getByLabel("ชื่อกลุ่ม").fill(group.name);
+      await createGroup.getByLabel("รหัสกลุ่ม").fill(group.slug);
+      await createGroup.getByLabel("เลือกขั้นต่ำ").fill("0");
+      await createGroup.getByLabel("เลือกสูงสุด").fill("1");
+      await createGroup.getByRole("button", { name: "เพิ่มกลุ่ม" }).click();
+      await second.getByText("เพิ่มกลุ่มตัวเลือกแล้ว").waitFor();
+    }
+    assert.equal(
+      await modifiers.getByRole("button", { name: "เพิ่มตัวเลือก", exact: true }).count(),
+      2, "Both modifier groups must have their own add action",
+    );
+    assert.equal(await modifiers.locator('input[name="newOptionName"]').count(), 0);
+    await modifiers.getByRole("button", { name: "เพิ่มตัวเลือก", exact: true })
+      .first().click();
+    await modifiers.getByLabel("ชื่อตัวเลือก", { exact: true }).fill("ข้อความค้าง E2E");
+    // Switching the active group must discard the previous unsent draft,
+    // leaving just one uniquely labelled new-option form in the DOM.
+    await modifiers.getByRole("button", { name: "เพิ่มตัวเลือก", exact: true })
+      .click();
+    const activeName = modifiers.locator('input[name="newOptionName"]');
+    assert.equal(await activeName.count(), 1);
+    assert.equal(await activeName.inputValue(), "",
+      "Modifier draft from a different group must not leak into new group");
+    assert.equal(await modifiers.locator('[id="new-option-name"]').count(), 1);
+    await activeName.fill("ซอส E2E");
+    await modifiers.getByLabel("ราคาเพิ่ม/ลด (บาท)", { exact: true })
+      .fill("2.50");
+    await modifiers.getByRole("button", { name: "บันทึกตัวเลือกใหม่" }).click();
+    await second.getByText("เพิ่มตัวเลือกสินค้าแล้ว").waitFor();
+    const scopedCatalog = await secondContext.request.get(
+      merchant + orderScope + "/catalog/products/page?limit=20",
+    );
+    assert.equal(scopedCatalog.status(), 200, await scopedCatalog.text());
+    const catalogData = await scopedCatalog.json();
+    const sweetGroup = catalogData.modifierGroups.find((g) => g.slug === "e2e-sweet");
+    const toppingsGroup = catalogData.modifierGroups.find((g) => g.slug === "e2e-toppings");
+    const savedOption = catalogData.modifierOptions.find((o) => o.name === "ซอส E2E");
+    assert.ok(sweetGroup && toppingsGroup && savedOption,
+      "Both groups and the correct added option must persist in scoped Catalog");
+    assert.equal(savedOption.groupId, toppingsGroup.id,
+      "Draft switched groups but submitted option was attached to wrong group");
+    assert.notEqual(savedOption.groupId, sweetGroup.id);
+    assert.equal(savedOption.priceDeltaSatang, 250);
+
     // Real Chromium canvas PNG -> bounded WebP conversion -> restricted
     // binary upload. Public active-only media must load as an image and be
     // denied for foreign tenancy or after this product is archived.
