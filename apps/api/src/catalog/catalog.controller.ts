@@ -49,6 +49,19 @@ export class CatalogController {
     return this.catalog.addCategory(req, tenantId, storeId, body);
   }
 
+  @Patch("categories/:categoryId")
+  @Header("Cache-Control", "no-store")
+  updateCategory(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("categoryId") categoryId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.catalog.updateCategory(req, tenantId, storeId, categoryId, body);
+  }
+
   @Post("products")
   @Header("Cache-Control", "no-store")
   addProduct(
