@@ -46,7 +46,7 @@ async function run() {
     process.stdout.write(usage + "\n");
     return;
   }
-  const { Client } = await import("pg");
+  const { Client } = (await import("pg")).default;
   // pg uses the existing PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD
   // environment; no app connection string or secret is printed.
   const db = new Client({ connectionTimeoutMillis: 5000 });
@@ -111,6 +111,15 @@ async function run() {
 }
 run().catch((error) => {
   // Error messages must not include a connection string or driver options.
-  process.stderr.write("G4 maintenance failed: " + String(error.message).slice(0, 180) + "\n");
+  // Only print curated local validation errors; DB driver errors might
+  // contain connection information or privileged query details.
+  const safe = /^(Unknown action|Unknown option|Pruning requires|Production pruning requires|PGHOST|PGDATABASE|PGUSER|CI test database requires|Another budget maintenance task)/.test(
+    String(error.message),
+  );
+  process.stderr.write(
+    "G4 maintenance failed: " +
+      (safe ? String(error.message) : "Database operation failed; inspect restricted operator logs") +
+      "\n",
+  );
   process.exitCode = 1;
 });
