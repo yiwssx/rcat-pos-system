@@ -40,14 +40,6 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Display Nx projects
         run: pnpm exec nx show projects
-      - name: Temporary Prettier outputs for changed Customer code
-        run: |
-          for f in apps/customer/src/app/guest-order.domain.ts apps/customer/src/app/app.spec.ts; do
-            echo "FORMAT_BEGIN:$f"
-            pnpm exec prettier "$f" | base64 -w0
-            echo
-            echo "FORMAT_END:$f"
-          done
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request'
         env:
