@@ -8,6 +8,7 @@ import {
   formatSatang,
   filterGuestMenu,
   GUEST_MENU_BATCH_SIZE,
+  mergeCartReview,
   GuestVisit,
   sanitizedVisitToken,
   selectedOptionError,
@@ -235,6 +236,38 @@ describe("customer route security and QR ordering", () => {
         cart,
       ),
     ).toBe(true);
+  });
+
+  it("reviews only selected cart products while preserving unrelated paged items", () => {
+    const lines = [{ productId: "p1", optionIds: ["o1"], quantity: 1 }];
+    const scoped = {
+      ...VISIT,
+      products: [{ ...VISIT.products[0]!, name: "ข้าวใหม่" }],
+      modifierGroups: [VISIT.modifierGroups[0]!],
+      modifierOptions: [{ ...VISIT.modifierOptions[0]!, name: "ไข่เพิ่ม" }],
+    };
+    expect(cartNeedsReview(VISIT, scoped, lines)).toBe(true);
+    const merged = mergeCartReview(VISIT, scoped, lines);
+    expect(merged.products.find((p) => p.id === "p2")?.name).toBe("น้ำ");
+    expect(merged.products.find((p) => p.id === "p1")?.name).toBe("ข้าวใหม่");
+    expect(merged.modifierOptions.map((o) => o.id)).toEqual(["o1"]);
+    expect(merged.modifierOptions[0]?.name).toBe("ไข่เพิ่ม");
+    expect(cartNeedsReview(merged, scoped, lines)).toBe(false);
+  });
+
+  it("rejects a withdrawn cart item without losing other loaded products", () => {
+    const lines = [{ productId: "p1", optionIds: ["o1"], quantity: 1 }];
+    const scoped = {
+      ...VISIT,
+      products: [],
+      modifierGroups: [],
+      modifierOptions: [],
+      categories: [],
+    };
+    expect(cartNeedsReview(VISIT, scoped, lines)).toBe(true);
+    const merged = mergeCartReview(VISIT, scoped, lines);
+    expect(merged.products.map((p) => p.id)).toEqual(["p2"]);
+    expect(selectedOptionError(merged, "p1", ["o1"])).not.toBe(null);
   });
 
   it("rejects invalid totals, quantity overflow and overly large carts", () => {

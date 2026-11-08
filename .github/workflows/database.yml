@@ -113,6 +113,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/catalog-editor.sql
       - name: Verify shared Guest rate budgets and 55-row tenant-isolated Guest keyset pages
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/guest-catalog-budgets.sql
+      - name: Verify cart-only Guest review, scoped modifiers and withdrawn products
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/guest-cart-review.sql
       - name: Verify printable QR code rotation, per-device grants, failed-attempt cap and Order continuity
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/printable-table-codes.sql
       - name: Verify restricted WebP product images, archived/sold-out reads and size cap

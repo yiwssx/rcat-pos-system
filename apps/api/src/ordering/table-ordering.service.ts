@@ -352,6 +352,72 @@ export class TableOrderingService {
     }
   }
 
+  async reviewCart(req: ApiRequest, raw: unknown) {
+    const data = requestObject(raw);
+    const token = data["token"];
+    const items = data["items"];
+    if (
+      typeof token !== "string" ||
+      !Array.isArray(items) ||
+      items.length < 1 ||
+      items.length > 20
+    ) {
+      throw new BadRequestException("Invalid Guest cart review");
+    }
+    const products = new Set<string>();
+    const options = new Set<string>();
+    let quantity = 0;
+    for (const rawItem of items) {
+      if (!rawItem || typeof rawItem !== "object" || Array.isArray(rawItem)) {
+        throw new BadRequestException("Invalid Guest cart review");
+      }
+      const line = rawItem as Record<string, unknown>;
+      if (
+        typeof line["productId"] !== "string" ||
+        !UUID.test(line["productId"]) ||
+        !Array.isArray(line["optionIds"]) ||
+        line["optionIds"].length > 32 ||
+        line["optionIds"].some(
+          (id: unknown) => typeof id !== "string" || !UUID.test(id),
+        ) ||
+        typeof line["quantity"] !== "number" ||
+        !Number.isInteger(line["quantity"]) ||
+        line["quantity"] < 1 ||
+        line["quantity"] > 20
+      ) {
+        throw new BadRequestException("Invalid Guest cart review");
+      }
+      const ids = (line["optionIds"] as string[]).map((id) => id.toLowerCase());
+      if (new Set(ids).size !== ids.length) {
+        throw new BadRequestException("Duplicate modifiers");
+      }
+      products.add(line["productId"].toLowerCase());
+      ids.forEach((id) => options.add(id));
+      quantity += line["quantity"];
+    }
+    if (quantity > 100) {
+      throw new BadRequestException("Too many items");
+    }
+    await this.guestBudget.consume(req, "resolve", token);
+    let digest: Buffer;
+    try {
+      digest = digestOpaqueSecret(token);
+    } catch {
+      throw new NotFoundException("Ordering visit unavailable");
+    }
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.guest_cart_review($1,$2::uuid[],$3::uuid[]) AS data",
+          [digest, [...products], [...options]],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      safeError(error);
+    }
+  }
+
   async page(req: ApiRequest, raw: unknown) {
     const data = requestObject(raw);
     const token = data["token"];

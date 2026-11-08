@@ -172,6 +172,49 @@ export function selectedOptionError(
  * anything relevant to a submitted cart changed since the guest saw it.
  * The PostgreSQL checkout remains authoritative under concurrent edits.
  */
+/**
+ * The server returns only cart-selected products/options. Preserve the menu
+ * already paged into memory; replace all selected-product snapshots so a
+ * removed item/option can never be treated as still orderable on retry.
+ */
+export function mergeCartReview(
+  reviewed: GuestVisit,
+  fresh: GuestVisit,
+  lines: readonly CartLine[],
+): GuestVisit {
+  if (
+    fresh.visitId !== reviewed.visitId ||
+    fresh.tenantId !== reviewed.tenantId ||
+    fresh.storeId !== reviewed.storeId ||
+    fresh.tableId !== reviewed.tableId
+  ) {
+    return fresh;
+  }
+  const selected = new Set(lines.map((line) => line.productId));
+  const selectedOptionIds = new Set(lines.flatMap((line) => line.optionIds));
+  const categories = new Map(reviewed.categories.map((c) => [c.id, c]));
+  fresh.categories.forEach((c) => categories.set(c.id, c));
+  return {
+    ...reviewed,
+    ...fresh,
+    categories: [...categories.values()],
+    products: [
+      ...reviewed.products.filter((p) => !selected.has(p.id)),
+      ...fresh.products,
+    ],
+    modifierGroups: [
+      ...reviewed.modifierGroups.filter((g) => !selected.has(g.productId)),
+      ...fresh.modifierGroups,
+    ],
+    modifierOptions: [
+      ...reviewed.modifierOptions.filter(
+        (o) => !selected.has(o.productId) && !selectedOptionIds.has(o.id),
+      ),
+      ...fresh.modifierOptions,
+    ],
+  };
+}
+
 export function cartNeedsReview(
   reviewed: GuestVisit,
   current: GuestVisit,

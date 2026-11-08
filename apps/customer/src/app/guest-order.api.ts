@@ -65,6 +65,15 @@ export class GuestOrderApi {
     );
   }
 
+  reviewCart(token: string, items: readonly CartLine[]): Promise<GuestVisit> {
+    return firstValueFrom(
+      this.http.post<GuestVisit>("/api/guest/ordering-visit/review-cart", {
+        token,
+        items,
+      }),
+    );
+  }
+
   checkout(
     token: string,
     items: readonly CartLine[],
