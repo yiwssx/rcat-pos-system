@@ -26,6 +26,21 @@
       "excludes": [
         "Real RMS/IOT connectivity and firewall",
         "Actual staging deployment, Google OAuth and Production"
+      ],
+      "invalidated_by": [
+        "Dockerfile.staging",
+        "compose.staging.yaml",
+        "infra/onprem/nginx-static-api.conf",
+        "apps/",
+        "libs/",
+        "package.json",
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml",
+        "nx.json",
+        "angular.json",
+        "tsconfig.base.json",
+        ".node-version",
+        ".github/workflows/onprem-staging.yml"
       ]
     },
     {
@@ -45,6 +60,16 @@
       "excludes": [
         "Encrypted offsite backup taken or restored on IOT",
         "Actual alert delivery or installed timer"
+      ],
+      "invalidated_by": [
+        "scripts/ops/onprem-",
+        "scripts/ops/g4-retention-maintenance.mjs",
+        "scripts/ops/ci-backup-restore.sh",
+        "infra/onprem/systemd/",
+        "compose.staging.yaml",
+        "Dockerfile.staging",
+        "tests/ops/onprem-",
+        ".github/workflows/foundation.yml"
       ]
     },
     {
@@ -64,6 +89,19 @@
       "excludes": [
         "Physical Android/iOS/Safari",
         "Real RMS two-replica sustained traffic and Production load SLO"
+      ],
+      "invalidated_by": [
+        "scripts/load/",
+        "tests/e2e/",
+        "tests/ops/onprem-qualification.test.mjs",
+        "apps/",
+        "libs/",
+        "db/",
+        "scripts/db/",
+        "package.json",
+        "pnpm-lock.yaml",
+        ".github/workflows/g4-browser-http.yml",
+        ".github/workflows/database.yml"
       ]
     },
     {
