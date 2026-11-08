@@ -323,7 +323,10 @@ async function browserFlow(fixture) {
       await createGroup.getByLabel("เลือกขั้นต่ำ").fill("0");
       await createGroup.getByLabel("เลือกสูงสุด").fill("1");
       await createGroup.getByRole("button", { name: "เพิ่มกลุ่ม" }).click();
-      await second.getByText("เพิ่มกลุ่มตัวเลือกแล้ว").waitFor();
+      // Success text may still be visible from the previous create.
+      // Await the newly committed group row, not a stale status banner.
+      await modifiers.getByRole("heading", { name: new RegExp(group.name) })
+        .waitFor({ timeout: 20000 });
     }
     assert.equal(
       await modifiers.getByRole("button", { name: "เพิ่มตัวเลือก", exact: true }).count(),
