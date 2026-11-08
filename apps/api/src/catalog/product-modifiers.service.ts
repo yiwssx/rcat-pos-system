@@ -216,10 +216,14 @@ export class ProductModifiersService {
     const expectedMin = data["expectedMinSelect"];
     const expectedMax = data["expectedMaxSelect"];
     if (
-      typeof slug !== "string" || !SLUG.test(slug) ||
-      slug.length < 3 || slug.length > 48 ||
-      typeof expectedSlug !== "string" || !SLUG.test(expectedSlug) ||
-      expectedSlug.length < 3 || expectedSlug.length > 48 ||
+      typeof slug !== "string" ||
+      !SLUG.test(slug) ||
+      slug.length < 3 ||
+      slug.length > 48 ||
+      typeof expectedSlug !== "string" ||
+      !SLUG.test(expectedSlug) ||
+      expectedSlug.length < 3 ||
+      expectedSlug.length > 48 ||
       ![minSelect, maxSelect, expectedMin, expectedMax].every(
         (n) => typeof n === "number" && Number.isInteger(n) && n >= 0 && n <= 8,
       ) ||
@@ -233,9 +237,19 @@ export class ProductModifiersService {
         client.query<{ data: Record<string, unknown> }>(
           "SELECT rcat_private.edit_modifier_group($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) AS data",
           [
-            digestOpaqueSecret(session.token), tenantId, storeId, productId, groupId,
-            expectedName, expectedSlug, expectedMin, expectedMax,
-            name, slug, minSelect, maxSelect,
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            productId,
+            groupId,
+            expectedName,
+            expectedSlug,
+            expectedMin,
+            expectedMax,
+            name,
+            slug,
+            minSelect,
+            maxSelect,
           ],
         ),
       );
@@ -265,11 +279,14 @@ export class ProductModifiersService {
     const available = data["available"];
     const expectedAvailable = data["expectedAvailable"];
     if (
-      typeof delta !== "number" || !Number.isSafeInteger(delta) ||
+      typeof delta !== "number" ||
+      !Number.isSafeInteger(delta) ||
       Math.abs(delta) > 100000000 ||
-      typeof expectedDelta !== "number" || !Number.isSafeInteger(expectedDelta) ||
+      typeof expectedDelta !== "number" ||
+      !Number.isSafeInteger(expectedDelta) ||
       Math.abs(expectedDelta) > 100000000 ||
-      typeof available !== "boolean" || typeof expectedAvailable !== "boolean"
+      typeof available !== "boolean" ||
+      typeof expectedAvailable !== "boolean"
     ) {
       throw new BadRequestException("Invalid modifier option edit");
     }
@@ -278,8 +295,18 @@ export class ProductModifiersService {
         client.query<{ data: Record<string, unknown> }>(
           "SELECT rcat_private.edit_modifier_option($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) AS data",
           [
-            digestOpaqueSecret(session.token),tenantId,storeId,productId,groupId,optionId,
-            expectedName,expectedDelta,expectedAvailable,name,delta,available,
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            productId,
+            groupId,
+            optionId,
+            expectedName,
+            expectedDelta,
+            expectedAvailable,
+            name,
+            delta,
+            available,
           ],
         ),
       );
@@ -288,5 +315,4 @@ export class ProductModifiersService {
       safeError(error);
     }
   }
-
 }
