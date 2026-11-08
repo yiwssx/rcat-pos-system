@@ -75,7 +75,9 @@ describe("customer route security and QR ordering", () => {
     const all = filterGuestMenu(large, "", "");
     expect(all).toHaveLength(70);
     expect(all.slice(0, GUEST_MENU_BATCH_SIZE)).toHaveLength(24);
-    expect(all.slice(0, 48).map((p) => p.id)).toEqual(products.slice(0, 48).map((p) => p.id));
+    expect(all.slice(0, 48).map((p) => p.id)).toEqual(
+      products.slice(0, 48).map((p) => p.id),
+    );
     expect(filterGuestMenu(large, "  ชาไทย  ", "")).toEqual([products[61]]);
     expect(filterGuestMenu(large, "", "drink")).toHaveLength(20);
     expect(filterGuestMenu(large, "สินค้า 1", "drink")).toEqual([]);
