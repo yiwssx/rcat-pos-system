@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { classify, formatSummary } from "../../scripts/ci/impact-policy.mjs";
+import { classify, formatSummary, evaluateHistoricalEvidence } from "../../scripts/ci/impact-policy.mjs";
 
 const root = new URL("../../", import.meta.url);
 const load = () => JSON.parse(readFileSync(new URL("docs/evidence-register.json", root), "utf8"));
@@ -83,4 +83,21 @@ test("evidence register is complete, immutable-commit-linked and never marks hos
   assert.ok(ids.has("G4-B-REAL-STAGING"));
   assert.ok(ids.has("G4-C-OWNER-POLICY"));
   assert.ok(ids.has("G5-G6-PAYMENT-RELEASE"));
+});
+
+
+test("historical CI evidence is reused only when no guarded inputs changed since its merge", () => {
+  const register = load();
+  const unchanged = evaluateHistoricalEvidence(register, () => ({ paths: ["docs/notes.md"], uncertain: false }));
+  assert.equal(unchanged.find((x) => x.id === "G4-A1-PACKAGING").state, "reusable_ci_scope_only");
+  assert.equal(unchanged.find((x) => x.id === "G4-B-REAL-STAGING").state, "pending_external_or_owner");
+  const change = evaluateHistoricalEvidence(register, (mergeSha) => {
+    if (mergeSha === register.claims[0].merge_sha) {
+      return { paths: ["Dockerfile.staging"], uncertain: false };
+    }
+    return { paths: ["docs/notes.md"], uncertain: false };
+  });
+  assert.equal(change.find((x) => x.id === "G4-A1-PACKAGING").state, "requires_new_ci");
+  assert.equal(change.find((x) => x.id === "G4-A2-A3-OPS").state, "reusable_ci_scope_only");
+  assert.equal(evaluateHistoricalEvidence(register, () => ({ paths: [], uncertain: true }))[0].state, "requires_new_ci");
 });
