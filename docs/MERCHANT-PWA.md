@@ -69,3 +69,25 @@ Offline navigation still shows only the warning page, with **no Order data**.
 
 Real physical Service Worker update lifecycle, mobile process eviction and
 multi-replica SSE staging soak remain operational acceptance gates.
+
+## Real Browser Service Worker lifecycle qualification (8 Nov 2026; G3/#8)
+
+A separate authenticated Chromium mobile-width Merchant session now installs
+and activates `/sw.js` over the test-only HTTPS origin, reloads into the
+worker-controlled Order Board, then **navigates offline**. It must display the
+informational offline page, not an old Order card or Order identifier; the
+Cache Storage inventory must not include `/api`, `/auth` or `/orders/`.
+After returning online the application must reload the authoritative
+PostgreSQL-backed Merchant Order Board. This is integrated into the G4
+Browser/HTTP E2E CI sequence without a live environment or Payment.
+
+The Node Service Worker test now also exercises activation: only obsolete
+`rcat-pos-merchant-static-*` cache versions can be deleted, while the
+current cache and unrelated browser-app caches are preserved, then clients
+are claimed. The E2E workflow executes this test explicitly so it does not
+rely on Nx treating root `tests/` files as Merchant project sources.
+
+**Not yet proven:** OS-level phone screen eviction, iOS Safari PWA and
+third-party browser behavior, real proxy SSE buffering, battery-saving mode,
+multiple worker instances behind an actual Staging ingress, or update
+lifecycle across real Production releases. No Production signoff or Payment.
