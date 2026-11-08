@@ -41,6 +41,12 @@
         "tsconfig.base.json",
         ".node-version",
         ".github/workflows/onprem-staging.yml"
+      ],
+      "supporting_runs": [
+        {
+          "workflow": "Foundation checks",
+          "run_id": 42485890971
+        }
       ]
     },
     {
@@ -70,6 +76,12 @@
         "Dockerfile.staging",
         "tests/ops/onprem-",
         ".github/workflows/foundation.yml"
+      ],
+      "supporting_runs": [
+        {
+          "workflow": "On-prem staging container packaging",
+          "run_id": 42487075640
+        }
       ]
     },
     {
@@ -102,6 +114,16 @@
         "pnpm-lock.yaml",
         ".github/workflows/g4-browser-http.yml",
         ".github/workflows/database.yml"
+      ],
+      "supporting_runs": [
+        {
+          "workflow": "Foundation checks",
+          "run_id": 42489346959
+        },
+        {
+          "workflow": "PostgreSQL tenant-isolation tests",
+          "run_id": 42489346919
+        }
       ]
     },
     {
