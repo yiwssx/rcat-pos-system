@@ -24,18 +24,18 @@ export class GuestOrdersController {
   @Header("Cache-Control", "no-store")
   async place(@Req() req: ApiRequest, @Body() body: unknown) {
     requireAllowedOrigin(req);
-    return this.orders.place(body, header(req, "Idempotency-Key"));
+    return this.orders.place(req, body, header(req, "Idempotency-Key"));
   }
 
   @Get(":orderId/status")
   @Header("Cache-Control", "no-store")
   status(@Req() req: ApiRequest, @Param("orderId") orderId: string) {
-    return this.orders.status(orderId, header(req, "authorization"));
+    return this.orders.status(req, orderId, header(req, "authorization"));
   }
 
   @Get(":orderId/history")
   @Header("Cache-Control", "no-store")
   history(@Req() req: ApiRequest, @Param("orderId") orderId: string) {
-    return this.orders.history(orderId, header(req, "authorization"));
+    return this.orders.history(req, orderId, header(req, "authorization"));
   }
 }
