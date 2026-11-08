@@ -212,6 +212,17 @@ async function browserFlow(fixture) {
     assert.ok(viewport.documentWidth <= viewport.visible + 1,
       "Guest menu overflows 320px screen: " + JSON.stringify(viewport));
 
+    // A5: Mobile keyboard navigation must expose a labelled search and
+    // move focus to the adjacent labelled category picker (no pointer needed).
+    const menuSearch = guest.getByRole("searchbox", { name: "ค้นหาเมนู" });
+    await menuSearch.focus();
+    assert.equal(await menuSearch.evaluate((node) => node === document.activeElement), true,
+      "Guest search cannot receive keyboard focus");
+    await guest.keyboard.press("Tab");
+    assert.equal(await guest.locator(".guest-category select")
+      .evaluate((node) => node === document.activeElement), true,
+      "Guest category filter is not reachable after search with Tab");
+
     // iPhone offline: do not submit an Order or silently mutate cart;
     // reconnect and submit through the visible Angular button.
     await guest.locator(".guest-product", { hasText: fixture.name })
@@ -258,7 +269,12 @@ async function browserFlow(fixture) {
     const selector = 'article[aria-label^="ออเดอร์ ' + orderIdPrefix + '"]';
     await board.locator(selector).waitFor({ timeout: 20000 });
     await second.locator(selector).waitFor({ timeout: 20000 });
-    await board.locator(selector).getByRole("button", { name: "รับออเดอร์" }).click();
+    // A5: the Merchant Order acceptance control must be keyboard-focusable.
+    const acceptAction = board.locator(selector).getByRole("button", { name: "รับออเดอร์" });
+    await acceptAction.focus();
+    assert.equal(await acceptAction.evaluate((node) => node === document.activeElement), true,
+      "Merchant acceptance control cannot receive keyboard focus");
+    await acceptAction.click();
     await board.locator(selector).getByText("รับออเดอร์แล้ว").waitFor({ timeout: 20000 });
     await second.locator(selector).getByText("รับออเดอร์แล้ว").waitFor({ timeout: 20000 });
 
