@@ -19,12 +19,18 @@ type GuestLane = "redeem" | "resolve" | "page" | "checkout" | "tracking";
 export class GuestRequestBudgetService {
   constructor(private readonly database: DatabaseAccess) {}
 
-  async consume(req: ApiRequest, lane: GuestLane, token?: string): Promise<void> {
+  async consume(
+    req: ApiRequest,
+    lane: GuestLane,
+    token?: string,
+  ): Promise<void> {
     const ip = req.socket.remoteAddress;
     const pepper = process.env["GUEST_TABLE_CODE_PEPPER"];
     if (!ip || !pepper || !/^[0-9a-f]{64}$/.test(pepper)) {
       // Public Guest endpoints cannot silently bypass abuse protection.
-      throw new ServiceUnavailableException("Guest request limits not configured");
+      throw new ServiceUnavailableException(
+        "Guest request limits not configured",
+      );
     }
     const subject = (kind: string, value: string): Buffer =>
       createHmac("sha256", Buffer.from(pepper, "hex"))
