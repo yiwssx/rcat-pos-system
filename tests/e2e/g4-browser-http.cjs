@@ -267,7 +267,7 @@ async function browserFlow(fixture) {
       window.dispatchEvent(new Event("focus"));
     });
     await second.locator(resumedSelector).waitFor({ timeout: 20000 });
-    await second.locator(resumedSelector).getByText("ส่งคำสั่งซื้อแล้ว")
+    await second.locator(resumedSelector).getByText("รอรับออเดอร์")
       .waitFor({ timeout: 15000 });
 
     // A foreground refresh should pick up the new status on the guest tab
