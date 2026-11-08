@@ -13,6 +13,7 @@ import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import {
   addToCart,
   changeCartQuantity,
+  cartNeedsReview,
   estimateSatang,
   formatSatang,
   GuestModifierGroup,
@@ -592,18 +593,10 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     this.notice.set("");
     try {
       // Recheck the visit and merchant's current catalog before committing.
-      // A changed price / sold-out menu requires explicit reconfirmation,
-      // never silently accept a different amount than the guest reviewed.
+      // A changed product/option identity or price requires explicit
+      // reconfirmation, even when the aggregate total is unchanged.
       const latest = await this.api.resolve(token);
-      const oldEstimate = estimateSatang(visit, lines);
-      const newEstimate = estimateSatang(latest, lines);
-      if (
-        !Number.isFinite(newEstimate) ||
-        newEstimate !== oldEstimate ||
-        lines.some((line) =>
-          selectedOptionError(latest, line.productId, line.optionIds),
-        )
-      ) {
+      if (cartNeedsReview(visit, latest, lines)) {
         this.session.setVisit(token, latest);
         this.notice.set(
           "เมนู ราคา หรือความพร้อมเปลี่ยนไป โปรดตรวจสอบตะกร้าก่อนยืนยันอีกครั้ง",
