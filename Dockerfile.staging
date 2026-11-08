@@ -12,6 +12,9 @@ WORKDIR /work
 COPY --from=build /work/node_modules ./node_modules
 COPY --from=build /work/dist ./dist
 COPY --from=build /work/package.json ./package.json
+# DBA-only, opt-in maintenance container reuses this image; the public API
+# never executes this script and has no DBA secret mounted.
+COPY --from=build /work/scripts/ops/g4-retention-maintenance.mjs ./scripts/ops/g4-retention-maintenance.mjs
 USER node
 EXPOSE 3000
 CMD ["node", "dist/apps/api/src/main.js"]
