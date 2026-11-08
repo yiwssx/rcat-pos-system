@@ -52,3 +52,20 @@ mobile background/sleep, storage quota, static icon install criteria on
 target devices, and full browser End-to-End validation. Installability is
 a convenience, not offline operations. The deferred PromptPay flow remains
 outside this feature (G5/#7).
+
+## G3 immutable asset cache hardening (8 Nov 2026)
+
+The Merchant service worker remains **static-assets-only**. It now accepts
+only same-origin, query-free build-hashed JavaScript requested as scripts and
+build-hashed CSS requested as styles. Caching also requires an actual
+non-redirected `basic` response with matching JavaScript/CSS Content-Type,
+a successful status, and no `private` or `no-store` Cache-Control.
+
+The Node service-worker regression test exercises cached hashed asset
+fallback after disconnection, rejects HTML/auth redirects and private/no-store
+responses, denies query-string variants and mismatched MIME/destination, and
+continues to block API/SSE/authenticated navigation/order mutation caching.
+Offline navigation still shows only the warning page, with **no Order data**.
+
+Real physical Service Worker update lifecycle, mobile process eviction and
+multi-replica SSE staging soak remain operational acceptance gates.
