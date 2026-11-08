@@ -40,6 +40,12 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Display Nx projects
         run: pnpm exec nx show projects
+      - name: Temporary exact formatter output for Modifier editor
+        run: |
+          echo FORMAT_BEGIN
+          pnpm exec prettier apps/merchant/src/app/merchant-catalog.page.ts | base64 -w0
+          echo
+          echo FORMAT_END
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request'
         env:
