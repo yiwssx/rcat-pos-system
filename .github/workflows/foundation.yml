@@ -21,6 +21,8 @@ jobs:
         run: node --test tests/ops/g4-maintenance-soak.test.mjs
       - name: Verify RCAT On-prem staging package boundaries, operator gates and Compose syntax
         run: node --test tests/ops/onprem-staging.test.mjs
+      - name: Verify safe on-prem maintenance jobs, backup checks and readiness monitor
+        run: node --test tests/ops/onprem-operations.test.mjs
       - name: Verify required files, metadata, license and source pins
         shell: bash
         run: |
