@@ -105,3 +105,23 @@ PostgreSQL still validates and snapshots all selected items and amounts.
 Vitest covers same-total rename/offsetting deltas, new mandatory Modifier
 groups, removed options and cross-visit/table changes. This does not add
 a Payment state, QR payment or Checkout-time stock reservation.
+
+## G2 large-menu progressive rendering and offline tracking qualification (8 Nov 2026)
+
+The Customer menu now filters the **server-provided menu snapshot** using the
+existing Thai search/category semantics, but initially mounts only 24 product
+cards; `แสดงเมนูเพิ่มเติม` mounts the next 24. Any search/category change
+resets the visible batch. A live result count and 48px accessible button
+preserve navigation on a 320px screen. Cart and PostgreSQL checkout remain
+authoritative and are independent of how many cards happen to be visible.
+
+The Order-tracking page now shows an explicit offline/stale-state warning,
+disables manual refresh while offline, and fetches fresh server status when
+connection/visibility returns. It never queues a speculative Order mutation
+or marks Payment verified. Chromium CI exercises 320px search/overflow and
+offline tracking/reconnect; Vitest exercises 70-product Thai filtering.
+
+**Scope limit:** This is client DOM batching, **not** server-side Guest catalog
+pagination, transfer-size optimization or measured real-device bandwidth.
+Physical printed-QR/weak-network/screenreader and large-catalog staging
+performance remain open G2 acceptance gates.

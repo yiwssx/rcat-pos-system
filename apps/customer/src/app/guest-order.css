@@ -470,3 +470,29 @@
   margin-bottom: 0.9rem;
   background: #edf1f4;
 }
+
+/* G2 progressive large-catalog navigation: status stays readable at 320px. */
+.guest-menu-progress {
+  text-align: center;
+  padding: 0.8rem 0 0.4rem;
+  font-size: 0.9rem;
+  color: #52647b;
+}
+.guest-show-more {
+  display: block;
+  width: min(100%, 30rem);
+  min-height: 48px;
+  margin: 0.7rem auto 1.6rem;
+  padding: 0.75rem 1.2rem;
+  border: 2px solid #173d5b;
+  background: #fff;
+  color: #173d5b;
+  border-radius: 0.65rem;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.guest-show-more:focus-visible {
+  outline: 3px solid #d99431;
+  outline-offset: 3px;
+}

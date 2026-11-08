@@ -5,13 +5,16 @@
 const STATIC_CACHE = "rcat-pos-merchant-static-v1";
 const OFFLINE_PAGE = "/offline.html";
 const SHELL_ASSETS = [OFFLINE_PAGE, "/manifest.webmanifest", "/pwa-icon.svg"];
-const HASHED_SHELL = /^\/(?:main|polyfills|chunk|styles)-[A-Za-z0-9_-]{8,}\.(?:js|css)$/;
+const HASHED_SCRIPT = /^\/(?:main|polyfills|chunk)-[A-Za-z0-9_-]{8,}\.js$/;
+const HASHED_STYLE = /^\/styles-[A-Za-z0-9_-]{8,}\.css$/;
 
 function isPublicStaticAsset(request, url) {
+  // Cache only build-hashed, origin-local JS/CSS with matching destination.
+  // Do not cache dynamic query variants, or files disguised as scripts.
   return request.method === "GET" &&
-    url.origin === self.location.origin &&
-    (request.destination === "script" || request.destination === "style") &&
-    HASHED_SHELL.test(url.pathname);
+    url.origin === self.location.origin && !url.search && !url.hash &&
+    ((request.destination === "script" && HASHED_SCRIPT.test(url.pathname)) ||
+     (request.destination === "style" && HASHED_STYLE.test(url.pathname)));
 }
 function isPrivateOrDynamicPath(pathname) {
   return pathname.startsWith("/api") ||
@@ -71,7 +74,12 @@ self.addEventListener("fetch", (event) => {
       try {
         const response = await fetch(request);
         const cacheControl = response.headers.get("Cache-Control") || "";
-        if (response.ok && response.type === "basic" &&
+        const contentType = response.headers.get("Content-Type") || "";
+        const expectedContentType = request.destination === "script"
+          ? /^(?:text|application)\/javascript\b/i
+          : /^text\/css\b/i;
+        if (response.ok && response.type === "basic" && !response.redirected &&
+            expectedContentType.test(contentType) &&
             !/\b(private|no-store)\b/i.test(cacheControl)) {
           await cache.put(request, response.clone());
         }

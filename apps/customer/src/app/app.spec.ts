@@ -6,6 +6,8 @@ import {
   cartNeedsReview,
   estimateSatang,
   formatSatang,
+  filterGuestMenu,
+  GUEST_MENU_BATCH_SIZE,
   GuestVisit,
   sanitizedVisitToken,
   selectedOptionError,
@@ -60,6 +62,27 @@ describe("customer route security and QR ordering", () => {
       routes.find((x) => x.path === "order/track")?.loadComponent,
     ).toBeTypeOf("function");
     expect(routes.some((route) => route.path?.includes("payment"))).toBe(false);
+  });
+
+  it("filters Thai product catalogs deterministically without changing the server visit", () => {
+    const products = Array.from({ length: 70 }, (_, i) => ({
+      id: "item-" + String(i).padStart(3, "0"),
+      categoryId: i < 50 ? "food" : "drink",
+      name: i === 61 ? "ชาไทยพิเศษ" : "สินค้า " + i,
+      priceSatang: 1500,
+    }));
+    const large: GuestVisit = { ...VISIT, products };
+    const all = filterGuestMenu(large, "", "");
+    expect(all).toHaveLength(70);
+    expect(all.slice(0, GUEST_MENU_BATCH_SIZE)).toHaveLength(24);
+    expect(all.slice(0, 48).map((p) => p.id)).toEqual(
+      products.slice(0, 48).map((p) => p.id),
+    );
+    expect(filterGuestMenu(large, "  ชาไทย  ", "")).toEqual([products[61]]);
+    expect(filterGuestMenu(large, "", "drink")).toHaveLength(20);
+    expect(filterGuestMenu(large, "สินค้า 1", "drink")).toEqual([]);
+    expect(large.products).toHaveLength(70);
+    expect(GUEST_MENU_BATCH_SIZE).toBe(24);
   });
 
   it("extracts only an exact, single fragment-only ordering capability", () => {
