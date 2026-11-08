@@ -134,10 +134,8 @@ export class GuestOrderSession {
       ...old,
       ...page,
       categories: this.cart().length ? old.categories : page.categories,
-      products: mergeById(
-        old.products,
-        page.products,
-        (value) => frozenProducts.has(value.id),
+      products: mergeById(old.products, page.products, (value) =>
+        frozenProducts.has(value.id),
       ),
       modifierGroups: mergeById(
         old.modifierGroups,
