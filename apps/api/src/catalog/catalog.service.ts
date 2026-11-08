@@ -124,7 +124,7 @@ export class CatalogService {
         (typeof cursorId !== "string" || !UUID.test(cursorId))) ||
       (cursorCreatedAt !== null &&
         (typeof cursorCreatedAt !== "string" ||
-          !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?(?:Z|[+-]\\d{2}:\\d{2})$/.test(
+          !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(
             cursorCreatedAt,
           ) ||
           !Number.isFinite(Date.parse(cursorCreatedAt))))
