@@ -36,7 +36,7 @@ function bahtInput(satang: number): string {
 }
 
 function parseDeltaBaht(value: string): number | null {
-  const match = /^(-?)(0|[1-9]\\d{0,6})(?:\\.(\\d{1,2}))?$/.exec(
+  const match = /^(-?)(0|[1-9]\d{0,6})(?:\.(\d{1,2}))?$/.exec(
     value.trim(),
   );
   if (!match) return null;
