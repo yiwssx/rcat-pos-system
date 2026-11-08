@@ -86,6 +86,13 @@ export class TableOrderingController {
     return this.ordering.redeemCode(req, body);
   }
 
+  @Post("guest/ordering-visit/review-cart")
+  @Header("Cache-Control", "no-store")
+  reviewCart(@Req() req: ApiRequest, @Body() body: unknown) {
+    requireAllowedOrigin(req);
+    return this.ordering.reviewCart(req, body);
+  }
+
   @Post("guest/ordering-visit/page")
   @Header("Cache-Control", "no-store")
   page(@Req() req: ApiRequest, @Body() body: unknown) {
