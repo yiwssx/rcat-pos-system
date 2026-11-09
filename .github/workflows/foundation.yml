@@ -33,6 +33,9 @@ jobs:
       - name: Verify RCAT On-prem staging package boundaries, operator gates and Compose syntax
         if: steps.impact.outputs.onprem_ops == 'true'
         run: node --test tests/ops/onprem-staging.test.mjs
+      - name: Verify read-only first-install B1 host delta and collision refusal
+        if: steps.impact.outputs.onprem_ops == 'true'
+        run: node --test tests/ops/onprem-host-delta.test.mjs
       - name: Verify safe on-prem maintenance jobs, backup checks and readiness monitor
         if: steps.impact.outputs.onprem_ops == 'true'
         run: node --test tests/ops/onprem-operations.test.mjs
