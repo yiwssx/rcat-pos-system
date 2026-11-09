@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "decision_date": "2026-11-09",
+  "scope": "G4 non-payment RCAT on-prem staging only",
+  "decision_source": "Owner approval recorded in GitHub Issue #82",
+  "stock": {
+    "approved": true,
+    "sold_out": "manual_merchant_toggle",
+    "ingredient_consumption": "on_merchant_acceptance",
+    "checkout_reservation": false,
+    "auto_sold_out": false
+  },
+  "backup": {
+    "policy_approved": false,
+    "offsite_destination_approved": false,
+    "cadence_approved": false,
+    "offsite_destination": null,
+    "cadence": null,
+    "retention_approved": false,
+    "guest_budget_prune_approved": false,
+    "auto_order_outbox_audit_deletion_approved": false
+  },
+  "slo": {
+    "approved": true,
+    "guest_menu_p95_ms_max": 2500,
+    "order_submit_p95_ms_max": 3000,
+    "backup_rpo_hours_max": 24,
+    "isolated_restore_rto_hours_max": 4,
+    "api_error_rate_target_approved": false,
+    "sse_reconnect_target_approved": false
+  },
+  "releases": {
+    "staging_deploy_approved": false,
+    "g4_final_signoff": false,
+    "payment_authorized": false,
+    "production_authorized": false
+  }
+}

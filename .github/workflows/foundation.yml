@@ -36,6 +36,11 @@ jobs:
       - name: Verify read-only first-install B1 host delta and collision refusal
         if: steps.impact.outputs.onprem_ops == 'true'
         run: node --test tests/ops/onprem-host-delta.test.mjs
+      - name: Verify approved G4 policy and fail-closed B1-B6 evidence gate
+        if: steps.impact.outputs.onprem_ops == 'true'
+        run: |
+          node --test tests/ops/g4-staging-acceptance.test.mjs
+          node scripts/ops/g4-staging-acceptance.mjs --policy-only
       - name: Verify safe on-prem maintenance jobs, backup checks and readiness monitor
         if: steps.impact.outputs.onprem_ops == 'true'
         run: node --test tests/ops/onprem-operations.test.mjs

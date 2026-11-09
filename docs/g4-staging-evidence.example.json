@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "environment": "staging",
+  "production": false,
+  "payment_enabled": false,
+  "release_tag": "PENDING",
+  "release_sha": null,
+  "observed_at": null,
+  "b1": {
+    "status": "pending",
+    "evidence_url": null,
+    "observed_at": null
+  },
+  "b2": {
+    "status": "pending",
+    "evidence_url": null,
+    "observed_at": null
+  },
+  "b3": {
+    "status": "pending",
+    "evidence_url": null,
+    "observed_at": null
+  },
+  "b4": {
+    "status": "pending",
+    "evidence_url": null,
+    "observed_at": null
+  },
+  "b5": {
+    "status": "blocked_by_c2",
+    "evidence_url": null,
+    "observed_at": null
+  },
+  "b6": {
+    "status": "pending",
+    "evidence_url": null,
+    "observed_at": null
+  },
+  "metrics": {
+    "guest_menu_p95_ms": null,
+    "order_submit_p95_ms": null,
+    "backup_rpo_hours": null,
+    "isolated_restore_rto_hours": null
+  },
+  "operator_signoff": {
+    "approved": false,
+    "evidence_url": null
+  },
+  "owner_signoff": {
+    "approved": false,
+    "evidence_url": null
+  }
+}
