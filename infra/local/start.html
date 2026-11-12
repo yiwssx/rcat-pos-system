@@ -92,9 +92,12 @@
     const tenantId = '70000000-0000-4000-8000-000000000001';
     const storeId = '70000000-0000-4000-8000-000000000002';
     const tableId = '70000000-0000-4000-8000-000000000005';
-    const round = await post(`/api/tenants/${tenantId}/stores/${storeId}/tables/${tableId}/issue-code`, {}, true);
-    const guest = await post('/api/guest/ordering-code/redeem', { tenantId, storeId, tableId, code: round.code });
-    location.assign('https://localhost:11880/order#token=' + encodeURIComponent(guest.visitToken));
+    const round = await post(`/api/tenants/${tenantId}/stores/${storeId}/tables/${tableId}/rotate`, {}, true);
+    const target = new URL(round.orderingUrl);
+    if (target.origin !== 'https://localhost:11880' || target.pathname !== '/order') {
+      throw new Error('ลิงก์โต๊ะทดลองไม่ถูกต้อง กรุณาลองใหม่');
+    }
+    location.assign(target.href);
   }));
   try {
     const response = await fetch('/api/auth/me', { cache: 'no-store', signal: AbortSignal.timeout(15000) });

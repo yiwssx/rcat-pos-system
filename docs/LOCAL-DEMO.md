@@ -71,9 +71,11 @@ Service Worker registration. Do not globally disable browser TLS verification.
 2. Choose Merchant or Admin to open the actual applications. Both use the same
    host-scoped Secure session cookie on localhost. The Google sign-in link in
    these unchanged applications returns to the local launcher in this profile.
-3. Choose **เริ่มรอบโต๊ะและเปิด Customer**. This issues a fresh code through the
-   existing authenticated/CSRF-protected API, redeems it, then opens the actual
-   guest ordering page. This deliberately revokes the previous demo table round.
+3. Choose **เริ่มรอบโต๊ะและเปิด Customer**. This rotates the table's high-entropy
+   visit link through the existing authenticated/CSRF-protected API, then opens
+   the actual guest ordering page. This deliberately revokes the previous demo
+   table round. The Local launcher uses the established staff-issued visit-link
+   flow, not the separate printed QR / eight-digit-code flow.
 4. Order a demo meal and open Merchant in another tab to accept the order.
    The order payment state remains `not_requested`.
 
@@ -81,6 +83,13 @@ Fixtures: one owner, one tenant, ร้านทดลอง RCAT, one table, an
 (ข้าวกะเพรา 45 บาท, ข้าวผัด 40 บาท, น้ำดื่ม 10 บาท). No real personnel accounts,
 customer data or bank details. Admin provides the existing **tenant owner**
 functions; this does not introduce global platform-admin permissions.
+
+Known existing limitation: the printed-code redemption creates a per-device
+grant, but `bind_guest_order_tracking` (migration 013) still matches only the
+original visit digest. The Local qualification encountered this checkout gap.
+No SQL/auth change is included here; the staff-rotated link avoids that separate
+path and remains subject to the existing authenticated rotation and guest checks.
+Do not count the printed-code path as qualified by this demo's successful run.
 
 The launcher has keyboard labels, visible focus, pending/disabled buttons, inline
 errors and no credential persistence in browser storage. Wrong password/expired
