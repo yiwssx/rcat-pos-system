@@ -23,6 +23,15 @@ test("operator-only maintenance change runs safety checks, not Nx or images", ()
   assert.equal(result.onpremOps, true);
 });
 
+test("Local demo inputs select Compose/browser verification without repeating unchanged Nx", () => {
+  for (const path of ["compose.local.yaml", "infra/local/start.html", "infra/local/nginx.conf",
+    "scripts/dev/local-seed.mjs", "scripts/ops/local-demo.sh", "tests/ops/local-demo-browser.cjs"]) {
+    const result = classify([path]);
+    assert.equal(result.onpremImages, true, path);
+    assert.equal(result.workspace, false, path);
+  }
+});
+
 test("Dockerfile, Angular and DB changes select only relevant gates", () => {
   assert.equal(classify(["Dockerfile.staging"]).onpremImages, true);
   assert.equal(classify(["Dockerfile.staging"]).workspace, false);

@@ -4,6 +4,11 @@ on:
   pull_request:
     paths:
       - 'Dockerfile.staging'
+      - 'compose.local.yaml'
+      - 'infra/local/**'
+      - 'scripts/dev/local-seed.mjs'
+      - 'scripts/ops/local-demo.sh'
+      - 'tests/ops/local-demo*'
       - 'compose.staging.yaml'
       - '.dockerignore'
       - '.env.staging.example'
@@ -24,6 +29,11 @@ on:
     branches: [main]
     paths:
       - 'Dockerfile.staging'
+      - 'compose.local.yaml'
+      - 'infra/local/**'
+      - 'scripts/dev/local-seed.mjs'
+      - 'scripts/ops/local-demo.sh'
+      - 'tests/ops/local-demo*'
       - 'compose.staging.yaml'
       - '.dockerignore'
       - '.env.staging.example'
@@ -46,7 +56,8 @@ concurrency:
 jobs:
   build-and-inspect:
     name: Stage images, Nginx configuration and isolation
-    runs-on: ubuntu-latest
+    # Match the pinned Playwright runner's supported OS, independent of latest.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -81,4 +92,31 @@ jobs:
           docker run --rm --entrypoint sh rcat-pos-merchant:staging-ci -c 'test -s /usr/share/nginx/html/sw.js'
           for app in customer admin; do
             docker run --rm --entrypoint sh "rcat-pos-$app:staging-ci" -c 'test ! -e /usr/share/nginx/html/sw.js'
+          done
+      - name: Start the isolated Local demo with its real Compose configuration
+        if: steps.impact.outputs.onprem_images == 'true'
+        run: bash scripts/ops/local-demo.sh up
+      - uses: actions/setup-node@v4
+        if: steps.impact.outputs.onprem_images == 'true'
+        with:
+          node-version-file: .node-version
+      - name: Install pinned browser runner for the Local demo only
+        if: steps.impact.outputs.onprem_images == 'true'
+        run: |
+          npm install --prefix /tmp/rcat-local-playwright --no-save --no-package-lock --ignore-scripts playwright@1.56.1
+          /tmp/rcat-local-playwright/node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify Local login, seeded menu, Order acceptance and repeat bootstrap
+        if: steps.impact.outputs.onprem_images == 'true'
+        env:
+          NODE_PATH: /tmp/rcat-local-playwright/node_modules
+          NODE_EXTRA_CA_CERTS: ${{ github.workspace }}/.secrets/local-demo/cert.pem
+        run: node tests/ops/local-demo-browser.cjs
+      - name: Stop only the Local demo containers
+        if: always() && steps.impact.outputs.onprem_images == 'true'
+        run: bash scripts/ops/local-demo.sh stop
+      - name: Show only Local container health on failure (no environment dump)
+        if: failure() && steps.impact.outputs.onprem_images == 'true'
+        run: |
+          for id in $(docker ps -aq --filter label=com.docker.compose.project=rcat-pos-local); do
+            docker inspect --format '{{.Name}} {{json .State.Health}}' "$id"
           done

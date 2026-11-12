@@ -30,6 +30,9 @@ jobs:
       - name: Verify operator safety checks and bounded staging-read qualification harness
         if: steps.impact.outputs.onprem_ops == 'true'
         run: node --test tests/ops/g4-maintenance-soak.test.mjs
+      - name: Verify isolated Local demo bootstrap and credential preservation
+        if: steps.impact.outputs.onprem_ops == 'true'
+        run: node --test tests/ops/local-demo.test.mjs
       - name: Verify RCAT On-prem staging package boundaries, operator gates and Compose syntax
         if: steps.impact.outputs.onprem_ops == 'true'
         run: node --test tests/ops/onprem-staging.test.mjs
