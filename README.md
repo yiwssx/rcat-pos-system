@@ -17,6 +17,9 @@ Current technology: Angular 22, NestJS 11, Nx 24, TypeScript 6, Node.js 24, pnpm
 
 ## Local development
 
+For a one-command Docker demonstration with seeded menu/table data and a local
+login (no Domain or Google OAuth setup), see [Local Demo](docs/LOCAL-DEMO.md).
+
 Requires Node.js 24.15.0, pnpm 10.23.0:
 
 ```bash

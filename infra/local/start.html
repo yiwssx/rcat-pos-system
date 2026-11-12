@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="th">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RCAT POS · ทดลอง Local</title>
+<style>
+  :root { color-scheme: light; font: 17px/1.7 system-ui, sans-serif; color: #292524; background: #fff7ed; }
+  * { box-sizing: border-box; }
+  main { max-width: 660px; margin: 6vh auto; padding: 24px; }
+  h1 { line-height: 1.3; } label { display: block; margin-top: 16px; }
+  input, button, nav a { font: inherit; border-radius: 10px; padding: 12px 16px; min-height: 48px; }
+  input { width: 100%; border: 1px solid #78716c; }
+  button { cursor: pointer; background: #9a3412; color: white; border: 0; margin-top: 16px; }
+  button:disabled { opacity: .55; cursor: wait; }
+  a { color: #9a3412; } nav { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; }
+  nav a { background: white; border: 1px solid #c2410c; }
+  :focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
+  #status { min-height: 2em; overflow-wrap: anywhere; }
+  small { display: block; } [hidden] { display: none !important; }
+</style>
+<main>
+  <small>RCAT POS / LOCAL DEMO</small>
+  <h1>ทดลองระบบสั่งอาหาร</h1>
+  <p>ร้านทดลอง RCAT · เมนู 3 รายการ · โต๊ะทดลอง 1<br>ข้อมูลทดลองเท่านั้น ยังไม่มีการรับชำระเงิน</p>
+  <form id="login">
+    <label for="email">บัญชีทดลอง</label>
+    <input id="email" type="email" autocomplete="username" value="owner@demo.invalid" required>
+    <label for="password">รหัสผ่านทดลอง</label>
+    <input id="password" type="password" autocomplete="current-password" required>
+    <button type="submit">เข้าสู่ระบบทดลอง</button>
+  </form>
+  <section id="workspace" hidden aria-label="เลือกหน้าทดลอง">
+    <nav aria-label="หน้าระบบ">
+      <a href="https://localhost:11881/">Merchant · จัดการร้าน</a>
+      <a href="https://localhost:11882/">Admin · เจ้าของร้าน</a>
+    </nav>
+    <button id="customer" type="button">เริ่มรอบโต๊ะและเปิด Customer</button>
+    <small>เริ่มรอบใหม่จะยกเลิกรหัสและสิทธิ์สั่งอาหารของรอบโต๊ะเดิม</small>
+    <button id="logout" type="button">ออกจากระบบทดลอง</button>
+  </section>
+  <p id="status" role="status" aria-live="polite">กำลังตรวจสอบบัญชี...</p>
+  <p><small>ใช้รหัสผ่านจากคำสั่ง credentials บน Server · Admin ในรุ่นนี้บริหารเฉพาะร้านที่ได้รับสิทธิ์</small></p>
+</main>
+<script type="module">
+  const form = document.querySelector('#login');
+  const workspace = document.querySelector('#workspace');
+  const status = document.querySelector('#status');
+  let pending = false;
+  function loggedIn(value) { form.hidden = value; workspace.hidden = !value; }
+  function csrf() {
+    return document.cookie.split('; ').find(x => x.startsWith('__Host-rcat_csrf='))?.split('=')[1] ?? '';
+  }
+  async function post(path, body, protectedRequest = false) {
+    const response = await fetch(path, {
+      method: 'POST', credentials: 'same-origin', cache: 'no-store',
+      headers: { 'Content-Type': 'application/json', ...(protectedRequest ? { 'X-CSRF-Token': csrf() } : {}) },
+      body: JSON.stringify(body), signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) {
+      if (response.status === 401) loggedIn(false);
+      throw new Error(response.status === 401 ? 'บัญชีหรือรหัสผ่านไม่ถูกต้อง หรือเซสชันหมดอายุ' : 'ดำเนินการไม่สำเร็จ กรุณาลองอีกครั้ง');
+    }
+    return response.status === 204 ? null : response.json();
+  }
+  async function action(fn) {
+    if (pending) return;
+    pending = true;
+    document.querySelectorAll('button').forEach(button => button.disabled = true);
+    status.textContent = 'กำลังดำเนินการ...';
+    try { await fn(); } catch (error) {
+      status.textContent = error instanceof TypeError || error.name === 'TimeoutError'
+        ? 'เชื่อมต่อไม่ได้หรือหมดเวลา ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง' : error.message;
+    } finally {
+      pending = false;
+      document.querySelectorAll('button').forEach(button => button.disabled = false);
+    }
+  }
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    action(async () => {
+      await post('/api/auth/login', { email: form.querySelector('#email').value, password: form.querySelector('#password').value });
+      form.querySelector('#password').value = '';
+      loggedIn(true);
+      status.textContent = 'เข้าสู่ระบบแล้ว เลือกหน้าที่ต้องการทดลอง';
+    });
+  });
+  document.querySelector('#logout').addEventListener('click', () => action(async () => {
+    await post('/api/auth/logout', {}, true);
+    loggedIn(false); status.textContent = 'ออกจากระบบแล้ว';
+  }));
+  document.querySelector('#customer').addEventListener('click', () => action(async () => {
+    const tenantId = '70000000-0000-4000-8000-000000000001';
+    const storeId = '70000000-0000-4000-8000-000000000002';
+    const tableId = '70000000-0000-4000-8000-000000000005';
+    const round = await post(`/api/tenants/${tenantId}/stores/${storeId}/tables/${tableId}/issue-code`, {}, true);
+    const guest = await post('/api/guest/ordering-code/redeem', { tenantId, storeId, tableId, code: round.code });
+    location.assign('https://localhost:11880/order#token=' + encodeURIComponent(guest.visitToken));
+  }));
+  try {
+    const response = await fetch('/api/auth/me', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    if (!response.ok && response.status !== 401) throw new Error('Service unavailable');
+    loggedIn(response.ok);
+    status.textContent = response.ok ? 'เข้าสู่ระบบแล้ว เลือกหน้าที่ต้องการทดลอง' : 'กรอกรหัสผ่านทดลองเพื่อเริ่มใช้งาน';
+  } catch { status.textContent = 'เชื่อมต่อ API ไม่ได้ ลองโหลดหน้านี้ใหม่'; }
+</script>
+</html>

@@ -14,6 +14,10 @@ const WORKSPACE = [
   /^\.github\/workflows\/workspace\.yml$/,
 ];
 const IMAGE = [
+  /^compose\.local\.yaml$/,
+  /^infra\/local\//,
+  /^scripts\/(?:dev\/local-seed\.mjs|ops\/local-demo\.sh)$/,
+  /^tests\/ops\/local-demo/,
   /^(?:apps|libs)\//,
   /^(?:Dockerfile\.staging|compose\.staging\.yaml|\.dockerignore|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|nx\.json|angular\.json|tsconfig\.base\.json|\.node-version)$/,
   /^infra\/onprem\/nginx-static-api\.conf$/,
@@ -21,6 +25,8 @@ const IMAGE = [
   /^\.github\/workflows\/onprem-staging\.yml$/,
 ];
 const OPS = [
+  /^compose\.local\.yaml$/,
+  /^infra\/local\//,
   /^(?:scripts\/ops|tests\/ops|scripts\/ci|tests\/ci)\//,
   /^(?:Dockerfile\.staging|compose\.staging\.yaml|\.dockerignore|\.env\.staging\.example)$/,
   /^infra\/onprem\//,
@@ -32,7 +38,7 @@ const EXPLICIT_NONWORKSPACE = [
   /^scripts\/(?:db|ops|ci|load|dev)\//,
   /^db\//, /^infra\//, /^\.github\/ISSUE_TEMPLATE\//,
   /^(?:README\.md|AGENTS\.md|SECURITY\.md|CONTRIBUTING\.md|LICENSE|\.gitignore)$/,
-  /^(?:Dockerfile\.staging|compose\.staging\.yaml|compose\.db\.yaml|\.dockerignore|\.env\.staging\.example)$/,
+  /^(?:Dockerfile\.staging|compose\.staging\.yaml|compose\.local\.yaml|compose\.db\.yaml|\.dockerignore|\.env\.staging\.example)$/,
 ];
 const isMatch = (rules, path) => rules.some((rule) => rule.test(path));
 
