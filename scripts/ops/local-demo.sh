@@ -69,7 +69,7 @@ if [[ "$1" == up ]]; then
     for name in dba auth tenant owner; do openssl rand -hex 32 > "$state/$name-password"; done
     openssl req -x509 -newkey rsa:2048 -sha256 -nodes -days 365 \
       -keyout "$state/key.pem" -out "$state/cert.pem" -subj '/CN=localhost' \
-      -addext 'subjectAltName=DNS:localhost' >/dev/null 2>&1
+      -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1' >/dev/null 2>&1
     {
       printf 'RCAT_LOCAL_AUTH_PASSWORD=%s\n' "$(cat "$state/auth-password")"
       printf 'RCAT_LOCAL_TENANT_PASSWORD=%s\n' "$(cat "$state/tenant-password")"

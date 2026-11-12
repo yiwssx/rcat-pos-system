@@ -97,7 +97,7 @@ test("Docker Compose accepts the Local manifest and publishes only fixed loopbac
   const cli = spawnSync("docker", ["compose", "version"], { encoding: "utf8" });
   if (cli.error?.code === "ENOENT") { t.skip("Compose CLI absent; real Compose/browser verification runs in packaging CI"); return; }
   assert.equal(cli.status, 0, cli.stderr);
-  const result = spawnSync("docker", ["compose", "-f", "compose.local.yaml", "config", "--format", "json"], {
+  const result = spawnSync("docker", ["compose", "--profile", "setup", "-f", "compose.local.yaml", "config", "--format", "json"], {
     encoding: "utf8", env: { ...process.env, RCAT_LOCAL_RELEASE: "local-ci", RCAT_LOCAL_AUTH_PASSWORD: "a".repeat(64), RCAT_LOCAL_TENANT_PASSWORD: "b".repeat(64), RCAT_LOCAL_PEPPER: "c".repeat(64) },
   });
   assert.equal(result.status, 0, result.stderr);

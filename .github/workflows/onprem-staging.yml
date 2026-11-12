@@ -113,3 +113,9 @@ jobs:
       - name: Stop only the Local demo containers
         if: always() && steps.impact.outputs.onprem_images == 'true'
         run: bash scripts/ops/local-demo.sh stop
+      - name: Show only Local container health on failure (no environment dump)
+        if: failure() && steps.impact.outputs.onprem_images == 'true'
+        run: |
+          for id in $(docker ps -aq --filter label=com.docker.compose.project=rcat-pos-local); do
+            docker inspect --format '{{.Name}} {{json .State.Health}}' "$id"
+          done

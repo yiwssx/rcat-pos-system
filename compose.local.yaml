@@ -18,7 +18,7 @@ x-web: &web
     - ./.secrets/local-demo/cert.pem:/etc/nginx/local-tls/cert.pem:ro
     - ./.secrets/local-demo/key.pem:/etc/nginx/local-tls/key.pem:ro
   healthcheck:
-    test: [CMD-SHELL, "wget --ca-certificate=/etc/nginx/local-tls/cert.pem -q -O /dev/null https://localhost:8080/local"]
+    test: [CMD-SHELL, "wget --ca-certificate=/etc/nginx/local-tls/cert.pem --header='Host: localhost' -q -O /dev/null https://127.0.0.1:8080/local"]
     interval: 5s
     timeout: 5s
     retries: 12
