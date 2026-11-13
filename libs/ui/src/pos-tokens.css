@@ -1,0 +1,26 @@
+
+/* Canonical portal: shared semantic UX tokens; legacy screens migrate per slice. */
+:root {
+  --pos-canvas: #f7f8fa;
+  --pos-surface: #ffffff;
+  --pos-surface-warm: #fffaf6;
+  --pos-ink: #17283b;
+  --pos-muted: #617083;
+  --pos-border: #e4e8ed;
+  --pos-orange: #b94f13;
+  --pos-orange-hover: #943708;
+  --pos-orange-soft: #fff0e4;
+  --pos-focus: #245cde;
+  --pos-danger: #a33135;
+  --pos-success: #206747;
+  --pos-warning: #82520a;
+  --pos-radius: 0.85rem;
+  --pos-radius-lg: 1.2rem;
+  --pos-shadow: 0 12px 35px rgb(23 40 59 / 7%);
+  --pos-space-1: 0.25rem;
+  --pos-space-2: 0.5rem;
+  --pos-space-3: 0.75rem;
+  --pos-space-4: 1rem;
+  --pos-space-6: 1.5rem;
+  --pos-space-8: 2rem;
+}

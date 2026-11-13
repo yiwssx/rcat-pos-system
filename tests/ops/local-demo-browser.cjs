@@ -31,11 +31,22 @@ async function main() {
     await page.getByLabel('รหัสผ่านทดลอง').fill(password);
     await page.getByRole('button', { name: 'เข้าสู่ระบบทดลอง', exact: true }).click();
     await page.getByRole('heading',{name:'เริ่มงานที่ร้าน',exact:true}).waitFor();
-    await page.screenshot({path:'/tmp/rcat-portal-mobile.png',fullPage:true});
-    await page.setViewportSize({width:1365,height:900});
-    await page.screenshot({path:'/tmp/rcat-portal-desktop.png',fullPage:true});
-    const size = await page.evaluate(() => ({ width: innerWidth, content: document.documentElement.scrollWidth }));
-    assert.ok(size.content <= size.width + 1, 'Local launcher overflows at 320px');
+    // Verify the actual viewport being tested: the old check ran only after
+    // changing to desktop width but mistakenly claimed 320px coverage.
+    for (const viewport of [
+      { width: 320, height: 780, name: 'mobile' },
+      { width: 390, height: 844, name: 'phone' },
+      { width: 768, height: 1024, name: 'tablet' },
+      { width: 1365, height: 900, name: 'desktop' },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      const size = await page.evaluate(() => ({
+        width: innerWidth,
+        content: document.documentElement.scrollWidth,
+      }));
+      assert.ok(size.content <= size.width + 1, 'Portal overflows at ' + viewport.width + 'px');
+      await page.screenshot({ path: '/tmp/rcat-portal-' + viewport.name + '.png', fullPage: true });
+    }
     const cookies = await context.cookies(merchant);
     assert.ok(cookies.some(c => c.name === '__Host-rcat_session' && c.secure && c.httpOnly));
     const csrf = cookies.find(c => c.name === '__Host-rcat_csrf');
