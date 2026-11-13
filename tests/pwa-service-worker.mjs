@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 
-const source = readFileSync("apps/merchant/public/sw.js", "utf8");
+const source = readFileSync("apps/customer/public/sw.js", "utf8");
 const manifest = JSON.parse(readFileSync(
-  "apps/merchant/public/manifest.webmanifest", "utf8",
+  "apps/customer/public/manifest.webmanifest", "utf8",
 ));
-const offline = readFileSync("apps/merchant/public/offline.html", "utf8");
+const offline = readFileSync("apps/customer/public/offline.html", "utf8");
 const handlers = new Map();
 const cached = [];
 const cachedResponses = new Map();

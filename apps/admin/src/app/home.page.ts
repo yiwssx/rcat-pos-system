@@ -8,7 +8,7 @@ import {
   inject,
   signal,
 } from "@angular/core";
-import { RouterLink } from "@angular/router";
+import { ActivatedRoute, RouterLink } from "@angular/router";
 import { OwnerAdminApi } from "./owner-admin.api";
 import {
   AdminStore,
@@ -47,21 +47,23 @@ function failure(error: unknown): string {
           พื้นที่บริหารร้านที่บัญชีนี้ได้รับสิทธิ์เท่านั้น
           ไม่ใช่สิทธิ์ผู้ดูแลทุก Tenant ของแพลตฟอร์ม
         </p>
-        <div class="owner-session">
-          <a href="/api/auth/google/start" class="owner-login">
-            เข้าสู่ระบบด้วย Google Workspace @rcat.ac.th
-          </a>
-          @if (authenticated()) {
-            <button
-              type="button"
-              class="owner-logout"
-              (click)="logout()"
-              [disabled]="pending()"
-            >
-              ออกจากระบบ
-            </button>
-          }
-        </div>
+        @if (!unified) {
+          <div class="owner-session">
+            <a href="/api/auth/google/start" class="owner-login">
+              เข้าสู่ระบบด้วย Google Workspace @rcat.ac.th
+            </a>
+            @if (authenticated()) {
+              <button
+                type="button"
+                class="owner-logout"
+                (click)="logout()"
+                [disabled]="pending()"
+              >
+                ออกจากระบบ
+              </button>
+            }
+          </div>
+        }
         <p class="owner-alert" role="note">
           ระบบยังเป็นระยะพัฒนา · การสร้างร้านหรือจัดการพนักงานจะสำเร็จ ต่อเมื่อ
           Backend ยืนยันธุรกรรมแล้วเท่านั้น · ยังไม่มีระบบรับเงิน
@@ -221,6 +223,8 @@ function failure(error: unknown): string {
   `,
 })
 export class HomePage implements OnInit {
+  readonly unified = inject(ActivatedRoute).snapshot.data["unified"] === true;
+
   private readonly api = inject(OwnerAdminApi);
   private readonly document = inject(DOCUMENT);
   readonly stores = signal<AdminStore[]>([]);

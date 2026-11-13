@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="RCAT POS">
+  <rect width="512" height="512" rx="108" fill="#fff8f1"/>
+  <rect x="68" y="64" width="376" height="384" rx="88" fill="#d98525"/>
+  <path d="M150 149h212v28H150zm0 69h212v28H150zm0 69h133v28H150z" fill="#fff6e8"/>
+  <path d="m292 323 29 29 60-72" fill="none" stroke="#fff" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="150" y="360" width="110" height="20" rx="10" fill="#fff6e8" opacity=".85"/>
+</svg>

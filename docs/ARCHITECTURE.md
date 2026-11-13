@@ -1,3 +1,12 @@
+# Current frontend decision — 13 Nov 2026
+
+Owner approved a single website/entry point. The existing Customer Nx application
+is now the canonical portal, with one shell/session and lazy-loaded Merchant and
+tenant-owner features. Backend role enforcement is unchanged. See
+[SINGLE-ENTRY-PORTAL.md](SINGLE-ENTRY-PORTAL.md) for the approved flow, Local entry
+and user-owned one-origin configuration. The original three-app proposal below
+is retained as historical context, not the current deployment recommendation.
+
 # Architecture proposal — not yet implemented
 
 ## Code organization

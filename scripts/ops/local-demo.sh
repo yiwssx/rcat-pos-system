@@ -85,17 +85,17 @@ case "$1" in
     # Validate without printing expanded database credentials.
     c config --quiet
     if [[ -z "$(docker_local ps -q --filter label=com.docker.compose.project=rcat-pos-local)" ]]; then
-      for port in 11880 11881 11882; do
+      for port in 11880; do
         [[ -z "$(ss -H -ltn "( sport = :$port )")" ]] || fail "Port $port is occupied; existing services were left running"
       done
     fi
-    c build api customer merchant admin
+    c build api customer
     c up -d --wait --wait-timeout 120 postgres
     c run --rm --no-deps migrator
     c run --rm --no-deps seed
-    c up -d --wait --wait-timeout 120 api customer merchant admin
+    c up -d --remove-orphans --wait --wait-timeout 120 api customer
     echo 'LOCAL_DEMO_READY'
-    echo 'Open https://localhost:11881/local through SSH forwarding (see docs/LOCAL-DEMO.md).'
+    echo 'Open https://localhost:11880/ through SSH forwarding (see docs/LOCAL-DEMO.md).'
     echo 'Show the demo password: sudo bash scripts/ops/local-demo.sh credentials'
     ;;
   status) c ps ;;
