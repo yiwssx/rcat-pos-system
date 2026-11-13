@@ -104,10 +104,13 @@ test("Docker Compose accepts the Local manifest and publishes only fixed loopbac
   const config = JSON.parse(result.stdout);
   assert.equal(config.name, "rcat-pos-local");
   for (const name of ["api", "postgres"]) assert.equal(config.services[name].ports, undefined);
-  for (const [index, name] of ["customer", "merchant", "admin"].entries()) {
+  for (const [index, name] of ["customer"].entries()) {
     assert.equal(config.services[name].ports[0].host_ip, "127.0.0.1");
     assert.equal(config.services[name].ports[0].published, String(11880 + index));
   }
+  assert.equal(config.services.merchant, undefined);
+  assert.equal(config.services.admin, undefined);
+  assert.equal(config.services.api.environment.AUTH_ALLOWED_ORIGINS, "https://localhost:11880");
   assert.equal(config.services.api.environment.NODE_ENV, "development");
   assert.equal(config.services.api.secrets, undefined);
   assert.equal(config.services.seed.profiles[0], "setup");

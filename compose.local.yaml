@@ -14,7 +14,6 @@ x-web: &web
     - /var/run:rw,nosuid,size=8m
   volumes:
     - ./infra/local/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    - ./infra/local/start.html:/usr/share/nginx/local/start.html:ro
     - ./.secrets/local-demo/cert.pem:/etc/nginx/local-tls/cert.pem:ro
     - ./.secrets/local-demo/key.pem:/etc/nginx/local-tls/key.pem:ro
   healthcheck:
@@ -55,8 +54,8 @@ services:
       RCAT_API_BIND_HOST: "0.0.0.0"
       AUTH_DATABASE_URL: postgresql://rcat_local_auth:${RCAT_LOCAL_AUTH_PASSWORD:?}@postgres:5432/rcat_pos_local_demo
       TENANT_DATABASE_URL: postgresql://rcat_local_tenant:${RCAT_LOCAL_TENANT_PASSWORD:?}@postgres:5432/rcat_pos_local_demo
-      AUTH_ALLOWED_ORIGINS: https://localhost:11880,https://localhost:11881,https://localhost:11882
-      CORS_ORIGINS: https://localhost:11880,https://localhost:11881,https://localhost:11882
+      AUTH_ALLOWED_ORIGINS: https://localhost:11880
+      CORS_ORIGINS: https://localhost:11880
       GUEST_TABLE_CODE_PEPPER: ${RCAT_LOCAL_PEPPER:?}
       GUEST_ORDER_BASE_URL: https://localhost:11880/order
     depends_on:
@@ -80,24 +79,6 @@ services:
       dockerfile: Dockerfile.staging
       target: customer
     ports: ["127.0.0.1:11880:8080"]
-
-  merchant:
-    <<: *web
-    image: rcat-pos-local-merchant:${RCAT_LOCAL_RELEASE:?}
-    build:
-      context: .
-      dockerfile: Dockerfile.staging
-      target: merchant
-    ports: ["127.0.0.1:11881:8080"]
-
-  admin:
-    <<: *web
-    image: rcat-pos-local-admin:${RCAT_LOCAL_RELEASE:?}
-    build:
-      context: .
-      dockerfile: Dockerfile.staging
-      target: admin
-    ports: ["127.0.0.1:11882:8080"]
 
   migrator:
     image: postgres:16-bookworm

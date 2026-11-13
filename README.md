@@ -15,6 +15,12 @@ Hardware-free, mobile-first, multi-merchant QR ordering SaaS.
 
 Current technology: Angular 22, NestJS 11, Nx 24, TypeScript 6, Node.js 24, pnpm 10. All real payment functionality is deliberately deferred until **issue #7 (G5)**.
 
+## Single website and role-aware workspace
+
+The canonical portal serves QR guests and signed-in store staff/owners from one
+origin. See [single-entry operation and configuration](docs/SINGLE-ENTRY-PORTAL.md).
+Local uses https://localhost:11880/; Staging configuration is owned by the operator.
+
 ## Local development
 
 For a one-command Docker demonstration with seeded menu/table data and a local

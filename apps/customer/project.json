@@ -17,10 +17,11 @@
       "command": "pnpm exec tsc --noEmit -p apps/customer/tsconfig.app.json"
     },
     "test": {
-      "command": "pnpm exec vitest run apps/customer/src/app/app.spec.ts"
+      "command": "pnpm exec vitest run apps/customer/src/app/app.spec.ts apps/customer/src/app/portal-access.spec.ts"
     },
     "lint": {
       "command": "pnpm exec prettier --check 'apps/customer/src/**/*.{ts,css,html}'"
     }
-  }
+  },
+  "implicitDependencies": ["merchant", "admin"]
 }

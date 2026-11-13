@@ -5,6 +5,8 @@ on:
     paths:
       - 'Dockerfile.staging'
       - 'compose.local.yaml'
+      - 'compose.portal.yaml'
+      - '.env.portal.example'
       - 'infra/local/**'
       - 'scripts/dev/local-seed.mjs'
       - 'scripts/ops/local-demo.sh'
@@ -30,6 +32,8 @@ on:
     paths:
       - 'Dockerfile.staging'
       - 'compose.local.yaml'
+      - 'compose.portal.yaml'
+      - '.env.portal.example'
       - 'infra/local/**'
       - 'scripts/dev/local-seed.mjs'
       - 'scripts/ops/local-demo.sh'
@@ -90,7 +94,7 @@ jobs:
             docker run --rm --entrypoint sh "rcat-pos-$app:staging-ci" -c 'test -s /usr/share/nginx/html/index.html'
           done
           docker run --rm --entrypoint sh rcat-pos-merchant:staging-ci -c 'test -s /usr/share/nginx/html/sw.js'
-          for app in customer admin; do
+          for app in admin; do
             docker run --rm --entrypoint sh "rcat-pos-$app:staging-ci" -c 'test ! -e /usr/share/nginx/html/sw.js'
           done
       - name: Start the isolated Local demo with its real Compose configuration
@@ -120,3 +124,12 @@ jobs:
           for id in $(docker ps -aq --filter label=com.docker.compose.project=rcat-pos-local); do
             docker inspect --format '{{.Name}} {{json .State.Health}}' "$id"
           done
+
+      - name: Upload unified portal screenshots (synthetic CI data only)
+        if: always() && steps.impact.outputs.onprem_images == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unified-portal-${{ github.run_id }}
+          path: /tmp/rcat-portal-*.png
+          if-no-files-found: ignore
+          retention-days: 7
