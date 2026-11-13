@@ -283,7 +283,6 @@
   outline-offset: 3px;
 }
 
-
 /* Operational layout consistency: inventory stays legible when tools stack. */
 .inventory-shell {
   max-width: var(--pos-content-width, 1180px);
