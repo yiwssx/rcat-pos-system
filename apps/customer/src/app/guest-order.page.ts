@@ -75,6 +75,13 @@ function guestError(error: unknown): string {
         ราคาในตะกร้าเป็นประมาณการ และจะยืนยันยอดจริงหลังส่งออเดอร์
       </p>
 
+      @if (!online()) {
+        <p class="guest-offline-alert" role="status">
+          ขณะนี้ออฟไลน์ — ยังไม่สามารถส่งคำสั่งซื้อได้
+          ตรวจสอบการเชื่อมต่อก่อนลองใหม่ ตะกร้าจะไม่ถูกส่งซ้ำอัตโนมัติ
+        </p>
+      }
+
       @if (staticTable(); as table) {
         @if (!session.visit()) {
           <form class="guest-code-form" (submit)="submitTableCode($event)">
@@ -123,6 +130,14 @@ function guestError(error: unknown): string {
       }
 
       @if (session.visit(); as visit) {
+        <div class="guest-menu-intro">
+          <div>
+            <span class="guest-menu-kicker">01 · เลือกเมนู</span>
+            <p class="guest-menu-intro-title">อยากรับประทานอะไรดี?</p>
+            <p>เลือกอาหารและตัวเลือกที่ต้องการ แล้วตรวจสอบตะกร้าก่อนส่งออเดอร์</p>
+          </div>
+          <span class="guest-table-chip">โต๊ะ {{ visit.tableLabel }}</span>
+        </div>
         <div class="guest-menu-toolbar">
           <label class="guest-search">
             <span>ค้นหาเมนู</span>
@@ -174,6 +189,9 @@ function guestError(error: unknown): string {
                     >{{ money(product.priceSatang) }} ฿</strong
                   >
                 </div>
+                @if (groups(product.id).length > 0) {
+                  <details class="guest-customization" open>
+                    <summary>ตัวเลือกเพิ่มเติม <span>แตะเพื่อยุบหรือแสดง</span></summary>
                 @for (group of groups(product.id); track group.id) {
                   <fieldset class="guest-options">
                     <legend>
@@ -206,6 +224,8 @@ function guestError(error: unknown): string {
                       </label>
                     }
                   </fieldset>
+                }
+                  </details>
                 }
                 <div class="guest-product-actions">
                   <button
@@ -306,6 +326,18 @@ function guestError(error: unknown): string {
             </p>
           }
         </section>
+      }
+      @if (session.visit() && cartQty() > 0) {
+        <a class="guest-cart-shortcut" href="#cart-title" aria-label="ไปยังตะกร้าเพื่อตรวจสอบคำสั่งซื้อ">
+          <span class="guest-cart-shortcut-count">
+            <span class="guest-cart-shortcut-icon" aria-hidden="true">🛒</span>
+            ตะกร้า <strong>{{ cartQty() }} ชิ้น</strong>
+          </span>
+          <span class="guest-cart-shortcut-price">
+            ประมาณ {{ money(estimate()) }} ฿
+          </span>
+          <span class="guest-cart-shortcut-action">ดูตะกร้า</span>
+        </a>
       }
     </section>
   `,
