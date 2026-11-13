@@ -82,74 +82,74 @@ function bahtInput(satang: number): string {
             <span class="catalog-create-hint">แตะเพื่อเปิดแบบฟอร์ม</span>
           </summary>
           <div class="catalog-grid">
-          <form class="catalog-panel" (ngSubmit)="addCategory()">
-            <h2>เพิ่มหมวดหมู่</h2>
-            <label for="category-name">ชื่อหมวดหมู่</label>
-            <input
-              id="category-name"
-              name="categoryName"
-              [(ngModel)]="newCategory.name"
-              maxlength="120"
-              required
-              placeholder="เช่น อาหารจานเดียว"
-              [disabled]="saving()"
-            />
-            <label for="category-slug">รหัสหมวดหมู่ (ภาษาอังกฤษ)</label>
-            <input
-              id="category-slug"
-              name="categorySlug"
-              [(ngModel)]="newCategory.slug"
-              maxlength="48"
-              required
-              pattern="[a-z0-9]+(-[a-z0-9]+)*"
-              placeholder="thai-food"
-              [disabled]="saving()"
-            />
-            <button type="submit" [disabled]="saving()">เพิ่มหมวดหมู่</button>
-          </form>
+            <form class="catalog-panel" (ngSubmit)="addCategory()">
+              <h2>เพิ่มหมวดหมู่</h2>
+              <label for="category-name">ชื่อหมวดหมู่</label>
+              <input
+                id="category-name"
+                name="categoryName"
+                [(ngModel)]="newCategory.name"
+                maxlength="120"
+                required
+                placeholder="เช่น อาหารจานเดียว"
+                [disabled]="saving()"
+              />
+              <label for="category-slug">รหัสหมวดหมู่ (ภาษาอังกฤษ)</label>
+              <input
+                id="category-slug"
+                name="categorySlug"
+                [(ngModel)]="newCategory.slug"
+                maxlength="48"
+                required
+                pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                placeholder="thai-food"
+                [disabled]="saving()"
+              />
+              <button type="submit" [disabled]="saving()">เพิ่มหมวดหมู่</button>
+            </form>
 
-          <form class="catalog-panel" (ngSubmit)="addProduct()">
-            <h2>เพิ่มสินค้า</h2>
-            <label for="new-product-name">ชื่อสินค้า</label>
-            <input
-              id="new-product-name"
-              name="newProductName"
-              [(ngModel)]="newProduct.name"
-              maxlength="160"
-              required
-              placeholder="เช่น ข้าวผัด"
-              [disabled]="saving()"
-            />
-            <label for="new-product-category">หมวดหมู่</label>
-            <select
-              id="new-product-category"
-              name="newProductCategory"
-              [(ngModel)]="newProduct.categoryId"
-              required
-              [disabled]="saving()"
-            >
-              <option value="" disabled>เลือกหมวดหมู่</option>
-              @for (category of categories(); track category.id) {
-                <option [value]="category.id">{{ category.name }}</option>
-              }
-            </select>
-            <label for="new-product-price">ราคาขาย (บาท)</label>
-            <input
-              id="new-product-price"
-              name="newProductPrice"
-              [(ngModel)]="newProduct.priceBaht"
-              required
-              inputmode="decimal"
-              placeholder="59.00"
-              [disabled]="saving()"
-            />
-            <button
-              type="submit"
-              [disabled]="saving() || categories().length === 0"
-            >
-              เพิ่มสินค้า
-            </button>
-          </form>
+            <form class="catalog-panel" (ngSubmit)="addProduct()">
+              <h2>เพิ่มสินค้า</h2>
+              <label for="new-product-name">ชื่อสินค้า</label>
+              <input
+                id="new-product-name"
+                name="newProductName"
+                [(ngModel)]="newProduct.name"
+                maxlength="160"
+                required
+                placeholder="เช่น ข้าวผัด"
+                [disabled]="saving()"
+              />
+              <label for="new-product-category">หมวดหมู่</label>
+              <select
+                id="new-product-category"
+                name="newProductCategory"
+                [(ngModel)]="newProduct.categoryId"
+                required
+                [disabled]="saving()"
+              >
+                <option value="" disabled>เลือกหมวดหมู่</option>
+                @for (category of categories(); track category.id) {
+                  <option [value]="category.id">{{ category.name }}</option>
+                }
+              </select>
+              <label for="new-product-price">ราคาขาย (บาท)</label>
+              <input
+                id="new-product-price"
+                name="newProductPrice"
+                [(ngModel)]="newProduct.priceBaht"
+                required
+                inputmode="decimal"
+                placeholder="59.00"
+                [disabled]="saving()"
+              />
+              <button
+                type="submit"
+                [disabled]="saving() || categories().length === 0"
+              >
+                เพิ่มสินค้า
+              </button>
+            </form>
           </div>
         </details>
 
