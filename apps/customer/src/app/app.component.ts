@@ -137,7 +137,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                   routerLink="/"
                   routerLinkActive="active"
                   [routerLinkActiveOptions]="{ exact: true }"
-                  >พื้นที่ทำงาน</a
+                  ><svg class="portal-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="8" rx="1.5" /><rect x="14" y="3" width="7" height="5" rx="1.5" /><rect x="14" y="12" width="7" height="9" rx="1.5" /><rect x="3" y="15" width="7" height="6" rx="1.5" /></svg><span>พื้นที่ทำงาน</span></a
                 >
               </div>
               @if (store(); as selected) {
@@ -153,7 +153,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                           selected.storeId,
                         ]"
                         routerLinkActive="active"
-                        >{{ item.label }}</a
+                        ><svg class="portal-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z" /><path d="M8 9h8M8 13h8M8 17h5" /></svg><span>{{ item.label }}</span></a
                       >
                     }
                   }
@@ -170,7 +170,14 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                           selected.storeId,
                         ]"
                         routerLinkActive="active"
-                        >{{ item.label }}</a
+                        ><svg class="portal-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          @switch (item.path) {
+                            @case ("tables") { <rect x="3" y="4" width="18" height="16" rx="3" /><path d="M3 10h18M9 10v10" /> }
+                            @case ("catalog") { <path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5" /> }
+                            @case ("inventory") { <path d="m3 7 9-4 9 4v11l-9 4-9-4V7Z" /><path d="m3 7 9 4 9-4M12 11v11" /> }
+                            @case ("reports") { <rect x="3" y="3" width="18" height="18" rx="3" /><path d="M8 16v-3m4 3V8m4 8v-5" /> }
+                          }
+                        </svg><span>{{ item.label }}</span></a
                       >
                     }
                   }
@@ -178,7 +185,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                     <a
                       [routerLink]="['/tenants', selected.tenantId, 'staff']"
                       routerLinkActive="active"
-                      >พนักงานและสิทธิ์</a
+                      ><svg class="portal-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3" /><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 11h5m-2.5-2.5v5" /></svg><span>พนักงานและสิทธิ์</span></a
                     >
                   }
                 </div>
@@ -187,7 +194,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                 <div class="portal-nav-group">
                   <span class="portal-nav-caption">ตั้งค่า</span>
                   <a routerLink="/settings" routerLinkActive="active"
-                    >ตั้งค่าร้าน</a
+                    ><svg class="portal-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></svg><span>ตั้งค่าร้าน</span></a
                   >
                 </div>
               }

@@ -114,20 +114,23 @@ import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
         @case ("staff") {
           <div class="portal-workspace-head">
             <div>
-              <span class="portal-eyebrow">MERCHANT WORKSPACE</span>
+              <span class="portal-eyebrow">RCAT POS · WORKSPACE</span>
               <h1 id="portal-title">เริ่มงานที่ร้าน</h1>
               <p class="portal-lead">
-                เลือกงานจากร้านที่บัญชีนี้เข้าถึงได้ เมนูจะปรับตามสิทธิ์ของคุณ
+                จัดการออเดอร์และงานภายในร้านในพื้นที่เดียว
               </p>
             </div>
-            <span class="portal-workspace-count"
-              >ร้านค้าที่เข้าถึงได้
-              <strong>{{ session.stores().length }}</strong></span
-            >
+            <span class="portal-workspace-count">
+              <span class="portal-count-dot" aria-hidden="true"></span>
+              ร้านที่เข้าถึงได้
+              <strong>{{ session.stores().length }}</strong>
+            </span>
           </div>
           <div class="portal-section-heading">
-            <span class="portal-eyebrow">YOUR STORES</span>
-            <h2>ร้านค้าของคุณ</h2>
+            <div>
+              <span class="portal-eyebrow">YOUR STORES</span>
+              <h2>ร้านค้าของคุณ</h2>
+            </div>
           </div>
           <div class="portal-stores">
             @for (
@@ -135,54 +138,69 @@ import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
               track store.tenantId + store.storeId
             ) {
               <article class="portal-panel portal-store-card">
-                <div class="portal-store-card-head">
-                  <span class="portal-store-avatar" aria-hidden="true">{{
-                    store.storeName.slice(0, 1)
-                  }}</span>
-                  <span class="portal-role">{{ roles[store.role] }}</span>
+                <div class="portal-store-feature">
+                  <div class="portal-store-card-head">
+                    <span class="portal-store-avatar" aria-hidden="true">{{
+                      store.storeName.slice(0, 1)
+                    }}</span>
+                    <span class="portal-role">{{ roles[store.role] }}</span>
+                  </div>
+                  <div class="portal-store-identity">
+                    <span class="portal-store-overline">STORE WORKSPACE</span>
+                    <h3>{{ store.storeName }}</h3>
+                    <p class="portal-store-tenant">{{ store.tenantName }}</p>
+                  </div>
+                  <p class="portal-store-feature-note">
+                    พื้นที่ทำงานสำหรับจัดการร้านและรายการสั่งซื้อ
+                  </p>
                 </div>
-                <h3>{{ store.storeName }}</h3>
-                <p class="portal-store-tenant">{{ store.tenantName }}</p>
-                <a
-                  class="portal-button portal-store-action"
-                  [routerLink]="['/orders', store.tenantId, store.storeId]"
-                  >เปิดกระดานออเดอร์ <span aria-hidden="true">→</span></a
-                >
-                @if (store.role === "owner" || store.role === "manager") {
-                  <div class="portal-store-links">
-                    <a
-                      [routerLink]="['/catalog', store.tenantId, store.storeId]"
-                      >เมนูและราคา</a
-                    >
-                    <a [routerLink]="['/tables', store.tenantId, store.storeId]"
-                      >โต๊ะและ QR</a
-                    >
+                <div class="portal-store-operations">
+                  <div class="portal-store-operations-head">
+                    <span class="portal-eyebrow">QUICK ACCESS</span>
+                    <h4>เริ่มจัดการร้าน</h4>
                   </div>
-                }
-                @if (store.role === "owner") {
                   <a
-                    class="portal-store-staff"
-                    [routerLink]="['/tenants', store.tenantId, 'staff']"
-                    >พนักงานและสิทธิ์</a
+                    class="portal-button portal-store-action"
+                    [routerLink]="['/orders', store.tenantId, store.storeId]"
+                    >เปิดกระดานออเดอร์ <span aria-hidden="true">↗</span></a
                   >
-                }
-                @if (
-                  session.localLogin() &&
-                  store.storeId === "70000000-0000-4000-8000-000000000002" &&
-                  store.role === "owner"
-                ) {
-                  <div class="portal-local-fixture">
-                    <button
-                      type="button"
-                      class="portal-button portal-secondary"
-                      (click)="demoOrder()"
-                      [disabled]="busy()"
+                  @if (store.role === "owner" || store.role === "manager") {
+                    <div class="portal-store-links">
+                      <a
+                        [routerLink]="['/catalog', store.tenantId, store.storeId]"
+                        >เมนูและราคา <span aria-hidden="true">↗</span></a
+                      >
+                      <a
+                        [routerLink]="['/tables', store.tenantId, store.storeId]"
+                        >โต๊ะและ QR <span aria-hidden="true">↗</span></a
+                      >
+                    </div>
+                  }
+                  @if (store.role === "owner") {
+                    <a
+                      class="portal-store-staff"
+                      [routerLink]="['/tenants', store.tenantId, 'staff']"
+                      >พนักงานและสิทธิ์ <span aria-hidden="true">↗</span></a
                     >
-                      เปิดโต๊ะทดลองเพื่อสั่งอาหาร
-                    </button>
-                    <small>เริ่มรอบโต๊ะทดลองใหม่และยกเลิกรอบเดิม</small>
-                  </div>
-                }
+                  }
+                  @if (
+                    session.localLogin() &&
+                    store.storeId === "70000000-0000-4000-8000-000000000002" &&
+                    store.role === "owner"
+                  ) {
+                    <div class="portal-local-fixture">
+                      <button
+                        type="button"
+                        class="portal-button portal-secondary"
+                        (click)="demoOrder()"
+                        [disabled]="busy()"
+                      >
+                        เปิดโต๊ะทดลองเพื่อสั่งอาหาร
+                      </button>
+                      <small>เริ่มรอบโต๊ะทดลองใหม่และยกเลิกรอบเดิม</small>
+                    </div>
+                  }
+                </div>
               </article>
             } @empty {
               <div class="portal-state-screen">
@@ -198,10 +216,7 @@ import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
             <div class="portal-setup-banner">
               <div>
                 <strong>ต้องการจัดการร้านหรือบุคลากร?</strong>
-                <p>
-                  สร้างร้านใหม่ รับคำเชิญ
-                  และจัดการสิทธิ์เฉพาะร้านที่คุณเป็นเจ้าของ
-                </p>
+                <p>สร้างร้านใหม่ รับคำเชิญ และจัดการสิทธิ์เฉพาะร้านที่คุณเป็นเจ้าของ</p>
               </div>
               <a class="portal-button portal-secondary" routerLink="/settings"
                 >ตั้งค่าร้าน</a
