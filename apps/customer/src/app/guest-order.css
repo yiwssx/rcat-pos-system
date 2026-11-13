@@ -1437,3 +1437,88 @@
     }
   }
 }
+
+
+/*
+ * Reference review (DOME POS, Square, Loyverse): menu first, total always
+ * visible, stable controls. Improve legibility without changing ordering rules.
+ */
+.guest-product {
+  min-width: 0;
+  box-shadow: 0 4px 16px rgb(23 40 59 / 5%);
+}
+.guest-product-info {
+  gap: 0.2rem;
+}
+.guest-product-category,
+.guest-product-extra {
+  font-size: 0.81rem;
+  line-height: 1.45;
+}
+.guest-product h2 {
+  font-size: 1rem;
+  line-height: 1.45;
+}
+.guest-context,
+.guest-track-link {
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.guest-menu-progress,
+.guest-payment-alert,
+.guest-cart-subtitle {
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.guest-sheet .guest-options legend span,
+.guest-sheet .guest-option-price {
+  font-size: 0.88rem;
+}
+.guest-sheet .guest-option {
+  line-height: 1.5;
+}
+@media (max-width: 460px) {
+  .guest-product {
+    min-height: 116px;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+  .guest-product-category,
+  .guest-product-extra {
+    font-size: 0.81rem;
+  }
+  .guest-product h2 {
+    font-size: 1rem;
+  }
+  .guest-context,
+  .guest-track-link {
+    font-size: 0.84rem;
+  }
+  .guest-cart-shortcut {
+    gap: 0.45rem;
+    padding-inline: 0.75rem;
+  }
+  .guest-cart-shortcut-count,
+  .guest-cart-shortcut-price,
+  .guest-cart-shortcut-action {
+    font-size: 0.85rem;
+  }
+}
+@media (max-width: 350px) {
+  /* Never conceal the estimated order total on narrow phones. */
+  .guest-cart-shortcut-price {
+    display: inline-flex;
+    font-size: 0.81rem;
+    margin-left: auto;
+  }
+  .guest-cart-shortcut-icon {
+    display: none;
+  }
+  .guest-cart-shortcut-count {
+    font-size: 0.8rem;
+  }
+  .guest-cart-shortcut-action {
+    font-size: 0.8rem;
+    padding-inline: 0.55rem;
+  }
+}
