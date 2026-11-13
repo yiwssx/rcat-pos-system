@@ -1,10 +1,12 @@
-# UNINSTALLED EXAMPLE — requires C policy approval and B operator review.
+# UNINSTALLED EXAMPLE — schedule selected 13 Nov 2026; destination/secrets/Host approval still required.
+# This file never enables a timer or authorizes --apply, Restic init, forget or prune.
 [Unit]
-Description=Daily encrypted offsite backup for RCAT POS staging
+Description=Twice-daily encrypted offsite backup for RCAT POS staging
 
 [Timer]
-OnCalendar=*-*-* 02:30:00
-RandomizedDelaySec=15min
+OnCalendar=*-*-* 00:00:00 Asia/Bangkok
+OnCalendar=*-*-* 12:00:00 Asia/Bangkok
+RandomizedDelaySec=0
 Persistent=true
 Unit=rcat-pos-staging-ops@backup.service
 
