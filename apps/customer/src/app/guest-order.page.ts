@@ -58,7 +58,7 @@ function guestError(error: unknown): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
   styleUrls: ["./guest-order.css"],
-  template: \`
+  template: `
     <section class="guest-shell" aria-labelledby="guest-title">
       <header class="guest-header">
         <div class="guest-brand">
@@ -393,7 +393,7 @@ function guestError(error: unknown): string {
         </footer>
       </dialog>
     </section>
-  \`
+  `
 })
 export class GuestOrderPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
