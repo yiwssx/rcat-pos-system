@@ -203,6 +203,7 @@ export class TableOrderingService {
       const result = await this.database.auth((client) =>
         client.query<{
           data: {
+            orderingEnabled: boolean;
             tables: Array<{
               tableId: string;
               label: string;
@@ -218,6 +219,7 @@ export class TableOrderingService {
       );
       const tables = result.rows[0]?.data?.tables ?? [];
       return {
+        orderingEnabled: result.rows[0]?.data?.orderingEnabled === true,
         tables: tables.map((table) => ({
           ...table,
           printedUrl: printableUrl(tenantId, storeId, table.tableId),
