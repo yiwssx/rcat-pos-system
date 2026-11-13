@@ -46,7 +46,21 @@ async function main() {
       }));
       assert.ok(size.content <= size.width + 1, 'Portal overflows at ' + viewport.width + 'px');
       await page.screenshot({ path: '/tmp/rcat-portal-' + viewport.name + '.png', fullPage: true });
+      // Portrait tablet and phones use one collapsible nav, not a 252px sidebar.
+      if (viewport.width <= 980) {
+        assert.equal(await page.getByRole('button', { name: 'เมนูจัดการร้าน' }).isVisible(), true);
+        assert.equal(await page.getByRole('navigation', { name: 'งานของร้าน' }).isVisible(), false);
+      }
     }
+    await page.setViewportSize({ width: 320, height: 780 });
+    const menuToggle = page.getByRole('button', { name: 'เมนูจัดการร้าน' });
+    assert.equal(await menuToggle.getAttribute('aria-expanded'), 'false');
+    await menuToggle.click();
+    assert.equal(await menuToggle.getAttribute('aria-expanded'), 'true');
+    assert.equal(await page.getByRole('navigation', { name: 'งานของร้าน' }).isVisible(), true);
+    await page.screenshot({ path: '/tmp/rcat-portal-mobile-navigation.png', fullPage: true });
+    await menuToggle.click();
+    assert.equal(await menuToggle.getAttribute('aria-expanded'), 'false');
     const cookies = await context.cookies(merchant);
     assert.ok(cookies.some(c => c.name === '__Host-rcat_session' && c.secure && c.httpOnly));
     const csrf = cookies.find(c => c.name === '__Host-rcat_csrf');
@@ -57,6 +71,7 @@ async function main() {
     await adminPage.goto(admin + '/settings');
     await adminPage.getByRole('heading', { name: 'ร้านทดลอง RCAT', exact: true }).waitFor();
     await adminPage.locator('.owner-stores').getByRole('link', { name: 'จัดการบุคลากรและคำเชิญ' }).waitFor();
+    await adminPage.screenshot({ path: '/tmp/rcat-portal-owner-mobile.png', fullPage: true });
     // All three local hosts retain a trusted-certificate path for Node fetch too.
     for (const origin of [customer]) {
       const ready = await fetch(origin + '/api/ready');
@@ -78,10 +93,14 @@ async function main() {
     assert.equal(await staticPage.locator('.guest-code-form').count(), 0, 'No PIN prompt for static QR');
     await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).click();
     await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).waitFor();
+    await tableView.screenshot({ path: '/tmp/rcat-portal-tables-mobile.png', fullPage: true });
     await staticPage.getByRole('button', { name: 'ตรวจสอบอีกครั้ง' }).click();
     await staticPage.locator('.guest-product').first().waitFor();
+    await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-menu-phone.png', fullPage: true });
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' }).getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
     await staticPage.getByRole('button', { name: 'ดูตะกร้า' }).click();
+    await staticPage.getByRole('dialog', { name: 'ตะกร้าของฉัน' }).waitFor();
+    await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-cart-phone.png', fullPage: true });
     await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).click();
     await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).waitFor();
     await staticPage.getByRole('dialog', { name: 'ตะกร้าของฉัน' }).getByRole('button', { name: /ยืนยันส่งคำสั่งซื้อ/ }).click();
@@ -111,6 +130,24 @@ async function main() {
     await card.waitFor();
     await card.getByRole('button', { name: 'รับออเดอร์', exact: true }).click();
     await card.getByText('รับออเดอร์แล้ว', { exact: true }).waitFor();
+    await board.screenshot({ path: '/tmp/rcat-portal-orders-mobile.png', fullPage: true });
+    await board.setViewportSize({ width: 1365, height: 900 });
+    await board.screenshot({ path: '/tmp/rcat-portal-orders-desktop.png', fullPage: true });
+
+    // Reuse this authenticated, synthetic CI fixture to capture actual
+    // management screens; no new service, database or payment checks.
+    for (const management of [
+      { route: 'catalog', title: 'จัดการเมนูและสินค้า', file: 'catalog-desktop' },
+      { route: 'inventory', title: 'สต็อกวัตถุดิบของร้าน', file: 'inventory-desktop' },
+      { route: 'reports', title: 'รายงานออเดอร์ประจำวัน', file: 'reports-desktop' },
+    ]) {
+      const capture = await context.newPage();
+      await capture.setViewportSize({ width: 1365, height: 900 });
+      await capture.goto(merchant + '/' + management.route + '/' + tenant + '/' + store);
+      await capture.getByRole('heading', { name: management.title, exact: true }).waitFor();
+      await capture.screenshot({ path: '/tmp/rcat-portal-' + management.file + '.png', fullPage: true });
+      await capture.close();
+    }
 
     // Repeat the actual one-command launcher; no duplicate fixtures/password reset.
     execFileSync('bash', ['scripts/ops/local-demo.sh', 'up'], { stdio: 'pipe', timeout: 180000 });
@@ -157,7 +194,7 @@ async function main() {
     await board.getByRole('button',{name:'ลองเชื่อมต่ออีกครั้ง'}).click();
     await board.getByRole('button',{name:'เข้าสู่ระบบทดลอง',exact:true}).waitFor();
     await context.close();
-    console.log('PASS: single-origin portal, role menus/route denial, Secure login/logout, mobile/desktop screenshots, deep-link reload, auth failure/retry, Guest→Order→Merchant, CSRF denial and repeat launch');
+    console.log('PASS: single-origin portal, role menus/route denial, Secure login/logout, multi-viewport UI evidence, deep-link reload, auth failure/retry, Guest→Order→Merchant, CSRF denial and repeat launch');
   } finally { await browser.close(); }
 }
 main().catch(error => {

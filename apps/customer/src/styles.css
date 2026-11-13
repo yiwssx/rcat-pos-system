@@ -576,7 +576,7 @@ h1 {
   outline: 3px solid var(--pos-focus);
   outline-offset: 3px;
 }
-@media (max-width: 760px) {
+@media (max-width: 980px) {
   .portal-header {
     min-height: 64px;
   }
@@ -953,7 +953,7 @@ h1 {
 .portal-how-it-works span {
   line-height: 1.5;
 }
-@media (max-width: 760px) {
+@media (max-width: 980px) {
   .portal-sidebar {
     padding: 0.75rem 1rem;
   }
@@ -1039,5 +1039,35 @@ h1 {
   .portal-logout,
   .portal-header-link {
     padding-inline: 0.5rem;
+  }
+}
+
+/* Browser evidence: the 768px portrait tablet loses useful workspace width
+   with a fixed 252px sidebar. Use the same collapsible tasks menu through 980px.
+   Also tighten the mobile path from workspace heading to first store action. */
+@media (max-width: 980px) {
+  .portal-workspace-head {
+    gap: 0.75rem;
+  }
+  .portal-home h1 {
+    margin: 0.5rem 0;
+  }
+  .portal-workspace-head .portal-lead {
+    margin: 0.4rem 0 0.25rem;
+  }
+  .portal-workspace-count {
+    padding: 0.5rem 0.75rem;
+  }
+  .portal-section-heading {
+    margin: 1.15rem 0 0.75rem;
+  }
+  .portal-section-heading h2 {
+    margin-top: 0.2rem;
+  }
+  .portal-store-card h3 {
+    margin-top: 0.9rem;
+  }
+  .portal-store-tenant {
+    margin-bottom: 0.85rem;
   }
 }

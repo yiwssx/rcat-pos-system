@@ -37,7 +37,7 @@ Reference systems (design patterns only, not code/asset copies):
 
 ## Acceptance matrix — requires actual rendered evidence
 
-Capture **real browser screenshots** (not generated images or Figma frames), with commit SHA and viewport metadata. Use Local Demo sample data only; never real student/staff/client or payment credentials.
+Capture **real browser screenshots** (not generated images or Figma frames), with commit SHA and viewport metadata. Existing baseline screenshots on PR #100: [successful unified portal CI run](https://github.com/yiwssx/rcat-pos-system/actions/runs/43389513983), four true Chromium captures at 320/390/768/1365. Baseline shows overly narrow 768px main content and excessive mobile heading-to-card whitespace; these are the targeted deltas in this follow-up. The existing Local Demo browser qualification now captures additional screens only in disposable CI (Guest menu/cart, Order board, Tables/QR, Catalog, Inventory, Reports and Owner), preserving the same short-lived artifact path. **Captures are evidence of rendered appearance, not a substitute for human visual sign-off.** Use Local Demo sample data only; never real student/staff/client or payment credentials.
 
 | Surface | Viewports | Acceptance |
 | --- | --- | --- |
