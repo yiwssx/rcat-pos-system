@@ -12,9 +12,11 @@ sudo bash scripts/ops/local-demo.sh credentials
 
 Use the generated `owner@demo.invalid` account. The page has a Local-only password
 form and then shows the stores/tasks allowed for that account. No Admin/Merchant
-application switch. The owner may open the Local sample table through the button
-on its store card; it rotates the normal staff-issued visit link. Guests in actual
-use enter through their table QR without signing in.
+application switch. Open **จัดการโต๊ะ / QR** for your store and press **เปิดรับออเดอร์**.
+New or migrated stores start **closed** by default. The same permanent QR opens
+the Guest menu without a code while open; while closed it shows the apology
+screen. The owner can also open the Local sample table from the store card after
+enabling ordering. No extra domain, OAuth, PIN or Payment settings are required.
 
 From your computer, forward port 11880 through your **existing working SSH route**.
 Keep its port/jump-host options. For an operator on the RCAT LAN, for example:
@@ -41,4 +43,4 @@ sudo bash scripts/ops/local-demo.sh stop
 Stop preserves data. No host API/database ports, schedules, retention or other
 Compose projects are changed. No live payment. Never load real customer data into
 the development-auth profile. See [the single-entry handoff](SINGLE-ENTRY-PORTAL.md)
-for one-origin Staging configuration and the existing printed-code limitation.
+for one-origin Staging configuration and the store QR opening policy.

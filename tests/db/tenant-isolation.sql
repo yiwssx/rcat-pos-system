@@ -9,9 +9,11 @@ INSERT INTO rcat.users(id,email,password_hash) VALUES
 INSERT INTO rcat.tenant_memberships(tenant_id,user_id,role) VALUES
  ('00000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','owner'),
  ('00000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','owner');
-INSERT INTO rcat.stores(id,tenant_id,slug,display_name) VALUES
- ('20000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000001','store-a','Store A'),
- ('20000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000002','store-b','Store B');
+-- The legacy CI Order fixture explicitly opts in, while newly created real
+-- stores default to closed until their owner opens QR ordering.
+INSERT INTO rcat.stores(id,tenant_id,slug,display_name,ordering_enabled) VALUES
+ ('20000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000001','store-a','Store A',true),
+ ('20000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000002','store-b','Store B',true);
 
 BEGIN;
 SET LOCAL ROLE rcat_app;
