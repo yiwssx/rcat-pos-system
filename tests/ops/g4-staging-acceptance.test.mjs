@@ -31,11 +31,18 @@ function fakeEvidence() {
   };
 }
 
-test("recorded owner decision is exact, stock stays on accept and deferred backup stays off", () => {
+test("G4 owner-approved cadence and retention stay fail-closed until the offsite target exists", () => {
   assert.doesNotThrow(() => validatePolicy(policy));
   assert.equal(policy.stock.sold_out, "manual_merchant_toggle");
   assert.equal(policy.stock.ingredient_consumption, "on_merchant_acceptance");
   assert.equal(policy.backup.policy_approved, false);
+  assert.equal(policy.backup.offsite_destination_approved, false);
+  assert.equal(policy.backup.offsite_destination, null);
+  assert.equal(policy.backup.cadence_approved, true);
+  assert.equal(policy.backup.cadence, "every_12_hours_at_00_12_Asia_Bangkok");
+  assert.equal(policy.backup.retention_approved, true);
+  assert.deepEqual(policy.backup.retention, { keep_daily: 14, keep_weekly: 4, keep_monthly: 3 });
+  assert.equal(policy.releases.staging_deploy_approved, true);
   assert.equal(policy.backup.guest_budget_prune_approved, false);
   assert.equal(policy.releases.production_authorized, false);
   assert.equal(policy.releases.payment_authorized, false);
@@ -86,6 +93,7 @@ test("CLI policy-only validates without claiming acceptance, redacts input and d
   const p = spawnSync(process.execPath, [script, "--policy-only"], { encoding: "utf8", timeout: 10000 });
   assert.equal(p.status, 0, p.stderr);
   assert.equal(JSON.parse(p.stdout).g4_acceptance, "blocked");
+  assert.equal(JSON.parse(p.stdout).c2_backup, "schedule_selected_offsite_destination_unverified");
   const dir = mkdtempSync(join(tmpdir(), "rcat-g4-gate-"));
   try {
     const input = join(dir, "private.json");
