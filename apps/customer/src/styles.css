@@ -813,6 +813,7 @@ h1 {
 .portal-store-card {
   display: flex;
   flex-direction: column;
+  max-width: 560px;
 }
 .portal-store-card-head {
   display: flex;
