@@ -13,7 +13,16 @@ source_db="rcat_ci_test"
 restore_db="rcat_ci_restore"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"; dropdb --if-exists --force "$restore_db" >/dev/null 2>&1 || true' EXIT
-\n# Use PostgreSQL 16 native dump/restore clients against the PostgreSQL 16\n# ephemeral service. Ubuntu runner may ship a newer client that emits server\n# settings (e.g. transaction_timeout) unsupported by 16.\npg16() {\n  docker run --rm --network host --mount "type=bind,src=$work,dst=$work" \\n    -e PGHOST -e PGPORT -e PGUSER -e PGPASSWORD -e PGDATABASE \\n    postgres:16-alpine "$@"\n}\n
+
+# Use PostgreSQL 16 native dump/restore clients against the PostgreSQL 16
+# ephemeral service. Ubuntu runner may ship a newer client that emits server
+# settings (e.g. transaction_timeout) unsupported by 16.
+pg16() {
+  docker run --rm --network host --mount "type=bind,src=$work,dst=$work" \
+    -e PGHOST -e PGPORT -e PGUSER -e PGPASSWORD -e PGDATABASE \
+    postgres:16-alpine "$@"
+}
+
 # Avoid data in logs. A custom archive retains schema, ACLs, functions,
 # session/Outbox records, sequences and migration checksums.
 pg16 pg_dump --format=custom --file="$work/snapshot.dump" --dbname="$source_db"
