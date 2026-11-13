@@ -872,6 +872,24 @@ try {
   assert.ok(payloads.every((p) => p.paymentState === "not_requested"));
   assert.equal(payloads.filter((p) => p.replayed === false).length, 1,
     "Exactly one retry should insert the order");
+  // Closing cannot create a new Order, but a lost HTTP response for an
+  // already-created Order must still recover its exact idempotent result.
+  assert.equal((await api(orderingUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ enabled: false }),
+  })).status, 201);
+  const closedReplay = await checkout("guest-order-retry-0001", cart);
+  assert.equal(closedReplay.status, 201, "Existing Order retry survives a store close");
+  const recovered = await closedReplay.json();
+  assert.equal(recovered.orderId, payloads[0].orderId);
+  assert.equal(recovered.trackingToken, payloads[0].trackingToken);
+  assert.equal(recovered.replayed, true);
+  assert.equal((await checkout("closed-new-after-order", cart)).status, 409,
+    "Closed store rejects a genuinely new Order");
+  assert.equal((await api(orderingUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ enabled: true }),
+  })).status, 201);
   assert.equal((await checkout("guest-order-retry-0001", {
     ...cart,
     items: [{ productId, quantity: 3, optionIds: [firstOptionId] }],
