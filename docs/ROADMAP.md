@@ -2,16 +2,16 @@
 
 **Decision (2026-11-02; revised 2026-11-13):** Implement real payments **last among product modules**. G5-M1 is **standard PromptPay amount QR per Order + private slip upload + authorized merchant confirmation after checking actual bank receipt**, paid directly to each merchant's account. No Bank API, gateway or webhook in M1. The final production gate still follows payment implementation.
 
-| Stage | Outcome | GitHub issues | Done when |
+| Stage | Outcome | Active owner | Done when |
 |---|---|---|---|
-| G0 Discovery | Validated journeys, Order-level QR payment requirements, state diagrams, threat model | #1 | Product acceptance criteria reviewed |
-| G1 Foundation | Angular/NestJS Nx/pnpm workspace, CI, multi-tenant auth | #2 #3 | Fresh install, auth/tenant isolation tests pass |
-| G2 Ordering core | Catalog and static **ordering** QR, table sessions, orders and bills, customer storefront; required ordered-by/delivery and item notes | #4 #6 #5; consolidated #102 | End-to-end Guest Order reaches Merchant immediately **without Payment** |
-| G3 Store operations | Merchant PWA and realtime queue, modifier/item notes and delivery context displayed in Order Board | #8 #9; consolidated #102 | Staff can prepare immediately regardless of Payment; Order recovery after device sleep |
-| G4 Non-payment hardening | Security, concurrency, disaster recovery, Staging, Pilot infrastructure preparedness | #10 #11 (preparation only) | Order system resilient with test-only payment stubs, no real banking enabled |
-| **G5-M1 Final product module — Manual PromptPay** | Store-owned standard PromptPay amount QR per Order, slip upload, merchant bank-account review/confirmation, exception/refund records and manual reconciliation | **#7** | Scoped QR/receiver, slip privacy, human-attested state, unauthorized/duplicate/race tests and non-money E2E pass |
-| G6 Release qualification | End-to-end **manual** payment/review and exception workflow in controlled environment, security signoff and controlled pilot | #10 #11 | Manual verification procedure, evidence privacy, operational recovery and owner go/no-go approved before real customer funds |
-| G7 Optional expansion | Delivery, bookings, sophisticated split bills, accounting, subscriptions | #12 | Prioritized based on pilot evidence |
+| Master / G0 decisions | Approved business journeys and sequenced scope; G7 future backlog parked | [#13](https://github.com/yiwssx/rcat-pos-system/issues/13) | Changes accepted and prior scope linked, not silently forgotten |
+| G1–G3 Ordering & Operations | Catalog/QR, Customer customizations, required ordered-by/location, Order/Bills, Merchant realtime, inventory and non-financial reports | [#102](https://github.com/yiwssx/rcat-pos-system/issues/102) | End-to-end Guest Order appears immediately and Merchant can prepare regardless of unpaid state; safe snapshots and relevant tests |
+| G4 non-payment hardening | Auth, tenant isolation, repository protections, real Staging B1–B6, policies, private backups and operational monitoring | [#81](https://github.com/yiwssx/rcat-pos-system/issues/81) | Independent operator evidence and owner signoff; no live Payment yet |
+| G5-M1 — final product feature | Store-owned PromptPay QR after Order creation, upload slip, manual bank-receipt review, fraud/exception/refund records | [#7](https://github.com/yiwssx/rcat-pos-system/issues/7) | Focused security/retry/receipt UAT and non-money sandbox checks pass |
+| G6 release qualification | Approved controlled real-money pilot, recovery and security go/no-go | [#81](https://github.com/yiwssx/rcat-pos-system/issues/81) with #7 | Explicit operator/owner approval, never inferred from docs/CI |
+| G7 optional | Booking, split bills, delivery, subscriptions, accounting | [#13](https://github.com/yiwssx/rcat-pos-system/issues/13) (deferred backlog only) | Not started unless pilot evidence and explicit reprioritization |
+
+**Consolidation (13 Nov 2026):** Historical predecessor Issues #1/#3/#5/#6/#8/#9/#10/#11/#12/#15/#38/#82 were closed as **superseded/not_planned**, not accepted or finished. Their outstanding safety checks and evidence remain mapped to four live Issues. Do not create new tracker Issue for each UI screen, API or test.
 
 **Not scheduled by date yet:** need team capacity and validated scope.
 
@@ -25,9 +25,9 @@
 - In MVP, one Order's amount is paid as one order-scoped obligation. Multiple Orders on a table retain individual obligations. Split bills / combined-table settlement are designed as future capabilities (#12) unless explicit product requirements change.
 
 ## Critical dependencies
-- #8 Merchant operation features depend on #3/#6, **not** #7. Cross-layer ordering-context UX changes belong only to [#102](https://github.com/yiwssx/rcat-pos-system/issues/102), implementation coordinated in #5/#6/#8. Historical #38 was superseded, not finished; real mobile/printed QR acceptance remains #81.
+- #8 Merchant operation features depend on #3/#6, **not** #7. Cross-layer ordering-context UX is owned only by [#102](https://github.com/yiwssx/rcat-pos-system/issues/102); historical implementation Issues #5/#6/#8 are archived, not finished. Mobile/printed QR physical acceptance remains #81.
 - #9 initial order-volume/operational reports depend on #6, **not** #7; actual revenue/refund reconciliation is added at G5.
-- #11 staging/infrastructure can start at G4 without money. Production Go-live depends on #7 + #10.
+- #81 owns G4 Staging/G6 release acceptance without live money until authorized Pilot; Production Go-live depends on both #7 and #81.
 - Threat modelling begins in G0 and runs throughout. Global auth/schema checks apply to changes that affect those boundaries.
 - CI should use Nx affected jobs where safe and preserve transaction/security and release gates.
 
