@@ -757,3 +757,19 @@
     text-align: center;
   }
 }
+
+.guest-closed {
+  max-width: 600px; margin: 1.5rem auto;
+  padding: clamp(1.5rem, 4vw, 2.5rem); text-align: center;
+  color: #263b4e; background: #fff; border: 1px solid #f0d3bd;
+  border-radius: 1.2rem; box-shadow: 0 12px 28px rgb(103 63 33 / 7%);
+}
+.guest-closed-symbol { font-size: 2.7rem; }
+.guest-closed h2 { margin: 0.7rem 0; font-size: clamp(1.3rem, 4vw, 1.8rem); }
+.guest-closed p { line-height: 1.7; color: #64748b; }
+.guest-closed button {
+  min-height: 44px; margin-top: 0.6rem; padding: 0.6rem 1.1rem;
+  border: 0; border-radius: 0.7rem; background: #c45e24;
+  color: #fff; font: inherit; font-weight: 750; cursor: pointer;
+}
+.guest-closed button:disabled { opacity: 0.6; cursor: default; }
