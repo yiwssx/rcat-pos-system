@@ -281,3 +281,42 @@
     flex: 1 0 100%;
   }
 }
+
+
+/* Owner settings match merchant density without implying platform-admin rights. */
+.owner-shell {
+  max-width: var(--pos-content-compact, 1040px);
+  padding: clamp(1rem, 2.4vw, 2rem) clamp(0.75rem, 2vw, 1.5rem) 4rem;
+}
+.owner-shell h1 {
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+.owner-panel {
+  border-radius: 0.95rem;
+  margin-block: 1rem;
+  box-shadow: 0 4px 16px rgb(23 40 59 / 5%);
+}
+.owner-grid {
+  gap: 0.85rem;
+}
+.owner-form label,
+.owner-staff-controls label {
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.owner-staff-controls {
+  gap: 0.7rem;
+}
+.owner-staff-list li {
+  gap: 0.75rem;
+}
+@media (max-width: 460px) {
+  .owner-panel {
+    padding: 1rem;
+  }
+  .owner-staff-controls button {
+    flex: 1 1 auto;
+  }
+}
