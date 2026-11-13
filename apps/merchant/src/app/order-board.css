@@ -400,7 +400,6 @@ a:focus-visible {
   line-height: 1.6;
 }
 
-
 /* Operational density: high-signal statuses, readable on phones and tablets. */
 .board {
   max-width: var(--pos-content-width, 1180px);
