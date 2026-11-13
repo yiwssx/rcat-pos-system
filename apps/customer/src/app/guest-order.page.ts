@@ -5,6 +5,8 @@ import {
   Component,
   OnInit,
   OnDestroy,
+  ElementRef,
+  ViewChild,
   computed,
   inject,
   signal,
@@ -56,60 +58,50 @@ function guestError(error: unknown): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
   styleUrls: ["./guest-order.css"],
-  template: `
+  template: \`
     <section class="guest-shell" aria-labelledby="guest-title">
       <header class="guest-header">
-        <div>
-          <span class="eyebrow">RCAT POS · ORDERING QR</span>
-          <h1 id="guest-title">
-            {{ session.visit()?.storeName || "สั่งอาหารผ่าน QR" }}
-          </h1>
-          <p class="guest-context">
-            @if (session.visit()) {
-              <strong>โต๊ะ {{ session.visit()!.tableLabel }}</strong>
-              <span>· กรุณาตรวจสอบโต๊ะก่อนสั่ง</span>
-            } @else {
-              สแกน QR สำหรับสั่งอาหารของร้าน (ไม่ใช่ QR ชำระเงิน)
-            }
-          </p>
+        <div class="guest-brand">
+          <span class="guest-brand-mark" aria-hidden="true">R</span>
+          <div class="guest-brand-copy">
+            <span class="guest-menu-kicker">RCAT POS · MENU</span>
+            <h1 id="guest-title">
+              {{ session.visit()?.storeName || closedStore()?.name || "สั่งอาหารผ่าน QR" }}
+            </h1>
+            <p class="guest-context">
+              @if (session.visit(); as visit) {
+                <strong>โต๊ะ {{ visit.tableLabel }}</strong> · สั่งอาหารผ่านมือถือ
+              } @else if (closedStore(); as closed) {
+                โต๊ะ {{ closed.table }}
+              } @else {
+                สแกน QR ประจำโต๊ะเพื่อดูเมนู
+              }
+            </p>
+          </div>
         </div>
         <a class="guest-track-link" routerLink="/order/track">ติดตามออเดอร์</a>
       </header>
 
-      <p class="guest-payment-alert" role="note">
-        ระบบนี้รับคำสั่งซื้อเท่านั้น ยังไม่มีการชำระเงินผ่าน PromptPay
-        ราคาในตะกร้าเป็นประมาณการ และจะยืนยันยอดจริงหลังส่งออเดอร์
-      </p>
-
       @if (!online()) {
         <p class="guest-offline-alert" role="status">
-          ขณะนี้ออฟไลน์ — ยังไม่สามารถส่งคำสั่งซื้อได้
-          ตรวจสอบการเชื่อมต่อก่อนลองใหม่ ตะกร้าจะไม่ถูกส่งซ้ำอัตโนมัติ
+          ออฟไลน์ · ยังไม่สามารถส่งออเดอร์ได้ ตะกร้าจะไม่ถูกส่งซ้ำอัตโนมัติ
         </p>
       }
 
       @if (closedStore(); as closed) {
-        <section
-          class="guest-closed"
-          aria-labelledby="guest-closed-title"
-          role="status"
-        >
+        <section class="guest-closed" aria-labelledby="guest-closed-title" role="status">
           <span class="guest-closed-symbol" aria-hidden="true">☕</span>
           <h2 id="guest-closed-title">ขออภัย ร้านยังไม่เปิดให้สั่งอาหาร</h2>
           <p>{{ closed.name }} · โต๊ะ {{ closed.table }}</p>
           <p>กรุณาลองใหม่เมื่อร้านเปิดรับออเดอร์</p>
-          <button
-            type="button"
-            (click)="reload()"
-            [disabled]="loading() || !online()"
-          >
+          <button type="button" (click)="reload()" [disabled]="loading() || !online()">
             ตรวจสอบอีกครั้ง
           </button>
         </section>
       }
 
       @if (loading()) {
-        <div class="guest-status" role="status">กำลังอ่านเมนูของร้าน...</div>
+        <div class="guest-status" role="status">กำลังโหลดเมนูอาหาร...</div>
       } @else if (error()) {
         <div class="guest-error" role="alert">
           <p>{{ error() }}</p>
@@ -122,127 +114,97 @@ function guestError(error: unknown): string {
       @if (session.visit(); as visit) {
         <div class="guest-menu-intro">
           <div>
-            <span class="guest-menu-kicker">01 · เลือกเมนู</span>
-            <p class="guest-menu-intro-title">อยากรับประทานอะไรดี?</p>
-            <p>
-              เลือกอาหารและตัวเลือกที่ต้องการ แล้วตรวจสอบตะกร้าก่อนส่งออเดอร์
-            </p>
+            <span class="guest-menu-kicker">สั่งอาหารได้เลย</span>
+            <p class="guest-menu-intro-title">เลือกเมนูที่ชอบ</p>
           </div>
           <span class="guest-table-chip">โต๊ะ {{ visit.tableLabel }}</span>
         </div>
+
         <div class="guest-menu-toolbar">
           <label class="guest-search">
-            <span>ค้นหาเมนู</span>
+            <span class="guest-field-title">ค้นหาเมนู</span>
             <input
               type="search"
               autocomplete="off"
-              placeholder="ชื่ออาหาร / เครื่องดื่ม"
+              placeholder="ค้นหาอาหารหรือเครื่องดื่ม"
               [value]="search()"
               (input)="onSearch($event)"
             />
           </label>
-          <label class="guest-category">
-            <span>หมวดหมู่</span>
-            <select [value]="category()" (change)="onCategory($event)">
-              <option value="">ทุกหมวดหมู่</option>
-              @for (group of visit.categories; track group.id) {
-                <option [value]="group.id">{{ group.name }}</option>
-              }
-            </select>
-          </label>
+        </div>
+        <div class="guest-categories" role="group" aria-label="หมวดหมู่">
+          <button
+            class="guest-category-chip"
+            type="button"
+            [class.is-active]="category() === ''"
+            [attr.aria-pressed]="category() === ''"
+            (click)="onCategoryChip('')"
+          >
+            ทั้งหมด
+          </button>
+          @for (group of visit.categories; track group.id) {
+            <button
+              class="guest-category-chip"
+              type="button"
+              [class.is-active]="category() === group.id"
+              [attr.aria-pressed]="category() === group.id"
+              (click)="onCategoryChip(group.id)"
+            >
+              {{ group.name }}
+            </button>
+          }
         </div>
 
         @if (products().length === 0 && !loading()) {
           <div class="guest-status" role="status">
-            ไม่มีสินค้าในหมวดหมู่นี้หรือไม่พบเมนูที่ค้นหา
+            ไม่พบเมนูที่ต้องการ ลองค้นหาหรือเปลี่ยนหมวดหมู่
           </div>
         } @else {
-          <div class="guest-products">
+          <div class="guest-products" aria-label="รายการอาหาร">
             @for (product of products(); track product.id) {
               <article class="guest-product" [attr.aria-label]="product.name">
-                @if (product.hasImage) {
-                  <img
-                    class="guest-product-photo"
-                    loading="lazy"
-                    [src]="
-                      productImageUrl(visit.tenantId, visit.storeId, product.id)
-                    "
-                    [alt]="'รูปภาพเมนู ' + product.name"
-                  />
-                }
-                <div class="guest-product-head">
-                  <div>
-                    <span class="guest-product-category">{{
-                      categoryName(product.categoryId)
-                    }}</span>
-                    <h2>{{ product.name }}</h2>
-                  </div>
-                  <strong class="guest-price"
-                    >{{ money(product.priceSatang) }} ฿</strong
-                  >
+                <button
+                  type="button"
+                  class="guest-product-media"
+                  [attr.aria-label]="'ดูรายละเอียด ' + product.name"
+                  [disabled]="busy()"
+                  (click)="openProduct(product)"
+                >
+                  @if (product.hasImage) {
+                    <img
+                      class="guest-product-photo"
+                      loading="lazy"
+                      [src]="productImageUrl(visit.tenantId, visit.storeId, product.id)"
+                      [alt]="'รูปภาพเมนู ' + product.name"
+                    />
+                  } @else {
+                    <span class="guest-product-placeholder" aria-hidden="true">🍽️</span>
+                  }
+                </button>
+                <div class="guest-product-info">
+                  <span class="guest-product-category">{{ categoryName(product.categoryId) }}</span>
+                  <h2>{{ product.name }}</h2>
+                  @if (groups(product.id).length > 0) {
+                    <span class="guest-product-extra">มีตัวเลือกเพิ่มเติม</span>
+                  }
+                  <strong class="guest-price">{{ money(product.priceSatang) }} ฿</strong>
                 </div>
-                @if (groups(product.id).length > 0) {
-                  <details class="guest-customization" open>
-                    <summary>
-                      ตัวเลือกเพิ่มเติม <span>แตะเพื่อยุบหรือแสดง</span>
-                    </summary>
-                    @for (group of groups(product.id); track group.id) {
-                      <fieldset class="guest-options">
-                        <legend>
-                          {{ group.name }}
-                          <span
-                            >เลือก {{ group.minSelect }}–{{
-                              group.maxSelect
-                            }}</span
-                          >
-                        </legend>
-                        @if (options(group.id).length < group.minSelect) {
-                          <p class="guest-warning">
-                            ตัวเลือกไม่เพียงพอสำหรับเมนูนี้ กรุณาแจ้งร้านค้า
-                          </p>
-                        }
-                        @for (choice of options(group.id); track choice.id) {
-                          <label class="guest-option">
-                            <input
-                              type="checkbox"
-                              [checked]="isSelected(product.id, choice.id)"
-                              [disabled]="
-                                busy() ||
-                                optionDisabled(product.id, group, choice.id)
-                              "
-                              (change)="
-                                toggleOption(product.id, group, choice.id)
-                              "
-                            />
-                            <span>{{ choice.name }}</span>
-                            <span class="guest-option-price">
-                              {{ choice.priceDeltaSatang > 0 ? "+" : ""
-                              }}{{ moneySigned(choice.priceDeltaSatang) }} ฿
-                            </span>
-                          </label>
-                        }
-                      </fieldset>
-                    }
-                  </details>
-                }
-                <div class="guest-product-actions">
-                  <button
-                    type="button"
-                    class="guest-add"
-                    [disabled]="busy()"
-                    (click)="add(product)"
-                  >
-                    เพิ่มลงตะกร้า
-                  </button>
-                </div>
+                <button
+                  class="guest-add"
+                  type="button"
+                  aria-label="เพิ่มลงตะกร้า"
+                  [disabled]="busy()"
+                  (click)="addOrCustomize(product)"
+                >
+                  <span aria-hidden="true">+</span>
+                  <span class="guest-visually-hidden">เพิ่มลงตะกร้า</span>
+                </button>
               </article>
             }
           </div>
           <div class="guest-menu-progress" role="status" aria-live="polite">
             แสดง {{ products().length }} เมนู
-            @if (hasMore()) {
-              · ยังมีเมนูเพิ่มเติม
-            }
+            @if (hasMore()) { · ยังมีเมนูเพิ่มเติม }
           </div>
           @if (hasMore()) {
             <button
@@ -256,15 +218,130 @@ function guestError(error: unknown): string {
           }
         }
 
-        <section class="guest-cart" aria-labelledby="cart-title">
-          <div class="guest-cart-heading">
-            <h2 id="cart-title">ตะกร้าของฉัน</h2>
-            <span>{{ cartQty() }} ชิ้น</span>
+        <p class="guest-payment-alert" role="note">
+          ยังไม่มีการชำระเงินผ่าน PromptPay · ราคาก่อนส่งออเดอร์เป็นยอดประมาณการ
+        </p>
+        @if (notice() && !cartOpen()) {
+          <p class="guest-notice" role="status">{{ notice() }}</p>
+        }
+      }
+
+      @if (session.visit() && cartQty() > 0) {
+        <button
+          type="button"
+          class="guest-cart-shortcut"
+          [disabled]="busy()"
+          (click)="openCart()"
+          aria-label="ดูตะกร้า"
+        >
+          <span class="guest-cart-shortcut-count">
+            <span class="guest-cart-shortcut-icon" aria-hidden="true">🛍️</span>
+            ตะกร้า <strong>{{ cartQty() }} รายการ</strong>
+          </span>
+          <span class="guest-cart-shortcut-price">≈ {{ money(estimate()) }} ฿</span>
+          <span class="guest-cart-shortcut-action">ดูตะกร้า</span>
+        </button>
+      }
+
+      <dialog
+        #detailDialog
+        class="guest-sheet guest-product-sheet"
+        aria-labelledby="guest-detail-title"
+        (close)="onDetailClose()"
+      >
+        @if (activeProduct(); as product) {
+          <div class="guest-sheet-handle" aria-hidden="true"></div>
+          <header class="guest-sheet-heading">
+            <div>
+              <span class="guest-menu-kicker">รายละเอียดอาหาร</span>
+              <h2 id="guest-detail-title">{{ product.name }}</h2>
+            </div>
+            <button
+              class="guest-sheet-close"
+              type="button"
+              aria-label="ปิดรายละเอียดสินค้า"
+              (click)="closeProduct()"
+            >✕</button>
+          </header>
+          <div class="guest-sheet-scroll">
+            <div class="guest-detail-media">
+              @if (product.hasImage && session.visit(); as visit) {
+                <img
+                  loading="lazy"
+                  [src]="productImageUrl(visit.tenantId, visit.storeId, product.id)"
+                  [alt]="'รูปภาพเมนู ' + product.name"
+                />
+              } @else {
+                <span aria-hidden="true">🍽️</span>
+              }
+            </div>
+            <div class="guest-detail-subtitle">
+              <span>{{ categoryName(product.categoryId) }}</span>
+              <strong>{{ money(product.priceSatang) }} ฿</strong>
+            </div>
+            @for (group of groups(product.id); track group.id) {
+              <fieldset class="guest-options">
+                <legend>
+                  {{ group.name }}
+                  <span>เลือก {{ group.minSelect }}–{{ group.maxSelect }}</span>
+                </legend>
+                @if (options(group.id).length < group.minSelect) {
+                  <p class="guest-warning">ตัวเลือกไม่เพียงพอ กรุณาแจ้งร้านค้า</p>
+                }
+                @for (choice of options(group.id); track choice.id) {
+                  <label class="guest-option">
+                    <input
+                      type="checkbox"
+                      [checked]="isSelected(product.id, choice.id)"
+                      [disabled]="busy() || optionDisabled(product.id, group, choice.id)"
+                      (change)="toggleOption(product.id, group, choice.id)"
+                    />
+                    <span>{{ choice.name }}</span>
+                    <span class="guest-option-price">
+                      {{ choice.priceDeltaSatang > 0 ? "+" : "" }}{{ moneySigned(choice.priceDeltaSatang) }} ฿
+                    </span>
+                  </label>
+                }
+              </fieldset>
+            }
+            @if (detailError()) {
+              <p class="guest-warning" role="alert">{{ detailError() }}</p>
+            }
           </div>
+          <footer class="guest-sheet-footer">
+            <div class="guest-detail-quantity">
+              <span>จำนวน</span>
+              <div class="guest-qty">
+                <button type="button" aria-label="ลดจำนวน" [disabled]="detailQty() <= 1" (click)="changeDetailQty(-1)">−</button>
+                <strong>{{ detailQty() }}</strong>
+                <button type="button" aria-label="เพิ่มจำนวน" [disabled]="detailQty() >= 20" (click)="changeDetailQty(1)">+</button>
+              </div>
+            </div>
+            <button class="guest-sheet-primary" type="button" [disabled]="busy()" (click)="addDetailProduct(product)">
+              เพิ่มลงตะกร้า · ประมาณ {{ money(detailEstimate(product)) }} ฿
+            </button>
+          </footer>
+        }
+      </dialog>
+
+      <dialog
+        #cartDialog
+        class="guest-sheet guest-cart-sheet"
+        aria-labelledby="cart-title"
+        (close)="onCartClose()"
+      >
+        <div class="guest-sheet-handle" aria-hidden="true"></div>
+        <header class="guest-sheet-heading">
+          <div>
+            <span class="guest-menu-kicker">ตรวจสอบก่อนส่ง</span>
+            <h2 id="cart-title">ตะกร้าของฉัน</h2>
+            <span class="guest-cart-subtitle">{{ cartQty() }} รายการ</span>
+          </div>
+          <button class="guest-sheet-close" type="button" aria-label="ปิดตะกร้า" (click)="closeCart()">✕</button>
+        </header>
+        <div class="guest-sheet-scroll">
           @if (session.cart().length === 0) {
-            <p class="guest-cart-empty">
-              ยังไม่มีสินค้าในตะกร้า เลือกรายการจากเมนูด้านบนได้เลย
-            </p>
+            <p class="guest-cart-empty">ตะกร้ายังว่าง เลือกเมนูที่ชอบก่อนสั่งอาหาร</p>
           } @else {
             <ol class="guest-cart-lines">
               @for (line of session.cart(); track $index; let i = $index) {
@@ -277,72 +354,46 @@ function guestError(error: unknown): string {
                     <button
                       type="button"
                       [disabled]="busy()"
-                      [attr.aria-label]="
-                        'ลดจำนวน ' + productName(line.productId)
-                      "
+                      [attr.aria-label]="'ลดจำนวน ' + productName(line.productId)"
                       (click)="changeQuantity(i, -1)"
-                    >
-                      −
-                    </button>
+                    >−</button>
                     <span>{{ line.quantity }}</span>
                     <button
                       type="button"
                       [disabled]="busy()"
-                      [attr.aria-label]="
-                        'เพิ่มจำนวน ' + productName(line.productId)
-                      "
+                      [attr.aria-label]="'เพิ่มจำนวน ' + productName(line.productId)"
                       (click)="changeQuantity(i, 1)"
-                    >
-                      +
-                    </button>
+                    >+</button>
                   </div>
                 </li>
               }
             </ol>
-            <div class="guest-cart-summary">
-              <span>ยอดประมาณการ (ยังไม่ใช่ใบเสร็จ)</span>
-              <strong>{{ money(estimate()) }} ฿</strong>
-            </div>
-            @if (notice()) {
-              <p class="guest-warning" role="status">{{ notice() }}</p>
-            }
-            <button
-              class="guest-checkout"
-              type="button"
-              [disabled]="busy() || loading() || !online()"
-              (click)="checkout()"
-            >
-              {{
-                busy()
-                  ? "กำลังส่งออเดอร์ กรุณาอย่าปิดหน้า..."
-                  : "ยืนยันส่งคำสั่งซื้อ (ยังไม่ชำระเงิน)"
-              }}
-            </button>
-            <p class="guest-privacy">
-              หากส่งไม่สำเร็จ ให้กดลองอีกครั้งโดยไม่แก้ไขตะกร้า
-              ระบบใช้รหัสคำสั่งซื้อเดิมเพื่อป้องกันการสั่งซ้ำ
-            </p>
           }
-        </section>
-      }
-      @if (session.visit() && cartQty() > 0) {
-        <a
-          class="guest-cart-shortcut"
-          href="#cart-title"
-          aria-label="ไปยังตะกร้าเพื่อตรวจสอบคำสั่งซื้อ"
-        >
-          <span class="guest-cart-shortcut-count">
-            <span class="guest-cart-shortcut-icon" aria-hidden="true">🛒</span>
-            ตะกร้า <strong>{{ cartQty() }} ชิ้น</strong>
-          </span>
-          <span class="guest-cart-shortcut-price">
-            ประมาณ {{ money(estimate()) }} ฿
-          </span>
-          <span class="guest-cart-shortcut-action">ดูตะกร้า</span>
-        </a>
-      }
+          @if (notice() && cartOpen()) {
+            <p class="guest-warning" role="status">{{ notice() }}</p>
+          }
+          <p class="guest-privacy">
+            ยอดในตะกร้าเป็นประมาณการ ระบบจะตรวจสอบราคาและตัวเลือกอีกครั้งก่อนส่งออเดอร์
+            ไม่ใช่การชำระเงิน
+          </p>
+        </div>
+        <footer class="guest-sheet-footer">
+          <div class="guest-cart-summary">
+            <span>ยอดประมาณการ</span>
+            <strong>{{ money(estimate()) }} ฿</strong>
+          </div>
+          <button
+            class="guest-checkout guest-sheet-primary"
+            type="button"
+            [disabled]="busy() || loading() || !online() || cartQty() === 0"
+            (click)="checkout()"
+          >
+            {{ busy() ? "กำลังส่งออเดอร์ กรุณาอย่าปิดหน้า..." : "ยืนยันส่งคำสั่งซื้อ (ยังไม่ชำระเงิน)" }}
+          </button>
+        </footer>
+      </dialog>
     </section>
-  `,
+  \`
 })
 export class GuestOrderPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
@@ -360,6 +411,12 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly loadingMore = signal(false);
   readonly nextCursor = signal<GuestCatalogCursor | null>(null);
   readonly selected = signal<Record<string, string[]>>({});
+  readonly activeProduct = signal<GuestProduct | null>(null);
+  readonly detailQty = signal(1);
+  readonly detailError = signal("");
+  readonly cartOpen = signal(false);
+  @ViewChild("detailDialog") private detailDialog?: ElementRef<HTMLDialogElement>;
+  @ViewChild("cartDialog") private cartDialog?: ElementRef<HTMLDialogElement>;
   readonly online = signal(true);
   readonly staticTable = signal<{
     tenantId: string;
@@ -560,11 +617,10 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     }
   }
 
-  onCategory(event: Event): void {
-    if (event.target instanceof HTMLSelectElement) {
-      this.category.set(event.target.value);
-      this.scheduleSearchReload(0);
-    }
+  onCategoryChip(categoryId: string): void {
+    if (this.category() === categoryId) return;
+    this.category.set(categoryId);
+    this.scheduleSearchReload(0);
   }
 
   async showMore(): Promise<void> {
@@ -672,6 +728,69 @@ export class GuestOrderPage implements OnInit, OnDestroy {
         : [...ids, optionId];
     this.selected.update((values) => ({ ...values, [productId]: next }));
     this.notice.set("");
+    this.detailError.set("");
+  }
+
+  addOrCustomize(product: GuestProduct): void {
+    if (this.groups(product.id).length > 0) {
+      this.openProduct(product);
+    } else {
+      this.add(product);
+    }
+  }
+  openProduct(product: GuestProduct): void {
+    if (this.busy()) return;
+    this.detailError.set("");
+    this.detailQty.set(1);
+    this.activeProduct.set(product);
+    this.detailDialog?.nativeElement.showModal();
+  }
+  closeProduct(): void {
+    this.detailDialog?.nativeElement.close();
+  }
+  onDetailClose(): void {
+    this.activeProduct.set(null);
+    this.detailQty.set(1);
+    this.detailError.set("");
+  }
+  changeDetailQty(delta: number): void {
+    this.detailQty.update((qty) => Math.max(1, Math.min(20, qty + delta)));
+  }
+  detailEstimate(product: GuestProduct): number {
+    const ids = this.selected()[product.id] ?? [];
+    const extras = this.session.visit()?.modifierOptions ?? [];
+    const unit = ids.reduce((sum, id) => {
+      const option = extras.find((entry) => entry.productId === product.id && entry.id === id);
+      return sum + (option?.priceDeltaSatang ?? 0);
+    }, product.priceSatang);
+    return Math.max(0, unit * this.detailQty());
+  }
+  addDetailProduct(product: GuestProduct): void {
+    const visit = this.session.visit();
+    if (!visit || this.busy()) return;
+    const ids = this.selected()[product.id] ?? [];
+    try {
+      let cart = this.session.cart();
+      for (let index = 0; index < this.detailQty(); index += 1) {
+        cart = addToCart(visit, cart, product.id, ids);
+      }
+      this.session.setCart(cart);
+      this.notice.set("เพิ่ม " + product.name + " ลงตะกร้าแล้ว");
+      this.closeProduct();
+    } catch (error) {
+      this.detailError.set(guestError(error));
+    }
+  }
+  openCart(): void {
+    if (this.cartDialog?.nativeElement.open) return;
+    this.cartOpen.set(true);
+    this.cartDialog?.nativeElement.showModal();
+  }
+  closeCart(): void {
+    this.cartDialog?.nativeElement.close();
+  }
+  onCartClose(): void {
+    this.cartOpen.set(false);
   }
 
   add(product: GuestProduct): void {
