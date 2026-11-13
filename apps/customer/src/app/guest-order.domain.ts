@@ -318,7 +318,10 @@ export function changeModifierSelection(
   if (!group) throw new Error("กลุ่มตัวเลือกไม่ถูกต้อง");
   const optionIds = new Set(
     visit.modifierOptions
-      .filter((option) => option.productId === productId && option.groupId === groupId)
+      .filter(
+        (option) =>
+          option.productId === productId && option.groupId === groupId,
+      )
       .map((option) => option.id),
   );
   if (optionId === null) {
