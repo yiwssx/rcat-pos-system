@@ -1,6 +1,6 @@
 # RCAT POS — UX Redesign Execution Plan
 
-Status: implementation staged on top of existing single-entry portal PR #93. UI code is not visually accepted until rendered browser review.
+Status: UX-01/UX-02/UX-03 implementation is proposed in PR #95, based on merged single-entry portal PR #93. This is source-level completion only; rendered browser review and current-head CI remain acceptance gates.
 
 ## Boundaries
 
