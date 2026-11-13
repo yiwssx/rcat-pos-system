@@ -18,24 +18,24 @@ stateDiagram-v2
 
 Order acceptance or preparation is independent of Payment until G5 introduces a *validated* pay-first policy. State transitions are enforced server-side with tenant and role authorization, version checks and audit log. No silent backward transitions.
 
-## Payment lifecycle (G5 — not implemented during G0–G4)
+## Payment lifecycle (G5-M1 — not implemented during G0–G4)
 
 ```mermaid
 stateDiagram-v2
     [*] --> not_requested
-    not_requested --> awaiting_payment: create Order-scoped request
-    awaiting_payment --> pending_verification: customer initiated payment
-    awaiting_payment --> expired
-    awaiting_payment --> failed
-    pending_verification --> provider_verified: trusted provider
-    pending_verification --> manual_confirmed: authorized staff
-    pending_verification --> failed
-    pending_verification --> expired
-    provider_verified --> refunded: confirmed refund
-    manual_confirmed --> refunded: audited refund
+    not_requested --> awaiting_payment: store receiver and order amount snapshotted
+    awaiting_payment --> slip_submitted: customer upload (NOT paid)
+    slip_submitted --> under_review: queued for merchant
+    under_review --> manual_confirmed: authorized staff checks bank receipt
+    under_review --> rejected: reason and audit
+    rejected --> awaiting_payment: retry permitted
+    awaiting_payment --> expired: payment request timeout
+    awaiting_payment --> payment_exception: late/ambiguous money
+    manual_confirmed --> refund_requested: merchant action
+    refund_requested --> refund_recorded: actual external refund checked
 ```
 
-Never equate browser redirect, QR creation or user-uploaded slip with provider-verified settlement. Manual confirmation must be visibly distinct and auditable. Late provider notifications require exceptions/reconciliation; they must not silently resurrect an expired order.
+A standard personal PromptPay QR can be identical for equal receiver and amount across Orders; internal IDs are not bank transaction references. A slip/QR/redirect/OCR never proves settlement. Merchant may record `manual_confirmed` **only after checking incoming bank transactions**. `provider_verified` belongs exclusively to optional future M2; late transfers, cancellation, duplicate or mismatched amounts go to exceptions, not automatic state reversal.
 
 ## Monetary and concurrency invariants
 - Authoritative amount stored as integer satang (THB); line item price/discount/tax are immutable snapshots at placement.
@@ -43,7 +43,7 @@ Never equate browser redirect, QR creation or user-uploaded slip with provider-v
 - Order changes and its outbox event commit in one database transaction; realtime delivery may retry without creating duplicate Orders.
 - Payment request is logically one per Order at a time, distinct payment attempts and immutable audit records.
 - Multiple Orders for a table share context, but not a combined payment obligation in MVP.
-- No API can grant paid state from a public client. Payment reconciliation checks amount, currency, merchant destination and trusted transaction reference.
+- No public client API can grant paid state. M1 manual reconciliation requires authorized merchant confirmation after checking actual bank incoming transaction, amount, currency, store receiver and any merchant-entered bank reference (unverified by RCAT POS).
 
 ## Examples of adverse flow handling
 | Condition | Expected behavior |
@@ -54,7 +54,7 @@ Never equate browser redirect, QR creation or user-uploaded slip with provider-v
 | Two staff devices advance state | Optimistic concurrency prevents stale updates |
 | Merchant phone asleep | Persisted unacknowledged queue, refetch on resume |
 | Identical Order totals | Distinct logical requests; provider-level unique references not assumed |
-| Payment webhook duplicate/out-of-order | Verify signature, idempotent receipt and reconciliation |
-| Payment success after cancellation | Exception, support workflow, possible refund; no silent change |
-| Manual payment claim | Permissioned action, not provider_verified |
-| Refund failure | Pending/error state, retry/reconcile; immutable audit |
+| Duplicate slip / reused reference | Flag potential reuse and require a distinct bank-receipt review; no auto-paid inference |
+| Customer transfer after cancellation/expiry | Payment exception, manual bank check and possible external refund; no silent change |
+| Manual payment claim | Permissioned merchant action *after bank check*, never provider_verified |
+| Manual refund pending/failed | No automatic refund claim; preserve external refund evidence and immutable audit |
