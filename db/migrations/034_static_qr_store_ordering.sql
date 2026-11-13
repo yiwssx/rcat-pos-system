@@ -123,9 +123,12 @@ CREATE FUNCTION rcat_private.place_guest_order_when_open(
 ) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog
 AS $$
-DECLARE v_open boolean;
+DECLARE v_open boolean;v_visit uuid;v_existing rcat.orders%ROWTYPE;
 BEGIN
- SELECT s.ordering_enabled INTO v_open
+ -- The pre-existing Order outbox trigger also takes a store FOR UPDATE lock
+ -- to serialize sequence numbers. Acquire that same lock at the start:
+ -- FOR SHARE here deadlocks on concurrent SHARE -> UPDATE conversions.
+ SELECT s.ordering_enabled,v.id INTO v_open,v_visit
  FROM rcat.stores s
  JOIN rcat.table_ordering_visits v ON v.tenant_id=s.tenant_id AND v.store_id=s.id
  JOIN rcat.store_tables t ON t.id=v.table_id
@@ -135,15 +138,29 @@ BEGIN
    WHERE g.visit_id=v.id AND g.token_digest=p_visit_digest
      AND g.expires_at>now()
  )) AND v.revoked_at IS NULL AND v.expires_at>now()
-   AND t.active FOR SHARE OF s;
+   AND t.active FOR UPDATE OF s;
  IF NOT FOUND THEN
    RAISE EXCEPTION 'Visit unavailable' USING ERRCODE='42501';
+ END IF;
+ -- An already accepted idempotent retry is NOT a new Order. Return its
+ -- authoritative receipt even if the merchant closed during network retry.
+ SELECT * INTO v_existing FROM rcat.orders o
+ WHERE o.visit_id=v_visit AND o.idempotency_key=p_idempotency_key;
+ IF FOUND THEN
+   IF v_existing.request_data IS DISTINCT FROM p_cart THEN
+     RAISE EXCEPTION 'Idempotency key reused with changed cart'
+       USING ERRCODE='23505';
+   END IF;
+   RETURN jsonb_build_object(
+     'orderId',v_existing.id,'amountSatang',v_existing.amount_satang,
+     'currency',v_existing.currency,'status',v_existing.status,
+     'paymentState',v_existing.payment_state,'replayed',true);
  END IF;
  IF NOT v_open THEN
    RAISE EXCEPTION 'Ordering closed' USING ERRCODE='P0040';
  END IF;
  RETURN rcat_private.place_guest_order(p_visit_digest,p_idempotency_key,p_cart);
-END $$;
+END $;
 
 REVOKE ALL ON FUNCTION rcat_private.set_store_ordering_enabled(bytea,uuid,uuid,boolean) FROM PUBLIC;
 REVOKE ALL ON FUNCTION rcat_private.open_printed_ordering_table(uuid,uuid,uuid,bytea,bytea) FROM PUBLIC;
@@ -153,8 +170,9 @@ GRANT EXECUTE ON FUNCTION rcat_private.open_printed_ordering_table(uuid,uuid,uui
 GRANT EXECUTE ON FUNCTION rcat_private.place_guest_order_when_open(bytea,text,jsonb) TO rcat_auth;
 -- Enforce the same switch for *all* order insert paths, including the
 -- legacy SQL function used by existing trusted integration fixtures.
--- The trigger holds the store lock through the enclosing transaction, so a
--- concurrent manager close cannot race a new Order into the queue.
+-- Match the pre-existing Order outbox trigger's FOR UPDATE lock; a weaker
+-- shared lock would deadlock under concurrent duplicate submissions.
+-- A concurrent merchant close cannot race a committed new Order.
 CREATE FUNCTION rcat_private.check_ordering_enabled_on_insert()
 RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog
@@ -162,7 +180,7 @@ AS $trigger$
 BEGIN
  PERFORM 1 FROM rcat.stores s
  WHERE s.tenant_id=NEW.tenant_id AND s.id=NEW.store_id
-   AND s.ordering_enabled FOR SHARE;
+   AND s.ordering_enabled FOR UPDATE;
  IF NOT FOUND THEN
    RAISE EXCEPTION 'Ordering closed' USING ERRCODE='P0040';
  END IF;
