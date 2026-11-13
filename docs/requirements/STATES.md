@@ -16,7 +16,7 @@ stateDiagram-v2
     cancelled --> [*]
 ```
 
-Order acceptance or preparation is independent of Payment until G5 introduces a *validated* pay-first policy. State transitions are enforced server-side with tenant and role authorization, version checks and audit log. No silent backward transitions.
+Order acceptance, preparation and serving are independent of Payment **including G5-M1** (owner-confirmed 13 Nov 2026). Successful Order submission immediately reaches Merchant's durable queue. Customer may pay now or later; unpaid Orders remain visible. State transitions are enforced server-side with tenant and role authorization, version checks and audit log. No silent backward transitions.
 
 ## Payment lifecycle (G5-M1 — not implemented during G0–G4)
 
@@ -36,6 +36,11 @@ stateDiagram-v2
 ```
 
 A standard personal PromptPay QR can be identical for equal receiver and amount across Orders; internal IDs are not bank transaction references. A slip/QR/redirect/OCR never proves settlement. Merchant may record `manual_confirmed` **only after checking incoming bank transactions**. `provider_verified` belongs exclusively to optional future M2; late transfers, cancellation, duplicate or mismatched amounts go to exceptions, not automatic state reversal.
+
+## Customer Order context invariants — tracker #102
+- Guest Checkout requires nonblank bounded `orderedBy` (ชื่อผู้สั่ง) and `deliverTo` (สถานที่รับ/ส่ง), allowing nicknames, and may carry optional validated per-item notes; store immutable snapshots on the Order and Order items.
+- Distinct per-item notes prevent accidental cart-line aggregation. A different name/delivery/note with a reused idempotency key is a payload conflict, never a second Order or silently accepted mutation.
+- Guest user strings are untrusted, privacy-scoped to the Order, omitted from public logs and safe to display only to authorized roles. Merchant Order Board must render them correctly on reconnect/recovery. See [#102](https://github.com/yiwssx/rcat-pos-system/issues/102).
 
 ## Monetary and concurrency invariants
 - Authoritative amount stored as integer satang (THB); line item price/discount/tax are immutable snapshots at placement.
