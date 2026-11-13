@@ -49,6 +49,28 @@ jobs:
       - name: Install from committed lockfile
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm install --frozen-lockfile
+      # TEMPORARY: export Prettier's exact changed-file output for a clean source commit.
+      - name: Export formatting delta for QR PR
+        if: github.event_name == 'pull_request' && steps.impact.outputs.workspace == 'true'
+        run: |
+          pnpm exec prettier --write             apps/customer/src/app/guest-order.api.ts             apps/customer/src/app/guest-order.page.ts             apps/customer/src/app/guest-order.css             apps/merchant/src/app/merchant-tables.api.ts             apps/merchant/src/app/merchant-tables.page.ts             apps/merchant/src/app/merchant-tables.css             apps/api/src/ordering/table-ordering.service.ts
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          for (const path of [
+            'apps/customer/src/app/guest-order.api.ts',
+            'apps/customer/src/app/guest-order.page.ts',
+            'apps/customer/src/app/guest-order.css',
+            'apps/merchant/src/app/merchant-tables.api.ts',
+            'apps/merchant/src/app/merchant-tables.page.ts',
+            'apps/merchant/src/app/merchant-tables.css',
+            'apps/api/src/ordering/table-ordering.service.ts',
+          ]) {
+            const raw = readFileSync(path).toString('base64');
+            for (let i = 0; i < raw.length; i += 2400) {
+              console.log('RCAT_FMT|' + path + '|' + (i / 2400) + '|' + raw.slice(i, i + 2400));
+            }
+          }
+          NODE
       - name: Display Nx projects
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm exec nx show projects
