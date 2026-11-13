@@ -52,11 +52,6 @@ jobs:
       - name: Display Nx projects
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm exec nx show projects
-      - name: Temporary UX04 Prettier delta (diagnostic only, remove before merge)
-        if: github.event_name == 'pull_request' && github.head_ref == 'feat/pos-ux04-guest-ordering-v2'
-        run: |
-          pnpm exec prettier --write apps/customer/src/app/guest-order.page.ts
-          git diff -- apps/customer/src/app/guest-order.page.ts
       - name: Test changed projects in PR
         if: github.event_name == 'pull_request' && steps.impact.outputs.workspace == 'true' && steps.impact.outputs.decision == 'scoped'
         env:
