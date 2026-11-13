@@ -1,5 +1,8 @@
 // Runs only against the fixed ephemeral Local Compose stack in packaging CI.
 const assert = require('node:assert/strict');
+// Compose intentionally publishes on IPv4 loopback only; keep the CI browser and
+// Node HTTP checks on that same interface without broadening host exposure.
+require('node:dns').setDefaultResultOrder('ipv4first');
 const { readFileSync } = require('node:fs');
 const { execFileSync } = require('node:child_process');
 const { chromium } = require('playwright');
@@ -12,7 +15,7 @@ const tenant = '70000000-0000-4000-8000-000000000001';
 const store = '70000000-0000-4000-8000-000000000002';
 const password = readFileSync('.secrets/local-demo/owner-password', 'utf8').trim();
 async function main() {
-  const browser = await chromium.launch({ headless: true, args: ['--ignore-certificate-errors'] });
+  const browser = await chromium.launch({ headless: true, args: ['--ignore-certificate-errors', '--host-resolver-rules=MAP localhost 127.0.0.1'] });
   try {
     const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 320, height: 780 } });
     const page = await context.newPage();
