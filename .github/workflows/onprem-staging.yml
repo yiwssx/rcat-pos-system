@@ -1,6 +1,7 @@
 name: On-prem staging container packaging
 
 on:
+  workflow_dispatch:  # Owner-triggered signed Staging candidate; no automatic publishing
   pull_request:
     paths:
       - 'Dockerfile.staging'
@@ -59,6 +60,7 @@ concurrency:
 
 jobs:
   build-and-inspect:
+    if: github.event_name != 'workflow_dispatch'
     name: Stage images, Nginx configuration and isolation
     # Match the pinned Playwright runner's supported OS, independent of latest.
     runs-on: ubuntu-24.04
@@ -133,3 +135,119 @@ jobs:
           path: /tmp/rcat-portal-*.png
           if-no-files-found: ignore
           retention-days: 7
+
+  signed-release:
+    name: Manually sign four Staging OCI image digests (never deploy)
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'yiwssx'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Fail closed without exact-main accepted On-prem CI
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -z "$(git status --porcelain)"
+          observed="$(gh api "repos/${GITHUB_REPOSITORY}/branches/main" --jq '.commit.sha')"
+          test "$observed" = "$GITHUB_SHA"
+          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/onprem-staging.yml/runs?head_sha=${GITHUB_SHA}&branch=main&event=push&status=success&per_page=20")"
+          jq -e --arg sha "$GITHUB_SHA" '[.workflow_runs[] | select(.head_sha == $sha and .conclusion == "success" and .event == "push")] | length > 0' <<< "$runs" > /dev/null
+          test -f Dockerfile.staging
+          test -f .dockerignore
+          grep -Fxq '.secrets' .dockerignore
+          grep -Fxq '.env' .dockerignore
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish exact-SHA api image
+        id: api
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.staging
+          target: api
+          push: true
+          provenance: true
+          tags: ghcr.io/${{ github.repository }}-api:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: Attest actual api registry manifest digest
+        uses: actions/attest@v4
+        with:
+          subject-name: ghcr.io/${{ github.repository }}-api
+          subject-digest: ${{ steps.api.outputs.digest }}
+          push-to-registry: true
+      - name: Publish exact-SHA customer image
+        id: customer
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.staging
+          target: customer
+          push: true
+          provenance: true
+          tags: ghcr.io/${{ github.repository }}-customer:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: Attest actual customer registry manifest digest
+        uses: actions/attest@v4
+        with:
+          subject-name: ghcr.io/${{ github.repository }}-customer
+          subject-digest: ${{ steps.customer.outputs.digest }}
+          push-to-registry: true
+      - name: Publish exact-SHA merchant image
+        id: merchant
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.staging
+          target: merchant
+          push: true
+          provenance: true
+          tags: ghcr.io/${{ github.repository }}-merchant:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: Attest actual merchant registry manifest digest
+        uses: actions/attest@v4
+        with:
+          subject-name: ghcr.io/${{ github.repository }}-merchant
+          subject-digest: ${{ steps.merchant.outputs.digest }}
+          push-to-registry: true
+      - name: Publish exact-SHA admin image
+        id: admin
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.staging
+          target: admin
+          push: true
+          provenance: true
+          tags: ghcr.io/${{ github.repository }}-admin:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: Attest actual admin registry manifest digest
+        uses: actions/attest@v4
+        with:
+          subject-name: ghcr.io/${{ github.repository }}-admin
+          subject-digest: ${{ steps.admin.outputs.digest }}
+          push-to-registry: true
