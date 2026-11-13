@@ -116,7 +116,9 @@ function main(args) {
     process.stdout.write(JSON.stringify({
       c1_manual_stock: "approved",
       c3_guest_order_rpo_rto: "approved_targets_not_measured",
-      c2_backup: "pending_offsite_and_cadence",
+      c2_backup: policy.backup.offsite_destination_approved === true && policy.backup.policy_approved === true
+        ? "selected_pending_independent_restore"
+        : "schedule_selected_offsite_destination_unverified",
       g4_acceptance: result.status,
       blockers: result.blockers,
     }) + "\n");
