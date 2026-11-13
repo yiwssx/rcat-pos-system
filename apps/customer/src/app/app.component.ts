@@ -117,7 +117,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
               class="portal-mobile-nav-toggle"
               aria-controls="portal-main-nav"
               [attr.aria-expanded]="mobileNavOpen()"
-              (click)="mobileNavOpen.update((open) => !open)"
+              (click)="toggleMobileNav()"
             >
               <span>{{ mobileNavOpen() ? "ซ่อนเมนูจัดการ" : "แสดงเมนูจัดการ" }}</span>
               <span aria-hidden="true">{{ mobileNavOpen() ? "−" : "+" }}</span>
@@ -254,6 +254,9 @@ export class AppComponent {
       !this.session.stores().length ||
       this.session.stores().some((store) => store.role === "owner")
     );
+  }
+  toggleMobileNav(): void {
+    this.mobileNavOpen.update((open) => !open);
   }
   changeStore(event: Event): void {
     const store = this.session
