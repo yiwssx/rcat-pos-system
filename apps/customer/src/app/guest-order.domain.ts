@@ -299,6 +299,46 @@ export function cartNeedsReview(
   return false;
 }
 
+/**
+ * Single-select modifier groups behave as a radio group. Optional single
+ * groups support an explicit "no option" choice; multiple groups toggle
+ * independently. Always preserve selections belonging to other groups.
+ * Checkout still enforces the server-owned min/max and price rules.
+ */
+export function changeModifierSelection(
+  visit: GuestVisit,
+  productId: string,
+  groupId: string,
+  selectedIds: readonly string[],
+  optionId: string | null,
+): string[] {
+  const group = visit.modifierGroups.find(
+    (entry) => entry.id === groupId && entry.productId === productId,
+  );
+  if (!group) throw new Error("กลุ่มตัวเลือกไม่ถูกต้อง");
+  const optionIds = new Set(
+    visit.modifierOptions
+      .filter((option) => option.productId === productId && option.groupId === groupId)
+      .map((option) => option.id),
+  );
+  if (optionId === null) {
+    if (group.maxSelect !== 1 || group.minSelect !== 0) {
+      throw new Error("ต้องเลือกตัวเลือกในกลุ่มนี้");
+    }
+    return selectedIds.filter((id) => !optionIds.has(id));
+  }
+  if (!optionIds.has(optionId)) throw new Error("ตัวเลือกสินค้าไม่ถูกต้อง");
+  const inGroup = selectedIds.filter((id) => optionIds.has(id));
+  if (group.maxSelect === 1) {
+    return [...selectedIds.filter((id) => !optionIds.has(id)), optionId];
+  }
+  if (inGroup.includes(optionId)) {
+    return selectedIds.filter((id) => id !== optionId);
+  }
+  if (inGroup.length >= group.maxSelect) return [...selectedIds];
+  return [...selectedIds, optionId];
+}
+
 export function addToCart(
   visit: GuestVisit,
   current: readonly CartLine[],
