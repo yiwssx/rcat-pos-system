@@ -394,3 +394,72 @@
     padding: 1rem;
   }
 }
+
+
+/* Visual V5 — calm editing surfaces, coherent form and product scale. */
+.catalog-shell {
+  max-width: 1180px;
+  padding: clamp(1.2rem, 3vw, 2.6rem) clamp(1rem, 3vw, 2.6rem) 4rem;
+  color: #27363d;
+}
+.catalog-head h1 {
+  font-size: clamp(1.9rem, 2.75vw, 2.65rem);
+  font-weight: 850;
+  color: #25343b;
+}
+.catalog-intro {
+  color: #748088;
+  font-size: 0.94rem;
+}
+.catalog-panel {
+  border-color: #e7eaea;
+  border-radius: 17px;
+  box-shadow: 0 5px 20px rgb(26 40 45 / 4%);
+  background: #fff;
+}
+.catalog-panel h2 {
+  font-weight: 800;
+  color: #2e3c42;
+}
+.catalog-panel label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #5b6970;
+}
+.catalog-panel input,
+.catalog-panel select,
+.catalog-edit input,
+.catalog-edit select {
+  border-color: #e0e6e5;
+  background: #fdfdfc;
+  border-radius: 11px;
+}
+.catalog-panel button:not(.danger):not(.subtle) {
+  background: #283e43;
+  border-radius: 11px;
+}
+.catalog-panel button:hover:not(:disabled) {
+  background: #b94d1b;
+}
+.catalog-product {
+  border-color: #eceded;
+}
+.catalog-summary h3 {
+  font-weight: 800;
+  color: #273840;
+}
+.catalog-status {
+  background: #e9f5ec;
+  color: #2c6747;
+}
+.catalog-edit {
+  border: 1px solid #e6e9e9;
+  background: #f8f9f8;
+  border-radius: 14px;
+}
+.catalog-editor-toggle {
+  border-radius: 10px;
+  background: #f8f9f8;
+  color: #4d6268;
+  border-color: #dfe5e5;
+}

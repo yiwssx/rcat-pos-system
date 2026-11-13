@@ -320,3 +320,44 @@
     padding: 1rem;
   }
 }
+
+
+/* Visual V5 — consistent inventory workspaces and data-entry controls. */
+.inventory-shell {
+  max-width: 1180px;
+  padding: clamp(1.2rem, 3vw, 2.6rem) clamp(1rem, 3vw, 2.6rem) 4rem;
+  color: #26363c;
+}
+.inventory-shell h1 {
+  color: #26373d;
+  font-size: clamp(1.85rem, 2.8vw, 2.65rem);
+  font-weight: 850;
+}
+.inventory-panel {
+  background: #fff;
+  border: 1px solid #e7eaea;
+  border-radius: 17px;
+  box-shadow: 0 5px 20px rgb(27 40 44 / 4%);
+}
+.inventory-form input,
+.inventory-form select {
+  background: #fdfdfc;
+  border: 1px solid #e0e5e5;
+  border-radius: 11px;
+}
+.inventory-form button,
+.inventory-toolbar button {
+  border-radius: 11px;
+}
+.inventory-form button {
+  background: #273e44;
+}
+.inventory-back {
+  color: #677b82;
+}
+.inventory-warning {
+  background: #fff9f2;
+  border: 1px solid #efe2d2;
+  border-left: 3px solid #d4ad80;
+  border-radius: 11px;
+}

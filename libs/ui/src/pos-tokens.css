@@ -1,22 +1,22 @@
 
 /* Canonical portal: shared semantic UX tokens; legacy screens migrate per slice. */
 :root {
-  --pos-canvas: #f7f8fa;
+  --pos-canvas: #f5f5f3;
   --pos-surface: #ffffff;
-  --pos-surface-warm: #fffaf6;
-  --pos-ink: #17283b;
-  --pos-muted: #617083;
-  --pos-border: #e4e8ed;
-  --pos-orange: #b94f13;
-  --pos-orange-hover: #943708;
-  --pos-orange-soft: #fff0e4;
+  --pos-surface-warm: #fbf4ed;
+  --pos-ink: #202c34;
+  --pos-muted: #677480;
+  --pos-border: #e5e7e8;
+  --pos-orange: #b94d1b;
+  --pos-orange-hover: #92370f;
+  --pos-orange-soft: #fff0e5;
   --pos-focus: #245cde;
   --pos-danger: #a33135;
   --pos-success: #206747;
   --pos-warning: #82520a;
-  --pos-radius: 0.85rem;
-  --pos-radius-lg: 1.2rem;
-  --pos-shadow: 0 12px 35px rgb(23 40 59 / 7%);
+  --pos-radius: 0.875rem;
+  --pos-radius-lg: 1.4rem;
+  --pos-shadow: 0 22px 64px rgb(21 38 43 / 8%);
   --pos-space-1: 0.25rem;
   --pos-space-2: 0.5rem;
   --pos-space-3: 0.75rem;
@@ -30,5 +30,11 @@
   --pos-content-compact: 1040px;
   --pos-touch-target: 44px;
   --pos-body-leading: 1.6;
-  --pos-shadow-subtle: 0 4px 16px rgb(23 40 59 / 5%);
+  --pos-deep: #21383d;
+  --pos-deep-strong: #172a30;
+  --pos-cream: #fff9f3;
+  --pos-field: #f9faf9;
+  --pos-line: #e8ebeb;
+  --pos-elevation: 0 14px 38px rgb(24 37 42 / 6%);
+  --pos-shadow-subtle: 0 5px 22px rgb(21 38 43 / 5%);
 }

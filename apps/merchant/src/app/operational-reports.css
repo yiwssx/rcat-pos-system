@@ -287,3 +287,56 @@
     padding: 1rem;
   }
 }
+
+
+/* Visual V5 — reporting cards with consistent numeric hierarchy. */
+.report-shell {
+  max-width: 1180px;
+  padding: clamp(1.2rem, 3vw, 2.6rem) clamp(1rem, 3vw, 2.6rem) 4rem;
+  color: #26363c;
+}
+.report-head h1 {
+  color: #27363d;
+  font-size: clamp(1.9rem, 2.75vw, 2.65rem);
+  font-weight: 850;
+}
+.report-kpis article,
+.report-card {
+  border: 1px solid #e7eaea;
+  background: #fff;
+  border-radius: 17px;
+  box-shadow: 0 5px 19px rgb(25 41 45 / 4%);
+}
+.report-kpis article:first-child {
+  background: #fff8f2;
+  border-color: #f4e5d8;
+}
+.report-kpis strong {
+  color: #28363c;
+  font-weight: 850;
+}
+.report-kpis article:first-child strong {
+  color: #ad451a;
+}
+.report-card h2 {
+  color: #2c3b41;
+  font-weight: 800;
+}
+.report-controls input {
+  border-color: #dfe4e5;
+  background: #fff;
+  border-radius: 11px;
+}
+.report-controls button:not(.report-export) {
+  background: #283e43;
+  border-radius: 11px;
+}
+.report-back {
+  color: #738086;
+}
+.report-warning {
+  background: #fff9f2;
+  border-color: #f0e3d6;
+  border-left: 3px solid #cfaa82;
+  border-radius: 11px;
+}
