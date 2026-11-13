@@ -234,7 +234,6 @@
   background: #9c4535;
 }
 
-
 /* Table management follows the same card density and status hierarchy as Orders. */
 .tables-shell {
   max-width: var(--pos-content-compact, 1040px);
