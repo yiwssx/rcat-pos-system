@@ -7,7 +7,7 @@ RCAT POS is a hardware-free, multi-merchant ordering/POS SaaS inspired by ThaiQR
 - Platform admin: tenants, operational support, global incident/audit.
 - Merchant owner: shop onboarding, staff, menu, table QR, *future* per-store PromptPay receiving configuration, reports.
 - Staff: manage orders/fulfilment; explicit manual payment confirmation only after Payment is implemented and authorized.
-- Guest: browse menu, customize items, submit/track orders, *later* pay per Order.
+- Guest: browse menu, customize items, provide required ordered-by/delivery information at Checkout, submit/track Orders, and pay immediately **or later** independently of food preparation.
 
 ## Development order (important)
 1. Merchant registration and shop/tenant administration.
@@ -26,10 +26,17 @@ RCAT POS is a hardware-free, multi-merchant ordering/POS SaaS inspired by ThaiQR
 ## MVP user journey (after G5)
 1. Guest scans table/store ordering QR → menu → cart → confirm.
 2. Backend recalculates totals, stores immutable Order snapshot, assigns Order ID and exposes tracking.
-3. Order reaches merchant's durable queue, independently of payment status (order acceptance policy is configurable later).
-4. After Merchant accepts the Order (initial policy proposal subject to stock/fulfilment review), show a standard PromptPay amount QR for that Order and store receiver; same-phone UX offers saving/importing QR.
+3. Order reaches Merchant's durable queue **immediately** upon submission. Merchant may accept, prepare and serve **without waiting for payment, slip upload or manual confirmation**; existing stock-on-merchant-accept continues.
+4. Show a standard PromptPay amount QR for that Order and store receiver **immediately after successful Order submission**; customer can pay now or later. Amount is prefilled but not guaranteed bank-side locked; same-phone UX offers saving/importing QR.
 5. Guest submits a private slip; authorized Merchant personnel checks the actual bank account's incoming transaction and then explicitly confirms or rejects. Showing a QR or uploading a slip **never** proves receipt. Label confirmation **merchant-confirmed**, not bank-verified.
 6. Merchant sees independent Order and Payment states, with audit history and recovery options.
+
+## G2/G3 customer context and customization (owner-approved tracker)
+- [#102](https://github.com/yiwssx/rcat-pos-system/issues/102) is the **single cross-functional tracker** for these pending requirements; no child Issue per page.
+- Existing store-defined modifier groups cover sweetness/spice/ice/toppings, using radio for exactly one and checkbox for multiple; modifiers may affect price by signed satang delta.
+- Optional **per-item** notes must survive Checkout as immutable order-item snapshots; distinct notes prevent unintended cart-line merging, even for identical products/options.
+- Checkout requires free-form **ชื่อผู้สั่ง** and **สถานที่รับ/ส่ง**; nickname permitted, table ID is not a substitute for destination. Validate on client and server, restrict retention/visibility and avoid collecting unnecessary real identity.
+- Merchant order card must show ordered-by, delivery point, item modifiers and per-item notes prominently; Order arrival/preparation never depends on Payment state.
 
 ## Business rules
 - One Order has one payment obligation for its full total in the initial release; retries may create multiple payment attempts but should have one active payment request at a time.
@@ -56,4 +63,4 @@ RCAT POS is a hardware-free, multi-merchant ordering/POS SaaS inspired by ThaiQR
 - Automatic split payments or merged payment across many Orders unless decided as separate work.
 
 ## Requirements tracking
-Master tracker #13. Product/ordering #1–#6, #8–#10; deferred manual-first payment #7; pilot #11. See [M1 detailed requirements](G5-M1-MANUAL-PROMPTPAY.md), docs/ROADMAP.md and docs/DECISIONS.md.
+Master tracker #13; consolidated Order UX [#102](https://github.com/yiwssx/rcat-pos-system/issues/102) (owners #5/#6/#8); G4 staging #10/#11/#81; final manual-first Payment #7. See [M1 detailed requirements](G5-M1-MANUAL-PROMPTPAY.md), docs/ROADMAP.md and docs/DECISIONS.md.
