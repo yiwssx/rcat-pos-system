@@ -160,7 +160,7 @@ BEGIN
    RAISE EXCEPTION 'Ordering closed' USING ERRCODE='P0040';
  END IF;
  RETURN rcat_private.place_guest_order(p_visit_digest,p_idempotency_key,p_cart);
-END $;
+END $$;
 
 REVOKE ALL ON FUNCTION rcat_private.set_store_ordering_enabled(bytea,uuid,uuid,boolean) FROM PUBLIC;
 REVOKE ALL ON FUNCTION rcat_private.open_printed_ordering_table(uuid,uuid,uuid,bytea,bytea) FROM PUBLIC;
