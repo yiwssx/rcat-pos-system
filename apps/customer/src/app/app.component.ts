@@ -86,7 +86,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
         [class.portal-with-nav]="session.phase() === 'staff' && !guestOrder()"
       >
         @if (session.phase() === "staff" && !guestOrder()) {
-          <aside class="portal-sidebar" aria-label="พื้นที่ทำงาน">
+          <aside class="portal-sidebar" [class.portal-nav-open]="mobileNavOpen()" aria-label="พื้นที่ทำงาน">
             <div class="portal-workspace-selector">
               <span class="portal-nav-caption">WORKSPACE</span>
               @if (store(); as selected) {
@@ -112,7 +112,17 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                 </p>
               }
             </div>
-            <nav class="portal-nav" aria-label="งานของร้าน">
+            <button
+              type="button"
+              class="portal-mobile-nav-toggle"
+              aria-controls="portal-main-nav"
+              [attr.aria-expanded]="mobileNavOpen()"
+              (click)="mobileNavOpen.update((open) => !open)"
+            >
+              <span>{{ mobileNavOpen() ? "ซ่อนเมนูจัดการ" : "แสดงเมนูจัดการ" }}</span>
+              <span aria-hidden="true">{{ mobileNavOpen() ? "−" : "+" }}</span>
+            </button>
+            <nav id="portal-main-nav" class="portal-nav" aria-label="งานของร้าน">
               <div class="portal-nav-group">
                 <span class="portal-nav-caption">ภาพรวม</span>
                 <a
@@ -202,6 +212,7 @@ export class AppComponent {
   private readonly router = inject(Router);
   readonly url = signal(this.router.url);
   readonly loggingOut = signal(false);
+  readonly mobileNavOpen = signal(false);
   readonly message = signal("");
   readonly guestOrder = computed(() =>
     /^\/order(?:\/|\?|#|$)/.test(this.url()),
@@ -223,7 +234,10 @@ export class AppComponent {
   ];
   constructor() {
     this.router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
-      if (event instanceof NavigationEnd) this.url.set(event.urlAfterRedirects);
+      if (event instanceof NavigationEnd) {
+        this.url.set(event.urlAfterRedirects);
+        this.mobileNavOpen.set(false);
+      }
     });
     void this.session.configure();
     void this.session.ensure();
