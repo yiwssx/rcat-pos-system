@@ -807,6 +807,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     optionId: string,
   ): boolean {
     const ids = this.selected()[productId] ?? [];
+    if (group.maxSelect === 1) return false; // Radios must remain switchable.
     return (
       !ids.includes(optionId) &&
       ids.filter((id) =>
