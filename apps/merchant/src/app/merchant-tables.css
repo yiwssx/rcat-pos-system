@@ -299,3 +299,87 @@
     flex: 1 1 100%;
   }
 }
+
+
+/* Visual V5 — table QR management shares the same RCAT app surfaces. */
+.tables-shell {
+  max-width: 1180px;
+  padding: clamp(1.2rem, 3vw, 2.6rem) clamp(1rem, 3vw, 2.6rem) 4rem;
+  color: #26373d;
+}
+.tables-header h1 {
+  color: #27373d;
+  font-size: clamp(1.9rem, 2.75vw, 2.65rem);
+  font-weight: 850;
+  line-height: 1.25;
+}
+.tables-header p {
+  color: #738188;
+  font-size: 0.94rem;
+}
+.tables-header > a {
+  color: #697a80;
+}
+.tables-add,
+.table-work,
+.tables-list {
+  background: #fff;
+  border: 1px solid #e7eaea;
+  border-radius: 17px;
+  box-shadow: 0 5px 20px rgb(26 40 45 / 4%);
+}
+.tables-add h2,
+.table-work h2,
+.tables-list h2 {
+  color: #2b3a40;
+  font-weight: 800;
+}
+.tables-add input {
+  border: 1px solid #e1e5e5;
+  border-radius: 11px;
+  background: #fdfdfc;
+}
+.tables-shell button {
+  border-radius: 11px;
+  background: #283f45;
+}
+.table-card {
+  border: 1px solid #e5e9e9;
+  border-radius: 13px;
+  background: #fafbfa;
+}
+.table-card.selected {
+  border-color: #be582c;
+  background: #fff6ef;
+}
+.table-card p {
+  color: #78858b;
+}
+.ordering-switch {
+  border: 1px solid #f0dfcf;
+  border-radius: 16px;
+  background: #fff9f3;
+}
+.ordering-switch h2 {
+  color: #293a3e;
+}
+.table-qr {
+  border-color: #e6eaea;
+  border-radius: 14px;
+  background: #fff;
+}
+.table-url {
+  color: #718087;
+}
+.tables-warning {
+  color: #78634b;
+  background: #fff9f3;
+  border-color: #f0dfcd;
+  border-radius: 12px;
+}
+.tables-notice {
+  color: #286247;
+  background: #f1faf4;
+  border-color: #c5e4d0;
+  border-radius: 12px;
+}
