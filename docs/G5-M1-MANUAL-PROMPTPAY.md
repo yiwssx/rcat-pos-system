@@ -10,11 +10,11 @@
 - Do **not** build a bank API, PSP/gateway, provider webhook, automatic verification/settlement, platform pooled receiving account or automatic refund in M1. Treat such integrations as future opt-in G5-M2 architecture, not a blocking dependency for M1.
 - Production with customer money still needs G4 evidence, G5 focused adversarial checks and G6 owner-approved controlled pilot, recovery and go/no-go.
 
-## Initial journey (UX design proposal, not an unreviewed automatic policy flip)
+## Confirmed decoupled customer and kitchen journey (owner decision, 13 Nov 2026)
 
 1. Customer scans existing table/store Ordering QR, chooses items and submits an Order. Backend retains server-authoritative immutable satang amount and `store_id`/`tenant_id`.
-2. Merchant reviews availability, accepts the Order, and then payment is requested; **before enforcing pay-before-prepare** reconcile it with current stock-on-accept behavior and operational exceptions. A later pay-after-dining policy is separate future scope.
-3. Backend pins the store receiving account snapshot and amount to a `payment_request`, exposes its payment QR and copy/save/import guidance suitable for one-phone banking.
+2. Merchant receives Order **immediately upon successful submission** via existing durable queue. Merchant may accept/prepare/serve regardless of payment status; stock is consumed on Merchant acceptance for tracked recipes as before. Payment confirmation is **not** a gate for kitchen actions.
+3. Backend creates the Order-specific logical `payment_request` immediately after submission, snapshots the store-configured PromptPay identifier and server amount, and exposes a standard PromptPay QR **without awaiting Merchant acceptance**. Pre-filled amount is not guaranteed bank-side noneditable. Guest may pay now or later; provide copy/save/import QR guidance suitable for one-phone banking.
 4. Guest uploads receipt evidence through an Order-scoped tracking capability, with strict validation. Status is **submitted for review**, never **paid**. Repeated upload does not create another Order or additional debt.
 5. Merchant inbox shows pending evidence and a clear instruction to check the bank's own incoming transaction. Owner/manager/cashier (subject to existing permissions) chooses confirm or reject, with explicit actor/time/reason and optimistic concurrency.
 6. Guest sees **ร้านยืนยันรับชำระแล้ว** only after `manual_confirmed`, never **ธนาคารตรวจสอบแล้ว**. Notify merchant/guest via durable events, with reconnect recovery.
@@ -28,7 +28,7 @@
 - `awaiting_payment` → `expired` or `payment_exception`. Expiry/cancellation **does not prove funds were never transferred**.
 - `manual_confirmed` → `refund_requested` → `refund_recorded` only after merchant verifies external refund and attaches evidence. Preserve the original payment confirmation and its audit trail.
 - `provider_verified` is reserved for future Bank/PSP integration; the M1 API must never produce it.
-- Order status (submitted/accepted/preparing/served/cancelled) is **independent** of Payment status. Any pay-first preparation policy must be an explicitly reviewed server-side order policy.
+- Order status (submitted/accepted/preparing/served/cancelled) is **independent** of Payment status. **No pay-first preparation gate in G5-M1**. Unpaid Order after fulfilment remains an outstanding payment obligation.
 
 ## Model, invariants and boundaries
 
@@ -58,6 +58,10 @@
 6. Merchant phone sleep/reconnect and weak connection during upload/review: no lost evidence, duplicate decision, or false completion.
 7. Mobile UI/Thai text accessibility and same-phone QR-save workflow; clear `manual_confirmed` wording.
 8. Staging-only synthetic validation plus retained G4 evidence under the Human-triggered Evidence-aware Engineering Loop. G6 requires operator review and explicit approval; docs-only PR cannot close #7.
+
+## Cross-feature UX scope
+
+- [#102](https://github.com/yiwssx/rcat-pos-system/issues/102) is the **single** G2/G3 tracker for product modifiers, optional per-item notes, required ordered-by/delivery fields and Merchant Order Board display; Payment #7 does not re-track those tasks. Order context is captured at submission, not during bank/slip steps.
 
 ## Delivery sequence
 
