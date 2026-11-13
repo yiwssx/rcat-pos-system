@@ -316,13 +316,7 @@ function guestError(error: unknown): string {
               <fieldset class="guest-options">
                 <legend>
                   {{ group.name }}
-                  <span>
-                    @if (group.maxSelect === 1) {
-                      {{ group.minSelect === 1 ? "จำเป็น · เลือก 1" : "ไม่จำเป็น · เลือกได้ 1" }}
-                    } @else {
-                      เลือก {{ group.minSelect }}–{{ group.maxSelect }}
-                    }
-                  </span>
+                  <span>{{ modifierGroupHint(group) }}</span>
                 </legend>
                 @if (options(group.id).length < group.minSelect) {
                   <p class="guest-warning">
@@ -815,6 +809,14 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       ).length >= group.maxSelect
     );
   }
+  modifierGroupHint(group: GuestModifierGroup): string {
+    if (group.maxSelect === 1) {
+      return group.minSelect === 1
+        ? "จำเป็น · เลือก 1"
+        : "ไม่จำเป็น · เลือกได้ 1";
+    }
+    return `เลือก ${group.minSelect}–${group.maxSelect}`;
+  }
   hasGroupSelection(productId: string, group: GuestModifierGroup): boolean {
     const options = new Set(this.options(group.id).map((option) => option.id));
     return (this.selected()[productId] ?? []).some((id) => options.has(id));
@@ -828,7 +830,11 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     if (!visit || this.busy()) return;
     try {
       const next = changeModifierSelection(
-        visit, productId, group.id, this.selected()[productId] ?? [], optionId,
+        visit,
+        productId,
+        group.id,
+        this.selected()[productId] ?? [],
+        optionId,
       );
       this.selected.update((values) => ({ ...values, [productId]: next }));
       this.notice.set("");
