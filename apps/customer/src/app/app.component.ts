@@ -53,7 +53,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
   template: `
     <div class="portal-layout">
       <a class="portal-skip" href="#main">ข้ามไปเนื้อหาหลัก</a>
-      <header class="portal-header">
+      <header class="portal-header" [class.portal-header-hidden]="guestMenu()">
         <a class="portal-brand" routerLink="/" aria-label="RCAT POS หน้าแรก">
           <span class="portal-brand-mark" aria-hidden="true">R</span>
           <span class="portal-brand-title"
@@ -86,7 +86,11 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
         [class.portal-with-nav]="session.phase() === 'staff' && !guestOrder()"
       >
         @if (session.phase() === "staff" && !guestOrder()) {
-          <aside class="portal-sidebar" aria-label="พื้นที่ทำงาน">
+          <aside
+            class="portal-sidebar"
+            [class.portal-nav-open]="mobileNavOpen()"
+            aria-label="พื้นที่ทำงาน"
+          >
             <div class="portal-workspace-selector">
               <span class="portal-nav-caption">WORKSPACE</span>
               @if (store(); as selected) {
@@ -112,14 +116,42 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                 </p>
               }
             </div>
-            <nav class="portal-nav" aria-label="งานของร้าน">
+            <button
+              type="button"
+              class="portal-mobile-nav-toggle"
+              aria-controls="portal-main-nav"
+              [attr.aria-expanded]="mobileNavOpen()"
+              (click)="toggleMobileNav()"
+            >
+              <span>เมนูจัดการร้าน</span>
+              <span aria-hidden="true">{{ mobileNavOpen() ? "−" : "+" }}</span>
+            </button>
+            <nav
+              id="portal-main-nav"
+              class="portal-nav"
+              aria-label="งานของร้าน"
+            >
               <div class="portal-nav-group">
                 <span class="portal-nav-caption">ภาพรวม</span>
                 <a
                   routerLink="/"
                   routerLinkActive="active"
                   [routerLinkActiveOptions]="{ exact: true }"
-                  >พื้นที่ทำงาน</a
+                  ><svg
+                    class="portal-nav-svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="3" width="7" height="8" rx="1.5" />
+                    <rect x="14" y="3" width="7" height="5" rx="1.5" />
+                    <rect x="14" y="12" width="7" height="9" rx="1.5" />
+                    <rect x="3" y="15" width="7" height="6" rx="1.5" /></svg
+                  ><span>พื้นที่ทำงาน</span></a
                 >
               </div>
               @if (store(); as selected) {
@@ -135,7 +167,19 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                           selected.storeId,
                         ]"
                         routerLinkActive="active"
-                        >{{ item.label }}</a
+                        ><svg
+                          class="portal-nav-svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M4 4h16v16H4z" />
+                          <path d="M8 9h8M8 13h8M8 17h5" /></svg
+                        ><span>{{ item.label }}</span></a
                       >
                     }
                   }
@@ -152,7 +196,34 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                           selected.storeId,
                         ]"
                         routerLinkActive="active"
-                        >{{ item.label }}</a
+                        ><svg
+                          class="portal-nav-svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          aria-hidden="true"
+                        >
+                          @switch (item.path) {
+                            @case ("tables") {
+                              <rect x="3" y="4" width="18" height="16" rx="3" />
+                              <path d="M3 10h18M9 10v10" />
+                            }
+                            @case ("catalog") {
+                              <path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5" />
+                            }
+                            @case ("inventory") {
+                              <path d="m3 7 9-4 9 4v11l-9 4-9-4V7Z" />
+                              <path d="m3 7 9 4 9-4M12 11v11" />
+                            }
+                            @case ("reports") {
+                              <rect x="3" y="3" width="18" height="18" rx="3" />
+                              <path d="M8 16v-3m4 3V8m4 8v-5" />
+                            }
+                          }</svg
+                        ><span>{{ item.label }}</span></a
                       >
                     }
                   }
@@ -160,7 +231,21 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                     <a
                       [routerLink]="['/tenants', selected.tenantId, 'staff']"
                       routerLinkActive="active"
-                      >พนักงานและสิทธิ์</a
+                      ><svg
+                        class="portal-nav-svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <circle cx="9" cy="8" r="3" />
+                        <path
+                          d="M3 20v-2a6 6 0 0 1 12 0v2M17 11h5m-2.5-2.5v5"
+                        /></svg
+                      ><span>พนักงานและสิทธิ์</span></a
                     >
                   }
                 </div>
@@ -169,7 +254,21 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                 <div class="portal-nav-group">
                   <span class="portal-nav-caption">ตั้งค่า</span>
                   <a routerLink="/settings" routerLinkActive="active"
-                    >ตั้งค่าร้าน</a
+                    ><svg
+                      class="portal-nav-svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="3" />
+                      <path
+                        d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"
+                      /></svg
+                    ><span>ตั้งค่าร้าน</span></a
                   >
                 </div>
               }
@@ -202,10 +301,12 @@ export class AppComponent {
   private readonly router = inject(Router);
   readonly url = signal(this.router.url);
   readonly loggingOut = signal(false);
+  readonly mobileNavOpen = signal(false);
   readonly message = signal("");
   readonly guestOrder = computed(() =>
     /^\/order(?:\/|\?|#|$)/.test(this.url()),
   );
+  readonly guestMenu = computed(() => /^\/order(?:\?|#|$)/.test(this.url()));
   readonly store = computed(() => {
     const segments = this.url().split(/[/?#]/);
     return (
@@ -223,7 +324,10 @@ export class AppComponent {
   ];
   constructor() {
     this.router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
-      if (event instanceof NavigationEnd) this.url.set(event.urlAfterRedirects);
+      if (event instanceof NavigationEnd) {
+        this.url.set(event.urlAfterRedirects);
+        this.mobileNavOpen.set(false);
+      }
     });
     void this.session.configure();
     void this.session.ensure();
@@ -240,6 +344,9 @@ export class AppComponent {
       !this.session.stores().length ||
       this.session.stores().some((store) => store.role === "owner")
     );
+  }
+  toggleMobileNav(): void {
+    this.mobileNavOpen.update((open) => !open);
   }
   changeStore(event: Event): void {
     const store = this.session

@@ -281,3 +281,123 @@
     flex: 1 0 100%;
   }
 }
+
+/* Owner settings match merchant density without implying platform-admin rights. */
+.owner-shell {
+  max-width: var(--pos-content-compact, 1040px);
+  padding: clamp(1rem, 2.4vw, 2rem) clamp(0.75rem, 2vw, 1.5rem) 4rem;
+}
+.owner-shell h1 {
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+.owner-panel {
+  border-radius: 0.95rem;
+  margin-block: 1rem;
+  box-shadow: 0 4px 16px rgb(23 40 59 / 5%);
+}
+.owner-grid {
+  gap: 0.85rem;
+}
+.owner-form label,
+.owner-staff-controls label {
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.owner-staff-controls {
+  gap: 0.7rem;
+}
+.owner-staff-list li {
+  gap: 0.75rem;
+}
+@media (max-width: 460px) {
+  .owner-panel {
+    padding: 1rem;
+  }
+  .owner-staff-controls button {
+    flex: 1 1 auto;
+  }
+}
+
+/* Visual V5 — tenant-owner tools match the shared merchant language. */
+.owner-shell {
+  max-width: 1180px;
+  padding: clamp(1.2rem, 3vw, 2.6rem) clamp(1rem, 3vw, 2.6rem) 4rem;
+  color: #28373d;
+}
+.owner-shell h1 {
+  font-size: clamp(1.8rem, 2.7vw, 2.6rem);
+  font-weight: 850;
+  line-height: 1.25;
+  letter-spacing: -0.035em;
+}
+.owner-shell h2,
+.owner-shell h3 {
+  color: #2d3b41;
+  font-weight: 800;
+}
+.owner-muted {
+  color: #758188;
+  font-size: 0.93rem;
+}
+.owner-panel {
+  background: #fff;
+  border: 1px solid #e6eaea;
+  border-radius: 17px;
+  box-shadow: 0 5px 20px rgb(27 40 45 / 4%);
+}
+.owner-stores article {
+  border: 1px solid #e7eaea;
+  border-radius: 14px;
+  background: #fdfdfc;
+}
+.owner-role {
+  background: #fbede4;
+  color: #a7471d;
+  border-radius: 999px;
+  font-weight: 800;
+}
+.owner-stores article > a,
+.owner-back {
+  color: #a64821;
+}
+.owner-form label {
+  color: #5e6b72;
+  font-weight: 700;
+}
+.owner-form input,
+.owner-form select,
+.owner-staff-controls select {
+  border: 1px solid #e0e6e6;
+  border-radius: 11px;
+  background: #fdfdfc;
+  color: #25363c;
+}
+.owner-login,
+.owner-form button {
+  background: #293f45;
+  border-color: #293f45;
+  border-radius: 11px;
+}
+.owner-logout,
+.owner-headline button,
+.owner-secret button,
+.owner-staff-controls button {
+  border: 1px solid #e0e6e6;
+  border-radius: 11px;
+  color: #375057;
+  background: #f9faf9;
+}
+.owner-alert {
+  background: #fff9f2;
+  border: 1px solid #efdfcb;
+  border-left: 3px solid #cea478;
+  border-radius: 12px;
+  color: #786147;
+}
+@media (max-width: 420px) {
+  .owner-shell h1 {
+    font-size: 1.75rem;
+  }
+}

@@ -1437,3 +1437,326 @@
     }
   }
 }
+
+/*
+ * Reference review (DOME POS, Square, Loyverse): menu first, total always
+ * visible, stable controls. Improve legibility without changing ordering rules.
+ */
+.guest-product {
+  min-width: 0;
+  box-shadow: 0 4px 16px rgb(23 40 59 / 5%);
+}
+.guest-product-info {
+  gap: 0.2rem;
+}
+.guest-product-category,
+.guest-product-extra {
+  font-size: 0.81rem;
+  line-height: 1.45;
+}
+.guest-product h2 {
+  font-size: 1rem;
+  line-height: 1.45;
+}
+.guest-context,
+.guest-track-link {
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+.guest-menu-progress,
+.guest-payment-alert,
+.guest-cart-subtitle {
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.guest-sheet .guest-options legend span,
+.guest-sheet .guest-option-price {
+  font-size: 0.88rem;
+}
+.guest-sheet .guest-option {
+  line-height: 1.5;
+}
+@media (max-width: 460px) {
+  .guest-product {
+    min-height: 116px;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+  .guest-product-category,
+  .guest-product-extra {
+    font-size: 0.81rem;
+  }
+  .guest-product h2 {
+    font-size: 1rem;
+  }
+  .guest-context,
+  .guest-track-link {
+    font-size: 0.84rem;
+  }
+  .guest-cart-shortcut {
+    gap: 0.45rem;
+    padding-inline: 0.75rem;
+  }
+  .guest-cart-shortcut-count,
+  .guest-cart-shortcut-price,
+  .guest-cart-shortcut-action {
+    font-size: 0.85rem;
+  }
+}
+@media (max-width: 350px) {
+  /* Never conceal the estimated order total on narrow phones. */
+  .guest-cart-shortcut-price {
+    display: inline-flex;
+    font-size: 0.81rem;
+    margin-left: auto;
+  }
+  .guest-cart-shortcut-icon {
+    display: none;
+  }
+  .guest-cart-shortcut-count {
+    font-size: 0.8rem;
+  }
+  .guest-cart-shortcut-action {
+    font-size: 0.8rem;
+    padding-inline: 0.55rem;
+  }
+}
+
+/* Internal 44px touch target rule also applies at the narrowest viewport. */
+.guest-cart-lines .guest-qty button {
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+}
+@media (max-width: 350px) {
+  .guest-add {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+  }
+}
+
+/* Visual V5 — the guest sees a refined menu, not a back-office form. */
+:host {
+  color: var(--pos-ink);
+}
+.guest-shell {
+  width: min(100% - 2rem, 1120px);
+  padding: clamp(0.85rem, 2vw, 2rem) 0 6rem;
+}
+.guest-header {
+  align-items: center;
+  gap: 0.7rem;
+  background: #fff;
+  border: 1px solid #e7e9e9;
+  border-radius: 20px;
+  padding: clamp(0.85rem, 2vw, 1.2rem);
+  box-shadow: 0 6px 24px rgb(25 38 43 / 4%);
+}
+.guest-brand {
+  align-items: center;
+  gap: 0.85rem;
+}
+.guest-brand-mark {
+  border-radius: 13px;
+  background: linear-gradient(145deg, #d77840, #ae4217);
+  box-shadow: 0 4px 10px rgb(176 64 24 / 13%);
+}
+.guest-menu-kicker {
+  color: #b94d1b;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+}
+.guest-header h1 {
+  color: #223137;
+  font-size: clamp(1.24rem, 2.3vw, 1.7rem);
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  margin: 0.2rem 0;
+}
+.guest-context {
+  color: #69777e;
+  font-size: 0.83rem;
+  margin: 0.15rem 0 0;
+}
+.guest-track-link {
+  padding-inline: 0.85rem;
+  color: #5a666b;
+  background: #f7f8f7;
+  border-color: #e9ebeb;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.guest-menu-intro {
+  margin-top: 1.6rem;
+}
+.guest-menu-intro-title {
+  color: #26353c;
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+.guest-table-chip {
+  border-radius: 999px;
+  background: #fff4ec;
+  border-color: #f6dfd0;
+  color: #a54b21;
+}
+.guest-menu-toolbar {
+  margin: 1rem 0 0.95rem;
+}
+.guest-search {
+  gap: 0.35rem;
+}
+.guest-search input {
+  min-height: 52px;
+  background: #fff;
+  border: 1px solid #e1e6e6;
+  border-radius: 15px;
+  padding-inline: 1rem;
+  color: #213138;
+  box-shadow: 0 4px 12px rgb(24 37 42 / 3%);
+}
+.guest-search input::placeholder {
+  color: #8b989e;
+}
+.guest-categories {
+  gap: 0.5rem;
+  margin-bottom: 1.1rem;
+}
+.guest-category-chip {
+  min-height: 42px;
+  border-radius: 999px;
+  padding-inline: 1rem;
+  color: #4c5b62;
+  background: #fff;
+  border: 1px solid #e6e9e9;
+  box-shadow: none;
+}
+.guest-category-chip.is-active {
+  background: #293f44;
+  border-color: #293f44;
+  color: #fff;
+  box-shadow: 0 4px 12px rgb(28 49 53 / 9%);
+}
+.guest-products {
+  gap: 0.9rem;
+}
+.guest-product {
+  border-radius: 17px;
+  border: 1px solid #e8eaea;
+  background: #fff;
+  box-shadow: 0 5px 22px rgb(29 44 50 / 4%);
+  padding: 0.9rem;
+  align-items: center;
+}
+.guest-product-media {
+  border-radius: 13px;
+  overflow: hidden;
+}
+.guest-product-placeholder {
+  background:
+    radial-gradient(circle at 78% 12%, #ffefe1 0, transparent 58%),
+    linear-gradient(155deg, #faf1e7, #f5e4d7);
+  color: #b76b45;
+}
+.guest-product-info {
+  gap: 0.3rem;
+}
+.guest-product-category {
+  color: #8a7970;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+.guest-product h2 {
+  font-size: 1.04rem;
+  font-weight: 850;
+  color: #26343b;
+  letter-spacing: -0.02em;
+  margin: 0.16rem 0;
+}
+.guest-price {
+  color: #a94119;
+  font-size: 1.04rem;
+  font-weight: 850;
+}
+.guest-add {
+  background: #b94d1b;
+  color: #fff;
+  border: 0;
+  border-radius: 13px;
+  box-shadow: 0 3px 9px rgb(185 77 27 / 12%);
+}
+.guest-add:hover:not(:disabled) {
+  background: #963c17;
+}
+.guest-menu-progress {
+  color: #8a959b;
+  font-size: 0.77rem;
+}
+.guest-payment-alert {
+  color: #7c674f;
+  background: #fffaf3;
+  border: 1px solid #f2e7d9;
+  border-left: 3px solid #d8b28b;
+  border-radius: 12px;
+  box-shadow: none;
+}
+.guest-cart-shortcut {
+  border-radius: 17px;
+  background: #21373d;
+  box-shadow: 0 12px 32px rgb(23 46 52 / 17%);
+}
+.guest-cart-shortcut-action {
+  border-radius: 10px;
+}
+.guest-sheet {
+  border-radius: 24px 24px 0 0;
+}
+.guest-sheet-primary {
+  border-radius: 13px;
+  background: #b94d1b;
+}
+.guest-closed {
+  border-radius: 22px;
+}
+@media (max-width: 520px) {
+  .guest-header {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .guest-brand {
+    flex: 1 1 190px;
+    min-width: 0;
+  }
+  .guest-header h1 {
+    font-size: 1.15rem;
+  }
+  .guest-brand-mark {
+    width: 42px;
+    height: 42px;
+  }
+  .guest-track-link {
+    padding-inline: 0.7rem;
+    font-size: 0.78rem;
+  }
+  .guest-menu-intro {
+    margin-top: 1.3rem;
+  }
+  .guest-product {
+    padding: 0.75rem;
+  }
+  .guest-product-media {
+    border-radius: 12px;
+  }
+  .guest-add {
+    border-radius: 12px;
+    box-shadow: none;
+  }
+}

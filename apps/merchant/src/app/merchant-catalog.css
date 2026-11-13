@@ -339,3 +339,126 @@
   border: 1px solid #a8c2d4;
   background: #f7fbfe;
 }
+
+/* Compact management: prioritize item name/price/status, then editing controls. */
+.catalog-shell {
+  max-width: var(--pos-content-compact, 1040px);
+  padding: clamp(1rem, 2.4vw, 2rem) clamp(0.75rem, 2vw, 1.5rem) 4rem;
+}
+.catalog-head h1 {
+  font-size: clamp(1.9rem, 3vw, 2.6rem);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+.catalog-grid {
+  gap: 0.85rem;
+  margin-block: 1rem;
+}
+.catalog-panel {
+  border-radius: 0.95rem;
+  box-shadow: 0 4px 16px rgb(23 40 59 / 5%);
+}
+.catalog-panel h2 {
+  font-size: 1.18rem;
+  line-height: 1.4;
+}
+.catalog-products {
+  margin-top: 1.2rem;
+}
+.catalog-product {
+  padding: 1rem 0;
+}
+.catalog-summary h3 {
+  font-size: 1.07rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.catalog-summary p {
+  line-height: 1.6;
+}
+.catalog-panel label,
+.catalog-product .catalog-status,
+.catalog-page-status {
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+.catalog-panel button,
+.catalog-actions button {
+  min-height: 44px;
+}
+@media (max-width: 760px) {
+  .catalog-grid {
+    gap: 0.75rem;
+  }
+  .catalog-panel {
+    padding: 1rem;
+  }
+}
+
+/* Visual V5 — calm editing surfaces, coherent form and product scale. */
+.catalog-shell {
+  max-width: 1180px;
+  padding: clamp(1.2rem, 3vw, 2.6rem) clamp(1rem, 3vw, 2.6rem) 4rem;
+  color: #27363d;
+}
+.catalog-head h1 {
+  font-size: clamp(1.9rem, 2.75vw, 2.65rem);
+  font-weight: 850;
+  color: #25343b;
+}
+.catalog-intro {
+  color: #748088;
+  font-size: 0.94rem;
+}
+.catalog-panel {
+  border-color: #e7eaea;
+  border-radius: 17px;
+  box-shadow: 0 5px 20px rgb(26 40 45 / 4%);
+  background: #fff;
+}
+.catalog-panel h2 {
+  font-weight: 800;
+  color: #2e3c42;
+}
+.catalog-panel label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #5b6970;
+}
+.catalog-panel input,
+.catalog-panel select,
+.catalog-edit input,
+.catalog-edit select {
+  border-color: #e0e6e5;
+  background: #fdfdfc;
+  border-radius: 11px;
+}
+.catalog-panel button:not(.danger):not(.subtle) {
+  background: #283e43;
+  border-radius: 11px;
+}
+.catalog-panel button:hover:not(:disabled) {
+  background: #b94d1b;
+}
+.catalog-product {
+  border-color: #eceded;
+}
+.catalog-summary h3 {
+  font-weight: 800;
+  color: #273840;
+}
+.catalog-status {
+  background: #e9f5ec;
+  color: #2c6747;
+}
+.catalog-edit {
+  border: 1px solid #e6e9e9;
+  background: #f8f9f8;
+  border-radius: 14px;
+}
+.catalog-editor-toggle {
+  border-radius: 10px;
+  background: #f8f9f8;
+  color: #4d6268;
+  border-color: #dfe5e5;
+}
