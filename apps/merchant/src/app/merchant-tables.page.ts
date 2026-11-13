@@ -43,19 +43,34 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
         @if (notice()) {
           <p class="tables-notice" role="status">{{ notice() }}</p>
         }
-        <section class="ordering-switch" aria-labelledby="ordering-switch-title">
+        <section
+          class="ordering-switch"
+          aria-labelledby="ordering-switch-title"
+        >
           <div>
             <h2 id="ordering-switch-title">เปิดรับออเดอร์ผ่าน QR</h2>
             <p>
-              {{ orderingEnabled()
-                ? "เปิดอยู่ · ลูกค้าสแกน QR เพื่อสั่งได้ทันที"
-                : "ปิดอยู่ · ลูกค้าเห็นข้อความว่าร้านยังไม่เปิดให้สั่ง" }}
+              {{
+                orderingEnabled()
+                  ? "เปิดอยู่ · ลูกค้าสแกน QR เพื่อสั่งได้ทันที"
+                  : "ปิดอยู่ · ลูกค้าเห็นข้อความว่าร้านยังไม่เปิดให้สั่ง"
+              }}
             </p>
           </div>
-          <button type="button" [class.is-open]="orderingEnabled()"
-            [disabled]="busy()" [attr.aria-pressed]="orderingEnabled()"
-            (click)="toggleOrdering()">
-            {{ busy() ? "กำลังบันทึก..." : orderingEnabled() ? "ปิดรับออเดอร์" : "เปิดรับออเดอร์" }}
+          <button
+            type="button"
+            [class.is-open]="orderingEnabled()"
+            [disabled]="busy()"
+            [attr.aria-pressed]="orderingEnabled()"
+            (click)="toggleOrdering()"
+          >
+            {{
+              busy()
+                ? "กำลังบันทึก..."
+                : orderingEnabled()
+                  ? "ปิดรับออเดอร์"
+                  : "เปิดรับออเดอร์"
+            }}
           </button>
         </section>
         <form class="tables-add" (ngSubmit)="createTable()">
@@ -222,11 +237,17 @@ export class MerchantTablesPage implements OnInit {
     this.error.set("");
     this.notice.set("");
     try {
-      const result = await this.api.setOrderingEnabled(this.tenant, this.store, next);
+      const result = await this.api.setOrderingEnabled(
+        this.tenant,
+        this.store,
+        next,
+      );
       this.orderingEnabled.set(result.orderingEnabled);
-      this.notice.set(result.orderingEnabled
-        ? "เปิดรับออเดอร์แล้ว ลูกค้าสแกน QR เดิมเพื่อสั่งได้"
-        : "ปิดรับออเดอร์แล้ว จะไม่มีออเดอร์ใหม่เข้าระบบ");
+      this.notice.set(
+        result.orderingEnabled
+          ? "เปิดรับออเดอร์แล้ว ลูกค้าสแกน QR เดิมเพื่อสั่งได้"
+          : "ปิดรับออเดอร์แล้ว จะไม่มีออเดอร์ใหม่เข้าระบบ",
+      );
     } catch {
       this.error.set("ไม่สามารถเปลี่ยนสถานะรับออเดอร์ได้ กรุณาลองอีกครั้ง");
     } finally {

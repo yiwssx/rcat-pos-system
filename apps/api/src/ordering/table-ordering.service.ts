@@ -42,7 +42,10 @@ function safeError(error: unknown): never {
     throw new NotFoundException("Table or visit unavailable");
   }
   if (code === "P0041") {
-    throw new HttpException("Too many table sessions", HttpStatus.TOO_MANY_REQUESTS);
+    throw new HttpException(
+      "Too many table sessions",
+      HttpStatus.TOO_MANY_REQUESTS,
+    );
   }
   if (code === "23505") {
     throw new ConflictException("Table label already exists");
@@ -306,7 +309,10 @@ export class TableOrderingService {
   ) {
     ids(tenantId, storeId);
     const input = requestObject(raw);
-    if (Object.keys(input).length !== 1 || typeof input["enabled"] !== "boolean") {
+    if (
+      Object.keys(input).length !== 1 ||
+      typeof input["enabled"] !== "boolean"
+    ) {
       throw new BadRequestException("Invalid ordering state");
     }
     const session = await this.auth.session(req);
@@ -315,7 +321,12 @@ export class TableOrderingService {
       const result = await this.database.auth((client) =>
         client.query<{ enabled: boolean }>(
           "SELECT rcat_private.set_store_ordering_enabled($1,$2,$3,$4) AS enabled",
-          [digestOpaqueSecret(session.token), tenantId, storeId, input["enabled"]],
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            input["enabled"],
+          ],
         ),
       );
       return { orderingEnabled: result.rows[0]?.enabled === true };
@@ -331,9 +342,12 @@ export class TableOrderingService {
     const table = input["tableId"];
     if (
       Object.keys(input).length !== 3 ||
-      typeof tenant !== "string" || typeof store !== "string" ||
+      typeof tenant !== "string" ||
+      typeof store !== "string" ||
       typeof table !== "string" ||
-      !UUID.test(tenant) || !UUID.test(store) || !UUID.test(table)
+      !UUID.test(tenant) ||
+      !UUID.test(store) ||
+      !UUID.test(table)
     ) {
       throw new NotFoundException("Table unavailable");
     }
@@ -342,15 +356,19 @@ export class TableOrderingService {
     const masterToken = newOpaqueSecret();
     try {
       const result = await this.database.auth((client) =>
-        client.query<{ data: {
-          open: boolean;
-          storeName: string;
-          tableLabel: string;
-          expiresAt?: string;
-        } }>(
+        client.query<{
+          data: {
+            open: boolean;
+            storeName: string;
+            tableLabel: string;
+            expiresAt?: string;
+          };
+        }>(
           "SELECT rcat_private.open_printed_ordering_table($1,$2,$3,$4,$5) AS data",
           [
-            tenant, store, table,
+            tenant,
+            store,
+            table,
             digestOpaqueSecret(masterToken),
             digestOpaqueSecret(guestToken),
           ],

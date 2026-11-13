@@ -34,7 +34,10 @@ function guestError(error: unknown): string {
     if (error.status === 404)
       return "QR ของโต๊ะหมดอายุหรือถูกเปลี่ยนแล้ว โปรดขอ QR ล่าสุดจากร้าน";
     if (error.status === 409) {
-      if ((error.error as { message?: string } | null)?.message === "ORDERING_CLOSED")
+      if (
+        (error.error as { message?: string } | null)?.message ===
+        "ORDERING_CLOSED"
+      )
         return "ขออภัย ร้านยังไม่เปิดให้สั่งอาหาร กรุณาลองใหม่ภายหลัง";
       return "คำสั่งซื้อถูกเปลี่ยนระหว่างส่ง โปรดตรวจสอบตะกร้าก่อนลองอีกครั้ง";
     }
@@ -86,12 +89,20 @@ function guestError(error: unknown): string {
       }
 
       @if (closedStore(); as closed) {
-        <section class="guest-closed" aria-labelledby="guest-closed-title" role="status">
+        <section
+          class="guest-closed"
+          aria-labelledby="guest-closed-title"
+          role="status"
+        >
           <span class="guest-closed-symbol" aria-hidden="true">☕</span>
           <h2 id="guest-closed-title">ขออภัย ร้านยังไม่เปิดให้สั่งอาหาร</h2>
           <p>{{ closed.name }} · โต๊ะ {{ closed.table }}</p>
           <p>กรุณาลองใหม่เมื่อร้านเปิดรับออเดอร์</p>
-          <button type="button" (click)="reload()" [disabled]="loading() || !online()">
+          <button
+            type="button"
+            (click)="reload()"
+            [disabled]="loading() || !online()"
+          >
             ตรวจสอบอีกครั้ง
           </button>
         </section>
@@ -510,11 +521,16 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     this.scanToken = null;
     try {
       const state = await this.api.openPrintedTable(
-        table.tenantId, table.storeId, table.tableId,
+        table.tenantId,
+        table.storeId,
+        table.tableId,
       );
       if (version !== this.requestVersion) return;
       if (!state.open) {
-        this.closedStore.set({ name: state.storeName, table: state.tableLabel });
+        this.closedStore.set({
+          name: state.storeName,
+          table: state.tableLabel,
+        });
         return;
       }
       this.scanToken = state.visitToken;
@@ -753,10 +769,14 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       if (
         error instanceof HttpErrorResponse &&
         error.status === 409 &&
-        (error.error as { message?: string } | null)?.message === "ORDERING_CLOSED"
+        (error.error as { message?: string } | null)?.message ===
+          "ORDERING_CLOSED"
       ) {
         this.session.invalidateVisit();
-        this.closedStore.set({ name: visit.storeName, table: visit.tableLabel });
+        this.closedStore.set({
+          name: visit.storeName,
+          table: visit.tableLabel,
+        });
         this.products.set([]);
       }
       this.notice.set(guestError(error));

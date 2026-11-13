@@ -14,7 +14,13 @@ import {
 
 export type PrintedTableState =
   | { open: false; storeName: string; tableLabel: string }
-  | { open: true; storeName: string; tableLabel: string; visitToken: string; expiresAt: string };
+  | {
+      open: true;
+      storeName: string;
+      tableLabel: string;
+      visitToken: string;
+      expiresAt: string;
+    };
 
 interface GuestTracking {
   orderId: string;
@@ -62,7 +68,9 @@ export class GuestOrderApi {
   ): Promise<PrintedTableState> {
     return firstValueFrom(
       this.http.post<PrintedTableState>("/api/guest/ordering-table/open", {
-        tenantId, storeId, tableId,
+        tenantId,
+        storeId,
+        tableId,
       }),
     );
   }

@@ -43,7 +43,10 @@ export class MerchantTablesApi {
     return { "X-CSRF-Token": csrf };
   }
 
-  list(tenant: string, store: string): Promise<{
+  list(
+    tenant: string,
+    store: string,
+  ): Promise<{
     tables: PrintableTable[];
     orderingEnabled: boolean;
   }> {
