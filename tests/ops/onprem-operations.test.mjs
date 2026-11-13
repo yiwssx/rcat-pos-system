@@ -49,6 +49,14 @@ test("backups and privileged retention never run without explicit --apply", () =
   assert.equal(shell.status, 0, shell.stderr);
 });
 
+test("backup timer example matches approved Bangkok 12-hour cadence but remains uninstalled", () => {
+  const timer = readFileSync(root + "/infra/onprem/systemd/rcat-pos-staging-backup.timer.example", "utf8");
+  assert.match(timer, /UNINSTALLED EXAMPLE/);
+  assert.match(timer, /OnCalendar=\*-\*-\* 00:00:00 Asia\/Bangkok/);
+  assert.match(timer, /OnCalendar=\*-\*-\* 12:00:00 Asia\/Bangkok/);
+  assert.doesNotMatch(timer, /ExecStart=|restic forget|restic prune/);
+});
+
 test("snapshot freshness requires tagged, current Restic backups", () => {
   const now = new Date().toISOString();
   const good = execute("python3", [snapshot], {}, JSON.stringify([
