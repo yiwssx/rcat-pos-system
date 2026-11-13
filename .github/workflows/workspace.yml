@@ -78,18 +78,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.head.ref }}
           persist-credentials: true
       - name: Guard this one exact commit intent, never main or an unrelated branch
         id: guard
         env:
-          SOURCE_BRANCH: ${ github.event.pull_request.head.ref }}
+          SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           set -euo pipefail
           test "$GITHUB_REPOSITORY" = yiwssx/rcat-pos-system
           test "$SOURCE_BRANCH" = feat/reference-driven-ux-balance-20261113
           test "$(git branch --show-current)" = "$SOURCE_BRANCH"
-          if test "$(git show -s --format=%s HEAD)" = "chore(visual): one-shot prettier handoff on PR 100"; then
+          if test "$(git show -s --format=%s HEAD)" = "chore(visual): correct one-shot formatter expression"; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
@@ -107,7 +107,7 @@ jobs:
       - name: Format only PR100 visual files and commit to the same PR head branch
         if: steps.guard.outputs.run == 'true'
         env:
-          SOURCE_BRANCH: ${ github.event.pull_request.head.ref }}
+          SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           set -euo pipefail
           pnpm install --frozen-lockfile
