@@ -50,3 +50,9 @@ Never rerun complete Nx/Database/Browser CI on RCAT IOT. Use prior CI evidence o
 - [ ] **C2** Offsite destination, backup cadence/retention and permission to enable maintenance jobs remain **unapproved**. `RCAT_POS_BACKUP_POLICY_APPROVED=no`, `RCAT_POS_GUEST_RETENTION_APPROVED=no`.
 - [ ] **B1–B6 #81** Operator host staging/HTTPS/OAuth/deploy/recovery/physical validation not executed. See [operator packet](G4-B1-B6-OPERATOR-RUNBOOK.md), [owner policy JSON](g4-staging-owner-policy.json), and read-only [evidence gate](../scripts/ops/g4-staging-acceptance.mjs). G4 acceptance is blocked until actual host proof and C2.
 - [ ] **G5/G6** Payment and Production remain unstarted/not approved. No full local CI repeats on IOT.
+
+## G4 decision update — 13 November 2026
+
+- [x] Owner authorized **Staging-only preparation/deploy subject to existing real B1–B6 safety gates** and selected a **12-hour encrypted offsite backup cadence** (00:00 and 12:00 Asia/Bangkok) with **14 daily / 4 weekly / 3 monthly backup snapshots retained**. Existing timer stays *uninstalled*. No Restic pruning or application-record deletion approved.
+- [ ] **C2 activation remains BLOCKED** until a real pre-existing approved offsite storage destination, cost/storage-capacity review, protected credentials, repository verification and isolated restore proof exist. Current Cloudflare R2 is not enabled; do not turn it on merely to get a green check. `RCAT_POS_BACKUP_POLICY_APPROVED=no` remains mandatory.
+- [ ] **B1–B6 Operational Acceptance remains BLOCKED** until HTTPS/OAuth, protected DB role/secrets, verified pre-migration backup, actual staging deployment/health, restore timing, and owner/host acceptance. No Production, Payment, DNS, public SSH or new Host executor approved.
