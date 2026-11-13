@@ -1522,3 +1522,18 @@
     padding-inline: 0.55rem;
   }
 }
+
+/* Internal 44px touch target rule also applies at the narrowest viewport. */
+.guest-cart-lines .guest-qty button {
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+}
+@media (max-width: 350px) {
+  .guest-add {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+  }
+}
