@@ -49,3 +49,9 @@ Existing A1–A5 and CI evidence is reused if exact code/config/environment scop
 - **C2/B5:** approved Offsite destination + cadence + retention policy; ensure target can meet RPO/RTO **with a real restored database**.
 - **B4/B6:** deployment and observed staging proof and operator/owner final signoff; #81/#82 remain open.
 - G5 per-Order PromptPay and G6 Production remain completely out of scope.
+
+## HDA-06 — 13 November 2026 owner-triggered signed Staging image source (NOT deployed)
+
+The **existing** `onprem-staging.yml` now includes a separate opt-in `workflow_dispatch` job restricted to `yiwssx` on trusted `main`. It requires an already-successful **same-SHA on-prem push CI run**, checks the checked-out SHA, builds and publishes **four separate** GHCR OCI images (`api`, `customer`, `merchant`, `admin`) tagged `sha-<40-hex>`, and generates GitHub/Sigstore source attestations for each *actual registry digest*. No pull-request workflow can execute this publisher, and the normal On-prem CI job does not rerun in a manual release invocation. The publisher has job-scoped `packages:write` and OIDC/attestation privileges only; no deployment or Host credentials are granted.
+
+**Unexecuted until explicitly dispatched on trusted main**: a merged source workflow and green PR CI are not published image evidence. Before using any image at RCAT IOT, independently resolve the immutable GHCR digest and verify all four exact-source attestations/manifest bytes; do not use mutable tags alone. Actual G4 B1–B6, encrypted offsite restore, protected staging config, Payment prohibition and Production gates are unchanged. Public GHCR container-image storage/bandwidth is currently free under GitHub's published billing terms; verify current account policy before a release. No CI job or deployment is manually dispatched by this document.
