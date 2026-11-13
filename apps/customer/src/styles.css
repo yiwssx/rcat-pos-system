@@ -922,3 +922,122 @@ h1 {
     padding: 1.2rem;
   }
 }
+
+/*
+ * Reference-driven UX balance: compact POS navigation, not a long landing page.
+ * Desktop navigation stays visible; mobile navigation expands on request.
+ */
+.portal-mobile-nav-toggle {
+  display: none;
+}
+.portal-landing-intro .portal-lead,
+.portal-login-card p,
+.portal-setup-banner p {
+  line-height: var(--pos-body-leading);
+}
+.portal-store-card {
+  min-width: 0;
+  box-shadow: var(--pos-shadow-subtle);
+}
+.portal-store-links a,
+.portal-stores a.portal-store-staff {
+  padding: 0.4rem 0.2rem;
+  line-height: 1.5;
+}
+.portal-login-card small,
+.portal-guest-help,
+.portal-local-fixture small {
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.portal-how-it-works span {
+  line-height: 1.5;
+}
+@media (max-width: 760px) {
+  .portal-sidebar {
+    padding: 0.75rem 1rem;
+  }
+  .portal-mobile-nav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: var(--pos-touch-target);
+    padding: 0.6rem 0.85rem;
+    background: var(--pos-surface-warm);
+    color: var(--pos-ink);
+    border: 1px solid var(--pos-border);
+    border-radius: 0.7rem;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 750;
+    cursor: pointer;
+  }
+  .portal-mobile-nav-toggle span:last-child {
+    font-size: 1.25rem;
+    line-height: 1;
+    color: var(--pos-orange);
+  }
+  .portal-workspace-selector {
+    padding-bottom: 0.7rem;
+  }
+  .portal-sidebar .portal-nav {
+    display: none;
+    overflow: visible;
+    padding-top: 0;
+  }
+  .portal-sidebar.portal-nav-open .portal-nav {
+    display: grid;
+    gap: 0.4rem;
+    padding-top: 0.65rem;
+  }
+  .portal-sidebar .portal-nav-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 0.35rem;
+    border-top: 1px solid var(--pos-border);
+    padding: 0.7rem 0 0;
+  }
+  .portal-sidebar .portal-nav-group .portal-nav-caption {
+    display: block;
+    grid-column: 1 / -1;
+    margin: 0 0 0.2rem;
+    padding: 0 0.35rem;
+  }
+  .portal-sidebar .portal-nav-group a {
+    white-space: normal;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0.6rem 0.75rem;
+    line-height: 1.45;
+  }
+}
+@media (max-width: 430px) {
+  .portal-how-it-works span {
+    font-size: 0.82rem;
+  }
+  .portal-login-card label {
+    font-size: 0.92rem;
+  }
+  .portal-brand-title strong {
+    font-size: 1rem;
+  }
+}
+@media (max-width: 340px) {
+  .portal-sidebar .portal-nav-group {
+    grid-template-columns: 1fr;
+  }
+  .portal-header {
+    gap: 0.5rem;
+    padding-inline: 0.7rem;
+  }
+  .portal-header-actions {
+    gap: 0.4rem;
+  }
+  .portal-logout,
+  .portal-header-link {
+    padding-inline: 0.5rem;
+  }
+}
