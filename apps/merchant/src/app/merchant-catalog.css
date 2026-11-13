@@ -340,7 +340,6 @@
   background: #f7fbfe;
 }
 
-
 /* Compact management: prioritize item name/price/status, then editing controls. */
 .catalog-shell {
   max-width: var(--pos-content-compact, 1040px);
