@@ -56,10 +56,14 @@ async function main() {
     const menuToggle = page.getByRole('button', { name: 'เมนูจัดการร้าน' });
     assert.equal(await menuToggle.getAttribute('aria-expanded'), 'false');
     await menuToggle.click();
-    assert.equal(await menuToggle.getAttribute('aria-expanded'), 'true');
-    assert.equal(await page.getByRole('navigation', { name: 'งานของร้าน' }).isVisible(), true);
+    // Angular updates the signal-driven class after the click. Do not race
+    // browser change detection with an instantaneous isVisible() assertion.
     await page.screenshot({ path: '/tmp/rcat-portal-mobile-navigation.png', fullPage: true });
+    await page.locator('.portal-sidebar.portal-nav-open').waitFor();
+    await page.getByRole('navigation', { name: 'งานของร้าน' }).waitFor({ state: 'visible' });
+    assert.equal(await menuToggle.getAttribute('aria-expanded'), 'true');
     await menuToggle.click();
+    await page.locator('.portal-sidebar:not(.portal-nav-open)').waitFor();
     assert.equal(await menuToggle.getAttribute('aria-expanded'), 'false');
     const cookies = await context.cookies(merchant);
     assert.ok(cookies.some(c => c.name === '__Host-rcat_session' && c.secure && c.httpOnly));
