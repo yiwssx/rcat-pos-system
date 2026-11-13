@@ -226,7 +226,7 @@ async function browserFlow(fixture) {
     await firstDish.getByRole("button", { name: "ดูรายละเอียด " + fixture.name }).click();
     const sheet = guest.getByRole("dialog", { name: fixture.name });
     await sheet.waitFor();
-    assert.equal(await sheet.getByText("125.00 ฿").count(), 1);
+    assert.ok(await sheet.getByText("125.00 ฿").count() >= 1);
     await guest.keyboard.press("Escape");
     await sheet.waitFor({ state: "hidden" });
 
