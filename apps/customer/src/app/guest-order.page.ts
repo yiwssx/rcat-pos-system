@@ -134,7 +134,9 @@ function guestError(error: unknown): string {
           <div>
             <span class="guest-menu-kicker">01 · เลือกเมนู</span>
             <p class="guest-menu-intro-title">อยากรับประทานอะไรดี?</p>
-            <p>เลือกอาหารและตัวเลือกที่ต้องการ แล้วตรวจสอบตะกร้าก่อนส่งออเดอร์</p>
+            <p>
+              เลือกอาหารและตัวเลือกที่ต้องการ แล้วตรวจสอบตะกร้าก่อนส่งออเดอร์
+            </p>
           </div>
           <span class="guest-table-chip">โต๊ะ {{ visit.tableLabel }}</span>
         </div>
@@ -191,40 +193,42 @@ function guestError(error: unknown): string {
                 </div>
                 @if (groups(product.id).length > 0) {
                   <details class="guest-customization" open>
-                    <summary>ตัวเลือกเพิ่มเติม <span>แตะเพื่อยุบหรือแสดง</span></summary>
-                @for (group of groups(product.id); track group.id) {
-                  <fieldset class="guest-options">
-                    <legend>
-                      {{ group.name }}
-                      <span
-                        >เลือก {{ group.minSelect }}–{{ group.maxSelect }}</span
-                      >
-                    </legend>
-                    @if (options(group.id).length < group.minSelect) {
-                      <p class="guest-warning">
-                        ตัวเลือกไม่เพียงพอสำหรับเมนูนี้ กรุณาแจ้งร้านค้า
-                      </p>
+                    <summary>
+                      ตัวเลือกเพิ่มเติม <span>แตะเพื่อยุบหรือแสดง</span>
+                    </summary>
+                    @for (group of groups(product.id); track group.id) {
+                      <fieldset class="guest-options">
+                        <legend>
+                          {{ group.name }}
+                          <span
+                            >เลือก {{ group.minSelect }}–{{ group.maxSelect }}</span
+                          >
+                        </legend>
+                        @if (options(group.id).length < group.minSelect) {
+                          <p class="guest-warning">
+                            ตัวเลือกไม่เพียงพอสำหรับเมนูนี้ กรุณาแจ้งร้านค้า
+                          </p>
+                        }
+                        @for (choice of options(group.id); track choice.id) {
+                          <label class="guest-option">
+                            <input
+                              type="checkbox"
+                              [checked]="isSelected(product.id, choice.id)"
+                              [disabled]="
+                                busy() ||
+                                optionDisabled(product.id, group, choice.id)
+                              "
+                              (change)="toggleOption(product.id, group, choice.id)"
+                            />
+                            <span>{{ choice.name }}</span>
+                            <span class="guest-option-price">
+                              {{ choice.priceDeltaSatang > 0 ? "+" : ""
+                              }}{{ moneySigned(choice.priceDeltaSatang) }} ฿
+                            </span>
+                          </label>
+                        }
+                      </fieldset>
                     }
-                    @for (choice of options(group.id); track choice.id) {
-                      <label class="guest-option">
-                        <input
-                          type="checkbox"
-                          [checked]="isSelected(product.id, choice.id)"
-                          [disabled]="
-                            busy() ||
-                            optionDisabled(product.id, group, choice.id)
-                          "
-                          (change)="toggleOption(product.id, group, choice.id)"
-                        />
-                        <span>{{ choice.name }}</span>
-                        <span class="guest-option-price">
-                          {{ choice.priceDeltaSatang > 0 ? "+" : ""
-                          }}{{ moneySigned(choice.priceDeltaSatang) }} ฿
-                        </span>
-                      </label>
-                    }
-                  </fieldset>
-                }
                   </details>
                 }
                 <div class="guest-product-actions">
@@ -328,7 +332,11 @@ function guestError(error: unknown): string {
         </section>
       }
       @if (session.visit() && cartQty() > 0) {
-        <a class="guest-cart-shortcut" href="#cart-title" aria-label="ไปยังตะกร้าเพื่อตรวจสอบคำสั่งซื้อ">
+        <a
+          class="guest-cart-shortcut"
+          href="#cart-title"
+          aria-label="ไปยังตะกร้าเพื่อตรวจสอบคำสั่งซื้อ"
+        >
           <span class="guest-cart-shortcut-count">
             <span class="guest-cart-shortcut-icon" aria-hidden="true">🛒</span>
             ตะกร้า <strong>{{ cartQty() }} ชิ้น</strong>
