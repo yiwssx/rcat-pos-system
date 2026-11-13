@@ -66,11 +66,16 @@ function guestError(error: unknown): string {
           <div class="guest-brand-copy">
             <span class="guest-menu-kicker">RCAT POS · MENU</span>
             <h1 id="guest-title">
-              {{ session.visit()?.storeName || closedStore()?.name || "สั่งอาหารผ่าน QR" }}
+              {{
+                session.visit()?.storeName ||
+                  closedStore()?.name ||
+                  "สั่งอาหารผ่าน QR"
+              }}
             </h1>
             <p class="guest-context">
               @if (session.visit(); as visit) {
-                <strong>โต๊ะ {{ visit.tableLabel }}</strong> · สั่งอาหารผ่านมือถือ
+                <strong>โต๊ะ {{ visit.tableLabel }}</strong> ·
+                สั่งอาหารผ่านมือถือ
               } @else if (closedStore(); as closed) {
                 โต๊ะ {{ closed.table }}
               } @else {
@@ -89,12 +94,20 @@ function guestError(error: unknown): string {
       }
 
       @if (closedStore(); as closed) {
-        <section class="guest-closed" aria-labelledby="guest-closed-title" role="status">
+        <section
+          class="guest-closed"
+          aria-labelledby="guest-closed-title"
+          role="status"
+        >
           <span class="guest-closed-symbol" aria-hidden="true">☕</span>
           <h2 id="guest-closed-title">ขออภัย ร้านยังไม่เปิดให้สั่งอาหาร</h2>
           <p>{{ closed.name }} · โต๊ะ {{ closed.table }}</p>
           <p>กรุณาลองใหม่เมื่อร้านเปิดรับออเดอร์</p>
-          <button type="button" (click)="reload()" [disabled]="loading() || !online()">
+          <button
+            type="button"
+            (click)="reload()"
+            [disabled]="loading() || !online()"
+          >
             ตรวจสอบอีกครั้ง
           </button>
         </section>
@@ -174,20 +187,32 @@ function guestError(error: unknown): string {
                     <img
                       class="guest-product-photo"
                       loading="lazy"
-                      [src]="productImageUrl(visit.tenantId, visit.storeId, product.id)"
+                      [src]="
+                        productImageUrl(
+                          visit.tenantId,
+                          visit.storeId,
+                          product.id
+                        )
+                      "
                       [alt]="'รูปภาพเมนู ' + product.name"
                     />
                   } @else {
-                    <span class="guest-product-placeholder" aria-hidden="true">🍽️</span>
+                    <span class="guest-product-placeholder" aria-hidden="true"
+                      >🍽️</span
+                    >
                   }
                 </button>
                 <div class="guest-product-info">
-                  <span class="guest-product-category">{{ categoryName(product.categoryId) }}</span>
+                  <span class="guest-product-category">{{
+                    categoryName(product.categoryId)
+                  }}</span>
                   <h2>{{ product.name }}</h2>
                   @if (groups(product.id).length > 0) {
                     <span class="guest-product-extra">มีตัวเลือกเพิ่มเติม</span>
                   }
-                  <strong class="guest-price">{{ money(product.priceSatang) }} ฿</strong>
+                  <strong class="guest-price"
+                    >{{ money(product.priceSatang) }} ฿</strong
+                  >
                 </div>
                 <button
                   class="guest-add"
@@ -204,7 +229,9 @@ function guestError(error: unknown): string {
           </div>
           <div class="guest-menu-progress" role="status" aria-live="polite">
             แสดง {{ products().length }} เมนู
-            @if (hasMore()) { · ยังมีเมนูเพิ่มเติม }
+            @if (hasMore()) {
+              · ยังมีเมนูเพิ่มเติม
+            }
           </div>
           @if (hasMore()) {
             <button
@@ -238,7 +265,9 @@ function guestError(error: unknown): string {
             <span class="guest-cart-shortcut-icon" aria-hidden="true">🛍️</span>
             ตะกร้า <strong>{{ cartQty() }} รายการ</strong>
           </span>
-          <span class="guest-cart-shortcut-price">≈ {{ money(estimate()) }} ฿</span>
+          <span class="guest-cart-shortcut-price"
+            >≈ {{ money(estimate()) }} ฿</span
+          >
           <span class="guest-cart-shortcut-action">ดูตะกร้า</span>
         </button>
       }
@@ -261,14 +290,18 @@ function guestError(error: unknown): string {
               type="button"
               aria-label="ปิดรายละเอียดสินค้า"
               (click)="closeProduct()"
-            >✕</button>
+            >
+              ✕
+            </button>
           </header>
           <div class="guest-sheet-scroll">
             <div class="guest-detail-media">
               @if (product.hasImage && session.visit(); as visit) {
                 <img
                   loading="lazy"
-                  [src]="productImageUrl(visit.tenantId, visit.storeId, product.id)"
+                  [src]="
+                    productImageUrl(visit.tenantId, visit.storeId, product.id)
+                  "
                   [alt]="'รูปภาพเมนู ' + product.name"
                 />
               } @else {
@@ -286,19 +319,24 @@ function guestError(error: unknown): string {
                   <span>เลือก {{ group.minSelect }}–{{ group.maxSelect }}</span>
                 </legend>
                 @if (options(group.id).length < group.minSelect) {
-                  <p class="guest-warning">ตัวเลือกไม่เพียงพอ กรุณาแจ้งร้านค้า</p>
+                  <p class="guest-warning">
+                    ตัวเลือกไม่เพียงพอ กรุณาแจ้งร้านค้า
+                  </p>
                 }
                 @for (choice of options(group.id); track choice.id) {
                   <label class="guest-option">
                     <input
                       type="checkbox"
                       [checked]="isSelected(product.id, choice.id)"
-                      [disabled]="busy() || optionDisabled(product.id, group, choice.id)"
+                      [disabled]="
+                        busy() || optionDisabled(product.id, group, choice.id)
+                      "
                       (change)="toggleOption(product.id, group, choice.id)"
                     />
                     <span>{{ choice.name }}</span>
                     <span class="guest-option-price">
-                      {{ choice.priceDeltaSatang > 0 ? "+" : "" }}{{ moneySigned(choice.priceDeltaSatang) }} ฿
+                      {{ choice.priceDeltaSatang > 0 ? "+" : ""
+                      }}{{ moneySigned(choice.priceDeltaSatang) }} ฿
                     </span>
                   </label>
                 }
@@ -312,12 +350,31 @@ function guestError(error: unknown): string {
             <div class="guest-detail-quantity">
               <span>จำนวน</span>
               <div class="guest-qty">
-                <button type="button" aria-label="ลดจำนวน" [disabled]="detailQty() <= 1" (click)="changeDetailQty(-1)">−</button>
+                <button
+                  type="button"
+                  aria-label="ลดจำนวน"
+                  [disabled]="detailQty() <= 1"
+                  (click)="changeDetailQty(-1)"
+                >
+                  −
+                </button>
                 <strong>{{ detailQty() }}</strong>
-                <button type="button" aria-label="เพิ่มจำนวน" [disabled]="detailQty() >= 20" (click)="changeDetailQty(1)">+</button>
+                <button
+                  type="button"
+                  aria-label="เพิ่มจำนวน"
+                  [disabled]="detailQty() >= 20"
+                  (click)="changeDetailQty(1)"
+                >
+                  +
+                </button>
               </div>
             </div>
-            <button class="guest-sheet-primary" type="button" [disabled]="busy()" (click)="addDetailProduct(product)">
+            <button
+              class="guest-sheet-primary"
+              type="button"
+              [disabled]="busy()"
+              (click)="addDetailProduct(product)"
+            >
               เพิ่มลงตะกร้า · ประมาณ {{ money(detailEstimate(product)) }} ฿
             </button>
           </footer>
@@ -337,11 +394,20 @@ function guestError(error: unknown): string {
             <h2 id="cart-title">ตะกร้าของฉัน</h2>
             <span class="guest-cart-subtitle">{{ cartQty() }} รายการ</span>
           </div>
-          <button class="guest-sheet-close" type="button" aria-label="ปิดตะกร้า" (click)="closeCart()">✕</button>
+          <button
+            class="guest-sheet-close"
+            type="button"
+            aria-label="ปิดตะกร้า"
+            (click)="closeCart()"
+          >
+            ✕
+          </button>
         </header>
         <div class="guest-sheet-scroll">
           @if (session.cart().length === 0) {
-            <p class="guest-cart-empty">ตะกร้ายังว่าง เลือกเมนูที่ชอบก่อนสั่งอาหาร</p>
+            <p class="guest-cart-empty">
+              ตะกร้ายังว่าง เลือกเมนูที่ชอบก่อนสั่งอาหาร
+            </p>
           } @else {
             <ol class="guest-cart-lines">
               @for (line of session.cart(); track $index; let i = $index) {
@@ -354,16 +420,24 @@ function guestError(error: unknown): string {
                     <button
                       type="button"
                       [disabled]="busy()"
-                      [attr.aria-label]="'ลดจำนวน ' + productName(line.productId)"
+                      [attr.aria-label]="
+                        'ลดจำนวน ' + productName(line.productId)
+                      "
                       (click)="changeQuantity(i, -1)"
-                    >−</button>
+                    >
+                      −
+                    </button>
                     <span>{{ line.quantity }}</span>
                     <button
                       type="button"
                       [disabled]="busy()"
-                      [attr.aria-label]="'เพิ่มจำนวน ' + productName(line.productId)"
+                      [attr.aria-label]="
+                        'เพิ่มจำนวน ' + productName(line.productId)
+                      "
                       (click)="changeQuantity(i, 1)"
-                    >+</button>
+                    >
+                      +
+                    </button>
                   </div>
                 </li>
               }
@@ -373,8 +447,8 @@ function guestError(error: unknown): string {
             <p class="guest-warning" role="status">{{ notice() }}</p>
           }
           <p class="guest-privacy">
-            ยอดในตะกร้าเป็นประมาณการ ระบบจะตรวจสอบราคาและตัวเลือกอีกครั้งก่อนส่งออเดอร์
-            ไม่ใช่การชำระเงิน
+            ยอดในตะกร้าเป็นประมาณการ
+            ระบบจะตรวจสอบราคาและตัวเลือกอีกครั้งก่อนส่งออเดอร์ ไม่ใช่การชำระเงิน
           </p>
         </div>
         <footer class="guest-sheet-footer">
@@ -388,12 +462,16 @@ function guestError(error: unknown): string {
             [disabled]="busy() || loading() || !online() || cartQty() === 0"
             (click)="checkout()"
           >
-            {{ busy() ? "กำลังส่งออเดอร์ กรุณาอย่าปิดหน้า..." : "ยืนยันส่งคำสั่งซื้อ (ยังไม่ชำระเงิน)" }}
+            {{
+              busy()
+                ? "กำลังส่งออเดอร์ กรุณาอย่าปิดหน้า..."
+                : "ยืนยันส่งคำสั่งซื้อ (ยังไม่ชำระเงิน)"
+            }}
           </button>
         </footer>
       </dialog>
     </section>
-  `
+  `,
 })
 export class GuestOrderPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
@@ -415,7 +493,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly detailQty = signal(1);
   readonly detailError = signal("");
   readonly cartOpen = signal(false);
-  @ViewChild("detailDialog") private detailDialog?: ElementRef<HTMLDialogElement>;
+  @ViewChild("detailDialog")
+  private detailDialog?: ElementRef<HTMLDialogElement>;
   @ViewChild("cartDialog") private cartDialog?: ElementRef<HTMLDialogElement>;
   readonly online = signal(true);
   readonly staticTable = signal<{
@@ -760,7 +839,9 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     const ids = this.selected()[product.id] ?? [];
     const extras = this.session.visit()?.modifierOptions ?? [];
     const unit = ids.reduce((sum, id) => {
-      const option = extras.find((entry) => entry.productId === product.id && entry.id === id);
+      const option = extras.find(
+        (entry) => entry.productId === product.id && entry.id === id,
+      );
       return sum + (option?.priceDeltaSatang ?? 0);
     }, product.priceSatang);
     return Math.max(0, unit * this.detailQty());
