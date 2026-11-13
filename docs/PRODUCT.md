@@ -63,4 +63,4 @@ RCAT POS is a hardware-free, multi-merchant ordering/POS SaaS inspired by ThaiQR
 - Automatic split payments or merged payment across many Orders unless decided as separate work.
 
 ## Requirements tracking
-Master tracker #13; consolidated Order UX [#102](https://github.com/yiwssx/rcat-pos-system/issues/102) (owners #5/#6/#8); G4 staging #10/#11/#81; final manual-first Payment #7. See [M1 detailed requirements](G5-M1-MANUAL-PROMPTPAY.md), docs/ROADMAP.md and docs/DECISIONS.md.
+Master #13; active Ordering/UX/merchant/stock [#102](https://github.com/yiwssx/rcat-pos-system/issues/102); active G4/G6 security/staging/release [#81](https://github.com/yiwssx/rcat-pos-system/issues/81); active final manual-first Payment #7. Prior #5/#6/#8/#10/#11 are historical superseded trackers, not accepted as complete. See [M1 detailed requirements](G5-M1-MANUAL-PROMPTPAY.md), docs/ROADMAP.md and docs/DECISIONS.md.
