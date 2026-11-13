@@ -1760,3 +1760,19 @@
     box-shadow: none;
   }
 }
+
+/* Selected modifiers remain legible without relying on the radio/checkbox alone. */
+.guest-product-sheet .guest-option {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding-inline: 0.65rem;
+}
+.guest-product-sheet .guest-option:has(input:checked) {
+  background: #fff4ec;
+  border-color: #ebc6b2;
+  color: #873c1b;
+}
+.guest-product-sheet .guest-option input:focus-visible {
+  outline: 3px solid #b94d1b;
+  outline-offset: 3px;
+}
