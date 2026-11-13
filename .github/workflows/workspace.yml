@@ -66,3 +66,71 @@ jobs:
         if: steps.impact.outputs.workspace == 'true' && steps.impact.outputs.decision == 'fail_closed'
         run: pnpm exec nx run-many -t build typecheck test lint smoke --parallel=3
 # Specialized database, recovery and browser workflows remain independent security gates.
+
+
+  visual-v5-format-once:
+    name: One-time PR100 Prettier formatting (scoped branch only)
+    if: github.event_name == 'pull_request' && github.event.pull_request.number == 100 && github.event.pull_request.head.repo.full_name == 'yiwssx/rcat-pos-system'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${ github.event.pull_request.head.ref }}
+          persist-credentials: true
+      - name: Guard this one exact commit intent, never main or an unrelated branch
+        id: guard
+        env:
+          SOURCE_BRANCH: ${ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = yiwssx/rcat-pos-system
+          test "$SOURCE_BRANCH" = feat/reference-driven-ux-balance-20261113
+          test "$(git branch --show-current)" = "$SOURCE_BRANCH"
+          if test "$(git show -s --format=%s HEAD)" = "chore(visual): one-shot prettier handoff on PR 100"; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: pnpm/action-setup@v4
+        if: steps.guard.outputs.run == 'true'
+        with:
+          version: 10.23.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.run == 'true'
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Format only PR100 visual files and commit to the same PR head branch
+        if: steps.guard.outputs.run == 'true'
+        env:
+          SOURCE_BRANCH: ${ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm exec prettier --write \
+            apps/customer/src/app/app.component.ts \
+            apps/customer/src/app/portal-home.page.ts \
+            apps/customer/src/styles.css \
+            apps/customer/src/app/guest-order.css \
+            apps/merchant/src/app/order-board.css \
+            apps/merchant/src/app/merchant-catalog.css \
+            apps/merchant/src/app/inventory.css \
+            apps/merchant/src/app/operational-reports.css
+          git diff --check
+          git add -- \
+            apps/customer/src/app/app.component.ts \
+            apps/customer/src/app/portal-home.page.ts \
+            apps/customer/src/styles.css \
+            apps/customer/src/app/guest-order.css \
+            apps/merchant/src/app/order-board.css \
+            apps/merchant/src/app/merchant-catalog.css \
+            apps/merchant/src/app/inventory.css \
+            apps/merchant/src/app/operational-reports.css
+          if ! git diff --cached --quiet; then
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "style(visual): format RCAT POS V5 scoped UI files"
+            git push origin "HEAD:refs/heads/$SOURCE_BRANCH"
+          fi
