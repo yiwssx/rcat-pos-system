@@ -259,7 +259,7 @@ function guestError(error: unknown): string {
           class="guest-cart-shortcut"
           [disabled]="busy()"
           (click)="openCart()"
-          aria-label="ดูตะกร้า"
+          [attr.aria-label]="'ดูตะกร้า ' + cartQty() + ' รายการ ยอดประมาณ ' + money(estimate()) + ' บาท'"
         >
           <span class="guest-cart-shortcut-count">
             <span class="guest-cart-shortcut-icon" aria-hidden="true">🛍️</span>
