@@ -965,6 +965,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     } catch (error) {
       if (error instanceof HttpErrorResponse && error.status === 404) {
         this.session.invalidateVisit();
+        this.error.set(guestError(error));
+        this.closeCart();
       }
       if (
         error instanceof HttpErrorResponse &&
@@ -972,6 +974,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
         (error.error as { message?: string } | null)?.message ===
           "ORDERING_CLOSED"
       ) {
+        this.closeCart();
         this.session.invalidateVisit();
         this.closedStore.set({
           name: visit.storeName,
