@@ -56,3 +56,8 @@ Never rerun complete Nx/Database/Browser CI on RCAT IOT. Use prior CI evidence o
 - [x] Owner authorized **Staging-only preparation/deploy subject to existing real B1–B6 safety gates** and selected a **12-hour encrypted offsite backup cadence** (00:00 and 12:00 Asia/Bangkok) with **14 daily / 4 weekly / 3 monthly backup snapshots retained**. Existing timer stays *uninstalled*. No Restic pruning or application-record deletion approved.
 - [ ] **C2 activation remains BLOCKED** until a real pre-existing approved offsite storage destination, cost/storage-capacity review, protected credentials, repository verification and isolated restore proof exist. Current Cloudflare R2 is not enabled; do not turn it on merely to get a green check. `RCAT_POS_BACKUP_POLICY_APPROVED=no` remains mandatory.
 - [ ] **B1–B6 Operational Acceptance remains BLOCKED** until HTTPS/OAuth, protected DB role/secrets, verified pre-migration backup, actual staging deployment/health, restore timing, and owner/host acceptance. No Production, Payment, DNS, public SSH or new Host executor approved.
+
+## HDA-06 signed OCI preparation — 13 November 2026
+
+- [x] Added manual-only trusted-`main` four-component GHCR OCI publisher in the existing On-prem workflow; source policy and PR CI govern its admission. No new workflow file, Runner, SSH, cloud account, protected secret or Production change.
+- [ ] **Publication/Operational Acceptance PENDING**: no owner-triggered signed image candidate has run, no four actual published digests or consumer-side attestations have been independently verified, and no real RCAT IOT B1–B6 deployment is accepted. Never promote signed source configuration alone to G4 PASS.
