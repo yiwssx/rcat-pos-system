@@ -86,7 +86,7 @@ async function createFixture() {
       [tenantId, testSlug, "G4 isolated concurrent order fixture"],
     );
     await client.query(
-      "INSERT INTO rcat.stores(id,tenant_id,slug,display_name) VALUES($1,$2,$3,$4)",
+      "INSERT INTO rcat.stores(id,tenant_id,slug,display_name,ordering_enabled) VALUES($1,$2,$3,$4,true)",
       [storeId, tenantId, "load-store", "G4 load store"],
     );
     for (const [id, role] of [[ownerId, "owner"], [managerId, "manager"]]) {

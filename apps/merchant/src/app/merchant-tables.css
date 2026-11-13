@@ -204,3 +204,32 @@
     color: #303d48 !important;
   }
 }
+
+.ordering-switch {
+  margin: 1.4rem 0;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #efc8a8;
+  border-radius: 1rem;
+  background: #fff8f2;
+  display: flex;
+  gap: 1.2rem;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.ordering-switch h2 {
+  margin: 0 0 0.3rem;
+  font-size: 1.25rem;
+}
+.ordering-switch p {
+  margin: 0;
+  color: #765337;
+  line-height: 1.6;
+}
+.tables-shell .ordering-switch button {
+  min-width: 164px;
+  background: #286554;
+}
+.tables-shell .ordering-switch button.is-open {
+  background: #9c4535;
+}

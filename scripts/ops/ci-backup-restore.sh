@@ -14,15 +14,24 @@ restore_db="rcat_ci_restore"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"; dropdb --if-exists --force "$restore_db" >/dev/null 2>&1 || true' EXIT
 
+# Use PostgreSQL 16 native dump/restore clients against the PostgreSQL 16
+# ephemeral service. Ubuntu runner may ship a newer client that emits server
+# settings (e.g. transaction_timeout) unsupported by 16.
+pg16() {
+  docker run --rm --network host --mount "type=bind,src=$work,dst=$work" \
+    -e PGHOST -e PGPORT -e PGUSER -e PGPASSWORD -e PGDATABASE \
+    postgres:16-alpine "$@"
+}
+
 # Avoid data in logs. A custom archive retains schema, ACLs, functions,
 # session/Outbox records, sequences and migration checksums.
-pg_dump --format=custom --file="$work/snapshot.dump" --dbname="$source_db"
+pg16 pg_dump --format=custom --file="$work/snapshot.dump" --dbname="$source_db"
 test -s "$work/snapshot.dump"
-pg_restore --list "$work/snapshot.dump" > "$work/toc.txt"
+pg16 pg_restore --list "$work/snapshot.dump" > "$work/toc.txt"
 grep -q 'rcat_migrations' "$work/toc.txt"
 grep -q 'order_outbox_events' "$work/toc.txt"
 createdb --template=template0 "$restore_db"
-pg_restore --exit-on-error --dbname="$restore_db" "$work/snapshot.dump"
+pg16 pg_restore --exit-on-error --dbname="$restore_db" "$work/snapshot.dump"
 
 # Every persistent row in every tenant, private and migration table is
 # compared in canonical JSONB order. Row count + digest catches lost/altered

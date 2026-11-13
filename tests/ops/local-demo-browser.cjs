@@ -67,6 +67,30 @@ async function main() {
     });
     assert.equal(denied.status(), 403, 'Local mode must retain CSRF enforcement');
 
+    const tableView = await context.newPage();
+    await tableView.goto(merchant + `/tables/${tenant}/${store}`);
+    await tableView.getByRole('heading', { name: 'เปิดรับออเดอร์ผ่าน QR' }).waitFor();
+    const staticUrl = customer + `/order?tenant=${tenant}&store=${store}&table=70000000-0000-4000-8000-000000000005`;
+    const guest = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 390, height: 844 } });
+    const staticPage = await guest.newPage();
+    await staticPage.goto(staticUrl);
+    await staticPage.getByRole('heading', { name: 'ขออภัย ร้านยังไม่เปิดให้สั่งอาหาร' }).waitFor();
+    assert.equal(await staticPage.locator('.guest-code-form').count(), 0, 'No PIN prompt for static QR');
+    await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).click();
+    await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).waitFor();
+    await staticPage.getByRole('button', { name: 'ตรวจสอบอีกครั้ง' }).click();
+    await staticPage.locator('.guest-product').first().waitFor();
+    await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' }).getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
+    await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).click();
+    await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).waitFor();
+    await staticPage.getByRole('button', { name: /ยืนยันส่งคำสั่งซื้อ/ }).click();
+    await staticPage.getByRole('heading', { name: 'ขออภัย ร้านยังไม่เปิดให้สั่งอาหาร' }).waitFor();
+    assert.equal(await staticPage.locator('.guest-product').count(), 0, 'Merchant close blocks existing cart');
+    await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).click();
+    await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).waitFor();
+    await guest.close();
+    await tableView.close();
+
     await page.getByRole('button', { name: 'เปิดโต๊ะทดลองเพื่อสั่งอาหาร', exact: true }).click();
     await page.waitForURL(customer + '/order', { timeout: 30000 });
     const product = page.locator('.guest-product', { hasText: 'ข้าวกะเพรา' });

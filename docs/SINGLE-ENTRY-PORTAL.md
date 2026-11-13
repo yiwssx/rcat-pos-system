@@ -56,9 +56,14 @@ is false and cannot enable password auth server-side. The protected owner accoun
 also has a Local-only sample-table button that rotates a visit link through the
 normal authenticated/CSRF-checked API. Guests in real staging scan the store QR.
 
-Known separate issue: printed eight-digit code grants still have the previously
-recorded tracking-bind gap; the Local sample button uses the established
-staff-issued visit link. This frontend change does not qualify that flow.
+Store-managed permanent table QR activation is implemented in migration 034.
+Owner/Manager opens or closes Guest orders from the Merchant Tables workspace.
+The same printed URL remains valid without a code; when closed new scanners see
+a polite closed notice and a current Guest checkout is rejected by the database.
+Old staff-issued visit links remain supported for compatibility, but still
+respect store closing. Local sample button continues to use the staff visit link.
+This is not proof of production deployment or protection from remotely reusing
+a copied public table QR.
 
 ## User-owned single-origin Staging configuration
 

@@ -714,6 +714,44 @@ try {
     method: "POST", headers: catHeaders,
     body: JSON.stringify({ label: "โต๊ะ 1" }),
   })).status, 409, "Duplicate table labels must be blocked");
+  // Permanent printed QR contains public IDs only; the merchant owns its
+  // open/closed state. A newly provisioned store starts fail-closed.
+  const orderingUrl = `/api/tenants/${made.tenantId}/stores/${made.storeId}/ordering-state`;
+  const staticQr = "/api/guest/ordering-table/open";
+  const staticPayload = { tenantId: made.tenantId, storeId: made.storeId, tableId };
+  const scan = () => api(staticQr, {
+    method: "POST", headers: json, body: JSON.stringify(staticPayload),
+  });
+  const firstScan = await scan();
+  assert.equal(firstScan.status, 201);
+  assert.equal((await firstScan.json()).open, false, "New stores must start closed");
+  assert.equal((await api(orderingUrl, {
+    method: "POST", headers: { ...json, Cookie: cookieHeader },
+    body: JSON.stringify({ enabled: true }),
+  })).status, 403, "QR state changes require CSRF");
+  assert.equal((await api(orderingUrl, {
+    method: "POST", headers: { ...json, Cookie: bHeader, "X-CSRF-Token": bCsrf },
+    body: JSON.stringify({ enabled: true }),
+  })).status, 404, "Other store staff cannot open a foreign store");
+  const enableOrders = await api(orderingUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ enabled: true }),
+  });
+  assert.equal(enableOrders.status, 201);
+  assert.equal((await enableOrders.json()).orderingEnabled, true);
+  const staticOpen = await scan();
+  assert.equal(staticOpen.status, 201);
+  const staticGrant = await staticOpen.json();
+  assert.equal(staticGrant.open, true);
+  assert.equal(staticGrant.tableLabel, "โต๊ะ 1");
+  assert.equal(staticGrant.visitToken.length, 43, "Printed QR never contains bearer tokens");
+  const currentTables = await api(tableUrl, { headers: { Cookie: cookieHeader } });
+  assert.equal(currentTables.status, 200);
+  const printed = await currentTables.json();
+  assert.equal(printed.orderingEnabled, true);
+  const printedUrl = new URL(printed.tables[0].printedUrl);
+  assert.equal(printedUrl.searchParams.get("table"), tableId);
+  assert.equal(printedUrl.hash, "", "Permanent QR must never include a bearer");
   const rotateUrl = tableUrl + "/" + tableId + "/rotate";
   const firstRotate = await api(rotateUrl, {
     method: "POST", headers: catHeaders,
@@ -778,6 +816,26 @@ try {
     visitToken: secondToken,
     items: [{ productId, quantity: 2, optionIds: [firstOptionId] }],
   };
+  // Closing must reject submissions even with a still-valid visit token;
+  // opening again must keep the printed table QR unchanged.
+  const closeOrders = await api(orderingUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ enabled: false }),
+  });
+  assert.equal(closeOrders.status, 201);
+  assert.equal((await closeOrders.json()).orderingEnabled, false);
+  const scanClosed = await scan();
+  assert.equal((await scanClosed.json()).open, false);
+  const closedCheckout = await checkout("store-closed-checkout-01", cart);
+  assert.equal(closedCheckout.status, 409, "Closing blocks direct API checkout");
+  assert.equal((await closedCheckout.json()).message, "ORDERING_CLOSED");
+  const reopened = await api(orderingUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ enabled: true }),
+  });
+  assert.equal(reopened.status, 201);
+  assert.equal((await reopened.json()).orderingEnabled, true);
+  assert.equal((await scan()).status, 201, "The same printed QR works after reopening");
   assert.equal((await api(orderPath, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Idempotency-Key": "origin-denied-key0001" },
@@ -814,6 +872,24 @@ try {
   assert.ok(payloads.every((p) => p.paymentState === "not_requested"));
   assert.equal(payloads.filter((p) => p.replayed === false).length, 1,
     "Exactly one retry should insert the order");
+  // Closing cannot create a new Order, but a lost HTTP response for an
+  // already-created Order must still recover its exact idempotent result.
+  assert.equal((await api(orderingUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ enabled: false }),
+  })).status, 201);
+  const closedReplay = await checkout("guest-order-retry-0001", cart);
+  assert.equal(closedReplay.status, 201, "Existing Order retry survives a store close");
+  const recovered = await closedReplay.json();
+  assert.equal(recovered.orderId, payloads[0].orderId);
+  assert.equal(recovered.trackingToken, payloads[0].trackingToken);
+  assert.equal(recovered.replayed, true);
+  assert.equal((await checkout("closed-new-after-order", cart)).status, 409,
+    "Closed store rejects a genuinely new Order");
+  assert.equal((await api(orderingUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ enabled: true }),
+  })).status, 201);
   assert.equal((await checkout("guest-order-retry-0001", {
     ...cart,
     items: [{ productId, quantity: 3, optionIds: [firstOptionId] }],

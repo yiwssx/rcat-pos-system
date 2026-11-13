@@ -1,5 +1,4 @@
 import { DOCUMENT } from "@angular/common";
-import { HttpErrorResponse } from "@angular/common/http";
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,11 +10,7 @@ import {
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { MerchantOrderApi } from "./merchant-order.api";
-import {
-  IssuedTableCode,
-  MerchantTablesApi,
-  PrintableTable,
-} from "./merchant-tables.api";
+import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
 
 @Component({
   standalone: true,
@@ -29,12 +24,12 @@ import {
         <span class="eyebrow">ORDERING / TABLE QR</span>
         <h1 id="tables-title">QR สั่งอาหารติดโต๊ะ</h1>
         <p>
-          QR ที่พิมพ์ติดโต๊ะระบุเพียงร้านและโต๊ะ ไม่ได้ให้สิทธิ์สั่งอาหารทันที
-          ลูกค้าต้องกรอกรหัส 8 หลักที่พนักงานออกให้สำหรับรอบโต๊ะนั้น
+          ใช้ QR ติดโต๊ะเดิมได้ตลอด ลูกค้าสแกนเพื่อเปิดเมนูและสั่งอาหารได้ทันที
+          เมื่อร้านเปิดรับออเดอร์
         </p>
         <p class="tables-warning">
           <strong>ไม่ใช่ QR รับเงิน PromptPay</strong>
-          รหัสโต๊ะต้องแจ้งให้ลูกค้าทราบแยกต่างหาก ห้ามพิมพ์รหัสลงใน QR ถาวร
+          ร้านควบคุมการรับออเดอร์ผ่านสวิตช์ด้านล่าง ไม่ต้องออกรหัส 8 หลัก
         </p>
       </header>
       @if (loading()) {
@@ -48,6 +43,36 @@ import {
         @if (notice()) {
           <p class="tables-notice" role="status">{{ notice() }}</p>
         }
+        <section
+          class="ordering-switch"
+          aria-labelledby="ordering-switch-title"
+        >
+          <div>
+            <h2 id="ordering-switch-title">เปิดรับออเดอร์ผ่าน QR</h2>
+            <p>
+              {{
+                orderingEnabled()
+                  ? "เปิดอยู่ · ลูกค้าสแกน QR เพื่อสั่งได้ทันที"
+                  : "ปิดอยู่ · ลูกค้าเห็นข้อความว่าร้านยังไม่เปิดให้สั่ง"
+              }}
+            </p>
+          </div>
+          <button
+            type="button"
+            [class.is-open]="orderingEnabled()"
+            [disabled]="busy()"
+            [attr.aria-pressed]="orderingEnabled()"
+            (click)="toggleOrdering()"
+          >
+            {{
+              busy()
+                ? "กำลังบันทึก..."
+                : orderingEnabled()
+                  ? "ปิดรับออเดอร์"
+                  : "เปิดรับออเดอร์"
+            }}
+          </button>
+        </section>
         <form class="tables-add" (ngSubmit)="createTable()">
           <h2>เพิ่มโต๊ะใหม่</h2>
           <label for="table-label">ชื่อโต๊ะ</label>
@@ -63,7 +88,7 @@ import {
           <button type="submit" [disabled]="busy()">เพิ่มโต๊ะ</button>
         </form>
         <section class="tables-list" aria-labelledby="table-selection">
-          <h2 id="table-selection">เลือกโต๊ะเพื่อพิมพ์ QR หรือออกโค้ดใหม่</h2>
+          <h2 id="table-selection">เลือกโต๊ะเพื่อดูหรือพิมพ์ QR เดิม</h2>
           <div class="tables-grid">
             @for (table of tables(); track table.tableId) {
               <article
@@ -90,14 +115,11 @@ import {
             <div class="table-work-head">
               <div>
                 <h2 id="table-work-title">{{ table.label }}</h2>
-                <p>QR ถาวร · สแกนแล้วกรอกรหัสรอบโต๊ะ</p>
+                <p>QR ถาวร · สแกนเพื่อสั่งเมื่อร้านเปิดรับออเดอร์</p>
               </div>
               <div class="table-actions">
                 <button type="button" [disabled]="busy()" (click)="print()">
                   พิมพ์ QR ของโต๊ะนี้
-                </button>
-                <button type="button" [disabled]="busy()" (click)="issueCode()">
-                  ออกรหัสโต๊ะใหม่
                 </button>
               </div>
             </div>
@@ -107,26 +129,10 @@ import {
               [alt]="'QR สำหรับสั่งอาหาร ' + table.label"
             />
             <p class="table-url">{{ table.printedUrl }}</p>
-            @if (latestCode(); as issued) {
-              <div class="table-code" role="status">
-                <p>รหัสรอบโต๊ะล่าสุด (แสดงเฉพาะในหน้านี้)</p>
-                <strong>{{ issued.code }}</strong>
-                <p>หมดอายุ: {{ issued.expiresAt }}</p>
-                <p>
-                  การออกรหัสใหม่จะยกเลิกรหัสรอบก่อนและสิทธิ์สั่งอาหารเดิม
-                  แต่ไม่ลบออเดอร์ที่บันทึกไปแล้ว
-                </p>
-              </div>
-            } @else {
-              <p class="tables-warning">
-                หากไม่มีรหัสรอบโต๊ะที่ใช้งานอยู่ ให้กด “ออกรหัสโต๊ะใหม่”
-                แล้วแจ้งรหัสแก่ลูกค้าที่นั่งโต๊ะนั้น
-              </p>
-            }
             <div class="print-sheet" aria-hidden="true">
               <h2>RCAT POS · {{ table.label }}</h2>
               <img [src]="qrSrc(table.tableId)" alt="" />
-              <p>สแกนเพื่อเปิดเมนู จากนั้นกรอกรหัส 8 หลักที่พนักงานแจ้ง</p>
+              <p>สแกนเพื่อสั่งอาหาร เมื่อร้านเปิดรับออเดอร์</p>
               <strong>QR สั่งอาหารเท่านั้น · ไม่ใช่ QR ชำระเงิน</strong>
             </div>
           </section>
@@ -147,7 +153,7 @@ export class MerchantTablesPage implements OnInit {
   readonly notice = signal("");
   readonly tables = signal<PrintableTable[]>([]);
   readonly selectedId = signal<string | null>(null);
-  readonly latestCode = signal<IssuedTableCode | null>(null);
+  readonly orderingEnabled = signal(false);
   readonly selected = computed(
     () =>
       this.tables().find((table) => table.tableId === this.selectedId()) ??
@@ -191,6 +197,7 @@ export class MerchantTablesPage implements OnInit {
   async refresh(): Promise<void> {
     const data = await this.api.list(this.tenant, this.store);
     this.tables.set(data.tables);
+    this.orderingEnabled.set(data.orderingEnabled);
     if (!data.tables.some((table) => table.tableId === this.selectedId())) {
       this.selectedId.set(data.tables[0]?.tableId ?? null);
     }
@@ -200,7 +207,6 @@ export class MerchantTablesPage implements OnInit {
   }
   select(table: PrintableTable): void {
     this.selectedId.set(table.tableId);
-    this.latestCode.set(null);
     this.error.set("");
     this.notice.set("");
   }
@@ -217,42 +223,33 @@ export class MerchantTablesPage implements OnInit {
       this.newLabel = "";
       await this.refresh();
       this.selectedId.set(data.tableId);
-      this.latestCode.set(null);
-      this.notice.set("เพิ่มโต๊ะแล้ว สามารถพิมพ์ QR ถาวรและออกรหัสรอบโต๊ะได้");
+      this.notice.set("เพิ่มโต๊ะแล้ว สามารถพิมพ์ QR ถาวรได้ทันที");
     } catch {
       this.error.set("เพิ่มโต๊ะไม่สำเร็จ ตรวจสอบชื่อโต๊ะว่าซ้ำหรือไม่");
     } finally {
       this.busy.set(false);
     }
   }
-  async issueCode(): Promise<void> {
-    const table = this.selected();
-    if (!table || this.busy()) return;
-    const approved = this.document.defaultView?.confirm(
-      "ออกรหัสใหม่สำหรับ " +
-        table.label +
-        " ? การสั่งอาหารด้วยรหัส/Token รอบก่อนจะถูกยกเลิก แต่ Order เดิมไม่ถูกลบ",
-    );
-    if (!approved) return;
+  async toggleOrdering(): Promise<void> {
+    if (this.busy()) return;
+    const next = !this.orderingEnabled();
     this.busy.set(true);
     this.error.set("");
     this.notice.set("");
-    this.latestCode.set(null);
     try {
-      const data = await this.api.issueCode(
+      const result = await this.api.setOrderingEnabled(
         this.tenant,
         this.store,
-        table.tableId,
+        next,
       );
-      await this.refresh();
-      this.latestCode.set(data);
-      this.notice.set("ออกรหัสใหม่แล้ว ให้แจ้งรหัสแก่ลูกค้าที่นั่งโต๊ะ");
-    } catch (error) {
-      this.error.set(
-        error instanceof HttpErrorResponse && error.status === 503
-          ? "ยังไม่ได้กำหนดค่าระบบรหัสโต๊ะบนเซิร์ฟเวอร์"
-          : "ไม่สามารถออกรหัสใหม่ได้ กรุณาตรวจสอบสิทธิ์แล้วลองใหม่",
+      this.orderingEnabled.set(result.orderingEnabled);
+      this.notice.set(
+        result.orderingEnabled
+          ? "เปิดรับออเดอร์แล้ว ลูกค้าสแกน QR เดิมเพื่อสั่งได้"
+          : "ปิดรับออเดอร์แล้ว จะไม่มีออเดอร์ใหม่เข้าระบบ",
       );
+    } catch {
+      this.error.set("ไม่สามารถเปลี่ยนสถานะรับออเดอร์ได้ กรุณาลองอีกครั้ง");
     } finally {
       this.busy.set(false);
     }

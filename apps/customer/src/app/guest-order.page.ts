@@ -33,8 +33,14 @@ function guestError(error: unknown): string {
       return "เชื่อมต่อไม่ได้ โปรดตรวจสอบอินเทอร์เน็ตแล้วลองใหม่";
     if (error.status === 404)
       return "QR ของโต๊ะหมดอายุหรือถูกเปลี่ยนแล้ว โปรดขอ QR ล่าสุดจากร้าน";
-    if (error.status === 409)
+    if (error.status === 409) {
+      if (
+        (error.error as { message?: string } | null)?.message ===
+        "ORDERING_CLOSED"
+      )
+        return "ขออภัย ร้านยังไม่เปิดให้สั่งอาหาร กรุณาลองใหม่ภายหลัง";
       return "คำสั่งซื้อถูกเปลี่ยนระหว่างส่ง โปรดตรวจสอบตะกร้าก่อนลองอีกครั้ง";
+    }
     if (error.status === 429)
       return "มีการเรียกใช้งานจำนวนมาก กรุณารอสักครู่ก่อนลองใหม่";
     if (error.status === 400)
@@ -82,40 +88,24 @@ function guestError(error: unknown): string {
         </p>
       }
 
-      @if (staticTable(); as table) {
-        @if (!session.visit()) {
-          <form class="guest-code-form" (submit)="submitTableCode($event)">
-            <h2>กรอกรหัสรอบโต๊ะ</h2>
-            <p>
-              QR ติดโต๊ะเป็นลิงก์สาธารณะ ยังสั่งอาหารไม่ได้ กรุณาขอรหัส 8
-              หลักจากพนักงานของร้านก่อน
-            </p>
-            <label for="table-code">รหัส 8 หลักที่พนักงานแจ้ง</label>
-            <input
-              id="table-code"
-              name="tableCode"
-              type="text"
-              inputmode="numeric"
-              autocomplete="one-time-code"
-              maxlength="8"
-              minlength="8"
-              pattern="[0-9]{8}"
-              required
-              [value]="tableCode()"
-              (input)="updateTableCode($event)"
-              [disabled]="busy()"
-            />
-            <button
-              type="submit"
-              [disabled]="busy() || !online() || tableCode().length !== 8"
-            >
-              {{ busy() ? "กำลังตรวจรหัส..." : "ยืนยันรหัสและเปิดเมนู" }}
-            </button>
-            <p class="guest-code-help">
-              รหัสจะไม่ถูกส่งใน URL หรือ QR และไม่ได้ใช้ยืนยันการชำระเงิน
-            </p>
-          </form>
-        }
+      @if (closedStore(); as closed) {
+        <section
+          class="guest-closed"
+          aria-labelledby="guest-closed-title"
+          role="status"
+        >
+          <span class="guest-closed-symbol" aria-hidden="true">☕</span>
+          <h2 id="guest-closed-title">ขออภัย ร้านยังไม่เปิดให้สั่งอาหาร</h2>
+          <p>{{ closed.name }} · โต๊ะ {{ closed.table }}</p>
+          <p>กรุณาลองใหม่เมื่อร้านเปิดรับออเดอร์</p>
+          <button
+            type="button"
+            (click)="reload()"
+            [disabled]="loading() || !online()"
+          >
+            ตรวจสอบอีกครั้ง
+          </button>
+        </section>
       }
 
       @if (loading()) {
@@ -376,7 +366,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     storeId: string;
     tableId: string;
   } | null>(null);
-  readonly tableCode = signal("");
+  readonly closedStore = signal<{ name: string; table: string } | null>(null);
   readonly money = formatSatang;
   readonly pageSize = GUEST_MENU_BATCH_SIZE;
   private scanToken: string | null = null;
@@ -437,6 +427,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
         return;
       }
       this.staticTable.set({ tenantId, storeId, tableId });
+      void this.openStaticTable();
     } else if (this.session.visitToken()) {
       this.scanToken = this.session.visitToken();
       void this.load(this.session.visitToken()!);
@@ -457,6 +448,10 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   }
 
   async reload(): Promise<void> {
+    if (this.staticTable()) {
+      await this.openStaticTable();
+      return;
+    }
     const token = this.session.visitToken() ?? this.scanToken;
     if (!token) {
       this.error.set("กรุณาสแกน QR ของโต๊ะใหม่เพื่อเริ่มสั่งอาหาร");
@@ -514,38 +509,36 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     }, delay);
   }
 
-  updateTableCode(event: Event): void {
-    if (event.target instanceof HTMLInputElement) {
-      this.tableCode.set(event.target.value.replace(/[^0-9]/g, "").slice(0, 8));
-    }
-  }
-
-  async submitTableCode(event: Event): Promise<void> {
-    event.preventDefault();
+  private async openStaticTable(): Promise<void> {
     const table = this.staticTable();
-    const code = this.tableCode();
-    if (!table || !/^[0-9]{8}$/.test(code) || this.busy() || !this.online())
-      return;
-    this.busy.set(true);
+    if (!table || !this.online()) return;
+    const version = ++this.requestVersion;
+    this.loading.set(true);
     this.error.set("");
+    this.closedStore.set(null);
+    this.products.set([]);
+    this.session.invalidateVisit();
+    this.scanToken = null;
     try {
-      const grant = await this.api.redeemCode(
+      const state = await this.api.openPrintedTable(
         table.tenantId,
         table.storeId,
         table.tableId,
-        code,
       );
-      this.tableCode.set("");
-      this.scanToken = grant.visitToken;
-      await this.load(grant.visitToken);
+      if (version !== this.requestVersion) return;
+      if (!state.open) {
+        this.closedStore.set({
+          name: state.storeName,
+          table: state.tableLabel,
+        });
+        return;
+      }
+      this.scanToken = state.visitToken;
+      await this.load(state.visitToken);
     } catch (error) {
-      this.error.set(
-        error instanceof HttpErrorResponse && error.status === 404
-          ? "รหัสไม่ถูกต้อง หมดอายุ หรือมีการขอรหัสผิดหลายครั้ง กรุณาติดต่อพนักงาน"
-          : guestError(error),
-      );
+      if (version === this.requestVersion) this.error.set(guestError(error));
     } finally {
-      this.busy.set(false);
+      if (version === this.requestVersion) this.loading.set(false);
     }
   }
 
@@ -772,6 +765,19 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     } catch (error) {
       if (error instanceof HttpErrorResponse && error.status === 404) {
         this.session.invalidateVisit();
+      }
+      if (
+        error instanceof HttpErrorResponse &&
+        error.status === 409 &&
+        (error.error as { message?: string } | null)?.message ===
+          "ORDERING_CLOSED"
+      ) {
+        this.session.invalidateVisit();
+        this.closedStore.set({
+          name: visit.storeName,
+          table: visit.tableLabel,
+        });
+        this.products.set([]);
       }
       this.notice.set(guestError(error));
     } finally {

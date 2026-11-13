@@ -2,6 +2,8 @@ import { createHmac, randomInt } from "node:crypto";
 import * as QRCode from "qrcode";
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -38,6 +40,12 @@ function safeError(error: unknown): never {
       : undefined;
   if (code === "42501" || code === "28000" || code === "23503") {
     throw new NotFoundException("Table or visit unavailable");
+  }
+  if (code === "P0041") {
+    throw new HttpException(
+      "Too many table sessions",
+      HttpStatus.TOO_MANY_REQUESTS,
+    );
   }
   if (code === "23505") {
     throw new ConflictException("Table label already exists");
@@ -198,6 +206,7 @@ export class TableOrderingService {
       const result = await this.database.auth((client) =>
         client.query<{
           data: {
+            orderingEnabled: boolean;
             tables: Array<{
               tableId: string;
               label: string;
@@ -213,6 +222,7 @@ export class TableOrderingService {
       );
       const tables = result.rows[0]?.data?.tables ?? [];
       return {
+        orderingEnabled: result.rows[0]?.data?.orderingEnabled === true,
         tables: tables.map((table) => ({
           ...table,
           printedUrl: printableUrl(tenantId, storeId, table.tableId),
@@ -286,6 +296,87 @@ export class TableOrderingService {
         expiresAt: data.expiresAt,
         printedUrl: printableUrl(tenantId, storeId, tableId),
       };
+    } catch (error) {
+      safeError(error);
+    }
+  }
+
+  async setOrderingState(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    raw: unknown,
+  ) {
+    ids(tenantId, storeId);
+    const input = requestObject(raw);
+    if (
+      Object.keys(input).length !== 1 ||
+      typeof input["enabled"] !== "boolean"
+    ) {
+      throw new BadRequestException("Invalid ordering state");
+    }
+    const session = await this.auth.session(req);
+    this.auth.requireCsrf(req, session);
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ enabled: boolean }>(
+          "SELECT rcat_private.set_store_ordering_enabled($1,$2,$3,$4) AS enabled",
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            input["enabled"],
+          ],
+        ),
+      );
+      return { orderingEnabled: result.rows[0]?.enabled === true };
+    } catch (error) {
+      safeError(error);
+    }
+  }
+
+  async openPrintedTable(req: ApiRequest, raw: unknown) {
+    const input = requestObject(raw);
+    const tenant = input["tenantId"];
+    const store = input["storeId"];
+    const table = input["tableId"];
+    if (
+      Object.keys(input).length !== 3 ||
+      typeof tenant !== "string" ||
+      typeof store !== "string" ||
+      typeof table !== "string" ||
+      !UUID.test(tenant) ||
+      !UUID.test(store) ||
+      !UUID.test(table)
+    ) {
+      throw new NotFoundException("Table unavailable");
+    }
+    await this.guestBudget.consume(req, "redeem", table);
+    const guestToken = newOpaqueSecret();
+    const masterToken = newOpaqueSecret();
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{
+          data: {
+            open: boolean;
+            storeName: string;
+            tableLabel: string;
+            expiresAt?: string;
+          };
+        }>(
+          "SELECT rcat_private.open_printed_ordering_table($1,$2,$3,$4,$5) AS data",
+          [
+            tenant,
+            store,
+            table,
+            digestOpaqueSecret(masterToken),
+            digestOpaqueSecret(guestToken),
+          ],
+        ),
+      );
+      const state = result.rows[0]?.data;
+      if (!state) throw new NotFoundException("Table unavailable");
+      return state.open ? { ...state, visitToken: guestToken } : state;
     } catch (error) {
       safeError(error);
     }
