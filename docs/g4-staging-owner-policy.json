@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "decision_date": "2026-11-09",
+  "decision_date": "2026-11-13",
   "scope": "G4 non-payment RCAT on-prem staging only",
-  "decision_source": "Owner approval recorded in GitHub Issue #82",
+  "decision_source": "Owner's 2026-11-13 authorization: select G4 offsite backup parameters and prepare Staging-only acceptance; offsite destination, credentials and host activation not yet verified",
   "stock": {
     "approved": true,
     "sold_out": "manual_merchant_toggle",
@@ -13,12 +13,17 @@
   "backup": {
     "policy_approved": false,
     "offsite_destination_approved": false,
-    "cadence_approved": false,
+    "cadence_approved": true,
     "offsite_destination": null,
-    "cadence": null,
-    "retention_approved": false,
+    "cadence": "every_12_hours_at_00_12_Asia_Bangkok",
+    "retention_approved": true,
     "guest_budget_prune_approved": false,
-    "auto_order_outbox_audit_deletion_approved": false
+    "auto_order_outbox_audit_deletion_approved": false,
+    "retention": {
+      "keep_daily": 14,
+      "keep_weekly": 4,
+      "keep_monthly": 3
+    }
   },
   "slo": {
     "approved": true,
@@ -30,7 +35,7 @@
     "sse_reconnect_target_approved": false
   },
   "releases": {
-    "staging_deploy_approved": false,
+    "staging_deploy_approved": true,
     "g4_final_signoff": false,
     "payment_authorized": false,
     "production_authorized": false
