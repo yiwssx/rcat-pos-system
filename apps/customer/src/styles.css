@@ -1071,3 +1071,8 @@ h1 {
     margin-bottom: 0.85rem;
   }
 }
+
+/* Guest ordering already renders its own store header; one header per screen. */
+.portal-header.portal-header-hidden {
+  display: none;
+}

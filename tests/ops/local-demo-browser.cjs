@@ -100,6 +100,9 @@ async function main() {
     await tableView.screenshot({ path: '/tmp/rcat-portal-tables-mobile.png', fullPage: true });
     await staticPage.getByRole('button', { name: 'ตรวจสอบอีกครั้ง' }).click();
     await staticPage.locator('.guest-product').first().waitFor();
+    assert.equal(await staticPage.locator('header.portal-header').isVisible(), false,
+      'Guest ordering should not repeat the portal masthead');
+    assert.equal(await staticPage.locator('header.guest-header').isVisible(), true);
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-menu-phone.png', fullPage: true });
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' }).getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
     await staticPage.getByRole('button', { name: 'ดูตะกร้า' }).click();
@@ -141,14 +144,17 @@ async function main() {
     // Reuse this authenticated, synthetic CI fixture to capture actual
     // management screens; no new service, database or payment checks.
     for (const management of [
-      { route: 'catalog', title: 'จัดการเมนูและสินค้า', file: 'catalog-desktop' },
-      { route: 'inventory', title: 'สต็อกวัตถุดิบของร้าน', file: 'inventory-desktop' },
-      { route: 'reports', title: 'รายงานออเดอร์ประจำวัน', file: 'reports-desktop' },
+      { route: 'catalog', title: 'จัดการเมนูและสินค้า', ready: '.catalog-panel', file: 'catalog-desktop' },
+      { route: 'inventory', title: 'สต็อกวัตถุดิบของร้าน', ready: '.inventory-panel', file: 'inventory-desktop' },
+      { route: 'reports', title: 'รายงานออเดอร์ประจำวัน', ready: '.report-kpis', file: 'reports-desktop' },
     ]) {
       const capture = await context.newPage();
       await capture.setViewportSize({ width: 1365, height: 900 });
       await capture.goto(merchant + '/' + management.route + '/' + tenant + '/' + store);
       await capture.getByRole('heading', { name: management.title, exact: true }).waitFor();
+      // The heading renders before the async API response. A loading-state
+      // screenshot is not evidence of a completed management workspace.
+      await capture.locator(management.ready).first().waitFor({ state: 'visible', timeout: 25000 });
       await capture.screenshot({ path: '/tmp/rcat-portal-' + management.file + '.png', fullPage: true });
       await capture.close();
     }

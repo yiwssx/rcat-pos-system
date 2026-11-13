@@ -53,7 +53,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
   template: `
     <div class="portal-layout">
       <a class="portal-skip" href="#main">ข้ามไปเนื้อหาหลัก</a>
-      <header class="portal-header">
+      <header class="portal-header" [class.portal-header-hidden]="guestMenu()">
         <a class="portal-brand" routerLink="/" aria-label="RCAT POS หน้าแรก">
           <span class="portal-brand-mark" aria-hidden="true">R</span>
           <span class="portal-brand-title"
@@ -224,6 +224,9 @@ export class AppComponent {
   readonly message = signal("");
   readonly guestOrder = computed(() =>
     /^\/order(?:\/|\?|#|$)/.test(this.url()),
+  );
+  readonly guestMenu = computed(() =>
+    /^\/order(?:\?|#|$)/.test(this.url()),
   );
   readonly store = computed(() => {
     const segments = this.url().split(/[/?#]/);
