@@ -201,7 +201,9 @@ function guestError(error: unknown): string {
                         <legend>
                           {{ group.name }}
                           <span
-                            >เลือก {{ group.minSelect }}–{{ group.maxSelect }}</span
+                            >เลือก {{ group.minSelect }}–{{
+                              group.maxSelect
+                            }}</span
                           >
                         </legend>
                         @if (options(group.id).length < group.minSelect) {
@@ -218,7 +220,9 @@ function guestError(error: unknown): string {
                                 busy() ||
                                 optionDisabled(product.id, group, choice.id)
                               "
-                              (change)="toggleOption(product.id, group, choice.id)"
+                              (change)="
+                                toggleOption(product.id, group, choice.id)
+                              "
                             />
                             <span>{{ choice.name }}</span>
                             <span class="guest-option-price">
