@@ -86,7 +86,11 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
         [class.portal-with-nav]="session.phase() === 'staff' && !guestOrder()"
       >
         @if (session.phase() === "staff" && !guestOrder()) {
-          <aside class="portal-sidebar" [class.portal-nav-open]="mobileNavOpen()" aria-label="พื้นที่ทำงาน">
+          <aside
+            class="portal-sidebar"
+            [class.portal-nav-open]="mobileNavOpen()"
+            aria-label="พื้นที่ทำงาน"
+          >
             <div class="portal-workspace-selector">
               <span class="portal-nav-caption">WORKSPACE</span>
               @if (store(); as selected) {
@@ -119,7 +123,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
               [attr.aria-expanded]="mobileNavOpen()"
               (click)="toggleMobileNav()"
             >
-              <span>{{ mobileNavOpen() ? "ซ่อนเมนูจัดการ" : "แสดงเมนูจัดการ" }}</span>
+              <span>เมนูจัดการร้าน</span>
               <span aria-hidden="true">{{ mobileNavOpen() ? "−" : "+" }}</span>
             </button>
             <nav id="portal-main-nav" class="portal-nav" aria-label="งานของร้าน">
