@@ -4,6 +4,7 @@ import { routes } from "./app.routes";
 import {
   addToCart,
   changeCartQuantity,
+  changeModifierSelection,
   cartNeedsReview,
   estimateSatang,
   formatSatang,
@@ -108,6 +109,40 @@ describe("customer route security and QR ordering", () => {
     expect(selectedOptionError(VISIT, "p1", ["o1", "o2"])).toBe(null);
     expect(selectedOptionError(VISIT, "p2", [])).toBe(null);
     expect(() => addToCart(VISIT, [], "p1", [])).toThrow();
+  });
+
+  it("uses radio semantics for required and optional single-select modifier groups", () => {
+    const visit: GuestVisit = {
+      ...VISIT,
+      modifierGroups: [
+        ...VISIT.modifierGroups,
+        { id: "sweet", productId: "p1", name: "ระดับความหวาน", slug: "sweet", minSelect: 1, maxSelect: 1 },
+        { id: "ice", productId: "p1", name: "น้ำแข็ง", slug: "ice", minSelect: 0, maxSelect: 1 },
+      ],
+      modifierOptions: [
+        ...VISIT.modifierOptions,
+        { id: "sweet-low", productId: "p1", groupId: "sweet", name: "หวานน้อย", priceDeltaSatang: 0 },
+        { id: "sweet-high", productId: "p1", groupId: "sweet", name: "หวานมาก", priceDeltaSatang: 0 },
+        { id: "ice-on", productId: "p1", groupId: "ice", name: "เพิ่มน้ำแข็ง", priceDeltaSatang: 500 },
+      ],
+    };
+    const first = changeModifierSelection(visit, "p1", "sweet", ["o1"], "sweet-low");
+    expect(first).toEqual(["o1", "sweet-low"]);
+    const switched = changeModifierSelection(visit, "p1", "sweet", first, "sweet-high");
+    expect(switched).toEqual(["o1", "sweet-high"]);
+    expect(selectedOptionError(visit, "p1", switched)).toBe(null);
+    const withIce = changeModifierSelection(visit, "p1", "ice", switched, "ice-on");
+    expect(estimateSatang(visit, [{ productId: "p1", optionIds: withIce, quantity: 1 }])).toBe(12000);
+    expect(changeModifierSelection(visit, "p1", "ice", withIce, null)).toEqual(switched);
+    expect(() => changeModifierSelection(visit, "p1", "sweet", switched, null)).toThrow();
+    expect(() => changeModifierSelection(visit, "p1", "sweet", switched, "foreign")).toThrow();
+  });
+
+  it("keeps multi-select modifiers independently bounded", () => {
+    const first = changeModifierSelection(VISIT, "p1", "g1", [], "o1");
+    const second = changeModifierSelection(VISIT, "p1", "g1", first, "o2");
+    expect(second).toEqual(["o1", "o2"]);
+    expect(changeModifierSelection(VISIT, "p1", "g1", second, "o1")).toEqual(["o2"]);
   });
 
   it("normalizes options, coalesces identical cart lines and handles signed satang", () => {
