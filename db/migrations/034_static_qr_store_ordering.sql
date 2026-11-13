@@ -151,4 +151,25 @@ REVOKE ALL ON FUNCTION rcat_private.place_guest_order_when_open(bytea,text,jsonb
 GRANT EXECUTE ON FUNCTION rcat_private.set_store_ordering_enabled(bytea,uuid,uuid,boolean) TO rcat_auth;
 GRANT EXECUTE ON FUNCTION rcat_private.open_printed_ordering_table(uuid,uuid,uuid,bytea,bytea) TO rcat_auth;
 GRANT EXECUTE ON FUNCTION rcat_private.place_guest_order_when_open(bytea,text,jsonb) TO rcat_auth;
-REVOKE EXECUTE ON FUNCTION rcat_private.place_guest_order(bytea,text,jsonb) FROM rcat_auth;
+-- Enforce the same switch for *all* order insert paths, including the
+-- legacy SQL function used by existing trusted integration fixtures.
+-- The trigger holds the store lock through the enclosing transaction, so a
+-- concurrent manager close cannot race a new Order into the queue.
+CREATE FUNCTION rcat_private.check_ordering_enabled_on_insert()
+RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog
+AS $
+BEGIN
+ PERFORM 1 FROM rcat.stores s
+ WHERE s.tenant_id=NEW.tenant_id AND s.id=NEW.store_id
+   AND s.ordering_enabled FOR SHARE;
+ IF NOT FOUND THEN
+   RAISE EXCEPTION 'Ordering closed' USING ERRCODE='P0040';
+ END IF;
+ RETURN NEW;
+END $;
+REVOKE ALL ON FUNCTION rcat_private.check_ordering_enabled_on_insert() FROM PUBLIC;
+CREATE TRIGGER orders_store_ordering_gate
+  BEFORE INSERT ON rcat.orders
+  FOR EACH ROW EXECUTE FUNCTION rcat_private.check_ordering_enabled_on_insert();
+
