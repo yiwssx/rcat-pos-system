@@ -212,22 +212,32 @@ async function browserFlow(fixture) {
     assert.ok(viewport.documentWidth <= viewport.visible + 1,
       "Guest menu overflows 320px screen: " + JSON.stringify(viewport));
 
-    // A5: Mobile keyboard navigation must expose a labelled search and
-    // move focus to the adjacent labelled category picker (no pointer needed).
+    // A5: iOS-style category chips remain reachable with a keyboard.
     const menuSearch = guest.getByRole("searchbox", { name: "ค้นหาเมนู" });
     await menuSearch.focus();
     assert.equal(await menuSearch.evaluate((node) => node === document.activeElement), true,
       "Guest search cannot receive keyboard focus");
     await guest.keyboard.press("Tab");
-    assert.equal(await guest.locator(".guest-category select")
+    assert.equal(await guest.getByRole("button", { name: "ทั้งหมด", exact: true })
       .evaluate((node) => node === document.activeElement), true,
-      "Guest category filter is not reachable after search with Tab");
+      "Guest category chips are not reachable by keyboard");
+    // Detail view uses the native modal dialog, with Escape restoring focus.
+    const firstDish = guest.locator(".guest-product", { hasText: fixture.name });
+    await firstDish.getByRole("button", { name: "ดูรายละเอียด " + fixture.name }).click();
+    const sheet = guest.getByRole("dialog", { name: fixture.name });
+    await sheet.waitFor();
+    assert.ok(await sheet.getByText("125.00 ฿").count() >= 1);
+    await guest.keyboard.press("Escape");
+    await sheet.waitFor({ state: "hidden" });
 
     // iPhone offline: do not submit an Order or silently mutate cart;
     // reconnect and submit through the visible Angular button.
     await guest.locator(".guest-product", { hasText: fixture.name })
       .getByRole("button", { name: "เพิ่มลงตะกร้า" }).click();
-    const checkout = guest.getByRole("button", { name: /ยืนยันส่งคำสั่งซื้อ/ });
+    await guest.getByRole("button", { name: "ดูตะกร้า" }).click();
+    const cartSheet = guest.getByRole("dialog", { name: "ตะกร้าของฉัน" });
+    await cartSheet.waitFor();
+    const checkout = cartSheet.getByRole("button", { name: /ยืนยันส่งคำสั่งซื้อ/ });
     await checkout.waitFor();
     await guestContext.setOffline(true);
     await guest.evaluate(() => window.dispatchEvent(new Event("offline")));
