@@ -126,7 +126,11 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
               <span>เมนูจัดการร้าน</span>
               <span aria-hidden="true">{{ mobileNavOpen() ? "−" : "+" }}</span>
             </button>
-            <nav id="portal-main-nav" class="portal-nav" aria-label="งานของร้าน">
+            <nav
+              id="portal-main-nav"
+              class="portal-nav"
+              aria-label="งานของร้าน"
+            >
               <div class="portal-nav-group">
                 <span class="portal-nav-caption">ภาพรวม</span>
                 <a
