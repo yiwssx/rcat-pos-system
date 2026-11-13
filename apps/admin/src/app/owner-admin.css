@@ -282,7 +282,6 @@
   }
 }
 
-
 /* Owner settings match merchant density without implying platform-admin rights. */
 .owner-shell {
   max-width: var(--pos-content-compact, 1040px);
