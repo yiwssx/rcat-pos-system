@@ -167,11 +167,19 @@ import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
                   @if (store.role === "owner" || store.role === "manager") {
                     <div class="portal-store-links">
                       <a
-                        [routerLink]="['/catalog', store.tenantId, store.storeId]"
+                        [routerLink]="[
+                          '/catalog',
+                          store.tenantId,
+                          store.storeId,
+                        ]"
                         >เมนูและราคา <span aria-hidden="true">↗</span></a
                       >
                       <a
-                        [routerLink]="['/tables', store.tenantId, store.storeId]"
+                        [routerLink]="[
+                          '/tables',
+                          store.tenantId,
+                          store.storeId,
+                        ]"
                         >โต๊ะและ QR <span aria-hidden="true">↗</span></a
                       >
                     </div>
@@ -216,7 +224,10 @@ import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
             <div class="portal-setup-banner">
               <div>
                 <strong>ต้องการจัดการร้านหรือบุคลากร?</strong>
-                <p>สร้างร้านใหม่ รับคำเชิญ และจัดการสิทธิ์เฉพาะร้านที่คุณเป็นเจ้าของ</p>
+                <p>
+                  สร้างร้านใหม่ รับคำเชิญ
+                  และจัดการสิทธิ์เฉพาะร้านที่คุณเป็นเจ้าของ
+                </p>
               </div>
               <a class="portal-button portal-secondary" routerLink="/settings"
                 >ตั้งค่าร้าน</a

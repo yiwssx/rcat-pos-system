@@ -1077,7 +1077,6 @@ h1 {
   display: none;
 }
 
-
 /* Visual V5 — component-scale redesign; evidence: Square POS, Shopify POS,
    Apple HIG. Warm neutral application chrome with one RCAT orange accent.
    Accessible semantic states and store-authoritative actions are preserved. */
@@ -1198,7 +1197,9 @@ body {
   color: #58666e;
   font-weight: 650;
   font-size: 0.9rem;
-  transition: background 140ms ease, color 140ms ease;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
 }
 .portal-nav-group a:hover {
   background: #f6f7f6;

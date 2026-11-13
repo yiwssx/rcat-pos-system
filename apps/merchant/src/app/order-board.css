@@ -472,7 +472,6 @@ a:focus-visible {
   }
 }
 
-
 /* Visual V5 — order cards and status are the visual center of operations. */
 .board {
   max-width: 1320px;
@@ -580,7 +579,9 @@ a:focus-visible {
 }
 .order-card.is-submitted {
   border-color: #e8bea5;
-  box-shadow: 0 0 0 1px #f6d7c4, 0 7px 22px rgb(28 43 46 / 4%);
+  box-shadow:
+    0 0 0 1px #f6d7c4,
+    0 7px 22px rgb(28 43 46 / 4%);
 }
 .order-number {
   color: #293c42;

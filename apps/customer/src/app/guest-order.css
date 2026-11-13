@@ -1537,7 +1537,6 @@
   }
 }
 
-
 /* Visual V5 — the guest sees a refined menu, not a back-office form. */
 :host {
   color: var(--pos-ink);
