@@ -158,7 +158,7 @@ GRANT EXECUTE ON FUNCTION rcat_private.place_guest_order_when_open(bytea,text,js
 CREATE FUNCTION rcat_private.check_ordering_enabled_on_insert()
 RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog
-AS $
+AS $trigger$
 BEGIN
  PERFORM 1 FROM rcat.stores s
  WHERE s.tenant_id=NEW.tenant_id AND s.id=NEW.store_id
@@ -167,7 +167,7 @@ BEGIN
    RAISE EXCEPTION 'Ordering closed' USING ERRCODE='P0040';
  END IF;
  RETURN NEW;
-END $;
+END $trigger$;
 REVOKE ALL ON FUNCTION rcat_private.check_ordering_enabled_on_insert() FROM PUBLIC;
 CREATE TRIGGER orders_store_ordering_gate
   BEFORE INSERT ON rcat.orders
