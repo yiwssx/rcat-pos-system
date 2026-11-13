@@ -13,7 +13,8 @@
   line-height: 1.25;
 }
 .report-back {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
   min-height: 44px;
   align-items: center;
   margin-bottom: 0.8rem;

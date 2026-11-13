@@ -21,7 +21,8 @@
   line-height: 1.7;
 }
 .inventory-back {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
   align-items: center;
   color: #25516f;
   min-height: 44px;
