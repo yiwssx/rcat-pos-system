@@ -16,6 +16,9 @@ async function main() {
   try {
     const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 320, height: 780 } });
     const page = await context.newPage();
+    const alias = await fetch(merchant + '/local', {redirect:'manual'});
+    assert.equal(alias.status,302);
+    assert.equal(alias.headers.get('location'),'/');
     await page.goto(merchant + '/local');
     await page.getByRole('button', {name:'เข้าสู่ระบบทดลอง',exact:true}).waitFor();
     assert.ok(await page.getByLabel('อีเมลบัญชีทดลอง').isVisible());
