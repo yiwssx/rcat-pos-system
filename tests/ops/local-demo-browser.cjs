@@ -102,12 +102,14 @@ async function main() {
     assert.equal(await cashierPage.getByRole('link',{name:'พนักงานและสิทธิ์',exact:true}).count(),0);
     await cashierPage.goto(merchant + '/settings');
     await cashierPage.getByText('บัญชีนี้ไม่มีสิทธิ์เข้าถึงงานหรือร้านที่เลือก',{exact:true}).waitFor();
+    await cashierPage.waitForURL(merchant + '/');
     assert.equal(new URL(cashierPage.url()).pathname,'/');
     await cashier.close();
     await board.getByRole('button',{name:'ออกจากระบบ',exact:true}).click();
     await board.getByRole('button',{name:'เข้าสู่ระบบทดลอง',exact:true}).waitFor();
     await board.goto(merchant + `/orders/${tenant}/${store}`);
     await board.getByRole('button',{name:'เข้าสู่ระบบทดลอง',exact:true}).waitFor();
+    await board.waitForURL(merchant + '/');
     assert.equal(new URL(board.url()).pathname,'/');
     // A failed auth service is an error/retry state, not a misleading login form.
     await board.route('**/api/auth/me', route => route.fulfill({status:503,json:{message:'unavailable'}}));
