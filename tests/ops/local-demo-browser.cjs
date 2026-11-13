@@ -81,9 +81,10 @@ async function main() {
     await staticPage.getByRole('button', { name: 'ตรวจสอบอีกครั้ง' }).click();
     await staticPage.locator('.guest-product').first().waitFor();
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' }).getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
+    await staticPage.getByRole('button', { name: 'ดูตะกร้า' }).click();
     await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).click();
     await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).waitFor();
-    await staticPage.getByRole('button', { name: /ยืนยันส่งคำสั่งซื้อ/ }).click();
+    await staticPage.getByRole('dialog', { name: 'ตะกร้าของฉัน' }).getByRole('button', { name: /ยืนยันส่งคำสั่งซื้อ/ }).click();
     await staticPage.getByRole('heading', { name: 'ขออภัย ร้านยังไม่เปิดให้สั่งอาหาร' }).waitFor();
     assert.equal(await staticPage.locator('.guest-product').count(), 0, 'Merchant close blocks existing cart');
     await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).click();
@@ -98,7 +99,8 @@ async function main() {
     assert.equal(new URL(page.url()).hash, '', 'Guest QR token must be scrubbed');
     assert.equal(await page.locator('.guest-product').count(), 3);
     await product.getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
-    await page.getByRole('button', { name: /ยืนยันส่งคำสั่งซื้อ/ }).click();
+    await page.getByRole('button', { name: 'ดูตะกร้า' }).click();
+    await page.getByRole('dialog', { name: 'ตะกร้าของฉัน' }).getByRole('button', { name: /ยืนยันส่งคำสั่งซื้อ/ }).click();
     await page.waitForURL('**/order/track', { timeout: 20000 });
     await page.getByText('Payment: not_requested').waitFor();
     const orderPrefix = (await page.locator('.guest-track-id').innerText()).match(/[a-f0-9]{8}/i)?.[0];
