@@ -76,7 +76,12 @@ function bahtInput(satang: number): string {
           </p>
         }
 
-        <div class="catalog-grid">
+        <details class="catalog-create">
+          <summary class="catalog-create-summary">
+            <span>เพิ่มหมวดหมู่หรือสินค้าใหม่</span>
+            <span class="catalog-create-hint">แตะเพื่อเปิดแบบฟอร์ม</span>
+          </summary>
+          <div class="catalog-grid">
           <form class="catalog-panel" (ngSubmit)="addCategory()">
             <h2>เพิ่มหมวดหมู่</h2>
             <label for="category-name">ชื่อหมวดหมู่</label>
@@ -145,7 +150,8 @@ function bahtInput(satang: number): string {
               เพิ่มสินค้า
             </button>
           </form>
-        </div>
+          </div>
+        </details>
 
         <section class="catalog-panel" aria-labelledby="category-editor-title">
           <h2 id="category-editor-title">แก้ไขหมวดหมู่ที่มีอยู่</h2>
