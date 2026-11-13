@@ -317,6 +317,9 @@
   font-size: 0.94rem;
 }
 .tables-header > a {
+  display: flex;
+  width: fit-content;
+  margin-bottom: 0.7rem;
   color: #697a80;
 }
 .tables-add,
