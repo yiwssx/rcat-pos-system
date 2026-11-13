@@ -79,6 +79,25 @@ export class TableOrderingController {
     return this.ordering.issueCode(req, tenantId, storeId, tableId);
   }
 
+  @Post("tenants/:tenantId/stores/:storeId/ordering-state")
+  @Header("Cache-Control", "no-store")
+  setOrderingState(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.ordering.setOrderingState(req, tenantId, storeId, body);
+  }
+
+  @Post("guest/ordering-table/open")
+  @Header("Cache-Control", "no-store")
+  openPrintedTable(@Req() req: ApiRequest, @Body() body: unknown) {
+    requireAllowedOrigin(req);
+    return this.ordering.openPrintedTable(req, body);
+  }
+
   @Post("guest/ordering-code/redeem")
   @Header("Cache-Control", "no-store")
   redeemCode(@Req() req: ApiRequest, @Body() body: unknown) {

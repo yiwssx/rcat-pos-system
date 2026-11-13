@@ -94,6 +94,9 @@ function mapOrderFailure(error: unknown): never {
   if (code === "42501" || code === "28000") {
     throw new NotFoundException("Order or visit unavailable");
   }
+  if (code === "P0040") {
+    throw new ConflictException("ORDERING_CLOSED");
+  }
   if (code === "23505") {
     throw new ConflictException(
       "Idempotency key already used for another cart",
@@ -137,7 +140,7 @@ export class GuestOrdersService {
     try {
       const data = await this.database.auth(async (client) => {
         const result = await client.query<{ data: Record<string, unknown> }>(
-          "SELECT rcat_private.place_guest_order($1,$2,$3::jsonb) AS data",
+          "SELECT rcat_private.place_guest_order_when_open($1,$2,$3::jsonb) AS data",
           [visitDigest, key, JSON.stringify(cart)],
         );
         const order = result.rows[0]?.data;

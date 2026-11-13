@@ -12,6 +12,10 @@ import {
   GuestVisit,
 } from "./guest-order.domain";
 
+export type PrintedTableState =
+  | { open: false; storeName: string; tableLabel: string }
+  | { open: true; storeName: string; tableLabel: string; visitToken: string; expiresAt: string };
+
 interface GuestTracking {
   orderId: string;
   trackingToken: string;
@@ -47,6 +51,18 @@ export class GuestOrderApi {
         categoryId,
         cursor,
         limit: 24,
+      }),
+    );
+  }
+
+  openPrintedTable(
+    tenantId: string,
+    storeId: string,
+    tableId: string,
+  ): Promise<PrintedTableState> {
+    return firstValueFrom(
+      this.http.post<PrintedTableState>("/api/guest/ordering-table/open", {
+        tenantId, storeId, tableId,
       }),
     );
   }

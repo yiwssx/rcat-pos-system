@@ -43,13 +43,30 @@ export class MerchantTablesApi {
     return { "X-CSRF-Token": csrf };
   }
 
-  list(tenant: string, store: string): Promise<{ tables: PrintableTable[] }> {
+  list(tenant: string, store: string): Promise<{
+    tables: PrintableTable[];
+    orderingEnabled: boolean;
+  }> {
     return firstValueFrom(
-      this.http.get<{ tables: PrintableTable[] }>(
+      this.http.get<{ tables: PrintableTable[]; orderingEnabled: boolean }>(
         scope(tenant, store) + "/tables",
         {
           withCredentials: true,
         },
+      ),
+    );
+  }
+
+  setOrderingEnabled(
+    tenant: string,
+    store: string,
+    enabled: boolean,
+  ): Promise<{ orderingEnabled: boolean }> {
+    return firstValueFrom(
+      this.http.post<{ orderingEnabled: boolean }>(
+        scope(tenant, store) + "/ordering-state",
+        { enabled },
+        { withCredentials: true, headers: this.headers() },
       ),
     );
   }
