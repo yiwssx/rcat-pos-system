@@ -7,6 +7,8 @@ import {
   GuestCatalogCursor,
   GuestCatalogPage,
   GuestCheckout,
+  GuestOrderContext,
+  normalizedOrderContext,
   GuestOrderHistory,
   GuestOrderStatus,
   GuestVisit,
@@ -101,12 +103,13 @@ export class GuestOrderApi {
   checkout(
     token: string,
     items: readonly CartLine[],
+    context: GuestOrderContext,
     key: string,
   ): Promise<GuestCheckout> {
     return firstValueFrom(
       this.http.post<GuestCheckout>(
         "/api/guest/orders",
-        { visitToken: token, items },
+        { visitToken: token, items, ...normalizedOrderContext(context) },
         { headers: { "Idempotency-Key": key } },
       ),
     );
@@ -208,8 +211,11 @@ export class GuestOrderSession {
     this.pending = null;
   }
 
-  keyFor(items: readonly CartLine[]): string {
-    const payload = JSON.stringify(items);
+  keyFor(
+    items: readonly CartLine[],
+    context: GuestOrderContext,
+  ): string {
+    const payload = JSON.stringify({ items, ...normalizedOrderContext(context) });
     if (this.pending?.payload === payload) return this.pending.key;
     if (!this.window?.crypto?.randomUUID) {
       throw new Error(
