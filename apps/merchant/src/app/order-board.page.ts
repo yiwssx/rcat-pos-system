@@ -83,11 +83,14 @@ function failureText(error: unknown): string {
         <button
           type="button"
           class="board-refresh"
+          [attr.aria-label]="refreshing() ? 'กำลังซิงก์ออเดอร์' : 'รีเฟรชออเดอร์'"
           [disabled]="refreshing() || !connected()"
           (click)="refresh()"
         >
           <span aria-hidden="true">↻</span>
-          {{ refreshing() ? "กำลังซิงก์..." : "รีเฟรชออเดอร์" }}
+          <span class="v6-refresh-label">{{
+            refreshing() ? "กำลังซิงก์..." : "รีเฟรชออเดอร์"
+          }}</span>
         </button>
       </header>
 
@@ -104,14 +107,14 @@ function failureText(error: unknown): string {
           !connected()
             ? "ออฟไลน์ · รอเชื่อมต่ออีกครั้ง"
             : streamState() === "streaming"
-              ? "SSE ทำงาน · ออเดอร์แจ้งอัตโนมัติ · ตรวจสอบซ้ำทุก 60 วินาที"
+              ? "เชื่อมต่อแล้ว · ออเดอร์แจ้งอัตโนมัติ"
               : streamState() === "connecting"
-                ? "กำลังเชื่อม SSE · ใช้ Polling สำรองทุก 10 วินาที"
+                ? "กำลังเชื่อมต่อ · ตรวจสอบสำรอง"
                 : streamState() === "blocked"
                   ? "ถูกตัดสิทธิ์การแจ้งเตือน · กรุณาเข้าสู่ระบบใหม่"
                   : streamState() === "paused"
-                    ? "หยุด SSE ระหว่างซ่อนแท็บ · จะซิงก์เมื่อกลับมา"
-                    : "Polling สำรองทุก 10 วินาที · SSE กำลังเชื่อมต่อใหม่"
+                    ? "พักการแจ้งเตือน · ซิงก์เมื่อกลับมา"
+                    : "กำลังเชื่อมต่อใหม่ · ตรวจสอบสำรอง"
         }}
         @if (lastSynced()) {
           <span
@@ -121,8 +124,7 @@ function failureText(error: unknown): string {
       </div>
 
       <p class="board-notice v6-board-notice">
-        รับออเดอร์และเตรียมอาหารได้โดยไม่ต้องรอการชำระเงิน ·
-        ระบบชำระเงินยังไม่เปิดใช้งาน
+        รับและเตรียมอาหารได้ทันที · ยังไม่เปิดรับชำระเงินในระบบ
       </p>
 
       @if (error()) {
