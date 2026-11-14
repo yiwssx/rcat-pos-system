@@ -19,6 +19,31 @@ describe("private slip PNG trust boundary", () => {
     expect(result.sha256.length).toBe(32);
   });
 
+  it("accepts standard browser Canvas resolution chunk without allowing EXIF", async () => {
+    const image = await sample();
+    const phys = Buffer.from(
+      "000000097048597300000ec400000ec401952b0e1b",
+      "hex",
+    );
+    // PNG signature (8) + IHDR chunk (25) precedes browser pHYs.
+    const fromCanvas = Buffer.concat([
+      image.subarray(0, 33),
+      phys,
+      image.subarray(33),
+    ]);
+    expect(validatePaymentSlipPng(fromCanvas).sha256.length).toBe(32);
+
+    const text = Buffer.from(
+      "0000000474455874736563726574",
+      "hex",
+    );
+    expect(() =>
+      validatePaymentSlipPng(
+        Buffer.concat([image.subarray(0, 33), text, image.subarray(33)]),
+      ),
+    ).toThrow();
+  });
+
   it("rejects non-PNG, invalid image CRC and appended content", async () => {
     const image = await sample();
     expect(() => validatePaymentSlipPng(Buffer.from("<svg/>"))).toThrow();
