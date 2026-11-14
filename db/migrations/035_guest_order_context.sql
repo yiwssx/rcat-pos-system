@@ -60,8 +60,8 @@ BEGIN
 
  -- Trusted historical SQL fixtures may omit context; the public gate below requires it.
  IF (p_cart ? 'orderedBy') OR (p_cart ? 'deliverTo') THEN
-   IF jsonb_typeof(p_cart->'orderedBy')<>'string'
-     OR jsonb_typeof(p_cart->'deliverTo')<>'string' THEN
+   IF jsonb_typeof(p_cart->'orderedBy') IS DISTINCT FROM 'string'
+     OR jsonb_typeof(p_cart->'deliverTo') IS DISTINCT FROM 'string' THEN
      RAISE EXCEPTION 'Order context invalid' USING ERRCODE='22023';
    END IF;
    v_ordered_by:=btrim(p_cart->>'orderedBy');
@@ -227,8 +227,8 @@ DECLARE v_open boolean;v_visit uuid;v_existing rcat.orders%ROWTYPE;
 BEGIN
  -- Enforce required context even for direct SQL callers of this public gate.
  IF p_cart IS NULL
-   OR jsonb_typeof(p_cart->'orderedBy')<>'string'
-   OR jsonb_typeof(p_cart->'deliverTo')<>'string'
+   OR jsonb_typeof(p_cart->'orderedBy') IS DISTINCT FROM 'string'
+   OR jsonb_typeof(p_cart->'deliverTo') IS DISTINCT FROM 'string'
    OR length(btrim(p_cart->>'orderedBy')) NOT BETWEEN 1 AND 80
    OR length(btrim(p_cart->>'deliverTo')) NOT BETWEEN 1 AND 160
    OR (p_cart->>'orderedBy')~'[[:cntrl:]]'
