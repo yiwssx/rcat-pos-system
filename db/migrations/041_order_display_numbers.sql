@@ -15,8 +15,10 @@ UPDATE rcat.orders o SET display_number=r.seq
 FROM ranked r WHERE o.id=r.id;
 
 ALTER TABLE rcat.orders
-  ALTER COLUMN display_number SET NOT NULL,
-  ADD CONSTRAINT order_display_number_positive CHECK(display_number>0),
+  -- AFTER INSERT allocation happens after initial NOT NULL checking;
+  -- the deferred integrity trigger below enforces the committed invariant.
+  ADD CONSTRAINT order_display_number_positive
+    CHECK(display_number IS NULL OR display_number>0),
   ADD CONSTRAINT order_display_number_store_unique
     UNIQUE(tenant_id,store_id,display_number);
 
@@ -61,6 +63,26 @@ REVOKE ALL ON FUNCTION rcat_private._assign_order_display_number() FROM PUBLIC;
 CREATE TRIGGER order_display_number_after_insert
 AFTER INSERT ON rcat.orders
 FOR EACH ROW EXECUTE FUNCTION rcat_private._assign_order_display_number();
+
+-- Commit-time invariant: an Order can never commit without its public number.
+CREATE FUNCTION rcat_private._check_order_display_number()
+RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog
+AS $
+BEGIN
+  PERFORM 1 FROM rcat.orders
+   WHERE id=NEW.id AND tenant_id=NEW.tenant_id AND
+     store_id=NEW.store_id AND display_number IS NOT NULL;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Committed Order is missing its public number'
+      USING ERRCODE='23514';
+  END IF;
+  RETURN NULL;
+END $;
+REVOKE ALL ON FUNCTION rcat_private._check_order_display_number() FROM PUBLIC;
+CREATE CONSTRAINT TRIGGER order_display_number_commit_check
+AFTER INSERT ON rcat.orders DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW EXECUTE FUNCTION rcat_private._check_order_display_number();
 
 -- Replaced only the affected response contract builders; authorization,
 -- price, idempotency, pagination, and kitchen logic are preserved verbatim.
