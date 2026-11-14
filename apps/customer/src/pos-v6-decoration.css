@@ -63,6 +63,17 @@
   z-index: 4;
 }
 
+/* The bottom hint is informative but must not sit on the light wave crest.
+   Tighten only its desktop spacing: keep the text on solid orange. */
+@media (min-width: 981px) {
+  .portal-content:has(.v6-home) .portal-sidebar .portal-nav-hint {
+    margin-top: 0;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    color: #fff8ec;
+  }
+}
+
 /* Main content sits above both ornaments. Its page background must be
    transparent; otherwise it would conceal the shell-level ribbon and waves. */
 .portal-content:has(.v6-home) .portal-home:has(.v6-home) {
