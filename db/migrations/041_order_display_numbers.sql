@@ -68,7 +68,7 @@ FOR EACH ROW EXECUTE FUNCTION rcat_private._assign_order_display_number();
 CREATE FUNCTION rcat_private._check_order_display_number()
 RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog
-AS $
+AS $$
 BEGIN
   PERFORM 1 FROM rcat.orders
    WHERE id=NEW.id AND tenant_id=NEW.tenant_id AND
@@ -78,7 +78,7 @@ BEGIN
       USING ERRCODE='23514';
   END IF;
   RETURN NULL;
-END $;
+END $$;
 REVOKE ALL ON FUNCTION rcat_private._check_order_display_number() FROM PUBLIC;
 CREATE CONSTRAINT TRIGGER order_display_number_commit_check
 AFTER INSERT ON rcat.orders DEFERRABLE INITIALLY DEFERRED
