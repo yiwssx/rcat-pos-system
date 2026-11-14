@@ -16,9 +16,9 @@
 **Why:** Accessible on existing phones/tablets/computers.
 
 ## ADR-004 — Merchant-directed payments
-**Status:** Investigation required (implementation deferred to G5)
-**Decision candidate:** Merchants receive PromptPay funds directly through permitted receiving accounts/providers. No unapproved platform custody. Support server/provider verification or explicit merchant manual confirmation.
-**Why:** Minimize regulatory risk and never falsely claim successful payment.
+**Status:** Accepted for G5-M1 (2026-11-13), implementation still deferred until G4 acceptance
+**Decision:** Merchants receive standard amount-specific PromptPay payments **directly** into their own store account; customers upload a slip, and authorized merchant staff manually confirm only after checking the incoming bank transaction. No Bank API, gateway or platform custody in M1.
+**Why:** Lower onboarding/cost/complexity while keeping financial claims explicitly human-attested, not bank-verified.
 
 ## ADR-005 — Durable orders and tenant isolation
 **Status:** Proposed
@@ -26,14 +26,24 @@
 **Why:** No lost Orders or cross-tenant leakage.
 
 ## ADR-006 — Implement PromptPay last; create a payment QR per Order
-**Status:** Accepted as product sequencing and payment scope (2026-11-02); provider selection pending.
+**Status:** Accepted (2026-11-02); revised to G5-M1 manual-first (2026-11-13), provider selection not required for M1.
 **Decision:**
 1. Complete catalog, table/ordering QR, customer Orders, merchant operations, operational reporting and non-payment security/staging **before** implementing real Payment.
 2. At design time, retain Order IDs, immutable amounts and separate Order/Payment state fields to prevent schema redesign.
 3. Each submitted Order gets its own logical PromptPay payment request, amount and payment QR once the final Payment module exists. Repeat orders in the same table are separate obligations.
 4. The static QR attached to a store/table is **only an ordering QR** and is not the payment QR.
-5. Ordinary personal PromptPay target+amount QR cannot guarantee unique reference or automatic receipt confirmation; obtain bank/provider capabilities for unique references and reliable webhooks or explicitly use manual verification.
+5. Ordinary personal PromptPay target+amount QR cannot guarantee a unique bank reference or automated receipt. In G5-M1 use merchant verification of actual incoming bank transactions only; Bank/PSP integrations are optional future G5-M2.
 6. Payment is the **last business feature**, but Production with live payments is blocked until integration/security/reconciliation tests and release approval are complete.
 7. Split-bill and combined multi-Order settlement are future features unless explicitly prioritized separately.
 
 **Consequences:** #8 and early #9 must not depend on #7. The API cannot expose an unverified "paid" status. Staging and demo Orders work before payment integration with non-production mock states only.
+
+## ADR-007 — G5-M1 Manual PromptPay + uploaded slip; distinct merchant-confirmed receipt
+**Status:** Accepted as scope (2026-11-13); not approved for production
+**Decision:** Keep the static Ordering QR. Generate a separate store-receiver+Order-amount payment QR for each logical payment request; the customer uploads a private slip. Only authorized merchant personnel who check actual bank-account incoming transactions can record `manual_confirmed`. Never infer a bank-verified settlement from a receipt image, OCR, redirect or QR. Review/reject/retry, audit, privacy, reconciliation and manual refund evidence are required. No bank API, gateway, provider webhook, automatic payout or platform custody in M1.
+**Release:** G4 operational and G6 controlled-pilot gates remain; payment implementation remains last. See [G5-M1 design](G5-M1-MANUAL-PROMPTPAY.md) and [Issue #7](https://github.com/yiwssx/rcat-pos-system/issues/7).
+
+## ADR-008 — Independent Order/Payment workflows and consolidated G2/G3 context
+**Status:** Accepted as product scope (13 Nov 2026), implementation still pending
+**Decision:** Guest Order submission immediately enters Merchant queue; Merchant may accept/prepare/serve regardless of unpaid/pending/manual-confirmed state. Customer may pay early/late; G5-M1 PromptPay amount QR is shown after submission and does not require provider-level amount lock. Existing stock-on-accept stays. All per-product modifiers/notes, required name and delivery at Checkout, server snapshots and Merchant Board rendering are tracked once in [#102](https://github.com/yiwssx/rcat-pos-system/issues/102); older #5/#6/#8 are archived evidence, not separate active trackers. Historical #38 was closed as superseded, not completed; physical acceptance remains #81.
+**Why:** Keep kitchen throughput independent of payment delays, avoid duplicate UI/Backend tracker sprawl and preserve prior CI evidence. Maintain G4/G6 safety gates and Payment #7 separate.

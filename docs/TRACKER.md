@@ -2,32 +2,28 @@
 
 GitHub is the source of truth. Master tracker: https://github.com/yiwssx/rcat-pos-system/issues/13
 
-**Decision:** Payment implementation (#7) is the final functional milestone, with **PromptPay QR/payment request for each Order**. Real-money production launch takes place **after** payment verification and release testing, not before.
+**Decision (revised 13 Nov 2026):** Single G2/G3 UI/order-context tracker **[#102](https://github.com/yiwssx/rcat-pos-system/issues/102)**; guest Order reaches Merchant immediately and kitchen may prepare regardless of payment. Payment (#7) remains the final business module: store-owned PromptPay amount QR available immediately after submission, optional early/late payment, private slip upload and manual bank-account confirmation. No bank/gateway API in M1; G6 approval required before taking real funds.
 
-## Execution order
-| Stage | Issue | Area | Priority | State |
-|---|---|---|---|---|
-| G0 | #1 | Product scope and per-Order QR payment requirements | P0 | Open |
-| G1 | #2 | Nx/pnpm Angular/NestJS foundation | P0 | Closed |
-| G1 | #3 | Multi-tenant auth/data | P0 | Open |
-| G2 | #4 | Catalog, tables, ordering QR session (G2 follow-up #38 remains open) | P0 | Closed |
-| G2 | #6 | Orders, prices and Bills (payment-ready schema only) | P0 | Open |
-| G2 | #5 | Guest ordering and Order tracking UI | P0 | Open |
-| G3 | #8 | Merchant PWA/realtime (no Payment dependency) | P0 | Open |
-| G3 | #9 | Basic operational reporting/stock (financial reports later) | P1 | Open |
-| G4 | #10 | Ordering security and reliability (continues across release) | P0 | Open |
-| G4 | #11 | Staging/hosting infrastructure preparation (not production release) | P1 | Open |
-| **G5** | **#7** | **Final business feature: per-Order PromptPay QR, verification, reconciliation** | **P0 — Release blocker** | **Open** |
-| G6 | #10 #11 | Integrated security/payment tests, pilot and Production go/no-go | P0/P1 | Open |
-| G7 | #12 | Expansion modules (after pilot) | P2 | Open |
+## 4 Active Issues (verified 13 Nov 2026)
 
-A high-priority issue can deliberately be scheduled late if it needs mature upstream requirements. No feature issue has been completed by this decision-only update.
+| Stage / governance | Canonical Issue | Owns | Status |
+|---|---|---|---|
+| Master / product decisions | [#13](https://github.com/yiwssx/rcat-pos-system/issues/13) | Roadmap, high-level policy, deferred G7 backlog | **Open** |
+| G2/G3 | [#102](https://github.com/yiwssx/rcat-pos-system/issues/102) | Guest & Merchant UX, required Checkout fields, modifiers, Order/Bill, stock, operations, reports | **Open** |
+| G4/G6 | [#81](https://github.com/yiwssx/rcat-pos-system/issues/81) | Tenant/auth/repo security, Staging B1–B6, backup/retention, operational acceptance, release pilot/go-no-go | **Open** |
+| G5-M1 (last product feature) | [#7](https://github.com/yiwssx/rcat-pos-system/issues/7) | Store-owned amount QR, slip upload, merchant manual confirmation, payment exceptions/refunds | **Open** |
+
+Historical #1/#3/#5/#6/#8/#9/#10/#11/#12/#15/#38/#82 were closed **superseded/not_planned, not feature-complete**. #2/#4/#80/#86 were previously closed for their respective historical scope. Outstanding acceptance and evidence moved to the four active owners above; original issue bodies/PRs remain accessible.
+
+**Sequencing:** Deliver G2/G3 before real Payment. G4 approval remains a prerequisite to G5 execution and live usage; G6 controlled production pilot requires explicit go/no-go. Order reaches Merchant immediately and kitchen never waits for payment. Payment QR is available after Order submission when G5-M1 exists; customer may pay early or late.
 
 ## Delivery invariants
 - Every Order has its own payable total and future PromptPay request; a table QR never doubles as the payment QR.
+- Successful Order submission immediately enters Merchant inbox; Merchant may accept/prepare/serve even if unpaid, paid late or awaiting slip review. No pay-first kitchen gate.
+- P0 item instructions / mandatory name and destination are owned only by #102; historical #5/#6/#8 evidence and scope are archived, not new child Issues.
 - A generic personal PromptPay QR with an amount does not prove payment or provide guaranteed unique transaction reference.
-- No bank integration, live QR payment endpoint, payment credentials or false "paid" flags before G5.
-- Issue state in GitHub is authoritative; document table is not a synced progress mirror.
+- No bank integration, live QR payment endpoint, receiving-account credentials or false "paid" flags before G5; G5-M1 also excludes Bank API/gateway/automatic slip verification. See [M1 design](G5-M1-MANUAL-PROMPTPAY.md).
+- Issue state in GitHub is authoritative; document table is not a synced progress mirror. Consolidated #38 was closed **superseded/not_planned**, not completed; its unresolved staging signoffs remain #81.
 
 ## Proof of done
 Linked PR, relevant tests pass, tenant/permission and transaction invariants verified, relevant docs and rollout updated; never close Payment or Production on the strength of docs-only checks.
