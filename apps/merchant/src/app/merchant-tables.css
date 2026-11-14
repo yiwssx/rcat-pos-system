@@ -385,3 +385,51 @@
   border-color: #c5e4d0;
   border-radius: 12px;
 }
+
+/* V6 restaurant table operations: QR-ordering clarity, never payment status. */
+.tables-shell {
+  color: #1f303b;
+  background: linear-gradient(180deg, #fffaf0, #fffefa);
+}
+.tables-header h1,
+.tables-add h2,
+.table-work-head h2 {
+  color: #1f303b;
+}
+.tables-header > a {
+  color: #a13e09;
+}
+.tables-add,
+.table-work,
+.tables-list,
+.table-card {
+  background: #fff;
+  border: 1px solid #f0d7bd;
+  border-radius: 13px;
+  box-shadow: 0 8px 20px rgb(178 71 9 / 5%);
+}
+.table-card.selected {
+  border-color: #d45812;
+  background: #fff1da;
+  box-shadow: inset 3px 0 0 #d45812;
+}
+.tables-add input {
+  background: #fffefa;
+  border-color: #ead0b4;
+}
+.tables-shell button:not(.danger):not(.subtle) {
+  border-radius: 10px;
+}
+.ordering-switch {
+  background: #fff5e3;
+  border-color: #f5d49d;
+}
+.table-qr {
+  border-color: #e8d4b8;
+  background: #fff;
+}
+.tables-notice {
+  color: #075e55;
+  background: #e5faf2;
+  border-color: #b8e7d7;
+}
