@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Header,
-  Param,
-  Put,
-  Req,
-} from "@nestjs/common";
+import { Body, Controller, Get, Header, Param, Put, Req } from "@nestjs/common";
 import { ApiRequest, requireAllowedOrigin } from "../auth/request-security";
 import { MerchantPaymentReceiverService } from "./merchant-payment-receiver.service";
 
