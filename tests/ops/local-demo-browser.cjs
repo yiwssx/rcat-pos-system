@@ -44,6 +44,22 @@ async function main() {
     });
     assert.ok(fontReport.actual.includes('RCAT Plex Thai') && fontReport.loadedRegular && fontReport.loadedBold,
       'Thai/Latin interface must use genuinely loaded 400/700 IBM Plex Sans Thai');
+    // Owner-approved V6 color contract: actual computed styles, not AI mockup pixels.
+    const storefrontAsset = await context.request.get(merchant + '/v6-storefront.svg');
+    assert.equal(storefrontAsset.status(), 200, 'Original V6 decorative storefront must ship with compiled portal');
+    const palette = await page.evaluate(() => {
+      const css = (selector) => getComputedStyle(document.querySelector(selector));
+      return {
+        orange: getComputedStyle(document.documentElement).getPropertyValue('--pos-orange').trim(),
+        sidebar: css('.portal-sidebar').backgroundImage,
+        orderAction: css('.v6-main-action').backgroundImage,
+        secondary: css('.v6-secondary-action').backgroundColor,
+      };
+    });
+    assert.equal(palette.orange, '#c94108', 'Production CSS must use the new readable vivid-orange token');
+    assert.match(palette.sidebar, /linear-gradient/, 'Desktop navigation must use the vivid orange treatment');
+    assert.match(palette.orderAction, /linear-gradient/, 'Order board entry must use the vivid brand CTA');
+    assert.notEqual(palette.secondary, 'rgba(0, 0, 0, 0)', 'Secondary actions must have a distinct mint surface');
     const officialLogo = page.locator('img.portal-brand-image');
     await officialLogo.waitFor();
     assert.equal(await officialLogo.evaluate(img => img.complete && img.naturalWidth === 96), true,
@@ -136,6 +152,12 @@ async function main() {
     assert.equal(await staticPage.locator('header.portal-header').isVisible(), false,
       'Guest ordering should not repeat the portal masthead');
     assert.equal(await staticPage.locator('header.guest-header').isVisible(), true);
+    const guestPalette = await staticPage.evaluate(() => ({
+      active: getComputedStyle(document.querySelector('.guest-category-chip.is-active')).backgroundImage,
+      cta: getComputedStyle(document.querySelector('.guest-add')).backgroundImage,
+    }));
+    assert.match(guestPalette.active, /linear-gradient/, 'Guest category selection must use vivid orange');
+    assert.match(guestPalette.cta, /linear-gradient/, 'Guest add-to-cart action must use vivid orange');
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-menu-phone.png', fullPage: true });
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' }).getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
     await staticPage.getByRole('dialog', { name: 'ข้าวผัด' }).getByRole('button', { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
