@@ -211,11 +211,11 @@ export class GuestOrderSession {
     this.pending = null;
   }
 
-  keyFor(
-    items: readonly CartLine[],
-    context: GuestOrderContext,
-  ): string {
-    const payload = JSON.stringify({ items, ...normalizedOrderContext(context) });
+  keyFor(items: readonly CartLine[], context: GuestOrderContext): string {
+    const payload = JSON.stringify({
+      items,
+      ...normalizedOrderContext(context),
+    });
     if (this.pending?.payload === payload) return this.pending.key;
     if (!this.window?.crypto?.randomUUID) {
       throw new Error(
