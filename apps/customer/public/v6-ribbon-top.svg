@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 230" preserveAspectRatio="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="haze" x1="0.15" y1="1" x2="0.92" y2="0">
+      <stop stop-color="#FFEFCF" stop-opacity="0"/>
+      <stop offset=".53" stop-color="#FFD993" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#F8A61E" stop-opacity=".24"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="1" x2="1" y2="0">
+      <stop stop-color="#FFEB9A" stop-opacity=".15"/>
+      <stop offset=".55" stop-color="#FFD34C"/>
+      <stop offset="1" stop-color="#FF9904"/>
+    </linearGradient>
+    <linearGradient id="sunlight" x1="0" y1="1" x2="1" y2="0">
+      <stop stop-color="#FFF0C3" stop-opacity=".06"/>
+      <stop offset=".73" stop-color="#FFDB80" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#FFAD18" stop-opacity=".6"/>
+    </linearGradient>
+  </defs>
+  <!-- Soft translucent sweep across the top-right workspace. -->
+  <path d="M423 218C696 211 826 162 1015 72 1161 3 1292-35 1440-25V69C1316 75 1190 111 1064 163 855 247 634 255 423 218Z" fill="url(#haze)"/>
+  <!-- Distinct, continuous elevated golden ribbon visible across the page edge. -->
+  <path d="M843 175C1001 124 1102 46 1238 10 1330-15 1388-21 1440-20V9C1353 6 1253 36 1154 79 1011 142 955 163 843 175Z" fill="url(#gold)"/>
+  <path d="M706 212C922 186 1041 103 1199 50 1296 16 1385 4 1440 8V38C1356 32 1258 58 1169 94 1009 159 898 210 706 212Z" fill="url(#sunlight)"/>
+  <path d="M919 160C1073 102 1185 46 1312 20 1368 8 1405 5 1440 5" fill="none" stroke="#FFF7D6" stroke-opacity=".8" stroke-width="5"/>
+</svg>
