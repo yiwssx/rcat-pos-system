@@ -684,3 +684,48 @@ a:focus-visible {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* RCAT POS V6 / information-rich Merchant board: context first, actions second. */
+.board {
+  color: #202c34;
+}
+.board-head h1 {
+  letter-spacing: -0.03em;
+}
+.order-card {
+  border-color: #e8e0d8;
+  border-radius: 18px;
+  box-shadow: 0 7px 25px rgb(50 44 38 / 5%);
+}
+.order-card.is-submitted {
+  border-top-color: #c45b22;
+}
+.order-delivery > div {
+  background: #fffbf6;
+  border-color: #ebdfd4;
+  border-radius: 12px;
+}
+.order-delivery strong {
+  color: #24333a;
+  font-size: 0.94rem;
+}
+.order-instructions {
+  border-left-color: #b94d1b;
+  background: #fff1e7;
+  font-weight: 600;
+}
+.order-items {
+  border-color: #ede7e1;
+}
+.order-actions button {
+  border-radius: 12px;
+  min-height: 46px;
+}
+.order-card.is-submitted .order-actions button:not(.danger):not(.subtle) {
+  background: #b94d1b;
+  border-color: #b94d1b;
+}
+.order-actions button:focus-visible {
+  outline: 3px solid #b94d1b;
+  outline-offset: 3px;
+}
