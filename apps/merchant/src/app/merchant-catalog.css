@@ -496,3 +496,65 @@
   color: #4d6268;
   border-color: #dfe5e5;
 }
+
+/* V6 brand continuity: compact catalog tools, warm panels, teal neutral actions. */
+.catalog-shell {
+  color: #1f303b;
+  background: linear-gradient(180deg, #fffaf0, #fffefa);
+}
+.catalog-head h1,
+.catalog-panel h2,
+.catalog-summary h3 {
+  color: #21313b;
+}
+.catalog-back {
+  color: #9e430e;
+}
+.catalog-panel,
+.catalog-product {
+  background: #fff;
+  border: 1px solid #efd9c4;
+  border-radius: 13px;
+  box-shadow: 0 7px 20px rgb(177 65 11 / 5%);
+}
+.catalog-create {
+  border-color: #f0d4b4;
+  background: #fff;
+  border-radius: 13px;
+}
+.catalog-create-summary {
+  color: #8c3b0a;
+  background: #fff6e8;
+}
+.catalog-create[open] .catalog-create-summary {
+  background: #ffedcf;
+}
+.catalog-panel input,
+.catalog-panel select,
+.catalog-edit input,
+.catalog-edit select {
+  border-color: #e8cfb5;
+  background: #fffefa;
+}
+.catalog-panel button:not(.danger):not(.subtle) {
+  background: linear-gradient(110deg, #bf3e07, #d95208);
+  border-color: #bf3e07;
+  color: #fff;
+}
+.catalog-panel button:not(.danger):not(.subtle):hover {
+  background: #ab3505;
+}
+.catalog-panel button.subtle,
+.catalog-editor-toggle {
+  background: #e8faf3;
+  color: #075e55;
+  border-color: #adddcd;
+}
+.catalog-status {
+  background: #ddf7ea;
+  color: #075e55;
+}
+.catalog-edit {
+  border-color: #e9d7c4;
+  background: #fff9f0;
+}
