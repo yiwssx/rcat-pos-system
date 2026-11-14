@@ -38,6 +38,8 @@ import { InventoryController } from "./inventory/inventory.controller";
 import { InventoryService } from "./inventory/inventory.service";
 import { MerchantPaymentReceiverController } from "./payments/merchant-payment-receiver.controller";
 import { MerchantPaymentReceiverService } from "./payments/merchant-payment-receiver.service";
+import { GuestPaymentRequestController } from "./payments/guest-payment-request.controller";
+import { GuestPaymentRequestService } from "./payments/guest-payment-request.service";
 
 @Module({
   controllers: [
@@ -60,6 +62,7 @@ import { MerchantPaymentReceiverService } from "./payments/merchant-payment-rece
     OperationalReportsController,
     InventoryController,
     MerchantPaymentReceiverController,
+    GuestPaymentRequestController,
   ],
   providers: [
     DatabaseAccess,
@@ -83,6 +86,7 @@ import { MerchantPaymentReceiverService } from "./payments/merchant-payment-rece
     OperationalReportsService,
     InventoryService,
     MerchantPaymentReceiverService,
+    GuestPaymentRequestService,
   ],
 })
 export class AppModule {}
