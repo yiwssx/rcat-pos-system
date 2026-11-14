@@ -96,9 +96,7 @@ const TRACK_INTERVAL_MS = 15_000;
                 เพื่อนำเข้าแอปธนาคารบนโทรศัพท์เครื่องเดียวกัน
               </p>
               <div class="guest-track-actions">
-                <button type="button" (click)="savePaymentQr()">
-                  บันทึก QR
-                </button>
+                <button type="button" (click)="savePaymentQr()">บันทึก QR</button>
                 <button
                   type="button"
                   class="guest-subtle"
