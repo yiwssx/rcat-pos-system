@@ -113,14 +113,14 @@ export interface GuestOrderStatus {
   status: "submitted" | "accepted" | "preparing" | "served" | "cancelled";
   amountSatang: number;
   currency: "THB";
-  paymentState: "not_requested" | "awaiting_payment";
+  paymentState: "not_requested" | "awaiting_payment" | "slip_submitted" | "manual_confirmed";
   createdAt: string;
   updatedAt: string;
 }
 export interface GuestOrderHistory {
   orderId: string;
   status: GuestOrderStatus["status"];
-  paymentState: "not_requested" | "awaiting_payment";
+  paymentState: "not_requested" | "awaiting_payment" | "slip_submitted" | "manual_confirmed";
   events: {
     status: GuestOrderStatus["status"];
     fromStatus: GuestOrderStatus["status"] | null;
