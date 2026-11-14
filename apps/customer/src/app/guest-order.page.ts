@@ -22,6 +22,9 @@ import {
   GUEST_MENU_BATCH_SIZE,
   GuestCatalogCursor,
   mergeCartReview,
+  normalizeOrderField,
+  normalizedItemNote,
+  normalizedOrderContext,
   GuestModifierGroup,
   GuestModifierOption,
   GuestProduct,
@@ -356,6 +359,18 @@ function guestError(error: unknown): string {
                 }
               </fieldset>
             }
+            <label class="guest-item-note">
+              <span>หมายเหตุสำหรับเมนูนี้ (ไม่บังคับ)</span>
+              <textarea
+                rows="2"
+                maxlength="240"
+                placeholder="เช่น ไม่ใส่ผัก แยกน้ำแข็ง"
+                [value]="detailNote()"
+                [disabled]="busy()"
+                (input)="onDetailNote($event)"
+              ></textarea>
+              <small>ส่งถึงร้านเฉพาะเมนูนี้ ไม่มีค่าใช้จ่ายเพิ่มเติม</small>
+            </label>
             @if (detailError()) {
               <p class="guest-warning" role="alert">{{ detailError() }}</p>
             }
@@ -429,6 +444,9 @@ function guestError(error: unknown): string {
                   <div class="guest-cart-name">
                     <strong>{{ productName(line.productId) }}</strong>
                     <span>{{ selectionNames(line.optionIds) }}</span>
+                    @if (line.note) {
+                      <span class="guest-cart-note">หมายเหตุ: {{ line.note }}</span>
+                    }
                   </div>
                   <div class="guest-qty">
                     <button
@@ -457,6 +475,37 @@ function guestError(error: unknown): string {
               }
             </ol>
           }
+          <fieldset class="guest-order-context">
+            <legend>ข้อมูลผู้สั่งและจุดรับ/ส่ง</legend>
+            <label for="guest-ordered-by">
+              ชื่อผู้สั่ง <span aria-hidden="true">*</span>
+            </label>
+            <input
+              id="guest-ordered-by"
+              type="text"
+              autocomplete="nickname"
+              required
+              maxlength="80"
+              placeholder="เช่น คุณ ก หรือชื่อเล่น"
+              [value]="orderedBy()"
+              [disabled]="busy()"
+              (input)="onOrderedBy($event)"
+            />
+            <label for="guest-deliver-to">
+              สถานที่รับ/ส่ง <span aria-hidden="true">*</span>
+            </label>
+            <input
+              id="guest-deliver-to"
+              type="text"
+              required
+              maxlength="160"
+              placeholder="เช่น อาคาร ข ชั้น 2"
+              [value]="deliverTo()"
+              [disabled]="busy()"
+              (input)="onDeliverTo($event)"
+            />
+            <small>ทั้งสองช่องจำเป็นต้องกรอกก่อนส่งออเดอร์ ไม่ใช่ข้อมูลชำระเงิน</small>
+          </fieldset>
           @if (notice() && cartOpen()) {
             <p class="guest-warning" role="status">{{ notice() }}</p>
           }
@@ -505,6 +554,9 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly selected = signal<Record<string, string[]>>({});
   readonly activeProduct = signal<GuestProduct | null>(null);
   readonly detailQty = signal(1);
+  readonly detailNote = signal("");
+  readonly orderedBy = signal("");
+  readonly deliverTo = signal("");
   readonly detailError = signal("");
   readonly cartOpen = signal(false);
   @ViewChild("detailDialog")
@@ -855,16 +907,32 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   }
 
   addOrCustomize(product: GuestProduct): void {
-    if (this.groups(product.id).length > 0) {
-      this.openProduct(product);
-    } else {
-      this.add(product);
+    // Always expose the optional per-item note, even with no modifiers.
+    this.openProduct(product);
+  }
+  onDetailNote(event: Event): void {
+    if (event.target instanceof HTMLTextAreaElement) {
+      this.detailNote.set(event.target.value);
+      this.detailError.set("");
+    }
+  }
+  onOrderedBy(event: Event): void {
+    if (event.target instanceof HTMLInputElement) {
+      this.orderedBy.set(event.target.value);
+      this.notice.set("");
+    }
+  }
+  onDeliverTo(event: Event): void {
+    if (event.target instanceof HTMLInputElement) {
+      this.deliverTo.set(event.target.value);
+      this.notice.set("");
     }
   }
   openProduct(product: GuestProduct): void {
     if (this.busy()) return;
     this.detailError.set("");
     this.detailQty.set(1);
+    this.detailNote.set("");
     // A fresh product sheet must not silently reuse the previous item's choices.
     this.selected.update((values) => ({ ...values, [product.id]: [] }));
     this.activeProduct.set(product);
@@ -876,6 +944,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   onDetailClose(): void {
     this.activeProduct.set(null);
     this.detailQty.set(1);
+    this.detailNote.set("");
     this.detailError.set("");
   }
   changeDetailQty(delta: number): void {
@@ -897,9 +966,10 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     if (!visit || this.busy()) return;
     const ids = this.selected()[product.id] ?? [];
     try {
+      const note = normalizedItemNote(this.detailNote());
       let cart = this.session.cart();
       for (let index = 0; index < this.detailQty(); index += 1) {
-        cart = addToCart(visit, cart, product.id, ids);
+        cart = addToCart(visit, cart, product.id, ids, note);
       }
       this.session.setCart(cart);
       this.notice.set("เพิ่ม " + product.name + " ลงตะกร้าแล้ว");
@@ -961,6 +1031,16 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       !this.online()
     )
       return;
+    let context;
+    try {
+      context = normalizedOrderContext({
+        orderedBy: this.orderedBy(),
+        deliverTo: this.deliverTo(),
+      });
+    } catch (error) {
+      this.notice.set(guestError(error));
+      return;
+    }
     if (Date.now() >= new Date(visit.expiresAt).getTime()) {
       this.notice.set("QR โต๊ะหมดอายุแล้ว กรุณาสแกนใหม่");
       return;
@@ -1002,8 +1082,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
         );
         return;
       }
-      const key = this.session.keyFor(lines);
-      const confirmed = await this.api.checkout(token, lines, key);
+      const key = this.session.keyFor(lines, context);
+      const confirmed = await this.api.checkout(token, lines, context, key);
       // Server result is the only authoritative amount. Do not use cart
       // estimate as receipt, and do not show any "paid" success state.
       this.session.saveTracking(confirmed.orderId, confirmed.trackingToken);
