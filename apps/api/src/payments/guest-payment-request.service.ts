@@ -4,7 +4,8 @@ import { digestOpaqueSecret } from "../../../../libs/server-auth/src";
 import { ApiRequest } from "../auth/request-security";
 import { DatabaseAccess } from "../database/db-access";
 import { GuestRequestBudgetService } from "../ordering/guest-request-budget.service";
-import { buildPromptPayPayload, PromptPayReceiverKind } from "./promptpay-qr.core";
+import { buildPromptPayPayload } from "./promptpay-qr.core";
+import type { PromptPayReceiverKind } from "./promptpay-qr.core";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TRACKING_BEARER = /^Bearer ([A-Za-z0-9_-]{43})$/;
