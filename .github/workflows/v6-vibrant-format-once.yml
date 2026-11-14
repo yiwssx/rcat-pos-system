@@ -1,0 +1,46 @@
+# Temporary, narrowly scoped formatter. Delete after the one successful push.
+name: One-time V6 vibrant CSS formatter
+on:
+  push:
+    branches:
+      - feat/v6-vibrant-palette-owner-visual-20261114
+    paths:
+      - .github/workflows/v6-vibrant-format-once.yml
+permissions:
+  contents: write
+concurrency:
+  group: rcat-pos-v6-vibrant-format-once
+  cancel-in-progress: true
+jobs:
+  format:
+    if: github.repository == 'yiwssx/rcat-pos-system'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply repo Prettier to exactly two affected CSS files
+        run: |
+          pnpm exec prettier --write \
+            apps/customer/src/pos-v6-workspace.css \
+            apps/admin/src/app/owner-admin.css
+      - name: Commit bounded formatting and no other files
+        run: |
+          git add -- apps/customer/src/pos-v6-workspace.css apps/admin/src/app/owner-admin.css
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'style(v6): Prettier approved vibrant CSS only'
+          git fetch origin refs/heads/feat/v6-vibrant-palette-owner-visual-20261114
+          git rebase FETCH_HEAD
+          git push origin HEAD:refs/heads/feat/v6-vibrant-palette-owner-visual-20261114
