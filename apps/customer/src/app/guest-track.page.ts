@@ -387,7 +387,7 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     if (!tracked || !payment) return;
     const anchor = this.document.createElement("a");
     anchor.href = payment.qrImageDataUrl;
-    anchor.download = `rcat-pos-order-${this.status()?.displayNumber ?? 'order'}-qr.png`;
+    anchor.download = `rcat-pos-order-${this.status()?.displayNumber ?? "order"}-qr.png`;
     anchor.click();
   }
 

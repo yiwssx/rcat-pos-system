@@ -227,9 +227,9 @@ function failureText(error: unknown): string {
               >
                 <div class="order-card-head">
                   <div>
-                    <span class="order-number"
-                      >{{ number(order.displayNumber) }}</span
-                    >
+                    <span class="order-number">{{
+                      number(order.displayNumber)
+                    }}</span>
                     <p class="order-meta">
                       โต๊ะ {{ order.tableId.slice(0, 8) }} ·
                       {{ time(order.createdAt) }}

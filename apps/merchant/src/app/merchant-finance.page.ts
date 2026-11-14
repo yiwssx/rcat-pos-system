@@ -237,7 +237,7 @@ function satang(text: string): number | null {
               <option value="">เลือกออเดอร์</option>
               @for (order of data.confirmedOrders; track order.orderId) {
                 <option [value]="order.orderId">
-                  #{{ order.displayNumber.padStart(3, '0') }} ·
+                  #{{ order.displayNumber.padStart(3, "0") }} ·
                   {{ money(order.amountSatang) }} ฿
                 </option>
               }
