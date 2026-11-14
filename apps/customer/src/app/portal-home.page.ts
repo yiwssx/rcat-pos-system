@@ -49,7 +49,12 @@ import { RcatButtonDirective } from "@rcat/ui";
           <div class="portal-landing">
             <div class="portal-landing-intro">
               <div class="portal-hero-brand">
-                <img src="/rcat-pos-logo.webp" width="68" height="68" alt="โลโก้ RCAT POS System" />
+                <img
+                  src="/rcat-pos-logo.webp"
+                  width="68"
+                  height="68"
+                  alt="โลโก้ RCAT POS System"
+                />
                 <span>RCAT POS SYSTEM</span>
               </div>
               <span class="portal-eyebrow">RCAT POS / QR ORDERING</span>
@@ -73,7 +78,13 @@ import { RcatButtonDirective } from "@rcat/ui";
               </p>
             </div>
             <div class="portal-login-card">
-              <img class="portal-login-brand-image" src="/rcat-pos-logo.webp" width="72" height="72" alt="" />
+              <img
+                class="portal-login-brand-image"
+                src="/rcat-pos-logo.webp"
+                width="72"
+                height="72"
+                alt=""
+              />
               <span class="portal-eyebrow">MERCHANT WORKSPACE</span>
               <h2>เข้าสู่พื้นที่จัดการร้าน</h2>
               <p>สำหรับเจ้าของร้านและพนักงานที่ได้รับสิทธิ์เท่านั้น</p>

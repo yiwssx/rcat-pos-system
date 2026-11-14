@@ -55,7 +55,13 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
       <a class="portal-skip" href="#main">ข้ามไปเนื้อหาหลัก</a>
       <header class="portal-header" [class.portal-header-hidden]="guestMenu()">
         <a class="portal-brand" routerLink="/" aria-label="RCAT POS หน้าแรก">
-          <img class="portal-brand-image" src="/rcat-pos-logo.webp" alt="" width="48" height="48" />
+          <img
+            class="portal-brand-image"
+            src="/rcat-pos-logo.webp"
+            alt=""
+            width="48"
+            height="48"
+          />
           <span class="portal-brand-title"
             ><strong>RCAT <em>POS</em></strong
             ><small>Ordering & Store Management</small></span

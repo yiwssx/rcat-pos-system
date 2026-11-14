@@ -66,7 +66,13 @@ function guestError(error: unknown): string {
     <section class="guest-shell" aria-labelledby="guest-title">
       <header class="guest-header">
         <div class="guest-brand">
-          <img class="guest-brand-image" src="/rcat-pos-logo.webp" alt="" width="48" height="48" />
+          <img
+            class="guest-brand-image"
+            src="/rcat-pos-logo.webp"
+            alt=""
+            width="48"
+            height="48"
+          />
           <div class="guest-brand-copy">
             <span class="guest-menu-kicker">RCAT POS · MENU</span>
             <h1 id="guest-title">
