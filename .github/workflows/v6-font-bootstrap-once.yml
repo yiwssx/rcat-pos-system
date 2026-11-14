@@ -1,0 +1,53 @@
+name: One-time RCAT Thai font asset bootstrap
+on:
+  push:
+    branches:
+      - feat/v6-pos-workspace-rebuild-thai-font-20261114
+    paths:
+      - .github/workflows/v6-font-bootstrap-once.yml
+permissions:
+  contents: write
+concurrency:
+  group: rcat-v6-one-shot-fonts
+  cancel-in-progress: true
+jobs:
+  pin-font-assets:
+    if: github.repository == 'yiwssx/rcat-pos-system'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download licensed IBM Plex Sans Thai from immutable Google Fonts commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          upstream="https://raw.githubusercontent.com/google/fonts/29b4ec6df2522a8aee279414b78a07910b065874/ofl/ibmplexsansthai"
+          mkdir -p apps/customer/public/fonts
+          for weight in Regular Medium SemiBold Bold; do
+            curl --fail --location --silent --show-error --retry 3 \
+              "$upstream/IBMPlexSansThai-$weight.ttf" \
+              -o "apps/customer/public/fonts/IBMPlexSansThai-$weight.ttf"
+            test "$(wc -c < "apps/customer/public/fonts/IBMPlexSansThai-$weight.ttf")" -gt 15000
+            file "apps/customer/public/fonts/IBMPlexSansThai-$weight.ttf" | grep -Eq '(TrueType|OpenType)'
+          done
+          curl --fail --location --silent --show-error --retry 3 \
+            "$upstream/OFL.txt" -o apps/customer/public/fonts/OFL.txt
+          grep -q 'SIL OPEN FONT LICENSE' apps/customer/public/fonts/OFL.txt
+          for app in merchant admin; do
+            mkdir -p "apps/$app/public/fonts"
+            cp apps/customer/public/fonts/* "apps/$app/public/fonts/"
+          done
+          sha256sum apps/customer/public/fonts/*.ttf
+      - name: Commit only verified font binaries and license to feature branch
+        shell: bash
+        run: |
+          git add -- apps/customer/public/fonts apps/merchant/public/fonts apps/admin/public/fonts
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'feat(type): self-host pinned OFL Thai typography on all applications'
+          git fetch origin refs/heads/feat/v6-pos-workspace-rebuild-thai-font-20261114
+          git rebase FETCH_HEAD
+          git push origin HEAD:refs/heads/feat/v6-pos-workspace-rebuild-thai-font-20261114
