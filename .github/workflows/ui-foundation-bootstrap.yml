@@ -43,4 +43,6 @@ jobs:
           git -c user.name='github-actions[bot]' \
               -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
               commit -m 'chore(ui): lock Spartan Brain, CLI, CDK and Tailwind v4'
+          git fetch origin refs/heads/feat/ux-spartan-foundation-rcat-brand-20261114
+          git rebase FETCH_HEAD
           git push origin HEAD:refs/heads/feat/ux-spartan-foundation-rcat-brand-20261114
