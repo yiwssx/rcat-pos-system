@@ -202,9 +202,9 @@ describe("customer route security and QR ordering", () => {
     const first = changeModifierSelection(VISIT, "p1", "g1", [], "o1");
     const second = changeModifierSelection(VISIT, "p1", "g1", first, "o2");
     expect(second).toEqual(["o1", "o2"]);
-    expect(changeModifierSelection(VISIT, "p1", "g1", second, "o1")).toEqual([
-      "o2",
-    ]);
+    expect(
+      changeModifierSelection(VISIT, "p1", "g1", second, "o1"),
+    ).toEqual(["o2"]);
   });
 
   it("normalizes options, coalesces identical cart lines and handles signed satang", () => {
