@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 200" role="img" aria-label="ภาพตกแต่งร้านค้าสีส้มและผลผลิต">
+  <defs>
+    <linearGradient id="awning" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFB122"/><stop offset="1" stop-color="#FB6405"/></linearGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFEEBD"/><stop offset="1" stop-color="#FFD77E"/></linearGradient>
+  </defs>
+  <path d="M0 190C99 154 139 187 214 169s125-11 206 13v18H0Z" fill="#FFD762"/>
+  <path d="M0 196c103-24 165-7 249-21s128 1 171 12v13H0Z" fill="#FF8B19"/>
+  <g transform="translate(142 24)">
+    <rect x="36" y="70" width="203" height="100" rx="9" fill="url(#wall)" stroke="#D9680E" stroke-width="3"/>
+    <rect x="51" y="103" width="70" height="67" rx="4" fill="#FFF9E8" stroke="#DE751C" stroke-width="3"/>
+    <rect x="143" y="111" width="76" height="48" rx="4" fill="#FFAD46" stroke="#DC6C0F" stroke-width="3"/>
+    <path d="M156 123h47m-47 13h47" stroke="#FFE7A7" stroke-width="6" stroke-linecap="round"/>
+    <path d="M22 70 50 24h172l30 46Z" fill="#FE8205" stroke="#D85A09" stroke-width="3"/>
+    <path d="M47 27 27 70q15 22 30 0l16-43Zm54 0L90 70q16 22 32 0l5-43Zm52 0 3 43q15 22 30 0l-12-43Zm51 0 15 43q15 22 30 0l-28-43Z" fill="#FFF7D5"/>
+    <path d="M20 71h232" stroke="#C75108" stroke-width="5" stroke-linecap="round"/>
+    <path d="M92 170v-49m9 25h-9" stroke="#D66C15" stroke-width="4"/>
+    <circle cx="231" cy="21" r="8" fill="#FFC43B"/>
+    <path d="m242 9 6-8m-5 33 10 4" stroke="#F49B08" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(8 93)">
+    <path d="M22 87h109l-9 23H30Z" fill="#D56B17"/>
+    <path d="M23 88h108m-91 0v22m31-22v22m29-22v22" stroke="#FFBF55" stroke-width="5"/>
+    <path d="M50 81c-12-22-33-30-29-50 21 5 36 20 36 45M78 80c-5-26 3-50 19-59 6 23 3 47-12 60" fill="#62B653"/>
+    <circle cx="36" cy="66" r="21" fill="#FFAA15"/><circle cx="67" cy="58" r="24" fill="#FF8A07"/>
+    <circle cx="101" cy="67" r="20" fill="#FFD02C"/><path d="M70 29c-9-9-21-9-27-4m53 5c3-9 11-15 20-16" fill="none" stroke="#479B3C" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(325 75)">
+    <path d="M38 0c20 0 36 15 36 36 0 27-36 64-36 64S2 63 2 36C2 15 18 0 38 0Z" fill="#05A991"/>
+    <circle cx="38" cy="35" r="20" fill="#2BD5B9"/>
+    <path d="M29 22v25m-7-25v11c0 6 14 6 14 0V22m21 0v26m-5-25c-7 7-7 14 5 15" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>
