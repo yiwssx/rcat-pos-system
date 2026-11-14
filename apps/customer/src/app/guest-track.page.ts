@@ -77,6 +77,14 @@ const TRACK_INTERVAL_MS = 15_000;
             <p class="guest-payment-alert" role="note">
               ออเดอร์ถูกยกเลิกแล้ว · ไม่สามารถสร้าง QR ชำระเงินใหม่ได้
             </p>
+          } @else if (status()?.paymentState === "manual_confirmed") {
+            <p class="guest-payment-alert" role="status">
+              ร้านยืนยันการรับเงินแล้ว (ตรวจโดยพนักงาน ไม่ใช่ธนาคารอัตโนมัติ)
+            </p>
+          } @else if (status()?.paymentState === "slip_submitted") {
+            <p class="guest-payment-alert" role="status">
+              ส่งสลิปแล้ว · รอร้านตรวจสอบยอดเงินเข้าจริง
+            </p>
           } @else if (payment()) {
             <div class="guest-payment-card">
               <h2>ชำระเงินด้วย PromptPay</h2>
@@ -110,8 +118,28 @@ const TRACK_INTERVAL_MS = 15_000;
               </div>
               <p class="guest-payment-alert" role="note">
                 QR ไม่ใช่หลักฐานว่าเงินเข้าแล้ว
-                การส่งสลิปและการยืนยันโดยร้านยังอยู่ระหว่างพัฒนา
+                โปรดส่งสลิปหลังโอน และรอร้านตรวจสอบเงินเข้าจริง
               </p>
+              <label for="payment-slip-file">แนบสลิปการโอน</label>
+              <input
+                id="payment-slip-file"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                [disabled]="slipLoading() || !online()"
+                (change)="onSlipSelected($event)"
+              />
+              <p class="guest-context">
+                รองรับรูป PNG, JPG, WebP · ระบบแปลงและลดขนาดก่อนส่ง
+              </p>
+              @if (slipLoading()) {
+                <p role="status">กำลังส่งหลักฐานการชำระเงิน...</p>
+              }
+              @if (slipMessage()) {
+                <p role="status">{{ slipMessage() }}</p>
+              }
+              @if (slipError()) {
+                <p class="guest-warning" role="alert">{{ slipError() }}</p>
+              }
             </div>
           } @else if (paymentLoading()) {
             <p class="guest-status" role="status">
@@ -177,6 +205,9 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   readonly paymentChecked = signal(false);
   readonly paymentLoading = signal(false);
   readonly paymentError = signal("");
+  readonly slipLoading = signal(false);
+  readonly slipError = signal("");
+  readonly slipMessage = signal("");
   readonly status = signal<GuestOrderStatus | null>(null);
   readonly history = signal<GuestOrderHistory | null>(null);
   readonly error = signal("");
@@ -244,8 +275,16 @@ export class GuestTrackPage implements OnInit, OnDestroy {
         tracked.trackingToken,
       );
       if (this.destroyed) return;
+      const previousPaymentState = this.status()?.paymentState;
       this.status.set(latest);
-      if (latest.status === "cancelled") {
+      if (previousPaymentState !== latest.paymentState) {
+        this.paymentForOrder = null;
+      }
+      if (
+        latest.status === "cancelled" ||
+        latest.paymentState === "slip_submitted" ||
+        latest.paymentState === "manual_confirmed"
+      ) {
         this.payment.set(null);
         this.paymentChecked.set(true);
       } else {
@@ -310,6 +349,36 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     }
   }
 
+  async onSlipSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const source = input.files?.[0];
+    const tracked = this.session.recoverTracking();
+    if (!source || !tracked || this.slipLoading() || !this.online()) return;
+    this.slipLoading.set(true);
+    this.slipError.set("");
+    this.slipMessage.set("");
+    try {
+      await this.api.uploadPaymentSlip(
+        tracked.orderId,
+        tracked.trackingToken,
+        source,
+      );
+      this.slipMessage.set("ส่งหลักฐานแล้ว · รอร้านตรวจสอบยอดเงินเข้า");
+      this.payment.set(null);
+      this.paymentForOrder = null;
+      await this.refresh();
+    } catch (error) {
+      this.slipError.set(
+        error instanceof Error && !("status" in error)
+          ? error.message
+          : "ส่งสลิปไม่สำเร็จ อาจมีสลิปรอตรวจอยู่แล้ว กรุณาลองใหม่",
+      );
+    } finally {
+      input.value = "";
+      this.slipLoading.set(false);
+    }
+  }
+
   savePaymentQr(): void {
     const tracked = this.session.tracking();
     const payment = this.payment();
@@ -325,6 +394,8 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     this.paymentChecked.set(false);
     this.paymentForOrder = null;
     this.paymentError.set("");
+    this.slipError.set("");
+    this.slipMessage.set("");
     this.session.clearTracking();
     this.status.set(null);
     this.history.set(null);
