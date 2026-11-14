@@ -81,7 +81,8 @@ const TRACK_INTERVAL_MS = 15_000;
             <div class="guest-payment-card">
               <h2>ชำระเงินด้วย PromptPay</h2>
               <p class="guest-context">
-                ยอดชำระ {{ money(payment()!.amountSatang) }} ฿ · จ่ายตอนนี้หรือภายหลังได้
+                ยอดชำระ {{ money(payment()!.amountSatang) }} ฿ ·
+                จ่ายตอนนี้หรือภายหลังได้
               </p>
               <img
                 class="guest-payment-qr"
@@ -95,7 +96,9 @@ const TRACK_INTERVAL_MS = 15_000;
                 เพื่อนำเข้าแอปธนาคารบนโทรศัพท์เครื่องเดียวกัน
               </p>
               <div class="guest-track-actions">
-                <button type="button" (click)="savePaymentQr()">บันทึก QR</button>
+                <button type="button" (click)="savePaymentQr()">
+                  บันทึก QR
+                </button>
                 <button
                   type="button"
                   class="guest-subtle"
