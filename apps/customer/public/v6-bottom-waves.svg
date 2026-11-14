@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 178" preserveAspectRatio="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="under" x1="0" y1="0" x2="1" y2=".3">
+      <stop stop-color="#FFAE00"/>
+      <stop offset=".42" stop-color="#FFCB3E"/>
+      <stop offset="1" stop-color="#FFE79E"/>
+    </linearGradient>
+    <linearGradient id="middle" x1="0" y1=".5" x2="1" y2=".5">
+      <stop stop-color="#FF9C06"/>
+      <stop offset=".54" stop-color="#FFCA38"/>
+      <stop offset="1" stop-color="#FF9B12"/>
+    </linearGradient>
+    <linearGradient id="front" x1="0" y1=".5" x2="1" y2=".5">
+      <stop stop-color="#F36F03"/>
+      <stop offset=".47" stop-color="#FFB325"/>
+      <stop offset="1" stop-color="#FF7A05"/>
+    </linearGradient>
+  </defs>
+  <!-- Transparent upper edge allows cards and navigation to remain legible. -->
+  <path d="M0 128C180 44 288 67 451 108 600 146 673 142 807 114 1024 71 1117 54 1243 72 1326 84 1373 88 1440 85V178H0Z" fill="#FFF2C9" opacity=".76"/>
+  <path d="M0 136C190 71 317 86 469 124 601 156 720 151 850 121 1046 78 1213 89 1440 91V178H0Z" fill="url(#under)"/>
+  <path d="M0 159C161 100 278 82 449 124 601 163 724 166 859 145 1057 118 1201 83 1440 108V178H0Z" fill="url(#middle)"/>
+  <path d="M0 172C144 113 287 96 450 142 573 177 747 180 862 155 1062 115 1270 132 1440 116V178H0Z" fill="url(#front)"/>
+  <path d="M0 166C146 108 299 101 449 143 598 185 732 175 862 154 1050 124 1215 105 1440 119" fill="none" stroke="#FFF9D9" stroke-width="5" stroke-linecap="round"/>
+  <path d="M0 174C155 128 304 121 452 155 598 191 723 180 864 162 1119 128 1279 130 1440 130" fill="none" stroke="#FFD151" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+</svg>
