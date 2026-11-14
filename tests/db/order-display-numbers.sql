@@ -70,8 +70,11 @@ BEGIN
  END IF;
  inbox:=rcat_private.merchant_order_inbox_page(
    actor,tenant,store,NULL,25,NULL,NULL);
- IF (inbox->'orders'->0->>'displayNumber')::bigint<>second_number
-   THEN RAISE EXCEPTION 'Merchant Board number is incorrect'; END IF;
+ IF (SELECT count(*) FROM jsonb_array_elements(inbox->'orders') row_data
+      WHERE row_data->>'orderId'=o2::text
+        AND row_data->>'displayNumber'=second_number::text)<>1 THEN
+   RAISE EXCEPTION 'Merchant Board number is incorrect';
+ END IF;
  lookup:=rcat_private.merchant_order_lookup_ids(
    actor,tenant,store,ARRAY[o1,o2]);
  IF (SELECT count(*) FROM jsonb_array_elements(lookup->'orders') row_data
