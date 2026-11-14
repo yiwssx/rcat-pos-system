@@ -54,13 +54,13 @@ async function main() {
         orange: getComputedStyle(document.documentElement).getPropertyValue('--pos-orange').trim(),
         sidebar: css('.portal-sidebar').backgroundImage,
         orderAction: css('.v6-main-action').backgroundImage,
-        secondary: css('.v6-secondary-action').backgroundColor,
+        secondary: css('.v6-secondary-action').backgroundImage,
       };
     });
     assert.equal(palette.orange, '#c94108', 'Production CSS must use the new readable vivid-orange token');
     assert.match(palette.sidebar, /linear-gradient/, 'Desktop navigation must use the vivid orange treatment');
     assert.match(palette.orderAction, /linear-gradient/, 'Order board entry must use the vivid brand CTA');
-    assert.notEqual(palette.secondary, 'rgba(0, 0, 0, 0)', 'Secondary actions must have a distinct mint surface');
+    assert.match(palette.secondary, /linear-gradient/, 'Secondary actions must have a distinct mint gradient');
     await page.setViewportSize({ width: 320, height: 780 });
     const officialLogo = page.locator('img.portal-brand-image');
     await officialLogo.waitFor();
