@@ -2419,3 +2419,36 @@
     border-radius: 9px;
   }
 }
+
+
+/* G5-M1: compact post-Order payment view; never block order tracking. */
+.guest-tracking .guest-payment-card {
+  margin: 0.85rem 0;
+  padding: 1rem;
+  border: 1px solid #d9e4df;
+  border-radius: 14px;
+  background: #f7fbf8;
+  text-align: center;
+}
+.guest-tracking .guest-payment-card h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+}
+.guest-tracking .guest-payment-qr {
+  display: block;
+  width: min(100%, 240px);
+  height: auto;
+  margin: 0.75rem auto;
+  padding: 0.55rem;
+  border: 1px solid #e3e8e7;
+  border-radius: 10px;
+  background: #fff;
+}
+.guest-tracking .guest-payment-card .guest-track-actions {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.guest-tracking .guest-payment-card .guest-payment-alert {
+  text-align: left;
+  margin-top: 0.85rem;
+}
