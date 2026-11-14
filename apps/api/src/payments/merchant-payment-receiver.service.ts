@@ -38,33 +38,28 @@ function form(raw: unknown): {
     throw new BadRequestException("Invalid payment settings request");
   }
   const input = raw as Record<string, unknown>;
-  const keys = Object.keys(input);
+  const keys = Object.keys(input).sort().join(",");
+  if (keys !== "expectedRevision,receiverId,receiverKind") {
+    throw new BadRequestException("Invalid payment settings request");
+  }
+  const receiverKind = input["receiverKind"];
+  const receiverId = input["receiverId"];
+  const expectedRevision = input["expectedRevision"];
   if (
-    keys.length !== 3 ||
-    !["receiverKind", "receiverId", "expectedRevision"].every((k) =>
-      Object.hasOwn(input, k),
-    ) ||
-    (input["receiverKind"] !== "mobile" &&
-      input["receiverKind"] !== "national_id") ||
-    typeof input["receiverId"] !== "string" ||
+    (receiverKind !== "mobile" && receiverKind !== "national_id") ||
+    typeof receiverId !== "string" ||
     !(
-      (input["receiverKind"] === "mobile" &&
-        /^0[689][0-9]{8}$/.test(input["receiverId"])) ||
-      (input["receiverKind"] === "national_id" &&
-        /^[0-9]{13}$/.test(input["receiverId"]))
+      (receiverKind === "mobile" && /^0[689][0-9]{8}$/.test(receiverId)) ||
+      (receiverKind === "national_id" && /^[0-9]{13}$/.test(receiverId))
     ) ||
-    typeof input["expectedRevision"] !== "number" ||
-    !Number.isSafeInteger(input["expectedRevision"]) ||
-    input["expectedRevision"] < 0 ||
-    input["expectedRevision"] > 2147483646
+    typeof expectedRevision !== "number" ||
+    !Number.isSafeInteger(expectedRevision) ||
+    expectedRevision < 0 ||
+    expectedRevision > 2147483646
   ) {
     throw new BadRequestException("Invalid payment settings request");
   }
-  return {
-    receiverKind: input["receiverKind"] as "mobile" | "national_id",
-    receiverId: input["receiverId"],
-    expectedRevision: input["expectedRevision"],
-  };
+  return { receiverKind, receiverId, expectedRevision };
 }
 
 @Injectable()
