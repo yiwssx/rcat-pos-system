@@ -320,7 +320,6 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   }
 
   clear(): void {
-    this.revokeQrUrl();
     this.payment.set(null);
     this.paymentChecked.set(false);
     this.paymentForOrder = null;
