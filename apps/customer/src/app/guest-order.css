@@ -1831,3 +1831,81 @@
   outline: 3px solid #b94d1b;
   outline-offset: 2px;
 }
+
+/* RCAT POS V6 / Mobile-first Guest, retaining the native transactional sheets. */
+.guest-brand-image {
+  display: block;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  border: 1px solid #f1d4b9;
+  object-fit: contain;
+  box-shadow: 0 2px 10px rgb(96 52 20 / 12%);
+}
+.guest-shell {
+  color: #202c34;
+}
+.guest-header {
+  align-items: center;
+}
+.guest-header h1 {
+  font-size: clamp(1.55rem, 3.2vw, 2.4rem);
+  letter-spacing: -0.035em;
+  line-height: 1.26;
+}
+.guest-menu-toolbar {
+  gap: 0.75rem;
+}
+.guest-search input,
+.guest-category select,
+.guest-item-note textarea,
+.guest-order-context input {
+  border-radius: 12px;
+  border-color: #d6ccc2;
+  background: #fffdfa;
+}
+.guest-search input:focus-visible,
+.guest-category select:focus-visible,
+.guest-order-context input:focus-visible {
+  outline: 3px solid #b94d1b;
+  outline-offset: 2px;
+}
+.guest-product {
+  border-color: #e9e1d9;
+  border-radius: 18px;
+  box-shadow: 0 6px 25px rgb(76 49 27 / 5%);
+}
+.guest-product h2 {
+  color: #202c34;
+  font-weight: 800;
+}
+.guest-price {
+  color: #a9471a;
+}
+.guest-sheet {
+  border: 1px solid #eee5dc;
+  box-shadow: 0 -20px 58px rgb(32 28 24 / 18%);
+}
+.guest-sheet::backdrop {
+  background: rgb(32 28 24 / 46%);
+}
+.guest-order-context {
+  border-color: #e8ded4;
+  background: #fffbf6;
+}
+.guest-cart-shortcut {
+  box-shadow: 0 12px 30px rgb(108 51 19 / 18%);
+}
+@media (max-width: 420px) {
+  .guest-brand-image {
+    width: 42px;
+    height: 42px;
+  }
+  .guest-header h1 {
+    font-size: 1.65rem;
+  }
+  .guest-product {
+    border-radius: 15px;
+  }
+}
