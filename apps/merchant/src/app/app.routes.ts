@@ -12,6 +12,13 @@ export const routes: Routes = [
       import("./order-board.page").then((m) => m.MerchantOrderBoardPage),
   },
   {
+    path: "payments/receiver/:tenantId/:storeId",
+    loadComponent: () =>
+      import("./merchant-payment-receiver.page").then(
+        (m) => m.MerchantPaymentReceiverPage,
+      ),
+  },
+  {
     path: "payments/finance/:tenantId/:storeId",
     loadComponent: () =>
       import("./merchant-finance.page").then((m) => m.MerchantFinancePage),

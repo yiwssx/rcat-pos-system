@@ -64,6 +64,7 @@ describe("merchant operations routes", () => {
   it("lazy loads only the store-scoped manual Payment review route", () => {
     const payment = routes.filter((route) => route.path?.includes("payment"));
     expect(payment.map((route) => route.path)).toEqual([
+      "payments/receiver/:tenantId/:storeId",
       "payments/finance/:tenantId/:storeId",
       "payments/:tenantId/:storeId",
     ]);

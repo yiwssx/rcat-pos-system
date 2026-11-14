@@ -88,6 +88,15 @@ import { MerchantOrderApi } from "./merchant-order.api";
               >
               <a
                 class="store-report-link"
+                [routerLink]="[
+                  '/payments/receiver',
+                  store.tenantId,
+                  store.storeId,
+                ]"
+                >ตั้งค่าบัญชีรับเงิน PromptPay (ยังไม่เปิดรับเงินจริง)</a
+              >
+              <a
+                class="store-report-link"
                 [routerLink]="['/payments', store.tenantId, store.storeId]"
                 >คิวตรวจสลิป (ระบบทดลอง)</a
               >
