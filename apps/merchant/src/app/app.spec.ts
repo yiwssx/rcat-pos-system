@@ -64,9 +64,11 @@ describe("merchant operations routes", () => {
   it("lazy loads only the store-scoped manual Payment review route", () => {
     const payment = routes.filter((route) => route.path?.includes("payment"));
     expect(payment.map((route) => route.path)).toEqual([
+      "payments/finance/:tenantId/:storeId",
       "payments/:tenantId/:storeId",
     ]);
-    expect(payment[0]?.loadComponent).toBeTypeOf("function");
+    expect(payment.every((route) => typeof route.loadComponent === "function"))
+      .toBe(true);
   });
 });
 
