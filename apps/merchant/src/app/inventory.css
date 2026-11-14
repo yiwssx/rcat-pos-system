@@ -360,3 +360,37 @@
   border-left: 3px solid #d4ad80;
   border-radius: 11px;
 }
+
+/* V6 inventory: warm operational workspace with color-safe stock warnings. */
+.inventory-shell {
+  color: #21333e;
+  background: linear-gradient(180deg, #fffaf1, #fffefa);
+}
+.inventory-shell h1,
+.inventory-shell h2 {
+  color: #20313b;
+}
+.inventory-panel {
+  background: #fff;
+  border-color: #f0d9c1;
+  box-shadow: 0 8px 24px rgb(173 72 13 / 6%);
+}
+.inventory-form input,
+.inventory-form select {
+  border-color: #e6cfb4;
+  background: #fffefa;
+}
+.inventory-form button:not(:disabled) {
+  background: linear-gradient(110deg, #bd3b06, #d95408);
+  border-color: #bd3b06;
+  color: #fff;
+}
+.inventory-back {
+  color: #9b460f;
+}
+.inventory-warning {
+  border-color: #f3d5aa;
+  border-left-color: #d8860c;
+  background: #fff3df;
+  color: #775018;
+}
