@@ -22,9 +22,9 @@ import {
   GUEST_MENU_BATCH_SIZE,
   GuestCatalogCursor,
   mergeCartReview,
-  normalizeOrderField,
   normalizedItemNote,
   normalizedOrderContext,
+  GuestOrderContext,
   GuestModifierGroup,
   GuestModifierOption,
   GuestProduct,
@@ -1031,7 +1031,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       !this.online()
     )
       return;
-    let context;
+    let context: GuestOrderContext;
     try {
       context = normalizedOrderContext({
         orderedBy: this.orderedBy(),
