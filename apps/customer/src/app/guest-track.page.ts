@@ -13,7 +13,7 @@ import {
   formatSatang,
   GuestOrderHistory,
   GuestOrderStatus,
-  GuestActivePaymentRequest,
+  GuestPayable,
   ORDER_STATUS_LABEL,
 } from "./guest-order.domain";
 import { GuestOrderApi, GuestOrderSession } from "./guest-order.api";
@@ -78,11 +78,10 @@ const TRACK_INTERVAL_MS = 15_000;
               ออเดอร์ถูกยกเลิกแล้ว · ไม่สามารถสร้าง QR ชำระเงินใหม่ได้
             </p>
           } @else if (payment()) {
-            <section class="guest-payment-card" aria-labelledby="payment-title">
-              <h2 id="payment-title">ชำระเงินด้วย PromptPay</h2>
+            <div class="guest-payment-card">
+              <h2>ชำระเงินด้วย PromptPay</h2>
               <p class="guest-context">
-                ยอดที่ระบบระบุ {{ money(payment()!.amountSatang) }} ฿
-                · สามารถชำระภายหลังได้
+                ยอดชำระ {{ money(payment()!.amountSatang) }} ฿ · จ่ายตอนนี้หรือภายหลังได้
               </p>
               <img
                 class="guest-payment-qr"
@@ -110,7 +109,7 @@ const TRACK_INTERVAL_MS = 15_000;
                 QR ไม่ใช่หลักฐานว่าเงินเข้าแล้ว
                 การส่งสลิปและการยืนยันโดยร้านยังอยู่ระหว่างพัฒนา
               </p>
-            </section>
+            </div>
           } @else if (paymentLoading()) {
             <p class="guest-status" role="status">
               กำลังตรวจสอบช่องทางชำระเงิน...
@@ -171,7 +170,7 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   private interval?: ReturnType<typeof setInterval>;
   private destroyed = false;
   private paymentForOrder: string | null = null;
-  readonly payment = signal<GuestActivePaymentRequest | null>(null);
+  readonly payment = signal<GuestPayable | null>(null);
   readonly paymentChecked = signal(false);
   readonly paymentLoading = signal(false);
   readonly paymentError = signal("");

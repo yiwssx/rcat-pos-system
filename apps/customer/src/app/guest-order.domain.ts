@@ -95,7 +95,7 @@ export interface GuestCheckout {
   paymentState: "not_requested";
   replayed: boolean;
 }
-export interface GuestActivePaymentRequest {
+export interface GuestPayable {
   available: true;
   requestId: string;
   orderId: string;
@@ -106,9 +106,7 @@ export interface GuestActivePaymentRequest {
   qrImageDataUrl: string;
   merchantConfirmation: false;
 }
-export type GuestPaymentRequest =
-  | { available: false }
-  | GuestActivePaymentRequest;
+export type GuestPaymentRequest = { available: false } | GuestPayable;
 
 export interface GuestOrderStatus {
   orderId: string;
