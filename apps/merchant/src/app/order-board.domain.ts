@@ -1,6 +1,11 @@
 export type MerchantRole = "owner" | "manager" | "cashier" | "kitchen";
 export type OrderStatus =
   "submitted" | "accepted" | "preparing" | "served" | "cancelled";
+export type PaymentState =
+  | "not_requested"
+  | "awaiting_payment"
+  | "slip_submitted"
+  | "manual_confirmed";
 
 export interface MerchantStore {
   tenantId: string;
@@ -27,7 +32,7 @@ export interface MerchantOrder {
   orderedBy?: string | null;
   deliverTo?: string | null;
   status: OrderStatus;
-  paymentState: "not_requested" | "awaiting_payment" | "slip_submitted" | "manual_confirmed";
+  paymentState: PaymentState;
   createdAt: string;
   updatedAt: string;
   items: readonly OrderItem[];
@@ -73,7 +78,7 @@ export interface OrderEventPage {
 export interface OrderHistory {
   orderId: string;
   status: OrderStatus;
-  paymentState: "not_requested" | "awaiting_payment" | "slip_submitted" | "manual_confirmed";
+  paymentState: PaymentState;
   events: {
     eventId: number | null;
     status: OrderStatus;

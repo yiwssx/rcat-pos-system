@@ -108,19 +108,25 @@ export interface GuestPayable {
 }
 export type GuestPaymentRequest = { available: false } | GuestPayable;
 
+export type GuestPaymentState =
+  | "not_requested"
+  | "awaiting_payment"
+  | "slip_submitted"
+  | "manual_confirmed";
+
 export interface GuestOrderStatus {
   orderId: string;
   status: "submitted" | "accepted" | "preparing" | "served" | "cancelled";
   amountSatang: number;
   currency: "THB";
-  paymentState: "not_requested" | "awaiting_payment" | "slip_submitted" | "manual_confirmed";
+  paymentState: GuestPaymentState;
   createdAt: string;
   updatedAt: string;
 }
 export interface GuestOrderHistory {
   orderId: string;
   status: GuestOrderStatus["status"];
-  paymentState: "not_requested" | "awaiting_payment" | "slip_submitted" | "manual_confirmed";
+  paymentState: GuestPaymentState;
   events: {
     status: GuestOrderStatus["status"];
     fromStatus: GuestOrderStatus["status"] | null;

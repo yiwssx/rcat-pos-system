@@ -38,6 +38,7 @@ const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 @Injectable({ providedIn: "root" })
 export class GuestOrderApi {
   private readonly http = inject(HttpClient);
+  private readonly document = inject(DOCUMENT);
 
   resolve(token: string): Promise<GuestVisit> {
     return firstValueFrom(

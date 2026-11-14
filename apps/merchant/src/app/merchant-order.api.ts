@@ -159,7 +159,13 @@ export class MerchantOrderApi {
     tenantId: string,
     storeId: string,
     slipId: string,
-    payload: Record<string, string | number | boolean>,
+    payload: {
+      action: "confirm" | "reject";
+      expectedRevision: number;
+      bankReference?: string;
+      actualAmountSatang?: number;
+      bankChecked?: boolean;
+    },
   ): Promise<{ slipId: string; paymentState: string }> {
     return firstValueFrom(
       this.http.post<{ slipId: string; paymentState: string }>(
