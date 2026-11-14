@@ -20,7 +20,7 @@
       "command": "pnpm exec tsc -p apps/api/tsconfig.app.json --noEmit"
     },
     "test": {
-      "command": "pnpm exec vitest run apps/api/src/health/health-status.spec.ts apps/api/src/auth/email-delivery.service.spec.ts apps/api/src/orders/merchant-notification-stream.spec.ts apps/api/src/orders/operational-report.core.spec.ts apps/api/src/auth/google-oidc-verifier.spec.ts apps/api/src/inventory/inventory.core.spec.ts"
+      "command": "pnpm exec vitest run apps/api/src/health/health-status.spec.ts apps/api/src/auth/email-delivery.service.spec.ts apps/api/src/orders/merchant-notification-stream.spec.ts apps/api/src/orders/operational-report.core.spec.ts apps/api/src/auth/google-oidc-verifier.spec.ts apps/api/src/inventory/inventory.core.spec.ts apps/api/src/payments/promptpay-qr.core.spec.ts"
     },
     "lint": {
       "command": "pnpm exec prettier --check 'apps/api/src/**/*.ts'"
