@@ -86,7 +86,7 @@ export function validateManualDecision(raw: unknown): ManualPaymentDecision {
     expectedRevision: revision,
     // The store/tenant are additionally scoped into this digest in the
     // service. Never persist the customer's bank reference in cleartext.
-    bankReferenceDigest: Buffer.from(data["bankReference"], "ascii"),
+    bankReferenceDigest: Buffer.from(data["bankReference"].toUpperCase(), "ascii"),
     actualAmountSatang: data["actualAmountSatang"],
     checkedBank: true,
   };
