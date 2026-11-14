@@ -597,7 +597,11 @@
   isolation: isolate;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 92% 12%, rgb(255 214 130 / 22%), transparent 39%),
+    radial-gradient(
+      ellipse at 92% 12%,
+      rgb(255 214 130 / 22%),
+      transparent 39%
+    ),
     linear-gradient(180deg, #fff9ef 0%, #fffdf8 66%, #fff7e7 100%);
   min-height: min(910px, calc(100dvh - 118px));
   padding-bottom: clamp(6rem, 14vw, 10rem);
@@ -689,7 +693,11 @@
   aspect-ratio: 1;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgb(255 201 73 / 25%) 0 48%, transparent 49%);
+  background: radial-gradient(
+    circle,
+    rgb(255 201 73 / 25%) 0 48%,
+    transparent 49%
+  );
   transform: skewX(-20deg);
 }
 .v6-main-action:hover {

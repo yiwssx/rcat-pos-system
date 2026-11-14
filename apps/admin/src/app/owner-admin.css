@@ -620,7 +620,11 @@
 }
 .v6-owner-disclosure > summary {
   background:
-    radial-gradient(ellipse at 100% 0%, rgb(255 215 130 / 19%), transparent 43%),
+    radial-gradient(
+      ellipse at 100% 0%,
+      rgb(255 215 130 / 19%),
+      transparent 43%
+    ),
     #fff;
 }
 .v6-owner-disclosure > summary strong {
