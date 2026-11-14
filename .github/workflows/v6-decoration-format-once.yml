@@ -1,0 +1,43 @@
+# One-shot, delta-only formatter; removed after it commits one CSS file.
+name: One-time V6 decoration formatter
+on:
+  push:
+    branches:
+      - feat/v6-brand-decoration-layer-20261114
+    paths:
+      - .github/workflows/v6-decoration-format-once.yml
+permissions:
+  contents: write
+concurrency:
+  group: rcat-pos-v6-art-format-once
+  cancel-in-progress: true
+jobs:
+  format:
+    if: github.repository == 'yiwssx/rcat-pos-system'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format only the new V6 decoration CSS
+        run: pnpm exec prettier --write apps/customer/src/pos-v6-decoration.css
+      - name: Commit exact formatting result
+        run: |
+          git add -- apps/customer/src/pos-v6-decoration.css
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'style(v6): format new shared decoration CSS'
+          git fetch origin refs/heads/feat/v6-brand-decoration-layer-20261114
+          git rebase FETCH_HEAD
+          git push origin HEAD:refs/heads/feat/v6-brand-decoration-layer-20261114
