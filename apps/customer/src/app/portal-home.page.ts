@@ -129,128 +129,159 @@ import { RcatButtonDirective } from "@rcat/ui";
           </div>
         }
         @case ("staff") {
-          <div class="portal-workspace-head">
-            <div>
-              <span class="portal-eyebrow">RCAT POS · WORKSPACE</span>
-              <h1 id="portal-title">เริ่มงานที่ร้าน</h1>
-              <p class="portal-lead">
-                จัดการออเดอร์และงานภายในร้านในพื้นที่เดียว
-              </p>
-            </div>
-            <span class="portal-workspace-count">
-              <span class="portal-count-dot" aria-hidden="true"></span>
-              ร้านที่เข้าถึงได้
-              <strong>{{ session.stores().length }}</strong>
-            </span>
-          </div>
-          <div class="portal-section-heading">
-            <div>
-              <span class="portal-eyebrow">YOUR STORES</span>
-              <h2>ร้านค้าของคุณ</h2>
-            </div>
-          </div>
-          <div class="portal-stores">
-            @for (
-              store of session.stores();
-              track store.tenantId + store.storeId
-            ) {
-              <article class="portal-panel portal-store-card">
-                <div class="portal-store-feature">
-                  <div class="portal-store-card-head">
-                    <span class="portal-store-avatar" aria-hidden="true">{{
-                      store.storeName.slice(0, 1)
-                    }}</span>
-                    <span class="portal-role">{{ roles[store.role] }}</span>
-                  </div>
-                  <div class="portal-store-identity">
-                    <span class="portal-store-overline">STORE WORKSPACE</span>
-                    <h3>{{ store.storeName }}</h3>
-                    <p class="portal-store-tenant">{{ store.tenantName }}</p>
-                  </div>
-                  <p class="portal-store-feature-note">
-                    พื้นที่ทำงานสำหรับจัดการร้านและรายการสั่งซื้อ
-                  </p>
-                </div>
-                <div class="portal-store-operations">
-                  <div class="portal-store-operations-head">
-                    <span class="portal-eyebrow">QUICK ACCESS</span>
-                    <h4>เริ่มจัดการร้าน</h4>
-                  </div>
-                  <a
-                    class="portal-button portal-store-action"
-                    [routerLink]="['/orders', store.tenantId, store.storeId]"
-                    >เปิดกระดานออเดอร์ <span aria-hidden="true">↗</span></a
-                  >
-                  @if (store.role === "owner" || store.role === "manager") {
-                    <div class="portal-store-links">
-                      <a
-                        [routerLink]="[
-                          '/catalog',
-                          store.tenantId,
-                          store.storeId,
-                        ]"
-                        >เมนูและราคา <span aria-hidden="true">↗</span></a
-                      >
-                      <a
-                        [routerLink]="[
-                          '/tables',
-                          store.tenantId,
-                          store.storeId,
-                        ]"
-                        >โต๊ะและ QR <span aria-hidden="true">↗</span></a
-                      >
-                    </div>
-                  }
-                  @if (store.role === "owner") {
-                    <a
-                      class="portal-store-staff"
-                      [routerLink]="['/tenants', store.tenantId, 'staff']"
-                      >พนักงานและสิทธิ์ <span aria-hidden="true">↗</span></a
-                    >
-                  }
-                  @if (
-                    session.localLogin() &&
-                    store.storeId === "70000000-0000-4000-8000-000000000002" &&
-                    store.role === "owner"
-                  ) {
-                    <div class="portal-local-fixture">
-                      <button
-                        type="button"
-                        class="portal-button portal-secondary"
-                        (click)="demoOrder()"
-                        [disabled]="busy()"
-                      >
-                        เปิดโต๊ะทดลองเพื่อสั่งอาหาร
-                      </button>
-                      <small>เริ่มรอบโต๊ะทดลองใหม่และยกเลิกรอบเดิม</small>
-                    </div>
-                  }
-                </div>
-              </article>
-            } @empty {
-              <div class="portal-state-screen">
-                <h2>ยังไม่มีร้านในบัญชีนี้</h2>
-                <p>
-                  ขอสิทธิ์จากเจ้าของร้าน
-                  หรือเปิดหน้าตั้งค่าเพื่อเริ่มสร้างร้านของคุณ
-                </p>
-              </div>
-            }
-          </div>
-          @if (canSetUp()) {
-            <div class="portal-setup-banner">
+          <section class="v6-home" aria-label="พื้นที่ทำงานร้านค้า">
+            <header class="v6-home-heading">
               <div>
-                <strong>ต้องการจัดการร้านหรือบุคลากร?</strong>
-                <p>
-                  สร้างร้านใหม่ รับคำเชิญ
-                  และจัดการสิทธิ์เฉพาะร้านที่คุณเป็นเจ้าของ
-                </p>
+                <span class="v6-overline">RCAT POS · MERCHANT DESK</span>
+                <h1 id="portal-title">เริ่มงานที่ร้าน</h1>
+                <p>จัดการออเดอร์ เมนู และโต๊ะในพื้นที่ทำงานเดียว</p>
               </div>
-              <a class="portal-button portal-secondary" routerLink="/settings"
-                >ตั้งค่าร้าน</a
-              >
+              <span class="v6-workspace-total">
+                <span aria-hidden="true" class="v6-total-mark"></span>
+                ร้านที่เข้าถึงได้
+                <strong>{{ session.stores().length }}</strong>
+              </span>
+            </header>
+            <div class="v6-home-columns">
+              <div class="v6-home-primary">
+                <div class="v6-section-top">
+                  <div>
+                    <h2>ร้านค้าของคุณ</h2>
+                    <p>เลือกงานที่ต้องการเริ่มได้ทันที</p>
+                  </div>
+                </div>
+                <div class="portal-stores v6-store-list">
+                  @for (
+                    store of session.stores();
+                    track store.tenantId + store.storeId
+                  ) {
+                    <article class="portal-store-card v6-store-card">
+                      <div class="v6-store-title-row">
+                        <span class="v6-store-icon" aria-hidden="true">
+                          {{ store.storeName.slice(0, 1) }}
+                        </span>
+                        <div class="v6-store-title">
+                          <h3>{{ store.storeName }}</h3>
+                          <p>{{ store.tenantName }}</p>
+                        </div>
+                        <span class="v6-store-role">{{ roles[store.role] }}</span>
+                      </div>
+                      <div class="v6-store-action-grid">
+                        <a
+                          class="v6-main-action"
+                          [routerLink]="[
+                            '/orders',
+                            store.tenantId,
+                            store.storeId,
+                          ]"
+                        >
+                          <span class="v6-action-glyph" aria-hidden="true">≡</span>
+                          <span>
+                            <strong>เปิดกระดานออเดอร์</strong>
+                            <small>รับรายการและติดตามงานครัว</small>
+                          </span>
+                          <span aria-hidden="true">›</span>
+                        </a>
+                        @if (store.role === "owner" || store.role === "manager") {
+                          <a
+                            class="v6-secondary-action"
+                            [routerLink]="[
+                              '/catalog',
+                              store.tenantId,
+                              store.storeId,
+                            ]"
+                          >
+                            <span aria-hidden="true">☷</span>
+                            เมนูและราคา
+                          </a>
+                          <a
+                            class="v6-secondary-action"
+                            [routerLink]="[
+                              '/tables',
+                              store.tenantId,
+                              store.storeId,
+                            ]"
+                          >
+                            <span aria-hidden="true">▦</span>
+                            โต๊ะและ QR
+                          </a>
+                        }
+                        @if (store.role === "owner") {
+                          <a
+                            class="v6-secondary-action"
+                            [routerLink]="['/tenants', store.tenantId, 'staff']"
+                          >
+                            <span aria-hidden="true">♙</span>
+                            พนักงานและสิทธิ์
+                          </a>
+                        }
+                      </div>
+                      @if (
+                        session.localLogin() &&
+                        store.storeId === "70000000-0000-4000-8000-000000000002" &&
+                        store.role === "owner"
+                      ) {
+                        <div class="portal-local-fixture v6-local-demo">
+                          <button
+                            type="button"
+                            class="v6-local-launch"
+                            (click)="demoOrder()"
+                            [disabled]="busy()"
+                          >
+                            เปิดโต๊ะทดลองเพื่อสั่งอาหาร
+                          </button>
+                          <small>ข้อมูลทดลองเท่านั้น · เปิดรอบใหม่และยกเลิกรอบเดิม</small>
+                        </div>
+                      }
+                    </article>
+                  } @empty {
+                    <div class="v6-empty-workspace">
+                      <h2>ยังไม่มีร้านในบัญชีนี้</h2>
+                      <p>ขอสิทธิ์จากเจ้าของร้าน หรือตั้งค่าร้านเพื่อเริ่มใช้งาน</p>
+                    </div>
+                  }
+                </div>
+              </div>
+              <aside class="v6-home-aside" aria-labelledby="v6-get-started">
+                <div class="v6-aside-top">
+                  <span class="v6-aside-dot" aria-hidden="true"></span>
+                  <h2 id="v6-get-started">ขั้นตอนการทำงาน</h2>
+                </div>
+                <ol class="v6-steps">
+                  <li>
+                    <span class="v6-step-number">01</span>
+                    <div>
+                      <strong>รับออเดอร์</strong>
+                      <p>ลูกค้าสแกน QR และส่งรายการเข้าร้านโดยตรง</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span class="v6-step-number">02</span>
+                    <div>
+                      <strong>เตรียมและส่งอาหาร</strong>
+                      <p>ร้านรับรายการและอัปเดตสถานะได้ทันที</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span class="v6-step-number">03</span>
+                    <div>
+                      <strong>จัดการร้าน</strong>
+                      <p>ตรวจสอบเมนู โต๊ะ และสต็อกตามสิทธิ์ของคุณ</p>
+                    </div>
+                  </li>
+                </ol>
+                <p class="v6-aside-notice">
+                  การรับออเดอร์ไม่ใช่การยืนยันชำระเงิน
+                </p>
+                @if (canSetUp()) {
+                  <a class="v6-manage-link" routerLink="/settings">
+                    ตั้งค่าร้านและบุคลากร
+                    <span aria-hidden="true">›</span>
+                  </a>
+                }
+              </aside>
             </div>
-          }
+          </section>
         }
       }
     </section>
