@@ -67,8 +67,9 @@ describe("merchant operations routes", () => {
       "payments/finance/:tenantId/:storeId",
       "payments/:tenantId/:storeId",
     ]);
-    expect(payment.every((route) => typeof route.loadComponent === "function"))
-      .toBe(true);
+    expect(
+      payment.every((route) => typeof route.loadComponent === "function"),
+    ).toBe(true);
   });
 });
 

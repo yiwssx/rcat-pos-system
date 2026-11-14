@@ -1,5 +1,12 @@
 import {
-  Body, Controller, Get, Header, Param, Post, Query, Req,
+  Body,
+  Controller,
+  Get,
+  Header,
+  Param,
+  Post,
+  Query,
+  Req,
 } from "@nestjs/common";
 import { ApiRequest, requireAllowedOrigin } from "../auth/request-security";
 import { PaymentFinanceService } from "./payment-finance.service";
@@ -66,8 +73,6 @@ export class PaymentFinanceController {
     @Body() body: unknown,
   ) {
     requireAllowedOrigin(req);
-    return this.finance.resolveException(
-      req, tenant, store, exceptionId, body,
-    );
+    return this.finance.resolveException(req, tenant, store, exceptionId, body);
   }
 }

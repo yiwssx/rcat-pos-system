@@ -93,7 +93,11 @@ import { MerchantOrderApi } from "./merchant-order.api";
               >
               <a
                 class="store-report-link"
-                [routerLink]="['/payments/finance', store.tenantId, store.storeId]"
+                [routerLink]="[
+                  '/payments/finance',
+                  store.tenantId,
+                  store.storeId,
+                ]"
                 >กระทบยอดและคืนเงิน (Manual)</a
               >
             }

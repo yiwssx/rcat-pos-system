@@ -60,8 +60,11 @@ export class MerchantFinanceApi {
 
   private path(tenant: string, store: string): string {
     return (
-      "/api/tenants/" + encodeURIComponent(tenant) +
-      "/stores/" + encodeURIComponent(store) + "/payments/finance"
+      "/api/tenants/" +
+      encodeURIComponent(tenant) +
+      "/stores/" +
+      encodeURIComponent(store) +
+      "/payments/finance"
     );
   }
 
@@ -69,33 +72,36 @@ export class MerchantFinanceApi {
     const cookies = this.document.cookie.split(";").map((s) => s.trim());
     const matches = cookies.filter((s) => s.startsWith("__Host-rcat_csrf="));
     const value = matches[0]?.slice("__Host-rcat_csrf=".length);
-    if (matches.length !== 1 || !value ||
-      !/^[A-Za-z0-9_-]{43}$/.test(value)) {
+    if (matches.length !== 1 || !value || !/^[A-Za-z0-9_-]{43}$/.test(value)) {
       throw new Error("กรุณายืนยันตัวตนใหม่เพื่อทำรายการ");
     }
     return value;
   }
 
   private post<T>(url: string, body: unknown): Promise<T> {
-    return firstValueFrom(this.http.post<T>(url, body, {
-      headers: { "X-CSRF-Token": this.csrf() },
-      withCredentials: true,
-    }));
+    return firstValueFrom(
+      this.http.post<T>(url, body, {
+        headers: { "X-CSRF-Token": this.csrf() },
+        withCredentials: true,
+      }),
+    );
   }
 
   report(tenant: string, store: string, days = 30): Promise<FinanceReport> {
-    return firstValueFrom(this.http.get<FinanceReport>(
-      this.path(tenant, store) + "/report",
-      {
+    return firstValueFrom(
+      this.http.get<FinanceReport>(this.path(tenant, store) + "/report", {
         withCredentials: true,
         params: new HttpParams().set("days", String(days)),
-      },
-    ));
+      }),
+    );
   }
 
   requestRefund(
-    tenant: string, store: string, orderId: string,
-    amountSatang: number, reason: string,
+    tenant: string,
+    store: string,
+    orderId: string,
+    amountSatang: number,
+    reason: string,
   ) {
     return this.post<{ refundId: string }>(
       this.path(tenant, store) + "/refunds",
@@ -104,39 +110,56 @@ export class MerchantFinanceApi {
   }
 
   refundDecision(
-    tenant: string, store: string, refundId: string,
+    tenant: string,
+    store: string,
+    refundId: string,
     payload:
       | { action: "void"; expectedRevision: number }
       | {
-          action: "record"; expectedRevision: number;
-          bankReference: string; actualAmountSatang: number; bankChecked: true;
+          action: "record";
+          expectedRevision: number;
+          bankReference: string;
+          actualAmountSatang: number;
+          bankChecked: true;
         },
   ) {
     return this.post<{ refundId: string; state: string }>(
-      this.path(tenant, store) + "/refunds/" +
-        encodeURIComponent(refundId) + "/decision", payload,
+      this.path(tenant, store) +
+        "/refunds/" +
+        encodeURIComponent(refundId) +
+        "/decision",
+      payload,
     );
   }
 
   openException(
-    tenant: string, store: string,
+    tenant: string,
+    store: string,
     payload: {
-      orderId: string | null; kind: string;
-      amountSatang: number | null; note: string;
+      orderId: string | null;
+      kind: string;
+      amountSatang: number | null;
+      note: string;
     },
   ) {
     return this.post<{ exceptionId: string }>(
-      this.path(tenant, store) + "/exceptions", payload,
+      this.path(tenant, store) + "/exceptions",
+      payload,
     );
   }
 
   resolveException(
-    tenant: string, store: string, exceptionId: string,
-    expectedRevision: number, resolution: string,
+    tenant: string,
+    store: string,
+    exceptionId: string,
+    expectedRevision: number,
+    resolution: string,
   ) {
     return this.post<{ exceptionId: string }>(
-      this.path(tenant, store) + "/exceptions/" +
-        encodeURIComponent(exceptionId) + "/resolve",
+      this.path(tenant, store) +
+        "/exceptions/" +
+        encodeURIComponent(exceptionId) +
+        "/resolve",
       { expectedRevision, resolution },
     );
   }

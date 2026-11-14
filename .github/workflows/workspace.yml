@@ -49,13 +49,6 @@ jobs:
       - name: Install from committed lockfile
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm install --frozen-lockfile
-      # Temporary one-pass Prettier output for G5-M1; remove after applying.
-      - name: Capture exact manual finance formatter changes
-        if: github.event_name == 'pull_request' && steps.impact.outputs.workspace == 'true'
-        run: |
-          pnpm exec prettier --write apps/api/src/payments/payment-finance.controller.ts apps/api/src/payments/payment-finance.core.ts apps/api/src/payments/payment-finance.core.spec.ts apps/api/src/payments/payment-finance.service.ts apps/merchant/src/app/merchant-finance.api.ts apps/merchant/src/app/merchant-finance.page.ts apps/merchant/src/app/payment-finance.css apps/merchant/src/app/app.spec.ts apps/merchant/src/app/home.page.ts
-          git --no-pager diff --unified=1 -- apps/api/src/payments/payment-finance.controller.ts apps/api/src/payments/payment-finance.core.ts apps/api/src/payments/payment-finance.core.spec.ts apps/api/src/payments/payment-finance.service.ts apps/merchant/src/app/merchant-finance.api.ts apps/merchant/src/app/merchant-finance.page.ts apps/merchant/src/app/payment-finance.css apps/merchant/src/app/app.spec.ts apps/merchant/src/app/home.page.ts
-          git restore -- apps/api/src/payments/payment-finance.controller.ts apps/api/src/payments/payment-finance.core.ts apps/api/src/payments/payment-finance.core.spec.ts apps/api/src/payments/payment-finance.service.ts apps/merchant/src/app/merchant-finance.api.ts apps/merchant/src/app/merchant-finance.page.ts apps/merchant/src/app/payment-finance.css apps/merchant/src/app/app.spec.ts apps/merchant/src/app/home.page.ts
       - name: Display Nx projects
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm exec nx show projects

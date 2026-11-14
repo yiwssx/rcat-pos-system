@@ -107,8 +107,13 @@ export class PaymentFinanceService {
         client.query<{ data: Record<string, unknown> }>(
           "SELECT rcat_private.request_manual_payment_refund($1,$2,$3,$4,$5,$6,$7) AS data",
           [
-            digestOpaqueSecret(session.token), tenant, store,
-            data.orderId, data.amountSatang, data.reason, this.release(),
+            digestOpaqueSecret(session.token),
+            tenant,
+            store,
+            data.orderId,
+            data.amountSatang,
+            data.reason,
+            this.release(),
           ],
         ),
       );
@@ -138,9 +143,16 @@ export class PaymentFinanceService {
         client.query<{ data: Record<string, unknown> }>(
           "SELECT rcat_private.decide_manual_payment_refund($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) AS data",
           [
-            digestOpaqueSecret(session.token), tenant, store, refundId,
-            data.expectedRevision, data.action, digest,
-            data.actualAmountSatang, data.bankChecked, this.release(),
+            digestOpaqueSecret(session.token),
+            tenant,
+            store,
+            refundId,
+            data.expectedRevision,
+            data.action,
+            digest,
+            data.actualAmountSatang,
+            data.bankChecked,
+            this.release(),
           ],
         ),
       );
@@ -165,8 +177,14 @@ export class PaymentFinanceService {
         client.query<{ data: Record<string, unknown> }>(
           "SELECT rcat_private.open_manual_payment_exception($1,$2,$3,$4,$5,$6,$7,$8) AS data",
           [
-            digestOpaqueSecret(session.token), tenant, store,
-            data.orderId, data.kind, data.amountSatang, data.note, this.release(),
+            digestOpaqueSecret(session.token),
+            tenant,
+            store,
+            data.orderId,
+            data.kind,
+            data.amountSatang,
+            data.note,
+            this.release(),
           ],
         ),
       );
@@ -195,8 +213,13 @@ export class PaymentFinanceService {
         client.query<{ data: Record<string, unknown> }>(
           "SELECT rcat_private.resolve_manual_payment_exception($1,$2,$3,$4,$5,$6,$7) AS data",
           [
-            digestOpaqueSecret(session.token), tenant, store,
-            exceptionId, data.expectedRevision, data.resolution, this.release(),
+            digestOpaqueSecret(session.token),
+            tenant,
+            store,
+            exceptionId,
+            data.expectedRevision,
+            data.resolution,
+            this.release(),
           ],
         ),
       );

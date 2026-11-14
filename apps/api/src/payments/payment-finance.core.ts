@@ -23,8 +23,12 @@ function keys(value: Record<string, unknown>, expected: string[]): void {
   }
 }
 function positiveMoney(raw: unknown): number {
-  if (typeof raw !== "number" || !Number.isSafeInteger(raw) ||
-      raw < 1 || raw > 100_000_000) {
+  if (
+    typeof raw !== "number" ||
+    !Number.isSafeInteger(raw) ||
+    raw < 1 ||
+    raw > 100_000_000
+  ) {
     throw new Error("Amount must be exact integer satang");
   }
   return raw;
@@ -32,15 +36,22 @@ function positiveMoney(raw: unknown): number {
 function note(raw: unknown): string {
   if (typeof raw !== "string") throw new Error("Invalid finance note");
   const value = raw.normalize("NFC").replace(/\s+/gu, " ").trim();
-  if (Array.from(value).length < 4 || Array.from(value).length > 240 ||
-      /[\u0000-\u001f\u007f]/u.test(value)) {
+  if (
+    Array.from(value).length < 4 ||
+    Array.from(value).length > 240 ||
+    /[\u0000-\u001f\u007f]/u.test(value)
+  ) {
     throw new Error("Finance note must be 4–240 visible characters");
   }
   return value;
 }
 function revision(raw: unknown): number {
-  if (typeof raw !== "number" || !Number.isSafeInteger(raw) ||
-      raw < 1 || raw > 2147483646) {
+  if (
+    typeof raw !== "number" ||
+    !Number.isSafeInteger(raw) ||
+    raw < 1 ||
+    raw > 2147483646
+  ) {
     throw new Error("Invalid expected revision");
   }
   return raw;
@@ -53,8 +64,7 @@ function optionalOrderId(raw: unknown): string | null {
   return raw;
 }
 function bankRef(raw: unknown): string {
-  if (typeof raw !== "string" ||
-      !/^[A-Za-z0-9._-]{6,64}$/.test(raw)) {
+  if (typeof raw !== "string" || !/^[A-Za-z0-9._-]{6,64}$/.test(raw)) {
     throw new Error("External bank transaction reference required");
   }
   return raw.toUpperCase();
@@ -68,10 +78,13 @@ export function parseFinanceDays(raw: unknown): number {
 }
 export function parseRefundRequest(raw: unknown) {
   const input = object(raw);
-  keys(input, ["orderId","amountSatang","reason"]);
+  keys(input, ["orderId", "amountSatang", "reason"]);
   return {
-    orderId: optionalOrderId(input["orderId"]) ??
-      (() => { throw new Error("Order ID required"); })(),
+    orderId:
+      optionalOrderId(input["orderId"]) ??
+      (() => {
+        throw new Error("Order ID required");
+      })(),
     amountSatang: positiveMoney(input["amountSatang"]),
     reason: note(input["reason"]),
   };
@@ -80,19 +93,25 @@ export function parseRefundDecision(raw: unknown) {
   const input = object(raw);
   const action = input["action"];
   if (action === "void") {
-    keys(input, ["action","expectedRevision"]);
+    keys(input, ["action", "expectedRevision"]);
     return {
       action: "void" as const,
       expectedRevision: revision(input["expectedRevision"]),
-      bankReference: null, actualAmountSatang: null, bankChecked: false,
+      bankReference: null,
+      actualAmountSatang: null,
+      bankChecked: false,
     };
   }
   if (action !== "record") throw new Error("Invalid refund action");
   keys(input, [
-    "action","expectedRevision","bankReference",
-    "actualAmountSatang","bankChecked",
+    "action",
+    "expectedRevision",
+    "bankReference",
+    "actualAmountSatang",
+    "bankChecked",
   ]);
-  if (input["bankChecked"] !== true) throw new Error("Bank outflow not checked");
+  if (input["bankChecked"] !== true)
+    throw new Error("Bank outflow not checked");
   return {
     action: "record" as const,
     expectedRevision: revision(input["expectedRevision"]),
@@ -103,23 +122,27 @@ export function parseRefundDecision(raw: unknown) {
 }
 export function parsePaymentException(raw: unknown) {
   const input = object(raw);
-  keys(input, ["orderId","kind","amountSatang","note"]);
+  keys(input, ["orderId", "kind", "amountSatang", "note"]);
   const kind = input["kind"];
-  if (typeof kind !== "string" ||
-      !PAYMENT_EXCEPTION_KINDS.some((x) => x === kind)) {
+  if (
+    typeof kind !== "string" ||
+    !PAYMENT_EXCEPTION_KINDS.some((x) => x === kind)
+  ) {
     throw new Error("Invalid exception category");
   }
   return {
     orderId: optionalOrderId(input["orderId"]),
     kind: kind as PaymentExceptionKind,
     amountSatang:
-      input["amountSatang"] === null ? null : positiveMoney(input["amountSatang"]),
+      input["amountSatang"] === null
+        ? null
+        : positiveMoney(input["amountSatang"]),
     note: note(input["note"]),
   };
 }
 export function parseExceptionResolution(raw: unknown) {
   const input = object(raw);
-  keys(input, ["expectedRevision","resolution"]);
+  keys(input, ["expectedRevision", "resolution"]);
   return {
     expectedRevision: revision(input["expectedRevision"]),
     resolution: note(input["resolution"]),
