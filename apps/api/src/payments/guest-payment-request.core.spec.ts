@@ -60,6 +60,8 @@ describe("G5-M1 guest payment request pure trust boundary", () => {
     { amountSatang: 100000001 },
     { amountSatang: "20005" },
   ])("rejects invalid or forged server snapshots %j", (bad) => {
-    expect(() => guestPaymentQrEnvelope(orderId, { ...approved, ...bad })).toThrow();
+    expect(() =>
+      guestPaymentQrEnvelope(orderId, { ...approved, ...bad }),
+    ).toThrow();
   });
 });
