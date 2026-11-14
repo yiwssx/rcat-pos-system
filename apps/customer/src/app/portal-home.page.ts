@@ -14,11 +14,12 @@ import { RouterLink } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 import { PortalSession } from "./portal-session.service";
 import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
+import { RcatButtonDirective } from "@rcat/ui";
 
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, RcatButtonDirective],
   template: `
     <section class="portal-home" aria-labelledby="portal-title">
       @switch (session.phase()) {
@@ -37,6 +38,7 @@ import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
             <button
               type="button"
               class="portal-button"
+              rcatBtn
               (click)="session.refresh()"
             >
               ลองเชื่อมต่ออีกครั้ง
@@ -105,7 +107,7 @@ import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
                 </form>
                 <small>ใช้บัญชีและรหัสผ่านจาก Terminal ของ Local Demo</small>
               } @else {
-                <a class="portal-button" href="/api/auth/google/start"
+                <a class="portal-button" rcatBtn href="/api/auth/google/start"
                   >เข้าสู่ระบบด้วย Google @rcat.ac.th</a
                 >
               }
