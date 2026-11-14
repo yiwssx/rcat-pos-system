@@ -52,6 +52,39 @@ export interface CartLine {
   productId: string;
   optionIds: string[];
   quantity: number;
+  note?: string;
+}
+export interface GuestOrderContext {
+  orderedBy: string;
+  deliverTo: string;
+}
+
+export function normalizeOrderField(
+  value: string,
+  maxLength: number,
+  label: string,
+  required = true,
+): string {
+  const normalized = value.normalize("NFC").replace(/\s+/gu, " ").trim();
+  if ((required && !normalized) || Array.from(normalized).length > maxLength) {
+    throw new Error(`กรุณาระบุ${label} (ไม่เกิน ${maxLength} ตัวอักษร)`);
+  }
+  if (/[\u0000-\u001f\u007f]/u.test(normalized)) {
+    throw new Error(`${label}มีอักขระไม่ถูกต้อง`);
+  }
+  return normalized;
+}
+
+export function normalizedOrderContext(
+  context: GuestOrderContext,
+): GuestOrderContext {
+  return {
+    orderedBy: normalizeOrderField(context.orderedBy, 80, "ชื่อผู้สั่ง"),
+    deliverTo: normalizeOrderField(context.deliverTo, 160, "สถานที่รับ/ส่ง"),
+  };
+}
+export function normalizedItemNote(note: string): string {
+  return normalizeOrderField(note, 240, "หมายเหตุสินค้า", false);
 }
 export interface GuestCheckout {
   orderId: string;
@@ -347,13 +380,16 @@ export function addToCart(
   current: readonly CartLine[],
   productId: string,
   optionIds: readonly string[],
+  note = "",
 ): CartLine[] {
+  const normalizedNote = normalizedItemNote(note);
   const invalid = selectedOptionError(visit, productId, optionIds);
   if (invalid) throw new Error(invalid);
   const canonical = [...optionIds].sort();
   const index = current.findIndex(
     (item) =>
       item.productId === productId &&
+      (item.note ?? "") === normalizedNote &&
       item.optionIds.length === canonical.length &&
       item.optionIds.every((id, i) => id === canonical[i]),
   );
@@ -365,7 +401,12 @@ export function addToCart(
     optionIds: [...line.optionIds],
   }));
   if (index === -1) {
-    lines.push({ productId, optionIds: canonical, quantity: 1 });
+    lines.push({
+      productId,
+      optionIds: canonical,
+      quantity: 1,
+      ...(normalizedNote ? { note: normalizedNote } : {}),
+    });
   } else {
     const item = lines[index]!;
     if (item.quantity >= 20) throw new Error("สั่งสินค้านี้ได้สูงสุด 20 ชิ้น");
