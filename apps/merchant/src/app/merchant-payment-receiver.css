@@ -1,0 +1,143 @@
+.receiver-shell {
+  width: min(760px, 100%);
+  margin-inline: auto;
+  padding: clamp(1rem, 2vw, 2rem);
+  display: grid;
+  gap: 1rem;
+}
+.receiver-back {
+  color: #aa4814;
+  font-weight: 700;
+  text-decoration: none;
+}
+.receiver-kicker {
+  color: #b3541e;
+  font-size: 0.74rem;
+  letter-spacing: 0.13em;
+  font-weight: 800;
+  margin: 0;
+}
+.receiver-shell h1 {
+  font-size: clamp(1.55rem, 2.8vw, 2.1rem);
+  margin: 0;
+}
+.receiver-shell h2 {
+  font-size: 1.08rem;
+  margin: 0 0 0.55rem;
+}
+.receiver-description,
+.receiver-hint {
+  color: #576775;
+  line-height: 1.7;
+  margin: 0;
+}
+.receiver-hint {
+  font-size: 0.85rem;
+}
+.receiver-warning {
+  background: #fff4e5;
+  border-left: 4px solid #e68c20;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  line-height: 1.7;
+  color: #62421c;
+  display: grid;
+  gap: 0.3rem;
+}
+.receiver-card {
+  background: #fff;
+  border: 1px solid #e7e4d9;
+  border-radius: 1rem;
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+.receiver-facts {
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+.receiver-facts > div {
+  display: flex;
+  gap: 0.7rem;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid #efeee8;
+  padding-block: 0.5rem;
+  flex-wrap: wrap;
+}
+.receiver-facts dt {
+  font-size: 0.88rem;
+  color: #68727a;
+}
+.receiver-facts dd {
+  margin: 0;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.receiver-disabled {
+  color: #1a7953;
+}
+.receiver-form {
+  display: grid;
+  gap: 0.65rem;
+}
+.receiver-form label {
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+.receiver-form input,
+.receiver-form select,
+.receiver-form button {
+  min-height: 46px;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.75rem;
+  border: 1px solid #cdd2d0;
+  width: 100%;
+  font: inherit;
+}
+.receiver-form button {
+  background: #db6319;
+  border-color: #db6319;
+  color: #fff;
+  font-weight: 750;
+  cursor: pointer;
+}
+.receiver-form button.receiver-secondary {
+  color: #a04718;
+  background: #fff;
+  border: 1px solid #dac4b4;
+}
+.receiver-form button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.receiver-form :focus-visible,
+.receiver-back:focus-visible {
+  outline: 3px solid #e59b3b;
+  outline-offset: 2px;
+}
+.receiver-error,
+.receiver-success {
+  border-radius: 0.7rem;
+  padding: 0.8rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.receiver-error {
+  background: #fff0ed;
+  color: #992f22;
+}
+.receiver-success {
+  background: #ecfaf3;
+  color: #216449;
+}
+@media (max-width: 520px) {
+  .receiver-shell {
+    padding-inline: 0.85rem;
+  }
+  .receiver-card {
+    padding: 0.85rem;
+  }
+}
