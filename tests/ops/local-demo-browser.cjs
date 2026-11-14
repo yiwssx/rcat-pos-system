@@ -47,6 +47,7 @@ async function main() {
     // Owner-approved V6 color contract: actual computed styles, not AI mockup pixels.
     const storefrontAsset = await context.request.get(merchant + '/v6-storefront.svg');
     assert.equal(storefrontAsset.status(), 200, 'Original V6 decorative storefront must ship with compiled portal');
+    await page.setViewportSize({ width: 1365, height: 900 });
     const palette = await page.evaluate(() => {
       const css = (selector) => getComputedStyle(document.querySelector(selector));
       return {
@@ -60,6 +61,7 @@ async function main() {
     assert.match(palette.sidebar, /linear-gradient/, 'Desktop navigation must use the vivid orange treatment');
     assert.match(palette.orderAction, /linear-gradient/, 'Order board entry must use the vivid brand CTA');
     assert.notEqual(palette.secondary, 'rgba(0, 0, 0, 0)', 'Secondary actions must have a distinct mint surface');
+    await page.setViewportSize({ width: 320, height: 780 });
     const officialLogo = page.locator('img.portal-brand-image');
     await officialLogo.waitFor();
     assert.equal(await officialLogo.evaluate(img => img.complete && img.naturalWidth === 96), true,
