@@ -66,6 +66,18 @@
 /* The bottom hint is informative but must not sit on the light wave crest.
    Tighten only its desktop spacing: keep the text on solid orange. */
 @media (min-width: 981px) {
+  /* Reserve a true decoration-safe zone below the sidebar text. This lets the
+     wave cross the orange rail without crossing the informational hint. */
+  .portal-content:has(.v6-home) .portal-sidebar {
+    padding-bottom: calc(var(--pos-decor-bottom-height) * 0.64);
+  }
+
+  /* Extend the transparent workspace with the grid row so the storefront
+     remains grounded on the wave instead of floating above it. */
+  .portal-content:has(.v6-home) .portal-home:has(.v6-home) {
+    height: 100%;
+  }
+
   .portal-content:has(.v6-home) .portal-sidebar .portal-nav-hint {
     margin-top: 0;
     padding-top: 0.25rem;
