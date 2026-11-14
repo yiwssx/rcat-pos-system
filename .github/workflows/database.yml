@@ -129,6 +129,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/product-modifiers.sql
       - name: Verify order money, idempotency, snapshots and tenant isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/guest-orders.sql
+      - name: Verify required guest identity, delivery and per-item snapshot recovery
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/guest-order-context.sql
       - name: Verify read-only operator Outbox retention preview and runtime privilege isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/outbox-retention-preview.sql
       - name: Verify merchant Order inbox, authorized transitions and audit

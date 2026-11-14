@@ -810,7 +810,11 @@ try {
   const checkout = (key, body) => api(orderPath, {
     method: "POST",
     headers: { ...json, "Idempotency-Key": key },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      ...body,
+      orderedBy: body.orderedBy ?? "ผู้ทดสอบ",
+      deliverTo: body.deliverTo ?? "อาคารทดสอบ",
+    }),
   });
   const cart = {
     visitToken: secondToken,

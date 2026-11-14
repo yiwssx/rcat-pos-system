@@ -219,7 +219,9 @@ async function submit(customer, token, productId, prefix) {
     },
     body: JSON.stringify({
       visitToken: token,
-      items: [{ productId, quantity: 1, optionIds: [] }],
+      orderedBy: "ผู้ทดสอบ SSE",
+      deliverTo: "อาคารทดสอบ",
+      items: [{ productId, quantity: 1, optionIds: [], note: "" }],
     }),
     signal: AbortSignal.timeout(25000),
   });

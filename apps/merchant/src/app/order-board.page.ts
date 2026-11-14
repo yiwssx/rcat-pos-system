@@ -205,6 +205,23 @@ function failureText(error: unknown): string {
                     {{ statusLabel[order.status] }}
                   </span>
                 </div>
+                <div
+                  class="order-delivery"
+                  aria-label="ข้อมูลผู้สั่งและสถานที่ส่ง"
+                >
+                  <div>
+                    <span>ผู้สั่ง</span>
+                    <strong>{{
+                      order.orderedBy || "ไม่ระบุ (ออเดอร์เดิม)"
+                    }}</strong>
+                  </div>
+                  <div>
+                    <span>ส่งที่</span>
+                    <strong>{{
+                      order.deliverTo || "ไม่ระบุ (ออเดอร์เดิม)"
+                    }}</strong>
+                  </div>
+                </div>
                 <ul class="order-items">
                   @for (item of order.items; track $index) {
                     <li>
@@ -222,6 +239,11 @@ function failureText(error: unknown): string {
                           @for (opt of item.options; track $index) {
                             {{ opt.name }}{{ !$last ? " · " : "" }}
                           }
+                        </p>
+                      }
+                      @if (item.note) {
+                        <p class="order-instructions">
+                          <strong>หมายเหตุ:</strong> {{ item.note }}
                         </p>
                       }
                     </li>

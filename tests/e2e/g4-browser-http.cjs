@@ -234,9 +234,17 @@ async function browserFlow(fixture) {
     // reconnect and submit through the visible Angular button.
     await guest.locator(".guest-product", { hasText: fixture.name })
       .getByRole("button", { name: "เพิ่มลงตะกร้า" }).click();
+    const itemSheet = guest.getByRole("dialog", { name: fixture.name });
+    await itemSheet.getByRole("textbox", { name: /หมายเหตุสำหรับเมนูนี้/ })
+      .fill("ไม่ใส่ผัก");
+    await itemSheet.getByRole("button", { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
     await guest.getByRole("button", { name: "ดูตะกร้า" }).click();
     const cartSheet = guest.getByRole("dialog", { name: "ตะกร้าของฉัน" });
     await cartSheet.waitFor();
+    await cartSheet.getByRole("textbox", { name: /ชื่อผู้สั่ง/ })
+      .fill("นาย ก");
+    await cartSheet.getByRole("textbox", { name: /สถานที่รับ\/ส่ง/ })
+      .fill("อาคาร ข");
     const checkout = cartSheet.getByRole("button", { name: /ยืนยันส่งคำสั่งซื้อ/ });
     await checkout.waitFor();
     await guestContext.setOffline(true);
@@ -279,6 +287,9 @@ async function browserFlow(fixture) {
     const selector = 'article[aria-label^="ออเดอร์ ' + orderIdPrefix + '"]';
     await board.locator(selector).waitFor({ timeout: 20000 });
     await second.locator(selector).waitFor({ timeout: 20000 });
+    await board.locator(selector).getByText("นาย ก", { exact: true }).waitFor();
+    await board.locator(selector).getByText("อาคาร ข", { exact: true }).waitFor();
+    await board.locator(selector).getByText("ไม่ใส่ผัก").waitFor();
     // A5: the Merchant Order acceptance control must be keyboard-focusable.
     const acceptAction = board.locator(selector).getByRole("button", { name: "รับออเดอร์" });
     await acceptAction.focus();
@@ -304,7 +315,9 @@ async function browserFlow(fixture) {
       .waitFor({ timeout: 15000 });
     const resumedOrder = await post(customer + "/api/guest/orders", {
       visitToken: fixture.token,
-      items: [{ productId: fixture.productId, quantity: 1, optionIds: [] }],
+      orderedBy: "ผู้ทดสอบการเชื่อมต่อ",
+      deliverTo: "อาคาร ข",
+      items: [{ productId: fixture.productId, quantity: 1, optionIds: [], note: "" }],
     }, { "Idempotency-Key": "resume-" + randomUUID() });
     assert.equal(resumedOrder.status, 201, await resumedOrder.clone().text());
     const { orderId: resumedOrderId, paymentState: resumedPaymentState } =
@@ -565,7 +578,9 @@ async function browserFlow(fixture) {
     await second.getByRole("button", { name: "เปิดรับออเดอร์", exact: true }).waitFor();
     const refused = await post(customer + "/api/guest/orders", {
       visitToken: tokens[0].visitToken,
-      items: [{ productId: fixture.productId, quantity: 1, optionIds: [] }],
+      orderedBy: "ผู้ทดสอบ",
+      deliverTo: "อาคาร ข",
+      items: [{ productId: fixture.productId, quantity: 1, optionIds: [], note: "" }],
     }, { "Idempotency-Key": "closed-static-qr-e2e-01" });
     assert.equal(refused.status, 409,
       "Closing a store blocks new Order submissions from valid guest grants");
@@ -799,8 +814,15 @@ async function httpLoad(fixture) {
   const batchSize = 24;
   const payload = {
     visitToken: fixture.token,
-    items: [{ productId: fixture.productId, quantity: 1, optionIds: [] }],
+    orderedBy: "ผู้ทดสอบโหลด",
+    deliverTo: "อาคารทดสอบ",
+    items: [{ productId: fixture.productId, quantity: 1, optionIds: [], note: "" }],
   };
+  const missingContext = await post(customer + "/api/guest/orders", {
+    visitToken: fixture.token,
+    items: payload.items,
+  }, { "Idempotency-Key": "missing-fields-" + randomUUID() });
+  assert.equal(missingContext.status, 400, "Direct API bypassed required fields");
   const shared = "http-duplicate-" + randomUUID();
   const repeated = await burst(
     Array.from({ length: batchSize }, () =>
@@ -808,6 +830,14 @@ async function httpLoad(fixture) {
     "24 simultaneous HTTP same-key Orders",
   );
   assert.equal(new Set(repeated.map((x) => x.data.orderId)).size, 1);
+  const changedPayload = {
+    ...payload,
+    items: [{ ...payload.items[0], note: "หวานมาก" }],
+  };
+  const changed = await post(customer + "/api/guest/orders", changedPayload, {
+    "Idempotency-Key": shared,
+  });
+  assert.equal(changed.status, 409, "Changed item note reused a committed key");
   assert.equal(repeated.filter((x) => x.data.replayed === false).length, 1);
   assert.equal(repeated.filter((x) => x.data.replayed === true).length, batchSize - 1);
   assert.ok(repeated.every((x) => x.data.amountSatang === 12500 &&

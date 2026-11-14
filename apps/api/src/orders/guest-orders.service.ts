@@ -13,11 +13,34 @@ import { GuestRequestBudgetService } from "../ordering/guest-request-budget.serv
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const KEY = /^[A-Za-z0-9_-]{16,96}$/;
 
+/** Normalize before hashing the canonical order request; never echo PII in errors. */
+function boundedText(raw: unknown, max: number, required: boolean): string {
+  if (typeof raw !== "string") {
+    throw new BadRequestException("Invalid order context");
+  }
+  const value = raw.normalize("NFC").replace(/\s+/gu, " ").trim();
+  if (
+    (required && !value) ||
+    Array.from(value).length > max ||
+    /[\u0000-\u001f\u007f]/u.test(value)
+  ) {
+    throw new BadRequestException("Invalid order context");
+  }
+  return value;
+}
+
 function parseCart(raw: unknown): {
   visitDigest: Buffer;
   visitToken: string;
   cart: {
-    items: { productId: string; quantity: number; optionIds: string[] }[];
+    orderedBy: string;
+    deliverTo: string;
+    items: {
+      productId: string;
+      quantity: number;
+      optionIds: string[];
+      note: string;
+    }[];
   };
 } {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
@@ -40,6 +63,8 @@ function parseCart(raw: unknown): {
   ) {
     throw new BadRequestException("Invalid order items");
   }
+  const orderedBy = boundedText(body["orderedBy"], 80, true);
+  const deliverTo = boundedText(body["deliverTo"], 160, true);
   let totalQuantity = 0;
   const items = body["items"].map((rawItem: unknown) => {
     if (!rawItem || typeof rawItem !== "object" || Array.isArray(rawItem)) {
@@ -73,6 +98,7 @@ function parseCart(raw: unknown): {
       productId: productId.toLowerCase(),
       quantity,
       optionIds: options.map((id) => id.toLowerCase()).sort(),
+      note: boundedText(item["note"] ?? "", 240, false),
     };
   });
   if (totalQuantity > 100) {
@@ -82,7 +108,7 @@ function parseCart(raw: unknown): {
   return {
     visitDigest: digest,
     visitToken: body["visitToken"],
-    cart: { items },
+    cart: { items, orderedBy, deliverTo },
   };
 }
 
