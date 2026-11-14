@@ -287,9 +287,11 @@ function failureText(error: unknown): string {
                 <div class="order-total">
                   <span>
                     ยอดออเดอร์ ·
-                    {{ order.paymentState === "awaiting_payment"
-                      ? "รอลูกค้าชำระ / ร้านตรวจสอบ"
-                      : "ยังไม่เปิดคำขอชำระ" }}
+                    {{
+                      order.paymentState === "awaiting_payment"
+                        ? "รอลูกค้าชำระ / ร้านตรวจสอบ"
+                        : "ยังไม่เปิดคำขอชำระ"
+                    }}
                   </span>
                   <strong class="money"
                     >{{ money(order.amountSatang) }} ฿</strong
