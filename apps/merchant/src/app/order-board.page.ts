@@ -205,14 +205,21 @@ function failureText(error: unknown): string {
                     {{ statusLabel[order.status] }}
                   </span>
                 </div>
-                <div class="order-delivery" aria-label="ข้อมูลผู้สั่งและสถานที่ส่ง">
+                <div
+                  class="order-delivery"
+                  aria-label="ข้อมูลผู้สั่งและสถานที่ส่ง"
+                >
                   <div>
                     <span>ผู้สั่ง</span>
-                    <strong>{{ order.orderedBy || "ไม่ระบุ (ออเดอร์เดิม)" }}</strong>
+                    <strong>{{
+                      order.orderedBy || "ไม่ระบุ (ออเดอร์เดิม)"
+                    }}</strong>
                   </div>
                   <div>
                     <span>ส่งที่</span>
-                    <strong>{{ order.deliverTo || "ไม่ระบุ (ออเดอร์เดิม)" }}</strong>
+                    <strong>{{
+                      order.deliverTo || "ไม่ระบุ (ออเดอร์เดิม)"
+                    }}</strong>
                   </div>
                 </div>
                 <ul class="order-items">
