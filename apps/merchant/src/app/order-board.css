@@ -1041,9 +1041,19 @@ a:focus-visible {
     font-size: 0.76rem;
   }
   .board-refresh {
-    min-height: 43px;
-    padding: 0.45rem 0.55rem;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
     font-size: 0.78rem;
+  }
+  .board-refresh span[aria-hidden="true"] {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+  .v6-refresh-label {
+    display: none;
   }
   .v6-board-connect {
     font-size: 0.73rem;
