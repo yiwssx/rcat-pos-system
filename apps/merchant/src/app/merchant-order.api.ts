@@ -32,6 +32,39 @@ export class MerchantOrderApi {
     return token;
   }
 
+  receiverSettings(
+    tenantId: string,
+    storeId: string,
+  ): Promise<PromptPayReceiverSettings> {
+    return firstValueFrom(
+      this.http.get<PromptPayReceiverSettings>(
+        scopePath(tenantId, storeId) + "/payments/receiver",
+        { withCredentials: true },
+      ),
+    );
+  }
+
+  configureReceiver(
+    tenantId: string,
+    storeId: string,
+    settings: {
+      receiverKind: "mobile" | "national_id";
+      receiverId: string;
+      expectedRevision: number;
+    },
+  ): Promise<PromptPayReceiverSettings> {
+    return firstValueFrom(
+      this.http.put<PromptPayReceiverSettings>(
+        scopePath(tenantId, storeId) + "/payments/receiver",
+        settings,
+        {
+          headers: { "X-CSRF-Token": this.csrfToken() },
+          withCredentials: true,
+        },
+      ),
+    );
+  }
+
   stores(): Promise<{ stores: MerchantStore[] }> {
     return firstValueFrom(
       this.http.get<{ stores: MerchantStore[] }>("/api/auth/merchant-stores", {
@@ -208,4 +241,13 @@ export interface PaymentSlipReview {
   revision: number;
   submittedAt: string;
   state: "submitted";
+}
+
+export interface PromptPayReceiverSettings {
+  configured: boolean;
+  enabled: boolean;
+  receiverKind?: "mobile" | "national_id";
+  maskedReceiver?: string;
+  revision: number;
+  changed?: boolean;
 }

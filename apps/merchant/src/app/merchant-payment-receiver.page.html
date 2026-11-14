@@ -1,0 +1,112 @@
+<main class="receiver-shell" aria-labelledby="receiver-title">
+  <a routerLink="/" class="receiver-back">← กลับหน้าร้าน</a>
+  <p class="receiver-kicker">MERCHANT / PROMPTPAY</p>
+  <h1 id="receiver-title">ตั้งค่าบัญชีรับเงิน</h1>
+  <p class="receiver-description">
+    บัญชี PromptPay นี้ใช้รับเงินตรงเข้าบัญชีของร้าน ไม่ใช่บัญชีของระบบ RCAT POS
+  </p>
+
+  <aside class="receiver-warning" role="note">
+    <strong>การบันทึกไม่ใช่การเปิดชำระเงิน</strong>
+    ข้อมูลบัญชีจะยังปิดรับชำระโดยค่าเริ่มต้น
+    การเปิดใช้งานต้องตรวจสอบเจ้าของบัญชีและผ่าน Release Gate ก่อน QR
+    สำหรับสั่งอาหารเป็นคนละอย่างกับ QR ชำระเงิน
+  </aside>
+
+  @if (loading()) {
+  <p role="status">กำลังตรวจสอบสิทธิ์และข้อมูลบัญชี...</p>
+  } @else if (!authorized()) {
+  <p class="receiver-error" role="alert">
+    {{ error() || "บัญชีนี้ไม่มีสิทธิ์ตั้งค่าการรับชำระเงิน" }}
+  </p>
+  } @else { @if (error()) {
+  <p class="receiver-error" role="alert">{{ error() }}</p>
+  } @if (notice()) {
+  <p class="receiver-success" role="status">{{ notice() }}</p>
+  } @if (current(); as settings) {
+  <section class="receiver-card" aria-labelledby="status-title">
+    <h2 id="status-title">สถานะบัญชีรับเงิน</h2>
+    <dl class="receiver-facts">
+      <div>
+        <dt>ข้อมูลบัญชี</dt>
+        <dd>
+          {{ settings.configured ? settings.maskedReceiver || "กำหนดแล้ว" :
+          "ยังไม่ได้กำหนด" }}
+        </dd>
+      </div>
+      <div>
+        <dt>ประเภท</dt>
+        <dd>
+          {{ settings.receiverKind === "mobile" ? "เบอร์โทรศัพท์ PromptPay" :
+          settings.receiverKind === "national_id" ? "เลขบัตรประชาชน /
+          เลขประจำตัวผู้เสียภาษี" : "ยังไม่ได้กำหนด" }}
+        </dd>
+      </div>
+      <div>
+        <dt>การเปิดรับชำระ</dt>
+        <dd [class.receiver-disabled]="!settings.enabled">
+          {{ settings.enabled ? "เปิดโดยผู้ดูแลระบบ —
+          ต้องตรวจสอบสถานะก่อนใช้งานจริง" : "ปิดอยู่ (ปลอดภัย)" }}
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="receiver-card" aria-labelledby="edit-title">
+    <h2 id="edit-title">
+      {{ settings.configured ? "เปลี่ยนบัญชี PromptPay" : "เพิ่มบัญชี PromptPay"
+      }}
+    </h2>
+    <p class="receiver-description">
+      ระบบไม่แสดงเลขเต็มของบัญชีที่บันทึกไว้ หากต้องการเปลี่ยน
+      ให้กรอกข้อมูลใหม่ทั้งหมด
+    </p>
+    <div class="receiver-form">
+      <label for="receiver-kind">ประเภทบัญชี PromptPay</label>
+      <select
+        id="receiver-kind"
+        [value]="receiverKind()"
+        [disabled]="busy()"
+        (change)="onKindChange($event)"
+      >
+        <option value="mobile">เบอร์โทรศัพท์ (10 หลัก)</option>
+        <option value="national_id">
+          เลขบัตรประชาชน / เลขประจำตัวผู้เสียภาษี (13 หลัก)
+        </option>
+      </select>
+
+      <label for="receiver-id">ข้อมูล PromptPay ใหม่</label>
+      <input
+        id="receiver-id"
+        type="password"
+        inputmode="numeric"
+        autocomplete="new-password"
+        [attr.maxlength]="receiverKind() === 'mobile' ? 10 : 13"
+        [value]="receiverId()"
+        [disabled]="busy()"
+        (input)="onIdInput($event)"
+        placeholder="กรอกเฉพาะตัวเลข"
+        aria-describedby="receiver-hint"
+      />
+      <p id="receiver-hint" class="receiver-hint">
+        {{ receiverKind() === "mobile" ? "ใช้เบอร์โทรศัพท์ที่ผูก PromptPay
+        ของร้านไว้แล้ว" : "ใช้เลข 13 หลักที่ผูก PromptPay ของร้านไว้แล้ว" }}
+        ไม่มีการรับรหัสผ่านธนาคารหรือ OTP ในหน้านี้
+      </p>
+
+      <button type="button" [disabled]="busy() || !valid()" (click)="save()">
+        {{ busy() ? "กำลังบันทึก..." : "บันทึกข้อมูลบัญชี (ยังไม่เปิดรับเงิน)"
+        }}
+      </button>
+      <button
+        type="button"
+        class="receiver-secondary"
+        [disabled]="busy() || loading()"
+        (click)="reload()"
+      >
+        โหลดข้อมูลล่าสุด
+      </button>
+    </div>
+  </section>
+  } }
+</main>
