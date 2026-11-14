@@ -125,10 +125,7 @@ export class GuestOrderApi {
     );
   }
 
-  paymentRequest(
-    orderId: string,
-    token: string,
-  ): Promise<GuestPaymentRequest> {
+  paymentRequest(orderId: string, token: string): Promise<GuestPaymentRequest> {
     return firstValueFrom(
       this.http.post<GuestPaymentRequest>(
         "/api/guest/orders/" + encodeURIComponent(orderId) + "/payment-request",
