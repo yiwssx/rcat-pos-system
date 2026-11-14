@@ -11,6 +11,8 @@ import {
   filterGuestMenu,
   GUEST_MENU_BATCH_SIZE,
   mergeCartReview,
+  normalizedItemNote,
+  normalizedOrderContext,
   GuestVisit,
   sanitizedVisitToken,
   selectedOptionError,
@@ -190,6 +192,48 @@ describe("customer route security and QR ordering", () => {
     expect(second).toEqual(["o1", "o2"]);
     const removed = changeModifierSelection(VISIT, "p1", "g1", second, "o1");
     expect(removed).toEqual(["o2"]);
+  });
+
+  it("isolates the same menu and modifiers by normalized per-item instructions", () => {
+    const first = addToCart(VISIT, [], "p1", ["o1"], "  ไม่ใส่ผัก  ");
+    const different = addToCart(VISIT, first, "p1", ["o1"], "แยกผัก");
+    const same = addToCart(VISIT, different, "p1", ["o1"], "ไม่ใส่ผัก");
+    expect(same).toHaveLength(2);
+    expect(same.map((line) => line.quantity)).toEqual([2, 1]);
+    expect(same.map((line) => line.note)).toEqual(["ไม่ใส่ผัก", "แยกผัก"]);
+    expect(estimateSatang(VISIT, same)).toBe(34500);
+    expect(normalizedItemNote("  ไม่   ใส่   พริก  ")).toBe(
+      "ไม่ ใส่ พริก",
+    );
+    expect(() => normalizedItemNote("ก".repeat(241))).toThrow();
+    expect(() => addToCart(VISIT, [], "p1", ["o1"], "x".repeat(241))).toThrow();
+  });
+
+  it("requires a bounded Thai checkout identity and delivery point", () => {
+    expect(
+      normalizedOrderContext({
+        orderedBy: "  นาย ก  ",
+        deliverTo: "  อาคาร ข   ชั้น 2  ",
+      }),
+    ).toEqual({ orderedBy: "นาย ก", deliverTo: "อาคาร ข ชั้น 2" });
+    expect(() =>
+      normalizedOrderContext({ orderedBy: "  ", deliverTo: "อาคาร ข" }),
+    ).toThrow();
+    expect(() =>
+      normalizedOrderContext({ orderedBy: "คุณ ก", deliverTo: " " }),
+    ).toThrow();
+    expect(() =>
+      normalizedOrderContext({
+        orderedBy: "ก".repeat(81),
+        deliverTo: "อาคาร ข",
+      }),
+    ).toThrow();
+    expect(() =>
+      normalizedOrderContext({
+        orderedBy: "ก",
+        deliverTo: "ข".repeat(161),
+      }),
+    ).toThrow();
   });
 
   it("normalizes options, coalesces identical cart lines and handles signed satang", () => {
