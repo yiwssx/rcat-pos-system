@@ -45,8 +45,17 @@ async function main() {
     assert.ok(fontReport.actual.includes('RCAT Plex Thai') && fontReport.loadedRegular && fontReport.loadedBold,
       'Thai/Latin interface must use genuinely loaded 400/700 IBM Plex Sans Thai');
     // Owner-approved V6 color contract: actual computed styles, not AI mockup pixels.
-    const storefrontAsset = await context.request.get(merchant + '/v6-storefront.svg');
-    assert.equal(storefrontAsset.status(), 200, 'Original V6 decorative storefront must ship with compiled portal');
+    for (const name of [
+      'v6-storefront.svg',
+      'v6-ribbon-top.svg',
+      'v6-bottom-waves.svg',
+      'v6-cta-flourish.svg',
+    ]) {
+      const asset = await context.request.get(merchant + '/' + name);
+      assert.equal(asset.status(), 200, 'Decorative Design System asset must ship: ' + name);
+      const svg = await asset.text();
+      assert.match(svg, /<svg\b/, 'Decorative file must be SVG, not a missing-page HTML fallback: ' + name);
+    }
     await page.setViewportSize({ width: 1365, height: 900 });
     const palette = await page.evaluate(() => {
       const css = (selector) => getComputedStyle(document.querySelector(selector));
@@ -61,6 +70,29 @@ async function main() {
     assert.match(palette.sidebar, /linear-gradient/, 'Desktop navigation must use the vivid orange treatment');
     assert.match(palette.orderAction, /linear-gradient/, 'Order board entry must use the vivid brand CTA');
     assert.match(palette.secondary, /linear-gradient/, 'Secondary actions must have a distinct mint gradient');
+    const ornament = await page.evaluate(() => {
+      const shell = document.querySelector('.portal-content');
+      const top = getComputedStyle(shell, '::before');
+      const bottom = getComputedStyle(shell, '::after');
+      const cta = getComputedStyle(document.querySelector('.v6-main-action'), '::after');
+      return {
+        top: top.backgroundImage,
+        bottom: bottom.backgroundImage,
+        bottomWidth: parseFloat(bottom.width),
+        pointerEvents: bottom.pointerEvents,
+        cta: cta.backgroundImage,
+        main: getComputedStyle(document.querySelector('.portal-home')).backgroundColor,
+        hintClearance: shell.getBoundingClientRect().bottom
+          - document.querySelector('.portal-nav-hint').getBoundingClientRect().bottom,
+      };
+    });
+    assert.match(ornament.top, /v6-ribbon-top\.svg/, 'Top gold ribbon must be mounted on the full application shell');
+    assert.match(ornament.bottom, /v6-bottom-waves\.svg/, 'Wave must be rendered at shell level across sidebar and workspace');
+    assert.ok(ornament.bottomWidth >= 1364, 'Shared bottom wave must span the full 1365px desktop shell');
+    assert.equal(ornament.pointerEvents, 'none', 'Decorative overlays must never intercept POS clicks');
+    assert.match(ornament.cta, /v6-cta-flourish\.svg/, 'Order CTA must use the shared basket flourish');
+    assert.equal(ornament.main, 'rgba(0, 0, 0, 0)', 'Workspace must be transparent so shell ornaments remain visible');
+    assert.ok(ornament.hintClearance > 54, 'Sidebar hint must remain readable above the golden wave crest');
     await page.setViewportSize({ width: 320, height: 780 });
     const officialLogo = page.locator('img.portal-brand-image');
     await officialLogo.waitFor();
@@ -80,6 +112,16 @@ async function main() {
         content: document.documentElement.scrollWidth,
       }));
       assert.ok(size.content <= size.width + 1, 'Portal overflows at ' + viewport.width + 'px');
+      const decor = await page.evaluate(() => {
+        const wave = getComputedStyle(document.querySelector('.portal-content'), '::after');
+        const ribbon = getComputedStyle(document.querySelector('.portal-content'), '::before');
+        return { waveHeight: parseFloat(wave.height), waveURL: wave.backgroundImage, ribbonDisplay: ribbon.display };
+      });
+      assert.match(decor.waveURL, /v6-bottom-waves\.svg/, 'Branded wave must remain present at ' + viewport.width + 'px');
+      assert.ok(decor.waveHeight <= (viewport.width <= 540 ? 73 : viewport.width <= 980 ? 113 : 179),
+        'Wave must scale to avoid taking operational screen space at ' + viewport.width + 'px');
+      if (viewport.width <= 980)
+        assert.equal(decor.ribbonDisplay, 'none', 'Top ribbon must not compete with phone/tablet navigation');
       await page.screenshot({ path: '/tmp/rcat-portal-' + viewport.name + '.png', fullPage: true });
       // Portrait tablet and phones use one collapsible nav, not a 252px sidebar.
       if (viewport.width <= 980) {
@@ -109,6 +151,9 @@ async function main() {
     const adminPage = await context.newPage();
     await adminPage.goto(admin + '/settings');
     await adminPage.getByRole('heading', { name: 'ร้านทดลอง RCAT', exact: true }).waitFor();
+    const noDecoration = await adminPage.evaluate(() =>
+      getComputedStyle(document.querySelector('.portal-content'), '::after').content);
+    assert.equal(noDecoration, 'none', 'Do not apply homepage ornaments to actual Admin tasks');
     await adminPage.locator('.owner-stores').getByRole('link', { name: 'จัดการบุคลากรและคำเชิญ' }).waitFor();
     const createDisclosure = adminPage.locator('details.v6-owner-disclosure').first();
     assert.equal(await createDisclosure.evaluate(el => el.open), false,

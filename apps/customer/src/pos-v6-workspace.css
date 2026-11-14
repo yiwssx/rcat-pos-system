@@ -606,29 +606,8 @@
   min-height: min(910px, calc(100dvh - 118px));
   padding-bottom: clamp(6rem, 14vw, 10rem);
 }
-.portal-home:has(.v6-home)::before {
-  content: "";
-  position: absolute;
-  inset: auto -5% 0 -6%;
-  height: clamp(76px, 12vw, 135px);
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 64% 100% at 20% 115%, #ffce53 62%, transparent 63%),
-    radial-gradient(ellipse 66% 100% at 75% 112%, #ff9c25 59%, transparent 60%),
-    linear-gradient(0deg, #ff8a0a 0%, #ffc449 58%, transparent 59%);
-}
-.portal-home:has(.v6-home)::after {
-  content: "";
-  position: absolute;
-  right: max(0px, calc((100% - 1330px) / 2));
-  bottom: 3px;
-  z-index: 0;
-  width: clamp(170px, 29vw, 350px);
-  height: clamp(85px, 14vw, 170px);
-  pointer-events: none;
-  background: url("/v6-storefront.svg") no-repeat right bottom / contain;
-}
+/* Desktop/header ribbons and the continuous wave now belong to the
+   shared shell-level V6 Brand Decoration System, not this page stylesheet. */
 .portal-home:has(.v6-home) > .v6-home {
   position: relative;
   z-index: 1;
@@ -684,22 +663,7 @@
   border-radius: 14px;
   box-shadow: 0 9px 19px rgb(195 69 7 / 17%);
 }
-.v6-main-action::after {
-  content: "";
-  position: absolute;
-  right: 5%;
-  top: -85%;
-  width: 60%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  pointer-events: none;
-  background: radial-gradient(
-    circle,
-    rgb(255 201 73 / 25%) 0 48%,
-    transparent 49%
-  );
-  transform: skewX(-20deg);
-}
+/* CTA flourish is now an SVG-based component decoration. */
 .v6-main-action:hover {
   background: linear-gradient(105deg, #a82f03, #c74404 55%, #e96803);
   border-color: #a82f03;
@@ -803,13 +767,6 @@
 @media (max-width: 540px) {
   .portal-home:has(.v6-home) {
     padding-bottom: 4.75rem;
-  }
-  .portal-home:has(.v6-home)::before {
-    height: 62px;
-  }
-  .portal-home:has(.v6-home)::after {
-    width: 155px;
-    height: 92px;
   }
   .portal-stores .v6-store-card {
     border-radius: 14px;

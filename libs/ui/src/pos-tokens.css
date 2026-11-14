@@ -10,6 +10,11 @@
   --pos-orange: #c94108;
   --pos-orange-bright: #ff7900;
   --pos-gold: #ffc23b;
+  /* V6 official decorative asset contract: use only on overview/welcome. */
+  --pos-decoration-ribbon: url("/v6-ribbon-top.svg");
+  --pos-decoration-wave: url("/v6-bottom-waves.svg");
+  --pos-decoration-cta: url("/v6-cta-flourish.svg");
+  --pos-decoration-store: url("/v6-storefront.svg");
   --pos-mint: #e4faf3;
   --pos-teal: #087c72;
   --pos-orange-gradient: linear-gradient(110deg, #c94108 0%, #e65b09 58%, #ff8200 100%);

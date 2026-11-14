@@ -18,7 +18,8 @@
             "tsConfig": "apps/customer/tsconfig.app.json",
             "styles": [
               "apps/customer/src/styles.css",
-              "apps/customer/src/pos-v6-workspace.css"
+              "apps/customer/src/pos-v6-workspace.css",
+              "apps/customer/src/pos-v6-decoration.css"
             ],
             "assets": [
               {
