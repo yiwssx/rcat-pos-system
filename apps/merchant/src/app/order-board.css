@@ -1112,3 +1112,181 @@ a:focus-visible {
     font-size: 0.82rem;
   }
 }
+
+/* Owner-approved V6 color treatment: clear kitchen state, vivid orange actions. */
+.board {
+  color: #1e303a;
+  background:
+    radial-gradient(ellipse at 90% 3%, rgb(255 220 150 / 18%), transparent 40%),
+    linear-gradient(180deg, #fff9f0 0%, #fffefa 68%);
+}
+.board-head.v6-board-head {
+  border-bottom-color: #f0dec6;
+}
+.v6-board-kicker {
+  color: #b73e08;
+}
+.board-head h1 {
+  color: #192c35;
+}
+.v6-board-store,
+.board-back {
+  color: #536979;
+}
+.board-refresh {
+  background: #fff;
+  color: #ac3c07;
+  border-color: #efc89d;
+  box-shadow: 0 4px 14px rgb(192 69 7 / 7%);
+}
+.board-refresh:hover:not(:disabled) {
+  border-color: #ce5d19;
+  background: #fff1df;
+}
+.board-connection.v6-board-connect {
+  background: #e7faf3;
+  border-color: #b9e7d8;
+  color: #075f55;
+  border-radius: 10px;
+}
+.board-connection.v6-board-connect .connection-indicator:not(.is-offline) {
+  background: #0ba487;
+  box-shadow: 0 0 0 4px #cef4e7;
+}
+.board-notice.v6-board-notice {
+  background: #fff3df;
+  color: #77440e;
+  border-left: 3px solid #ef9708;
+}
+.board-metrics.v6-board-metrics {
+  gap: 0.75rem;
+}
+.v6-order-metric {
+  border: 1px solid #f1d7bc;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 8px 19px rgb(179 69 8 / 6%);
+}
+.v6-order-metric:nth-child(1) {
+  background: linear-gradient(155deg, #fff, #fff3e4);
+}
+.v6-order-metric:nth-child(2) {
+  background: linear-gradient(155deg, #fff, #fff5d9);
+}
+.v6-order-metric:nth-child(3) {
+  background: linear-gradient(155deg, #fff, #e7faf3);
+  border-color: #bbebdf;
+}
+.v6-order-metric strong {
+  color: #be3f08;
+}
+.v6-order-metric:nth-child(3) strong {
+  color: #076d62;
+}
+.v6-order-metric.v6-selected {
+  border-color: #bd440d;
+  background: #fff0d6;
+  box-shadow:
+    inset 3px 0 0 #d5550b,
+    0 8px 18px rgb(195 81 9 / 9%);
+}
+.v6-order-metric:nth-child(3).v6-selected {
+  border-color: #087c72;
+  background: #def8ee;
+  box-shadow: inset 3px 0 0 #087c72;
+}
+.v6-order-metric:focus-visible,
+.board-refresh:focus-visible,
+.order-actions button:focus-visible {
+  outline: 3px solid #087c72;
+  outline-offset: 3px;
+}
+.board-controls select {
+  background: #fff;
+  color: #233946;
+  border-color: #edccaa;
+  border-radius: 10px;
+}
+.order-card {
+  background: #fff;
+  border-color: #f0d8c3;
+  border-top-color: #e5c6a5;
+  border-radius: 14px;
+  box-shadow: 0 12px 27px rgb(172 65 8 / 8%);
+}
+.order-card.is-submitted {
+  background: #fffdf7;
+  border-top-color: #e76f07;
+}
+.order-number {
+  color: #172b36;
+}
+.order-delivery > div {
+  background: #e9fbf5;
+  border: 1px solid #c9ebdd;
+  border-radius: 9px;
+}
+.order-delivery span {
+  color: #436d65;
+}
+.order-delivery strong {
+  color: #174c46;
+}
+.order-items,
+.order-items li {
+  border-color: #f0e3d6;
+}
+.order-instructions {
+  background: #fff0dc;
+  border-left-color: #f09011;
+  color: #9f3f09;
+}
+.order-total {
+  border-color: #f0e3d4;
+}
+.order-total > strong {
+  color: #ba3c06;
+}
+.order-actions button:not(.danger):not(.subtle),
+.order-card.is-submitted .order-actions button:not(.danger):not(.subtle) {
+  background: linear-gradient(115deg, #bd3f08, #de5707);
+  border-color: #bd3f08;
+  color: #fff;
+}
+.order-actions button:not(.danger):not(.subtle):hover:not(:disabled) {
+  background: #a83305;
+}
+.order-actions button.subtle {
+  background: #e6faf3;
+  color: #096258;
+  border-color: #b9e6d8;
+}
+.order-actions button.subtle:hover:not(:disabled) {
+  background: #cef1e5;
+}
+.board-events.v6-board-events {
+  border-color: #f1d9c0;
+  background: #fff;
+  box-shadow: 0 4px 13px rgb(188 77 15 / 5%);
+}
+.v6-board-events > summary {
+  color: #263a45;
+}
+.v6-board-events > summary::after {
+  color: #bb410a;
+}
+@media (max-width: 580px) {
+  .board {
+    background: #fffaf3;
+  }
+  .board-metrics.v6-board-metrics {
+    gap: 0.44rem;
+  }
+  .v6-order-metric {
+    border-radius: 10px;
+    box-shadow: none;
+  }
+  .order-card {
+    box-shadow: 0 7px 18px rgb(172 65 8 / 7%);
+  }
+}

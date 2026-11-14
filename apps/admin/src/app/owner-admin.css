@@ -571,3 +571,107 @@
     margin-bottom: 0.85rem;
   }
 }
+
+/* V6 vibrant admin: an energetic, legible RCAT brand without expanding forms. */
+.owner-shell {
+  color: #20313b;
+  background:
+    radial-gradient(ellipse at 92% 0%, rgb(255 218 132 / 18%), transparent 38%),
+    linear-gradient(180deg, #fffaf0, #fffefa);
+}
+.owner-intro {
+  border-bottom-color: #f1dfc7;
+}
+.owner-intro .eyebrow {
+  color: #bb4108;
+}
+.owner-shell h1,
+.owner-headline h2 {
+  color: #1d2c37;
+}
+.owner-intro .owner-muted,
+.owner-muted {
+  color: #536677;
+}
+.owner-panel {
+  background: #fff;
+  border: 1px solid #f0d9c1;
+  border-radius: 15px;
+  box-shadow: 0 10px 28px rgb(179 70 12 / 7%);
+}
+.owner-stores article {
+  background:
+    radial-gradient(ellipse at 93% 6%, rgb(255 220 149 / 23%), transparent 55%),
+    linear-gradient(145deg, #fff, #fff8ed);
+  border-color: #f2d4b2;
+  border-radius: 12px;
+}
+.owner-stores article a {
+  color: #af3e08;
+}
+.owner-alert {
+  background: #fff2da;
+  border-color: #f1cd9a;
+  border-left-color: #e88910;
+  color: #734312;
+}
+.v6-owner-disclosure {
+  border-color: #f0d5b8;
+}
+.v6-owner-disclosure > summary {
+  background:
+    radial-gradient(
+      ellipse at 100% 0%,
+      rgb(255 215 130 / 19%),
+      transparent 43%
+    ),
+    #fff;
+}
+.v6-owner-disclosure > summary strong {
+  color: #22323b;
+}
+.v6-owner-disclosure > summary span {
+  color: #566979;
+}
+.v6-owner-disclosure > summary::after {
+  color: #bb4409;
+}
+.v6-owner-disclosure[open] > summary {
+  background: #fff7e9;
+  border-color: #efdbbf;
+}
+.v6-owner-form-body {
+  background: #fffdfa;
+}
+.v6-owner-form-body .owner-form input {
+  background: #fff;
+  border-color: #eacdad;
+}
+.v6-owner-form-body .owner-form button,
+.owner-login,
+.owner-form button {
+  background: linear-gradient(115deg, #bf4207, #df5a09);
+  border-color: #bc4007;
+  color: #fff;
+  border-radius: 10px;
+}
+.v6-owner-form-body .owner-form button:hover:not(:disabled),
+.owner-login:hover:not(:disabled) {
+  background: #a83405;
+}
+.owner-logout,
+.owner-headline button,
+.owner-staff-controls button {
+  background: #e9faf4;
+  border-color: #aaddcc;
+  color: #075e54;
+  border-radius: 10px;
+}
+.v6-owner-disclosure > summary:focus-visible,
+.owner-shell a:focus-visible,
+.owner-shell button:focus-visible,
+.owner-shell input:focus-visible,
+.owner-shell select:focus-visible {
+  outline: 3px solid #087c72;
+  outline-offset: 3px;
+}

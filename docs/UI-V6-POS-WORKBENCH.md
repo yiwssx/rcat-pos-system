@@ -26,3 +26,12 @@ Wongnai POS / FoodStory supplied structural inspiration: compact operator-first 
 
 ## Cleanup policy
 Do not delete Git history, old Order APIs or old functional styles relied on by unmigrated routes. Retired V1–V5 design notes are read-only historical reference. Strip deprecated CSS only when its selectors are verified unused; never remove accessibility or error/empty/recovery behavior for visual reasons.
+
+## V6 Vivid RCAT palette — Owner-approved visual direction, 14 Nov 2026
+- **Visual reference:** The colorful desktop RCAT POS concept image approved by the Owner in this conversation. It is an **AI design concept, not a real Chromium screenshot**. Maintain the **actual PR #106 operator-first layout and business behavior**; do not copy inaccurate generated Thai text, fictitious menu items, payment labels or decorative nonfunctional buttons from the mock.
+- **Design tokens:** accessible dark orange `#C94108` for white-text CTA; vivid `#FF7900` and gold `#FFC23B` only for decorative gradients/highlights; warm-white canvas `#FFFAF3`; mint `#E4FAF3` with teal text `#087C72` for secondary actions and connection status. Dark neutral `#1F2933` is retained for Thai text.
+- **Contrast policy:** white ordinary text uses dark orange for sufficient contrast; the brighter amber/orange gradient area cannot carry small white text. Gold is accent only, not a paid/success state. Never use a green chip to claim payment completion. Keep deliberate offline/error colors and keyboard focus rings.
+- **What changed:** shared Spartan/RCAT tokens; vivid orange sidebar (desktop) switching to white compact menu (mobile); radiant restaurant entry CTA; mint secondary operations; warmer catalog/QR/inventory/stocktake/report surfaces; vivid but functional Guest category/add/cart; warm Admin task disclosures. The new small original `v6-storefront.svg` is a local decorative asset independent from the uploaded official RCAT POS logo.
+- **Font:** unchanged self-hosted IBM Plex Sans Thai, pre-existing license and source pin; no new font/CDN request.
+- **Evidence:** Existing Local Demo Chromium CI now asserts actual computed sidebar/CTA/category colors and verifies the artwork URL plus QR ordering and merchant operations. Owner Visual UAT must compare the **generated concept** with the **real browser screenshots** before considering appearance approved. No Production deploy implied.
+- **Scope:** CSS/brand illustration and the minimum existing visual assertions only; no business-logic/Auth/Order/Payment/Infrastructure changes and no new Issue.

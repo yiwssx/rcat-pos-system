@@ -2251,3 +2251,171 @@
     bottom: 1rem;
   }
 }
+
+/* V6 vibrant food catalog: color refresh only; order/modifier logic unchanged. */
+.guest-shell.v6-guest-shop {
+  color: #21313b;
+  background:
+    radial-gradient(ellipse at 90% 4%, rgb(255 208 95 / 17%), transparent 38%),
+    linear-gradient(180deg, #fff9ee 0%, #fffdf9 62%, #fff8ec 100%);
+}
+.v6-guest-shop .guest-header {
+  border-color: #f1d6b6;
+  background:
+    radial-gradient(ellipse at 95% 0%, rgb(255 206 85 / 21%), transparent 45%),
+    #fff;
+  border-radius: 15px;
+  box-shadow: 0 8px 26px rgb(184 78 12 / 7%);
+}
+.v6-guest-shop .guest-brand-image {
+  border: 1px solid #ffdaac;
+}
+.v6-guest-shop .guest-header h1,
+.v6-guest-shop .guest-menu-intro-title {
+  color: #1f2f39;
+}
+.v6-guest-shop .guest-menu-kicker {
+  color: #b94108;
+}
+.v6-guest-shop .guest-track-link {
+  color: #075c54;
+  background: #e8fbf5;
+  border-color: #a9e2d2;
+  border-radius: 11px;
+}
+.v6-guest-shop .guest-track-link:hover {
+  background: #cff4e8;
+}
+.v6-guest-shop .v6-guest-intro {
+  padding: 0.25rem 0;
+}
+.v6-guest-shop .guest-menu-intro-title {
+  text-wrap: balance;
+}
+.v6-guest-shop .guest-table-chip {
+  color: #963e08;
+  background: linear-gradient(100deg, #fff6df, #ffe2a2);
+  border-color: #fbd18a;
+  border-radius: 9px;
+}
+.v6-guest-filters {
+  background: #fff;
+  border-color: #f3dcc0;
+  border-radius: 15px;
+  box-shadow: 0 9px 26px rgb(180 77 10 / 5%);
+}
+.v6-guest-filters .guest-search input {
+  background: #fffefa;
+  border-color: #e9d1b4;
+  border-radius: 10px;
+  color: #243640;
+}
+.v6-guest-filters .guest-search input:focus-visible,
+.v6-guest-filters .guest-category-chip:focus-visible,
+.v6-guest-product .guest-add:focus-visible {
+  outline: 3px solid #087c72;
+  outline-offset: 2px;
+}
+.v6-guest-filters .guest-category-chip {
+  background: #fff7e9;
+  border-color: #f1dec5;
+  color: #65482e;
+  border-radius: 10px;
+}
+.v6-guest-filters .guest-category-chip:hover {
+  border-color: #edb981;
+  background: #fff0d5;
+}
+.v6-guest-filters .guest-category-chip.is-active {
+  background: linear-gradient(115deg, #bd3f07, #d95108);
+  border-color: #bc3e08;
+  color: #fff;
+  box-shadow: 0 4px 12px rgb(199 72 8 / 14%);
+}
+.v6-guest-products .v6-guest-product {
+  background: #fff;
+  border: 1px solid #f0dcca;
+  border-radius: 13px;
+  box-shadow: 0 9px 25px rgb(178 68 7 / 7%);
+}
+.v6-guest-products .v6-guest-product:hover {
+  border-color: #ebad76;
+  box-shadow: 0 13px 29px rgb(178 68 7 / 11%);
+}
+.v6-guest-product .guest-product-media {
+  background: linear-gradient(150deg, #fff1d9, #ffe4b6);
+  border-radius: 9px;
+}
+.v6-guest-product .guest-product-placeholder {
+  background: linear-gradient(150deg, #fff2dc, #ffe2ae);
+  color: #b3480a;
+}
+.v6-guest-product .guest-product-category {
+  color: #a86426;
+}
+.v6-guest-product h2 {
+  color: #20313b;
+}
+.v6-guest-product .guest-price {
+  color: #bd3f07;
+  font-weight: 700;
+}
+.v6-guest-product .guest-add {
+  background: linear-gradient(135deg, #c54006, #ee6e07);
+  border-color: #c54006;
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 5px 12px rgb(194 67 9 / 18%);
+}
+.v6-guest-product .guest-add:hover:not(:disabled) {
+  background: #aa3505;
+}
+.v6-guest-shop .guest-cart-shortcut {
+  background: linear-gradient(110deg, #bc3904, #e96008);
+  border-color: #bd3c08;
+  box-shadow: 0 13px 32px rgb(191 65 8 / 23%);
+}
+.guest-sheet {
+  background: #fffefa;
+  border-color: #f2d9b9;
+}
+.guest-sheet .guest-sheet-primary {
+  background: linear-gradient(110deg, #bd3f07, #dc5408);
+  border-color: #bd3f07;
+  color: #fff;
+  border-radius: 11px;
+}
+.guest-sheet .guest-sheet-primary:hover:not(:disabled) {
+  background: #a93505;
+}
+.guest-sheet .guest-order-context,
+.guest-item-note {
+  border-color: #f0dbbf;
+}
+.guest-sheet .guest-order-context {
+  background: #fff8e9;
+}
+.guest-item-note textarea,
+.guest-order-context input {
+  background: #fffdfa;
+  border-color: #ead2b5;
+}
+.guest-cart-note {
+  color: #9c3e08;
+}
+.v6-guest-shop .guest-payment-alert {
+  background: #fff5e4;
+  border-color: #f4d7aa;
+  border-left: 3px solid #ed8c10;
+  color: #764716;
+}
+@media (max-width: 760px) {
+  .v6-guest-product .guest-product-media {
+    border-radius: 10px 10px 0 0;
+  }
+}
+@media (max-width: 350px) {
+  .v6-guest-product .guest-product-media {
+    border-radius: 9px;
+  }
+}
