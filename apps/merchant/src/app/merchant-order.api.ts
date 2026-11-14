@@ -134,6 +134,54 @@ export class MerchantOrderApi {
     );
   }
 
+  paymentReviewQueue(
+    tenantId: string,
+    storeId: string,
+  ): Promise<{ items: PaymentSlipReview[] }> {
+    return firstValueFrom(
+      this.http.get<{ items: PaymentSlipReview[] }>(
+        scopePath(tenantId, storeId) + "/payments/slips",
+        { withCredentials: true },
+      ),
+    );
+  }
+
+  paymentSlipImage(tenantId: string, storeId: string, slipId: string): string {
+    return (
+      scopePath(tenantId, storeId) +
+      "/payments/slips/" +
+      encodeURIComponent(slipId) +
+      "/image"
+    );
+  }
+
+  paymentDecision(
+    tenantId: string,
+    storeId: string,
+    slipId: string,
+    payload: {
+      action: "confirm" | "reject";
+      expectedRevision: number;
+      bankReference?: string;
+      actualAmountSatang?: number;
+      bankChecked?: boolean;
+    },
+  ): Promise<{ slipId: string; paymentState: string }> {
+    return firstValueFrom(
+      this.http.post<{ slipId: string; paymentState: string }>(
+        scopePath(tenantId, storeId) +
+          "/payments/slips/" +
+          encodeURIComponent(slipId) +
+          "/decision",
+        payload,
+        {
+          headers: { "X-CSRF-Token": this.csrfToken() },
+          withCredentials: true,
+        },
+      ),
+    );
+  }
+
   history(
     tenantId: string,
     storeId: string,
@@ -149,4 +197,15 @@ export class MerchantOrderApi {
       ),
     );
   }
+}
+
+export interface PaymentSlipReview {
+  slipId: string;
+  orderId: string;
+  displayNumber: string;
+  amountSatang: number;
+  currency: "THB";
+  revision: number;
+  submittedAt: string;
+  state: "submitted";
 }

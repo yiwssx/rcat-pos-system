@@ -28,6 +28,8 @@ async function bootstrap(): Promise<void> {
   // Raw WebP parser has a separate 192 KiB cap; standard JSON limits remain
   // unchanged. No base64 uploads or multipart paths reach this route.
   app.useBodyParser("raw", { type: "image/webp", limit: "192kb" });
+  // Payment receipts: PNG-only, 512 KiB parser cap, validated before storage.
+  app.useBodyParser("raw", { type: "image/png", limit: "512kb" });
 
   app.setGlobalPrefix("api");
   app.enableShutdownHooks();

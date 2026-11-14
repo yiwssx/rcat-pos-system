@@ -11,8 +11,10 @@ import {
 import { RouterLink } from "@angular/router";
 import {
   formatSatang,
+  formatOrderNumber,
   GuestOrderHistory,
   GuestOrderStatus,
+  GuestPayable,
   ORDER_STATUS_LABEL,
 } from "./guest-order.domain";
 import { GuestOrderApi, GuestOrderSession } from "./guest-order.api";
@@ -35,10 +37,6 @@ const TRACK_INTERVAL_MS = 15_000;
       <p class="guest-context">
         แสดงสถานะจากร้านค้าโดยตรง · การส่งออเดอร์สำเร็จไม่ใช่การชำระเงินสำเร็จ
       </p>
-      <div class="guest-payment-alert" role="note">
-        ยังไม่เปิดรับการชำระเงินในระบบนี้ (Payment: not_requested)
-      </div>
-
       @if (!online()) {
         <p class="guest-warning" role="status">
           ออฟไลน์ · สถานะออเดอร์ล่าสุดอาจเปลี่ยนแล้ว
@@ -54,7 +52,7 @@ const TRACK_INTERVAL_MS = 15_000;
       } @else {
         <div class="guest-track-card">
           <p class="guest-track-id">
-            หมายเลขออเดอร์ #{{ session.tracking()!.orderId.slice(0, 8) }}
+            หมายเลขออเดอร์ {{ number(status()?.displayNumber) }}
           </p>
           @if (status()) {
             <span
@@ -75,6 +73,94 @@ const TRACK_INTERVAL_MS = 15_000;
           }
           @if (error()) {
             <div class="guest-error" role="alert">{{ error() }}</div>
+          }
+          @if (status()?.status === "cancelled") {
+            <p class="guest-payment-alert" role="note">
+              ออเดอร์ถูกยกเลิกแล้ว · ไม่สามารถสร้าง QR ชำระเงินใหม่ได้
+            </p>
+          } @else if (status()?.paymentState === "manual_confirmed") {
+            <p class="guest-payment-alert" role="status">
+              ร้านยืนยันการรับเงินแล้ว (ตรวจโดยพนักงาน ไม่ใช่ธนาคารอัตโนมัติ)
+            </p>
+          } @else if (status()?.paymentState === "slip_submitted") {
+            <p class="guest-payment-alert" role="status">
+              ส่งสลิปแล้ว · รอร้านตรวจสอบยอดเงินเข้าจริง
+            </p>
+          } @else if (payment()) {
+            <div class="guest-payment-card">
+              <h2>ชำระเงินด้วย PromptPay</h2>
+              <p class="guest-context">
+                ยอดชำระ {{ money(payment()!.amountSatang) }} ฿ ·
+                จ่ายตอนนี้หรือภายหลังได้
+              </p>
+              <img
+                class="guest-payment-qr"
+                [src]="payment()!.qrImageDataUrl"
+                alt="QR PromptPay ของออเดอร์นี้"
+                width="240"
+                height="240"
+              />
+              <p class="guest-context">
+                ใช้แอปธนาคารสแกน หรือบันทึกรูป QR
+                เพื่อนำเข้าแอปธนาคารบนโทรศัพท์เครื่องเดียวกัน
+              </p>
+              <div class="guest-track-actions">
+                <button type="button" (click)="savePaymentQr()">
+                  บันทึก QR
+                </button>
+                <button
+                  type="button"
+                  class="guest-subtle"
+                  [disabled]="paymentLoading() || !online()"
+                  (click)="loadPayment(true)"
+                >
+                  ตรวจสอบ QR อีกครั้ง
+                </button>
+              </div>
+              <p class="guest-payment-alert" role="note">
+                QR ไม่ใช่หลักฐานว่าเงินเข้าแล้ว โปรดส่งสลิปหลังโอน
+                และรอร้านตรวจสอบเงินเข้าจริง
+              </p>
+              <label for="payment-slip-file">แนบสลิปการโอน</label>
+              <input
+                id="payment-slip-file"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                [disabled]="slipLoading() || !online()"
+                (change)="onSlipSelected($event)"
+              />
+              <p class="guest-context">
+                รองรับรูป PNG, JPG, WebP · ระบบแปลงและลดขนาดก่อนส่ง
+              </p>
+              @if (slipLoading()) {
+                <p role="status">กำลังส่งหลักฐานการชำระเงิน...</p>
+              }
+              @if (slipMessage()) {
+                <p role="status">{{ slipMessage() }}</p>
+              }
+              @if (slipError()) {
+                <p class="guest-warning" role="alert">{{ slipError() }}</p>
+              }
+            </div>
+          } @else if (paymentLoading()) {
+            <p class="guest-status" role="status">
+              กำลังตรวจสอบช่องทางชำระเงิน...
+            </p>
+          } @else if (paymentChecked()) {
+            <div class="guest-payment-alert" role="note">
+              ยังไม่เปิดรับการชำระเงินในระบบนี้ (Payment: not_requested)
+              <button
+                type="button"
+                class="guest-subtle"
+                [disabled]="!online()"
+                (click)="loadPayment(true)"
+              >
+                ตรวจสอบช่องทางอีกครั้ง
+              </button>
+            </div>
+          }
+          @if (paymentError()) {
+            <p class="guest-warning" role="status">{{ paymentError() }}</p>
           }
           @if (history()?.events?.length) {
             <h2>ประวัติสถานะ</h2>
@@ -115,7 +201,16 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   private readonly window = this.document.defaultView;
   private interval?: ReturnType<typeof setInterval>;
   private destroyed = false;
+  private paymentForOrder: string | null = null;
+  readonly payment = signal<GuestPayable | null>(null);
+  readonly paymentChecked = signal(false);
+  readonly paymentLoading = signal(false);
+  readonly paymentError = signal("");
+  readonly slipLoading = signal(false);
+  readonly slipError = signal("");
+  readonly slipMessage = signal("");
   readonly status = signal<GuestOrderStatus | null>(null);
+  readonly number = formatOrderNumber;
   readonly history = signal<GuestOrderHistory | null>(null);
   readonly error = signal("");
   readonly loading = signal(false);
@@ -182,7 +277,21 @@ export class GuestTrackPage implements OnInit, OnDestroy {
         tracked.trackingToken,
       );
       if (this.destroyed) return;
+      const previousPaymentState = this.status()?.paymentState;
       this.status.set(latest);
+      if (previousPaymentState !== latest.paymentState) {
+        this.paymentForOrder = null;
+      }
+      if (
+        latest.status === "cancelled" ||
+        latest.paymentState === "slip_submitted" ||
+        latest.paymentState === "manual_confirmed"
+      ) {
+        this.payment.set(null);
+        this.paymentChecked.set(true);
+      } else {
+        void this.loadPayment();
+      }
       const timeline = await this.api.history(
         tracked.orderId,
         tracked.trackingToken,
@@ -204,7 +313,91 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     }
   }
 
+  async loadPayment(force = false): Promise<void> {
+    const tracked = this.session.recoverTracking();
+    if (
+      !tracked ||
+      !this.online() ||
+      this.destroyed ||
+      this.paymentLoading() ||
+      this.status()?.status === "cancelled" ||
+      (!force && this.paymentForOrder === tracked.orderId)
+    ) {
+      return;
+    }
+    this.paymentForOrder = tracked.orderId;
+    this.paymentLoading.set(true);
+    this.paymentChecked.set(false);
+    this.paymentError.set("");
+    try {
+      const result = await this.api.paymentRequest(
+        tracked.orderId,
+        tracked.trackingToken,
+      );
+      if (
+        this.destroyed ||
+        this.session.tracking()?.orderId !== tracked.orderId
+      ) {
+        return;
+      }
+      this.payment.set(result.available ? result : null);
+      this.paymentChecked.set(true);
+    } catch {
+      if (this.destroyed) return;
+      this.paymentError.set("ยังตรวจสอบช่องทางชำระเงินไม่ได้ โปรดลองอีกครั้ง");
+      this.paymentChecked.set(true);
+    } finally {
+      if (!this.destroyed) this.paymentLoading.set(false);
+    }
+  }
+
+  async onSlipSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const source = input.files?.[0];
+    const tracked = this.session.recoverTracking();
+    if (!source || !tracked || this.slipLoading() || !this.online()) return;
+    this.slipLoading.set(true);
+    this.slipError.set("");
+    this.slipMessage.set("");
+    try {
+      await this.api.uploadPaymentSlip(
+        tracked.orderId,
+        tracked.trackingToken,
+        source,
+      );
+      this.slipMessage.set("ส่งหลักฐานแล้ว · รอร้านตรวจสอบยอดเงินเข้า");
+      this.payment.set(null);
+      this.paymentForOrder = null;
+      await this.refresh();
+    } catch (error) {
+      this.slipError.set(
+        error instanceof Error && !("status" in error)
+          ? error.message
+          : "ส่งสลิปไม่สำเร็จ อาจมีสลิปรอตรวจอยู่แล้ว กรุณาลองใหม่",
+      );
+    } finally {
+      input.value = "";
+      this.slipLoading.set(false);
+    }
+  }
+
+  savePaymentQr(): void {
+    const tracked = this.session.tracking();
+    const payment = this.payment();
+    if (!tracked || !payment) return;
+    const anchor = this.document.createElement("a");
+    anchor.href = payment.qrImageDataUrl;
+    anchor.download = `rcat-pos-order-${this.status()?.displayNumber ?? "order"}-qr.png`;
+    anchor.click();
+  }
+
   clear(): void {
+    this.payment.set(null);
+    this.paymentChecked.set(false);
+    this.paymentForOrder = null;
+    this.paymentError.set("");
+    this.slipError.set("");
+    this.slipMessage.set("");
     this.session.clearTracking();
     this.status.set(null);
     this.history.set(null);

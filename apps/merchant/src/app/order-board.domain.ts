@@ -1,6 +1,14 @@
 export type MerchantRole = "owner" | "manager" | "cashier" | "kitchen";
 export type OrderStatus =
   "submitted" | "accepted" | "preparing" | "served" | "cancelled";
+export type PaymentState =
+  "not_requested" | "awaiting_payment" | "slip_submitted" | "manual_confirmed";
+export const PAYMENT_STATUS_LABEL: Readonly<Record<PaymentState, string>> = {
+  not_requested: "ยังไม่เปิดคำขอชำระ",
+  awaiting_payment: "รอชำระเงิน",
+  slip_submitted: "ส่งสลิปแล้ว · รอร้านตรวจสอบ",
+  manual_confirmed: "ร้านยืนยันรับเงินแล้ว (ตรวจด้วยตนเอง)",
+};
 
 export interface MerchantStore {
   tenantId: string;
@@ -20,6 +28,7 @@ export interface OrderItem {
 
 export interface MerchantOrder {
   orderId: string;
+  displayNumber: string;
   tableId: string;
   visitId: string;
   amountSatang: number;
@@ -27,7 +36,7 @@ export interface MerchantOrder {
   orderedBy?: string | null;
   deliverTo?: string | null;
   status: OrderStatus;
-  paymentState: "not_requested";
+  paymentState: PaymentState;
   createdAt: string;
   updatedAt: string;
   items: readonly OrderItem[];
@@ -72,8 +81,9 @@ export interface OrderEventPage {
 
 export interface OrderHistory {
   orderId: string;
+  displayNumber: string;
   status: OrderStatus;
-  paymentState: "not_requested";
+  paymentState: PaymentState;
   events: {
     eventId: number | null;
     status: OrderStatus;
@@ -139,6 +149,13 @@ export function orderActions(
     return [{ label: "เสิร์ฟแล้ว", nextStatus: "served" }];
   }
   return [];
+}
+
+/** Short, stable order number per store. UUID remains internal. */
+export function formatOrderNumber(value: string | null | undefined): string {
+  return typeof value === "string" && /^[1-9][0-9]*$/.test(value)
+    ? "#" + value.padStart(3, "0")
+    : "#—";
 }
 
 export function formatSatang(satang: number): string {

@@ -61,8 +61,15 @@ describe("merchant operations routes", () => {
     ).toBeTypeOf("function");
   });
 
-  it("does not expose a payment route", () => {
-    expect(routes.some((route) => route.path?.includes("payment"))).toBe(false);
+  it("lazy loads only the store-scoped manual Payment review route", () => {
+    const payment = routes.filter((route) => route.path?.includes("payment"));
+    expect(payment.map((route) => route.path)).toEqual([
+      "payments/finance/:tenantId/:storeId",
+      "payments/:tenantId/:storeId",
+    ]);
+    expect(
+      payment.every((route) => typeof route.loadComponent === "function"),
+    ).toBe(true);
   });
 });
 
@@ -279,7 +286,7 @@ describe("two-person Stocktake client invariants", () => {
 });
 
 describe("G3 exceptional return Merchant safeguards", () => {
-  it("lazily loads the scoped Order exception flow, never Payment", () => {
+  it("keeps stock-return workflow separate from Payment review", () => {
     expect(
       routes.find(
         (route) =>
@@ -287,7 +294,10 @@ describe("G3 exceptional return Merchant safeguards", () => {
           "inventory/:tenantId/:storeId/exception-returns/:orderId",
       )?.loadComponent,
     ).toBeTypeOf("function");
-    expect(routes.some((route) => route.path?.includes("payment"))).toBe(false);
+    expect(
+      routes.find((route) => route.path === "payments/:tenantId/:storeId")
+        ?.loadComponent,
+    ).toBeTypeOf("function");
   });
   it("never exceeds original unreturned allocation and uses exact milliquantity", () => {
     expect(validRecoverableReturnQuantity("100.125", "100.125")).toBe(true);

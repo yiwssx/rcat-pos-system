@@ -11,6 +11,7 @@ import {
   normalizedOrderContext,
   GuestOrderHistory,
   GuestOrderStatus,
+  GuestPaymentRequest,
   GuestVisit,
 } from "./guest-order.domain";
 
@@ -37,6 +38,7 @@ const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 @Injectable({ providedIn: "root" })
 export class GuestOrderApi {
   private readonly http = inject(HttpClient);
+  private readonly document = inject(DOCUMENT);
 
   resolve(token: string): Promise<GuestVisit> {
     return firstValueFrom(
@@ -120,6 +122,78 @@ export class GuestOrderApi {
       this.http.get<GuestOrderStatus>(
         "/api/guest/orders/" + encodeURIComponent(orderId) + "/status",
         { headers: { Authorization: `Bearer ${token}` } },
+      ),
+    );
+  }
+
+  paymentRequest(orderId: string, token: string): Promise<GuestPaymentRequest> {
+    return firstValueFrom(
+      this.http.post<GuestPaymentRequest>(
+        "/api/guest/orders/" + encodeURIComponent(orderId) + "/payment-request",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      ),
+    );
+  }
+
+  async uploadPaymentSlip(
+    orderId: string,
+    token: string,
+    source: File,
+  ): Promise<{ slipId: string; state: string; replayed: boolean }> {
+    if (
+      source.size > 8 * 1024 * 1024 ||
+      !["image/png", "image/jpeg", "image/webp"].includes(source.type)
+    ) {
+      throw new Error("รองรับเฉพาะรูป PNG, JPG หรือ WebP ไม่เกิน 8 MB");
+    }
+    const bitmap = await createImageBitmap(source);
+    let png: Blob | null = null;
+    try {
+      if (
+        bitmap.width < 1 ||
+        bitmap.height < 1 ||
+        bitmap.width > 4096 ||
+        bitmap.height > 4096
+      ) {
+        throw new Error("รูปสลิปมีขนาดไม่เหมาะสม");
+      }
+      for (const maxSide of [1200, 960, 720, 560]) {
+        const scale = Math.min(
+          1,
+          maxSide / Math.max(bitmap.width, bitmap.height),
+        );
+        const canvas = this.document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("ไม่สามารถอ่านรูปสลิปได้");
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        const result = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, "image/png"),
+        );
+        // Canvas conversion drops embedded source EXIF, text and ICC metadata.
+        if (result && result.size >= 80 && result.size <= 524288) {
+          png = result;
+          break;
+        }
+      }
+    } finally {
+      bitmap.close();
+    }
+    if (!png) {
+      throw new Error("ไม่สามารถลดขนาดรูปสลิปได้ โปรดใช้ภาพที่อ่านชัดเจน");
+    }
+    return firstValueFrom(
+      this.http.put<{ slipId: string; state: string; replayed: boolean }>(
+        "/api/guest/orders/" + encodeURIComponent(orderId) + "/payment-slip",
+        png,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "image/png",
+          },
+        },
       ),
     );
   }

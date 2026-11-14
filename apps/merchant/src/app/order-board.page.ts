@@ -13,6 +13,7 @@ import { HttpErrorResponse } from "@angular/common/http";
 import {
   appendOrderPage,
   formatSatang,
+  formatOrderNumber,
   hasEventCoverage,
   mergeEvents,
   missingOrderIds,
@@ -23,6 +24,7 @@ import {
   OrderEvent,
   OrderHistory,
   OrderStatus,
+  PAYMENT_STATUS_LABEL,
   orderActions,
   ROLE_LABEL,
   STATUS_LABEL,
@@ -126,7 +128,7 @@ function failureText(error: unknown): string {
       </div>
 
       <p class="board-notice v6-board-notice">
-        รับและเตรียมอาหารได้ทันที · ยังไม่เปิดรับชำระเงินในระบบ
+        รับและเตรียมอาหารได้ทันที · สถานะชำระเงินแยกจากงานครัว
       </p>
 
       @if (error()) {
@@ -221,13 +223,13 @@ function failureText(error: unknown): string {
               <article
                 class="order-card"
                 [class.is-submitted]="order.status === 'submitted'"
-                [attr.aria-label]="'ออเดอร์ ' + order.orderId.slice(0, 8)"
+                [attr.aria-label]="'ออเดอร์ ' + number(order.displayNumber)"
               >
                 <div class="order-card-head">
                   <div>
-                    <span class="order-number"
-                      >#{{ order.orderId.slice(0, 8) }}</span
-                    >
+                    <span class="order-number">{{
+                      number(order.displayNumber)
+                    }}</span>
                     <p class="order-meta">
                       โต๊ะ {{ order.tableId.slice(0, 8) }} ·
                       {{ time(order.createdAt) }}
@@ -285,7 +287,10 @@ function failureText(error: unknown): string {
                   }
                 </ul>
                 <div class="order-total">
-                  <span>ยอดออเดอร์ (ยังไม่ชำระเงิน)</span>
+                  <span>
+                    ยอดออเดอร์ ·
+                    {{ paymentStatusLabel[order.paymentState] }}
+                  </span>
                   <strong class="money"
                     >{{ money(order.amountSatang) }} ฿</strong
                   >
@@ -407,7 +412,7 @@ function failureText(error: unknown): string {
                     <span class="event-type">{{
                       statusLabel[event.status]
                     }}</span>
-                    <span>ออเดอร์ #{{ event.orderId.slice(0, 8) }}</span>
+                    <span>ออเดอร์ {{ eventNumber(event.orderId) }}</span>
                     <time>{{ time(event.occurredAt) }}</time>
                   </li>
                 }
@@ -435,6 +440,12 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
 
   readonly store = signal<MerchantStore | null>(null);
   readonly orders = signal<MerchantOrder[]>([]);
+  readonly number = formatOrderNumber;
+
+  eventNumber(orderId: string): string {
+    const order = this.orders().find((entry) => entry.orderId === orderId);
+    return formatOrderNumber(order?.displayNumber);
+  }
   readonly hasMoreOrders = signal(false);
   readonly loadedPages = signal(1);
   readonly maxInboxPages = MAX_INBOX_PAGES;
@@ -458,6 +469,7 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
   readonly historyLoadingId = signal<string | null>(null);
   readonly statusLabel = STATUS_LABEL;
   readonly roleLabel = ROLE_LABEL;
+  readonly paymentStatusLabel = PAYMENT_STATUS_LABEL;
   readonly money = formatSatang;
 
   readonly visibleOrders = computed(() => {

@@ -88,6 +88,7 @@ export function normalizedItemNote(note: string): string {
 }
 export interface GuestCheckout {
   orderId: string;
+  displayNumber: string;
   trackingToken: string;
   amountSatang: number;
   currency: "THB";
@@ -95,25 +96,50 @@ export interface GuestCheckout {
   paymentState: "not_requested";
   replayed: boolean;
 }
+export interface GuestPayable {
+  available: true;
+  requestId: string;
+  orderId: string;
+  amountSatang: number;
+  currency: "THB";
+  state: "awaiting_payment";
+  createdAt: string;
+  qrImageDataUrl: string;
+  merchantConfirmation: false;
+}
+export type GuestPaymentRequest = { available: false } | GuestPayable;
+
+export type GuestPaymentState =
+  "not_requested" | "awaiting_payment" | "slip_submitted" | "manual_confirmed";
+
 export interface GuestOrderStatus {
   orderId: string;
+  displayNumber: string;
   status: "submitted" | "accepted" | "preparing" | "served" | "cancelled";
   amountSatang: number;
   currency: "THB";
-  paymentState: "not_requested";
+  paymentState: GuestPaymentState;
   createdAt: string;
   updatedAt: string;
 }
 export interface GuestOrderHistory {
   orderId: string;
+  displayNumber: string;
   status: GuestOrderStatus["status"];
-  paymentState: "not_requested";
+  paymentState: GuestPaymentState;
   events: {
     status: GuestOrderStatus["status"];
     fromStatus: GuestOrderStatus["status"] | null;
     occurredAt: string;
   }[];
 }
+/** Public human order number: scoped to one store; never use as authentication. */
+export function formatOrderNumber(value: string | null | undefined): string {
+  return typeof value === "string" && /^[1-9][0-9]*$/.test(value)
+    ? "#" + value.padStart(3, "0")
+    : "#—";
+}
+
 export const ORDER_STATUS_LABEL: Readonly<
   Record<GuestOrderStatus["status"], string>
 > = {

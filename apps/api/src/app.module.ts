@@ -36,6 +36,14 @@ import { OperationalReportsController } from "./orders/operational-reports.contr
 import { OperationalReportsService } from "./orders/operational-reports.service";
 import { InventoryController } from "./inventory/inventory.controller";
 import { InventoryService } from "./inventory/inventory.service";
+import { MerchantPaymentReceiverController } from "./payments/merchant-payment-receiver.controller";
+import { MerchantPaymentReceiverService } from "./payments/merchant-payment-receiver.service";
+import { GuestPaymentRequestController } from "./payments/guest-payment-request.controller";
+import { GuestPaymentRequestService } from "./payments/guest-payment-request.service";
+import { PaymentSlipController } from "./payments/payment-slip.controller";
+import { PaymentSlipService } from "./payments/payment-slip.service";
+import { PaymentFinanceController } from "./payments/payment-finance.controller";
+import { PaymentFinanceService } from "./payments/payment-finance.service";
 
 @Module({
   controllers: [
@@ -57,6 +65,10 @@ import { InventoryService } from "./inventory/inventory.service";
     MerchantNotificationsController,
     OperationalReportsController,
     InventoryController,
+    MerchantPaymentReceiverController,
+    GuestPaymentRequestController,
+    PaymentSlipController,
+    PaymentFinanceController,
   ],
   providers: [
     DatabaseAccess,
@@ -79,6 +91,10 @@ import { InventoryService } from "./inventory/inventory.service";
     MerchantNotificationStreamService,
     OperationalReportsService,
     InventoryService,
+    MerchantPaymentReceiverService,
+    GuestPaymentRequestService,
+    PaymentSlipService,
+    PaymentFinanceService,
   ],
 })
 export class AppModule {}

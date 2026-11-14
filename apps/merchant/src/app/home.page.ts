@@ -86,6 +86,20 @@ import { MerchantOrderApi } from "./merchant-order.api";
                 [routerLink]="['/reports', store.tenantId, store.storeId]"
                 >ดูรายงานออเดอร์ (ไม่ใช่รายรับ)</a
               >
+              <a
+                class="store-report-link"
+                [routerLink]="['/payments', store.tenantId, store.storeId]"
+                >คิวตรวจสลิป (ระบบทดลอง)</a
+              >
+              <a
+                class="store-report-link"
+                [routerLink]="[
+                  '/payments/finance',
+                  store.tenantId,
+                  store.storeId,
+                ]"
+                >กระทบยอดและคืนเงิน (Manual)</a
+              >
             }
           </article>
         }

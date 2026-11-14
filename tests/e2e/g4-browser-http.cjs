@@ -256,9 +256,9 @@ async function browserFlow(fixture) {
     await checkout.click();
     await guest.waitForURL("**/order/track", { timeout: 20000 });
     await guest.getByText("Payment: not_requested").waitFor();
-    const orderIdPrefix = (await guest.locator(".guest-track-id").innerText())
-      .match(/[a-f0-9]{8}/i)?.[0];
-    assert.ok(orderIdPrefix, "Customer tracking page missing Order ID");
+    const orderLabel = (await guest.locator(".guest-track-id").innerText())
+      .match(/#[0-9]{3,}/)?.[0];
+    assert.ok(orderLabel, "Customer tracking page missing public Order number");
     assert.ok((await guest.locator(".guest-order-state").innerText()).length > 0);
     // G2: tracking is explicitly marked stale when the device drops the
     // connection. Reconnecting should revalidate server status, not
@@ -284,7 +284,7 @@ async function browserFlow(fixture) {
     ]);
     const route = merchant + "/orders/" + tenant + "/" + store;
     await Promise.all([board.goto(route), second.goto(route)]);
-    const selector = 'article[aria-label^="ออเดอร์ ' + orderIdPrefix + '"]';
+    const selector = 'article[aria-label="ออเดอร์ ' + orderLabel + '"]';
     await board.locator(selector).waitFor({ timeout: 20000 });
     await second.locator(selector).waitFor({ timeout: 20000 });
     await board.locator(selector).getByText("นาย ก", { exact: true }).waitFor();
@@ -320,11 +320,17 @@ async function browserFlow(fixture) {
       items: [{ productId: fixture.productId, quantity: 1, optionIds: [], note: "" }],
     }, { "Idempotency-Key": "resume-" + randomUUID() });
     assert.equal(resumedOrder.status, 201, await resumedOrder.clone().text());
-    const { orderId: resumedOrderId, paymentState: resumedPaymentState } =
-      await resumedOrder.json();
+    const {
+      orderId: resumedOrderId,
+      displayNumber: resumedDisplayNumber,
+      paymentState: resumedPaymentState,
+    } = await resumedOrder.json();
+    assert.match(resumedOrderId, /^[a-f0-9-]{36}$/i);
+    assert.match(resumedDisplayNumber, /^[1-9][0-9]*$/);
     assert.equal(resumedPaymentState, "not_requested");
     const resumedSelector =
-      'article[aria-label^="ออเดอร์ ' + resumedOrderId.slice(0, 8) + '"]';
+      'article[aria-label="ออเดอร์ #' +
+      resumedDisplayNumber.padStart(3, "0") + '"]';
     assert.equal(await second.locator(resumedSelector).count(), 0,
       "Suspended offline Merchant must not invent unseen Orders");
     await secondContext.setOffline(false);

@@ -241,11 +241,11 @@ async function main() {
     await cart.getByRole('button', { name: /ยืนยันส่งคำสั่งซื้อ/ }).click();
     await page.waitForURL('**/order/track', { timeout: 20000 });
     await page.getByText('Payment: not_requested').waitFor();
-    const orderPrefix = (await page.locator('.guest-track-id').innerText()).match(/[a-f0-9]{8}/i)?.[0];
-    assert.ok(orderPrefix);
+    const orderLabel = (await page.locator('.guest-track-id').innerText()).match(/#[0-9]{3,}/)?.[0];
+    assert.ok(orderLabel, 'Customer tracking must show readable public Order number');
     const board = await context.newPage();
     await board.goto(merchant + `/orders/${tenant}/${store}`);
-    const card = board.locator(`article[aria-label^="ออเดอร์ ${orderPrefix}"]`);
+    const card = board.locator(`article[aria-label="ออเดอร์ ${orderLabel}"]`);
     await card.waitFor();
     await card.getByText('คุณ ก', { exact: true }).waitFor();
     await card.getByText('อาคาร ข', { exact: true }).waitFor();
