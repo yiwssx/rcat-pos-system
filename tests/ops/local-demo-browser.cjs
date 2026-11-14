@@ -92,6 +92,13 @@ async function main() {
     await adminPage.goto(admin + '/settings');
     await adminPage.getByRole('heading', { name: 'ร้านทดลอง RCAT', exact: true }).waitFor();
     await adminPage.locator('.owner-stores').getByRole('link', { name: 'จัดการบุคลากรและคำเชิญ' }).waitFor();
+    const createDisclosure = adminPage.locator('details.v6-owner-disclosure').first();
+    assert.equal(await createDisclosure.evaluate(el => el.open), false,
+      'Owner creation form stays collapsed until the user requests it');
+    await createDisclosure.locator('summary').click();
+    assert.equal(await createDisclosure.evaluate(el => el.open), true,
+      'Owner can expand the native keyboard-accessible creation form');
+    await createDisclosure.locator('summary').click();
     await adminPage.screenshot({ path: '/tmp/rcat-portal-owner-mobile.png', fullPage: true });
     // All three local hosts retain a trusted-certificate path for Node fetch too.
     for (const origin of [customer]) {
