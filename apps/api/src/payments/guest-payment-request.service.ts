@@ -4,23 +4,10 @@ import { digestOpaqueSecret } from "../../../../libs/server-auth/src";
 import { ApiRequest } from "../auth/request-security";
 import { DatabaseAccess } from "../database/db-access";
 import { GuestRequestBudgetService } from "../ordering/guest-request-budget.service";
-import { buildPromptPayPayload } from "./promptpay-qr.core";
-import type { PromptPayReceiverKind } from "./promptpay-qr.core";
+import { guestPaymentQrEnvelope } from "./guest-payment-request.core";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TRACKING_BEARER = /^Bearer ([A-Za-z0-9_-]{43})$/;
-
-interface PaymentRequestData {
-  available: boolean;
-  requestId?: string;
-  orderId?: string;
-  amountSatang?: number | string;
-  currency?: string;
-  state?: string;
-  receiverKind?: PromptPayReceiverKind;
-  receiverId?: string;
-  createdAt?: string;
-}
 
 /**
  * The only guest payment route consumes the same Order-scoped bearer as
@@ -57,10 +44,10 @@ export class GuestPaymentRequestService {
       throw new NotFoundException("Payment request unavailable");
     }
 
-    let data: PaymentRequestData | undefined;
+    let data: unknown;
     try {
       const result = await this.database.auth((client) =>
-        client.query<{ data: PaymentRequestData }>(
+        client.query<{ data: unknown }>(
           "SELECT rcat_private.guest_order_payment_request($1,$2,$3) AS data",
           [
             orderId,
@@ -81,46 +68,20 @@ export class GuestPaymentRequestService {
       throw error;
     }
 
-    if (!data || data.available !== true) {
-      // A non-enabled store, unapproved release or cancelled Order
-      // cannot expose a payment QR or a receiver identifier.
-      return { available: false as const };
-    }
-
-    const amount = Number(data.amountSatang);
-    if (
-      !data.requestId ||
-      !data.orderId ||
-      data.orderId.toLowerCase() !== orderId.toLowerCase() ||
-      data.currency !== "THB" ||
-      data.state !== "awaiting_payment" ||
-      !data.receiverKind ||
-      !data.receiverId
-    ) {
-      throw new Error("Invalid server payment snapshot");
-    }
-    const payload = buildPromptPayPayload({
-      amountSatang: amount,
-      receiverKind: data.receiverKind,
-      receiverId: data.receiverId,
-    });
-    const qrSvg = await QRCode.toString(payload, {
-      type: "svg",
+    const envelope = guestPaymentQrEnvelope(orderId, data);
+    if (!envelope.available) return { available: false as const };
+    const qrImageDataUrl = await QRCode.toDataURL(envelope.qrPayload, {
+      type: "image/png",
       errorCorrectionLevel: "M",
       margin: 4,
       width: 512,
     });
+    const { qrPayload: _payload, ...publicResponse } = envelope;
     return {
-      available: true as const,
-      requestId: data.requestId,
-      orderId: data.orderId,
-      amountSatang: amount,
-      currency: "THB" as const,
-      state: "awaiting_payment" as const,
-      createdAt: data.createdAt,
-      qrSvg,
-      // Standard personal PromptPay QR is NOT unique bank settlement proof.
-      merchantConfirmation: false,
+      ...publicResponse,
+      qrImageDataUrl,
+      // A QR is NEVER proof of bank transfer or Merchant confirmation.
+      merchantConfirmation: false as const,
     };
   }
 }
