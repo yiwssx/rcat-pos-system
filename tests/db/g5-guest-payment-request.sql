@@ -179,10 +179,12 @@ DECLARE
 BEGIN
  a:=rcat_private.guest_order_payment_request(order1,token1,true);
  b:=rcat_private.guest_order_payment_request(order2,token2,true);
- IF a->>'receiverId'<>'0812345678' OR
-    b->>'receiverId'<>'0898765432' OR
-    (a->>'requestId')::uuid=(b->>'requestId')::uuid THEN
-   RAISE EXCEPTION 'Store receiver snapshot or per-Order isolation broken';
+ -- The old recipient is retained only inside the immutable DB request;
+ -- after a receiver rotation and re-enable it must NOT reappear as a payable QR.
+ IF (a->>'available')::boolean IS DISTINCT FROM false OR
+    (b->>'available')::boolean IS DISTINCT FROM true OR
+    b->>'receiverId'<>'0898765432' THEN
+   RAISE EXCEPTION 'Stale receiving ID reappeared after receiver rotation';
  END IF;
 END $$;
 RESET ROLE;

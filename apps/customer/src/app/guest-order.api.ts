@@ -159,7 +159,10 @@ export class GuestOrderApi {
         throw new Error("รูปสลิปมีขนาดไม่เหมาะสม");
       }
       for (const maxSide of [1200, 960, 720, 560]) {
-        const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+        const scale = Math.min(
+          1,
+          maxSide / Math.max(bitmap.width, bitmap.height),
+        );
         const canvas = this.document.createElement("canvas");
         canvas.width = Math.max(1, Math.round(bitmap.width * scale));
         canvas.height = Math.max(1, Math.round(bitmap.height * scale));

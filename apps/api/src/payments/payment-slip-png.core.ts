@@ -10,9 +10,10 @@ export const MAX_SLIP_BYTES = 524_288;
  * auxiliary chunks or file paths. The authenticated staff view serves
  * validated bytes with a private, no-store and same-origin response.
  */
-export function validatePaymentSlipPng(
-  raw: unknown,
-): { png: Buffer; sha256: Buffer } {
+export function validatePaymentSlipPng(raw: unknown): {
+  png: Buffer;
+  sha256: Buffer;
+} {
   if (
     !Buffer.isBuffer(raw) ||
     raw.length < 80 ||

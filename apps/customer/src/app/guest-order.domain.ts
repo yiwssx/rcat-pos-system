@@ -109,10 +109,7 @@ export interface GuestPayable {
 export type GuestPaymentRequest = { available: false } | GuestPayable;
 
 export type GuestPaymentState =
-  | "not_requested"
-  | "awaiting_payment"
-  | "slip_submitted"
-  | "manual_confirmed";
+  "not_requested" | "awaiting_payment" | "slip_submitted" | "manual_confirmed";
 
 export interface GuestOrderStatus {
   orderId: string;

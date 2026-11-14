@@ -117,8 +117,8 @@ const TRACK_INTERVAL_MS = 15_000;
                 </button>
               </div>
               <p class="guest-payment-alert" role="note">
-                QR ไม่ใช่หลักฐานว่าเงินเข้าแล้ว
-                โปรดส่งสลิปหลังโอน และรอร้านตรวจสอบเงินเข้าจริง
+                QR ไม่ใช่หลักฐานว่าเงินเข้าแล้ว โปรดส่งสลิปหลังโอน
+                และรอร้านตรวจสอบเงินเข้าจริง
               </p>
               <label for="payment-slip-file">แนบสลิปการโอน</label>
               <input

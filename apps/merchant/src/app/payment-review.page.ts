@@ -13,7 +13,8 @@ import { formatSatang } from "./order-board.domain";
 function satangFromInput(text: string): number | null {
   const match = /^([0-9]{1,7})(?:\.([0-9]{1,2}))?$/.exec(text.trim());
   if (!match) return null;
-  const satang = Number(match[1]) * 100 + Number((match[2] ?? "").padEnd(2, "0"));
+  const satang =
+    Number(match[1]) * 100 + Number((match[2] ?? "").padEnd(2, "0"));
   return Number.isSafeInteger(satang) ? satang : null;
 }
 
@@ -60,8 +61,12 @@ function satangFromInput(text: string): number | null {
           </div>
           @if (selected(); as slip) {
             <section class="review-detail" aria-labelledby="slip-heading">
-              <h2 id="slip-heading">ตรวจหลักฐานของ Order #{{ slip.orderId.slice(0, 8) }}</h2>
-              <p><strong>ยอดที่ต้องรับ: {{ money(slip.amountSatang) }} ฿</strong></p>
+              <h2 id="slip-heading">
+                ตรวจหลักฐานของ Order #{{ slip.orderId.slice(0, 8) }}
+              </h2>
+              <p>
+                <strong>ยอดที่ต้องรับ: {{ money(slip.amountSatang) }} ฿</strong>
+              </p>
               <img
                 [src]="imageUrl()"
                 alt="สลิปที่ลูกค้าส่งเพื่อให้ร้านตรวจสอบยอดเงินจริง"
@@ -81,7 +86,9 @@ function satangFromInput(text: string): number | null {
                 (input)="bankReference.set($any($event.target).value)"
                 placeholder="รหัสธุรกรรมจากรายการเงินเข้า"
               />
-              <label for="actual-amount">จำนวนเงินที่เข้าบัญชีจริง (บาท) *</label>
+              <label for="actual-amount"
+                >จำนวนเงินที่เข้าบัญชีจริง (บาท) *</label
+              >
               <input
                 id="actual-amount"
                 inputmode="decimal"
@@ -105,13 +112,17 @@ function satangFromInput(text: string): number | null {
                   class="review-confirm"
                   [disabled]="!canConfirm() || busy()"
                   (click)="decide('confirm')"
-                >ยืนยันว่ารับเงินจริงแล้ว</button>
+                >
+                  ยืนยันว่ารับเงินจริงแล้ว
+                </button>
                 <button
                   type="button"
                   class="review-reject"
                   [disabled]="busy()"
                   (click)="decide('reject')"
-                >ปฏิเสธสลิป</button>
+                >
+                  ปฏิเสธสลิป
+                </button>
               </div>
             </section>
           }
@@ -119,30 +130,130 @@ function satangFromInput(text: string): number | null {
       }
     </section>
   `,
-  styles: [`
-    .review-shell { max-width: 1050px; margin: auto; padding: 1.2rem; }
-    .review-shell h1 { margin: .4rem 0 .8rem; }
-    .eyebrow { display: block; margin-top: .9rem; font-size: .75rem; letter-spacing: .08em; color: #8a440d; }
-    .review-warning { padding: .85rem; border-radius: .8rem; background: #fff4e4; color: #643c1b; }
-    .review-error { color: #ae2727; font-weight: 650; }
-    .review-muted { color: #5c6673; font-size: .9rem; }
-    .review-layout { display: grid; grid-template-columns: minmax(190px, 300px) minmax(0, 1fr); gap: 1rem; margin-top: 1rem; }
-    .review-list { display: grid; align-content: start; gap: .5rem; }
-    .review-list button { text-align: left; border: 1px solid #e5d9ca; background: #fff; border-radius: .75rem; padding: .85rem; display: grid; gap: .3rem; }
-    .review-list button.is-selected { border: 2px solid #c94e08; }
-    .review-detail { min-width: 0; display: grid; gap: .55rem; background: white; border: 1px solid #e7dccf; border-radius: 1rem; padding: 1.1rem; }
-    .review-detail h2 { font-size: 1.05rem; margin: 0; }
-    .review-detail img { width: min(100%, 340px); max-height: 440px; object-fit: contain; background: #f5f5f5; border-radius: .5rem; }
-    .review-detail input[type="text"] { width: 100%; min-height: 44px; padding: .65rem; border: 1px solid #bdbdbd; border-radius: .5rem; }
-    .review-check { display: flex; align-items: start; gap: .5rem; padding: .6rem 0; }
-    .review-check input { width: 20px; height: 20px; }
-    .review-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
-    .review-actions button, .review-shell > button { min-height: 44px; padding: .6rem .9rem; border-radius: .6rem; cursor: pointer; }
-    .review-confirm { background: #b9470e; color: #fff; border: none; }
-    .review-reject { background: #fff; border: 1px solid #9d4b4b; color: #7a2020; }
-    button:disabled { opacity: .55; cursor: not-allowed; }
-    @media (max-width: 680px) { .review-layout { grid-template-columns: 1fr; } }
-  `],
+  styles: [
+    `
+      .review-shell {
+        max-width: 1050px;
+        margin: auto;
+        padding: 1.2rem;
+      }
+      .review-shell h1 {
+        margin: 0.4rem 0 0.8rem;
+      }
+      .eyebrow {
+        display: block;
+        margin-top: 0.9rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        color: #8a440d;
+      }
+      .review-warning {
+        padding: 0.85rem;
+        border-radius: 0.8rem;
+        background: #fff4e4;
+        color: #643c1b;
+      }
+      .review-error {
+        color: #ae2727;
+        font-weight: 650;
+      }
+      .review-muted {
+        color: #5c6673;
+        font-size: 0.9rem;
+      }
+      .review-layout {
+        display: grid;
+        grid-template-columns: minmax(190px, 300px) minmax(0, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .review-list {
+        display: grid;
+        align-content: start;
+        gap: 0.5rem;
+      }
+      .review-list button {
+        text-align: left;
+        border: 1px solid #e5d9ca;
+        background: #fff;
+        border-radius: 0.75rem;
+        padding: 0.85rem;
+        display: grid;
+        gap: 0.3rem;
+      }
+      .review-list button.is-selected {
+        border: 2px solid #c94e08;
+      }
+      .review-detail {
+        min-width: 0;
+        display: grid;
+        gap: 0.55rem;
+        background: white;
+        border: 1px solid #e7dccf;
+        border-radius: 1rem;
+        padding: 1.1rem;
+      }
+      .review-detail h2 {
+        font-size: 1.05rem;
+        margin: 0;
+      }
+      .review-detail img {
+        width: min(100%, 340px);
+        max-height: 440px;
+        object-fit: contain;
+        background: #f5f5f5;
+        border-radius: 0.5rem;
+      }
+      .review-detail input[type="text"] {
+        width: 100%;
+        min-height: 44px;
+        padding: 0.65rem;
+        border: 1px solid #bdbdbd;
+        border-radius: 0.5rem;
+      }
+      .review-check {
+        display: flex;
+        align-items: start;
+        gap: 0.5rem;
+        padding: 0.6rem 0;
+      }
+      .review-check input {
+        width: 20px;
+        height: 20px;
+      }
+      .review-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+      }
+      .review-actions button,
+      .review-shell > button {
+        min-height: 44px;
+        padding: 0.6rem 0.9rem;
+        border-radius: 0.6rem;
+        cursor: pointer;
+      }
+      .review-confirm {
+        background: #b9470e;
+        color: #fff;
+        border: none;
+      }
+      .review-reject {
+        background: #fff;
+        border: 1px solid #9d4b4b;
+        color: #7a2020;
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      @media (max-width: 680px) {
+        .review-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    `,
+  ],
 })
 export class PaymentReviewPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -168,13 +279,17 @@ export class PaymentReviewPage implements OnInit {
   });
   readonly canConfirm = computed(() => {
     const item = this.selected();
-    return !!item &&
+    return (
+      !!item &&
       this.bankChecked() &&
       /^[A-Za-z0-9._-]{6,64}$/.test(this.bankReference()) &&
-      satangFromInput(this.actualAmount()) === item.amountSatang;
+      satangFromInput(this.actualAmount()) === item.amountSatang
+    );
   });
 
-  ngOnInit(): void { void this.refresh(); }
+  ngOnInit(): void {
+    void this.refresh();
+  }
 
   time(value: string): string {
     const dt = new Date(value);
@@ -187,20 +302,28 @@ export class PaymentReviewPage implements OnInit {
     this.error.set("");
     try {
       const stores = await this.api.stores();
-      const store = stores.stores.find((s) =>
-        s.tenantId === this.tenantId && s.storeId === this.storeId);
+      const store = stores.stores.find(
+        (s) => s.tenantId === this.tenantId && s.storeId === this.storeId,
+      );
       if (!store || (store.role !== "owner" && store.role !== "manager")) {
         this.allowed.set(false);
         this.items.set([]);
         throw new Error("บัญชีนี้ไม่มีสิทธิ์ตรวจสลิปของร้าน");
       }
       this.allowed.set(true);
-      const queue = await this.api.paymentReviewQueue(this.tenantId, this.storeId);
+      const queue = await this.api.paymentReviewQueue(
+        this.tenantId,
+        this.storeId,
+      );
       this.items.set(queue.items);
       const picked = this.selected();
-      this.selected.set(queue.items.find((s) => s.slipId === picked?.slipId) ?? null);
+      this.selected.set(
+        queue.items.find((s) => s.slipId === picked?.slipId) ?? null,
+      );
     } catch {
-      this.error.set("ไม่สามารถเปิดคิวตรวจสลิปได้ กรุณาตรวจสอบสิทธิ์และลองใหม่");
+      this.error.set(
+        "ไม่สามารถเปิดคิวตรวจสลิปได้ กรุณาตรวจสอบสิทธิ์และลองใหม่",
+      );
     } finally {
       this.loading.set(false);
     }
@@ -222,16 +345,22 @@ export class PaymentReviewPage implements OnInit {
     this.busy.set(true);
     this.error.set("");
     try {
-      const payload = action === "confirm"
-        ? {
-            action,
-            expectedRevision: item.revision,
-            bankReference: this.bankReference(),
-            actualAmountSatang: satangFromInput(this.actualAmount())!,
-            bankChecked: true,
-          }
-        : { action, expectedRevision: item.revision };
-      await this.api.paymentDecision(this.tenantId, this.storeId, item.slipId, payload);
+      const payload =
+        action === "confirm"
+          ? {
+              action,
+              expectedRevision: item.revision,
+              bankReference: this.bankReference(),
+              actualAmountSatang: satangFromInput(this.actualAmount())!,
+              bankChecked: true,
+            }
+          : { action, expectedRevision: item.revision };
+      await this.api.paymentDecision(
+        this.tenantId,
+        this.storeId,
+        item.slipId,
+        payload,
+      );
       this.notice.set(
         action === "confirm"
           ? "บันทึกการยืนยันรับเงินจริงโดยผู้ตรวจสอบแล้ว (ไม่ใช่ยืนยันจากธนาคารอัตโนมัติ)"
@@ -241,7 +370,9 @@ export class PaymentReviewPage implements OnInit {
       this.bankChecked.set(false);
       await this.refresh();
     } catch {
-      this.error.set("บันทึกผลตรวจไม่สำเร็จ อาจมีผู้ตรวจสอบก่อนแล้ว กรุณารีเฟรช");
+      this.error.set(
+        "บันทึกผลตรวจไม่สำเร็จ อาจมีผู้ตรวจสอบก่อนแล้ว กรุณารีเฟรช",
+      );
     } finally {
       this.busy.set(false);
     }

@@ -32,9 +32,7 @@ describe("private slip PNG trust boundary", () => {
 
   it("rejects oversized images, non-buffer and truncated data", async () => {
     const image = await sample();
-    expect(() =>
-      validatePaymentSlipPng(Buffer.alloc(524289, 0)),
-    ).toThrow();
+    expect(() => validatePaymentSlipPng(Buffer.alloc(524289, 0))).toThrow();
     expect(() => validatePaymentSlipPng("data:image/png;base64,...")).toThrow();
     expect(() => validatePaymentSlipPng(image.subarray(0, 20))).toThrow();
   });
