@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import * as QRCode from "qrcode";
 import { buildPromptPayPayload, thaiQrCrc } from "./promptpay-qr.core";
 
 function tags(payload: string): Map<string, string> {
@@ -100,6 +101,21 @@ describe("PromptPay QR (G5-M1, no live endpoint)", () => {
         amountSatang: 100,
       }),
     ).toThrow();
+  });
+
+  it("renders an importable PNG QR image using the existing server dependency", async () => {
+    const payload = buildPromptPayPayload({
+      receiverKind: "mobile",
+      receiverId: "0812345678",
+      amountSatang: 20005,
+    });
+    const png = await QRCode.toDataURL(payload, {
+      type: "image/png",
+      errorCorrectionLevel: "M",
+      margin: 4,
+      width: 512,
+    });
+    expect(png).toMatch(/^data:image\/png;base64,[A-Za-z0-9+/=]+$/);
   });
 
   it("rejects unsupported recipient kind and rejects wrong length for tax ID", () => {
