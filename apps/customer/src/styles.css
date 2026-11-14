@@ -1772,3 +1772,76 @@ body {
     padding: 0.8rem 0.55rem;
   }
 }
+
+/* V6 vibrant identity applies to pre-auth, setup and shared portal UI too. */
+.portal-landing {
+  background:
+    radial-gradient(ellipse at 7% 6%, rgb(255 211 111 / 26%), transparent 38%),
+    linear-gradient(145deg, #fff9e9, #fffdf9 70%);
+}
+.portal-landing-intro {
+  background:
+    radial-gradient(ellipse at 95% 92%, rgb(255 203 74 / 20%), transparent 42%),
+    linear-gradient(145deg, #fff5df, #fff);
+  border-color: #f4d8b5;
+  box-shadow: 0 18px 44px rgb(196 76 8 / 8%);
+}
+.portal-landing-intro h1 {
+  color: #1e2e36;
+}
+.portal-landing-intro h1 span,
+.portal-brand-title em,
+.portal-eyebrow,
+.portal-nav-caption {
+  color: #b93c08;
+}
+.portal-login-card {
+  background: #fff;
+  border-color: #f2daba;
+  box-shadow: 0 18px 45px rgb(190 77 9 / 9%);
+}
+.portal-login-brand-image {
+  border-color: #ffd49a;
+}
+.portal-button:not(.portal-secondary),
+.portal-store-action,
+.portal-login-card .portal-button {
+  background: linear-gradient(110deg, #c94108, #e85b0a);
+  border: 1px solid #bd3c07;
+  color: #fff;
+  box-shadow: 0 7px 19px rgb(199 70 6 / 14%);
+}
+.portal-button:not(.portal-secondary):hover,
+.portal-store-action:hover {
+  background: linear-gradient(110deg, #ab3406, #ce4608);
+}
+.portal-button.portal-secondary {
+  background: #e8faf4;
+  color: #075f55;
+  border-color: #95d8c5;
+}
+.portal-how-it-works > div,
+.portal-panel,
+.portal-store-card {
+  background: #fff;
+  border-color: #f0deca;
+  box-shadow: 0 8px 24px rgb(168 74 18 / 6%);
+}
+.portal-setup-banner {
+  background: #fff3df;
+  border-color: #f3d2a3;
+}
+.portal-login-card input {
+  border-color: #e5cdb4;
+  background: #fffdf9;
+}
+.portal-login-card input:focus-visible,
+.portal-button:focus-visible {
+  outline: 3px solid #087c72;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .portal-button {
+    transition: none;
+  }
+}
