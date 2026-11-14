@@ -19,7 +19,11 @@ const MAX_ORDER_SATANG = 100_000_000;
 const PROMPTPAY_AID = "A000000677010111";
 
 function field(tag: string, value: string): string {
-  if (!/^[0-9]{2}$/.test(tag) || !/^[\x20-\x7e]*$/.test(value) || value.length > 99) {
+  if (
+    !/^[0-9]{2}$/.test(tag) ||
+    !/^[\x20-\x7e]*$/.test(value) ||
+    value.length > 99
+  ) {
     throw new RangeError("Invalid Thai QR field");
   }
   return tag + String(value.length).padStart(2, "0") + value;
@@ -34,9 +38,10 @@ export function thaiQrCrc(payloadWithCrcPrefix: string): string {
   for (let i = 0; i < payloadWithCrcPrefix.length; i += 1) {
     crc ^= payloadWithCrcPrefix.charCodeAt(i) << 8;
     for (let bit = 0; bit < 8; bit += 1) {
-      crc = (crc & 0x8000) !== 0
-        ? ((crc << 1) ^ 0x1021) & 0xffff
-        : (crc << 1) & 0xffff;
+      crc =
+        (crc & 0x8000) !== 0
+          ? ((crc << 1) ^ 0x1021) & 0xffff
+          : (crc << 1) & 0xffff;
     }
   }
   return crc.toString(16).toUpperCase().padStart(4, "0");
@@ -50,8 +55,11 @@ export function thaiQrCrc(payloadWithCrcPrefix: string): string {
  * Never accept a guest-provided receiver or amount.
  */
 export function buildPromptPayPayload(request: PromptPayRequest): string {
-  if (!Number.isSafeInteger(request.amountSatang) ||
-      request.amountSatang <= 0 || request.amountSatang > MAX_ORDER_SATANG) {
+  if (
+    !Number.isSafeInteger(request.amountSatang) ||
+    request.amountSatang <= 0 ||
+    request.amountSatang > MAX_ORDER_SATANG
+  ) {
     throw new RangeError("Invalid Order amount");
   }
   if (typeof request.receiverId !== "string") {
@@ -76,13 +84,20 @@ export function buildPromptPayPayload(request: PromptPayRequest): string {
     throw new RangeError("Unsupported PromptPay receiver kind");
   }
 
-  const amount = String(Math.floor(request.amountSatang / 100)) + "." +
+  const amount =
+    String(Math.floor(request.amountSatang / 100)) +
+    "." +
     String(request.amountSatang % 100).padStart(2, "0");
   const merchantInfo = field("00", PROMPTPAY_AID) + field(subTag, receiver);
   // Point-of-initiation 12 indicates a payload generated for a payment flow;
   // it is NOT a one-time token or a guaranteed bank-locked amount.
-  const payload = field("00", "01") + field("01", "12") +
-    field("29", merchantInfo) + field("53", "764") +
-    field("54", amount) + field("58", "TH") + "6304";
+  const payload =
+    field("00", "01") +
+    field("01", "12") +
+    field("29", merchantInfo) +
+    field("53", "764") +
+    field("54", amount) +
+    field("58", "TH") +
+    "6304";
   return payload + thaiQrCrc(payload);
 }
