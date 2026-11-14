@@ -49,6 +49,33 @@ jobs:
       - name: Install from committed lockfile
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm install --frozen-lockfile
+      # Temporary, one-pass formatter diagnostic for the payment PR; remove before merge.
+      - name: Print exact G5 formatting deltas (temporary)
+        if: github.event_name == 'pull_request' && steps.impact.outputs.workspace == 'true'
+        run: |
+          pnpm exec prettier --write \
+            apps/api/src/payments/payment-slip-png.core.ts \
+            apps/api/src/payments/payment-slip-png.core.spec.ts \
+            apps/customer/src/app/guest-order.api.ts \
+            apps/customer/src/app/guest-order.domain.ts \
+            apps/customer/src/app/guest-track.page.ts \
+            apps/merchant/src/app/order-board.domain.ts \
+            apps/merchant/src/app/payment-review.page.ts
+          git --no-pager diff --unified=1 -- \
+            apps/api/src/payments/payment-slip-png.core.ts \
+            apps/api/src/payments/payment-slip-png.core.spec.ts \
+            apps/customer/src/app/guest-order.api.ts \
+            apps/customer/src/app/guest-order.domain.ts \
+            apps/customer/src/app/guest-track.page.ts \
+            apps/merchant/src/app/order-board.domain.ts \
+            apps/merchant/src/app/payment-review.page.ts
+          git restore -- apps/api/src/payments/payment-slip-png.core.ts \
+            apps/api/src/payments/payment-slip-png.core.spec.ts \
+            apps/customer/src/app/guest-order.api.ts \
+            apps/customer/src/app/guest-order.domain.ts \
+            apps/customer/src/app/guest-track.page.ts \
+            apps/merchant/src/app/order-board.domain.ts \
+            apps/merchant/src/app/payment-review.page.ts
       - name: Display Nx projects
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm exec nx show projects
