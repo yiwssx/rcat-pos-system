@@ -9,7 +9,6 @@ import {
   signal,
 } from "@angular/core";
 import { RouterLink } from "@angular/router";
-import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import {
   formatSatang,
   GuestOrderHistory,
@@ -85,15 +84,13 @@ const TRACK_INTERVAL_MS = 15_000;
                 ยอดที่ระบบระบุ {{ money(payment()!.amountSatang) }} ฿
                 · สามารถชำระภายหลังได้
               </p>
-              @if (paymentUrl()) {
-                <img
-                  class="guest-payment-qr"
-                  [src]="paymentUrl()"
-                  alt="QR PromptPay ของออเดอร์นี้"
-                  width="240"
-                  height="240"
-                />
-              }
+              <img
+                class="guest-payment-qr"
+                [src]="payment()!.qrImageDataUrl"
+                alt="QR PromptPay ของออเดอร์นี้"
+                width="240"
+                height="240"
+              />
               <p class="guest-context">
                 ใช้แอปธนาคารสแกน หรือบันทึกรูป QR
                 เพื่อนำเข้าแอปธนาคารบนโทรศัพท์เครื่องเดียวกัน
@@ -172,16 +169,13 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   readonly session = inject(GuestOrderSession);
   private readonly api = inject(GuestOrderApi);
   private readonly document = inject(DOCUMENT);
-  private readonly sanitizer = inject(DomSanitizer);
   private readonly window = this.document.defaultView;
   private interval?: ReturnType<typeof setInterval>;
   private destroyed = false;
   private paymentForOrder: string | null = null;
-  private qrObjectUrl: string | null = null;
   readonly payment = signal<
     Extract<GuestPaymentRequest, { available: true }> | null
   >(null);
-  readonly paymentUrl = signal<SafeUrl | null>(null);
   readonly paymentChecked = signal(false);
   readonly paymentLoading = signal(false);
   readonly paymentError = signal("");
@@ -212,7 +206,6 @@ export class GuestTrackPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroyed = true;
-    this.revokeQrUrl();
     if (this.interval) clearInterval(this.interval);
     this.window?.removeEventListener("focus", this.onResume);
     this.window?.removeEventListener("online", this.onResume);
@@ -255,7 +248,6 @@ export class GuestTrackPage implements OnInit, OnDestroy {
       if (this.destroyed) return;
       this.status.set(latest);
       if (latest.status === "cancelled") {
-        this.revokeQrUrl();
         this.payment.set(null);
         this.paymentChecked.set(true);
       } else {
@@ -282,14 +274,6 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     }
   }
 
-  private revokeQrUrl(): void {
-    if (this.qrObjectUrl && this.window) {
-      this.window.URL.revokeObjectURL(this.qrObjectUrl);
-    }
-    this.qrObjectUrl = null;
-    this.paymentUrl.set(null);
-  }
-
   async loadPayment(force = false): Promise<void> {
     const tracked = this.session.recoverTracking();
     if (
@@ -314,22 +298,7 @@ export class GuestTrackPage implements OnInit, OnDestroy {
       if (this.destroyed || this.session.tracking()?.orderId !== tracked.orderId) {
         return;
       }
-      this.revokeQrUrl();
-      this.payment.set(null);
-      if (result.available) {
-        const svg = new Blob([result.qrSvg], { type: "image/svg+xml" });
-        const objectUrl = this.window?.URL.createObjectURL(svg);
-        if (!objectUrl) {
-          throw new Error("Payment QR cannot be displayed");
-        }
-        this.qrObjectUrl = objectUrl;
-        // Only our own read-only image Blob is marked safe; never inject
-        // third-party SVG via innerHTML or trust arbitrary received URLs.
-        this.paymentUrl.set(
-          this.sanitizer.bypassSecurityTrustUrl(objectUrl),
-        );
-        this.payment.set(result);
-      }
+      this.payment.set(result.available ? result : null);
       this.paymentChecked.set(true);
     } catch {
       if (this.destroyed) return;
@@ -342,10 +311,11 @@ export class GuestTrackPage implements OnInit, OnDestroy {
 
   savePaymentQr(): void {
     const tracked = this.session.tracking();
-    if (!tracked || !this.qrObjectUrl) return;
+    const payment = this.payment();
+    if (!tracked || !payment) return;
     const anchor = this.document.createElement("a");
-    anchor.href = this.qrObjectUrl;
-    anchor.download = `rcat-pos-order-${tracked.orderId.slice(0, 8)}-qr.svg`;
+    anchor.href = payment.qrImageDataUrl;
+    anchor.download = `rcat-pos-order-${tracked.orderId.slice(0, 8)}-qr.png`;
     anchor.click();
   }
 
