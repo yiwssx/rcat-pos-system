@@ -13,7 +13,7 @@
   position: relative;
   z-index: 5;
   background:
-    url("/v6-ribbon-top.svg") center top /
+    var(--pos-decoration-ribbon) center top /
       100% var(--pos-decor-top-height) no-repeat,
     linear-gradient(100deg, #ffffff 0%, #fffdfa 72%, #fff3d9 100%);
 }
@@ -42,7 +42,7 @@
   top: -64px;
   height: var(--pos-decor-top-height);
   z-index: 0;
-  background: url("/v6-ribbon-top.svg") center top /
+  background: var(--pos-decoration-ribbon) center top /
     100% 100% no-repeat;
 }
 
@@ -52,7 +52,7 @@
   bottom: 0;
   height: var(--pos-decor-bottom-height);
   z-index: 3;
-  background: url("/v6-bottom-waves.svg") center bottom /
+  background: var(--pos-decoration-wave) center bottom /
     100% 100% no-repeat;
 }
 
@@ -81,7 +81,7 @@
   width: var(--pos-decor-side-width);
   height: clamp(125px, 19vw, 245px);
   pointer-events: none;
-  background: url("/v6-storefront.svg") right bottom / contain no-repeat;
+  background: var(--pos-decoration-store) right bottom / contain no-repeat;
 }
 
 .portal-content:has(.v6-home) .portal-home:has(.v6-home) > .v6-home {
@@ -105,7 +105,7 @@
   transform: none;
   pointer-events: none;
   opacity: 0.9;
-  background: url("/v6-cta-flourish.svg") right center / contain no-repeat;
+  background: var(--pos-decoration-cta) right center / contain no-repeat;
 }
 
 .portal-layout:has(.v6-home) .v6-main-action > * {
