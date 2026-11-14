@@ -55,38 +55,67 @@ describe("PromptPay QR (G5-M1, no live endpoint)", () => {
   });
 
   it("does not manufacture a unique bank reference for same recipient and amount", () => {
-    const input = {receiverKind: "mobile" as const, receiverId: "0898765432", amountSatang: 9_950};
+    const input = {
+      receiverKind: "mobile" as const,
+      receiverId: "0898765432",
+      amountSatang: 9_950,
+    };
     const first = buildPromptPayPayload(input);
-    const second = buildPromptPayPayload({...input});
+    const second = buildPromptPayPayload({ ...input });
     expect(second).toBe(first);
     expect(tags(first).has("62")).toBe(false);
   });
 
-  it.each([0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER, 100_000_001])(
-    "rejects invalid / out-of-order amount %s",
-    (amountSatang) => {
-      expect(() => buildPromptPayPayload({
-        receiverKind: "mobile", receiverId: "0812345678", amountSatang,
-      })).toThrow();
-    },
-  );
+  it.each([
+    0,
+    -1,
+    1.5,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.MAX_SAFE_INTEGER,
+    100_000_001,
+  ])("rejects invalid / out-of-order amount %s", (amountSatang) => {
+    expect(() =>
+      buildPromptPayPayload({
+        receiverKind: "mobile",
+        receiverId: "0812345678",
+        amountSatang,
+      }),
+    ).toThrow();
+  });
 
-  it.each(["", "1234567890", "0212345678", "081234567", "08123456789", "08x2345678", "081-234-5678"])(
-    "rejects invalid mobile or ordinary bank account %s", (receiverId) => {
-      expect(() => buildPromptPayPayload({
-        receiverKind: "mobile", receiverId, amountSatang: 100,
-      })).toThrow();
-    },
-  );
+  it.each([
+    "",
+    "1234567890",
+    "0212345678",
+    "081234567",
+    "08123456789",
+    "08x2345678",
+    "081-234-5678",
+  ])("rejects invalid mobile or ordinary bank account %s", (receiverId) => {
+    expect(() =>
+      buildPromptPayPayload({
+        receiverKind: "mobile",
+        receiverId,
+        amountSatang: 100,
+      }),
+    ).toThrow();
+  });
 
   it("rejects unsupported recipient kind and rejects wrong length for tax ID", () => {
-    expect(() => buildPromptPayPayload({
-      receiverKind: "bank_account" as never,
-      receiverId: "1234567890", amountSatang: 100,
-    })).toThrow();
-    expect(() => buildPromptPayPayload({
-      receiverKind: "national_id",
-      receiverId: "123456789012", amountSatang: 100,
-    })).toThrow();
+    expect(() =>
+      buildPromptPayPayload({
+        receiverKind: "bank_account" as never,
+        receiverId: "1234567890",
+        amountSatang: 100,
+      }),
+    ).toThrow();
+    expect(() =>
+      buildPromptPayPayload({
+        receiverKind: "national_id",
+        receiverId: "123456789012",
+        amountSatang: 100,
+      }),
+    ).toThrow();
   });
 });
