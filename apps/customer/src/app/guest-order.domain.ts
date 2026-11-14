@@ -95,19 +95,20 @@ export interface GuestCheckout {
   paymentState: "not_requested";
   replayed: boolean;
 }
+export interface GuestActivePaymentRequest {
+  available: true;
+  requestId: string;
+  orderId: string;
+  amountSatang: number;
+  currency: "THB";
+  state: "awaiting_payment";
+  createdAt: string;
+  qrImageDataUrl: string;
+  merchantConfirmation: false;
+}
 export type GuestPaymentRequest =
   | { available: false }
-  | {
-      available: true;
-      requestId: string;
-      orderId: string;
-      amountSatang: number;
-      currency: "THB";
-      state: "awaiting_payment";
-      createdAt: string;
-      qrImageDataUrl: string;
-      merchantConfirmation: false;
-    };
+  | GuestActivePaymentRequest;
 
 export interface GuestOrderStatus {
   orderId: string;
