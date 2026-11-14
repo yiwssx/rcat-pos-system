@@ -242,6 +242,15 @@ function satang(text: string): number | null {
                 </option>
               }
             </select>
+            <label for="refund-order-manual">
+              หรือวาง Order UUID ที่เคยยืนยันรับเงินแล้ว (กรณีเกินช่วงรายงาน)
+            </label>
+            <input
+              id="refund-order-manual"
+              [value]="refundOrderId()"
+              (input)="refundOrderId.set($any($event.target).value)"
+              placeholder="Order UUID"
+            />
             <label for="refund-amount">ยอดขอคืน (บาท)</label>
             <input
               id="refund-amount"
@@ -408,11 +417,11 @@ export class MerchantFinancePage implements OnInit {
     const s = this.report()?.summary;
     if (!s) return "—";
     try {
-      return formatReportSatang(
-        String(
-          BigInt(s.manualReceiptSatang) - BigInt(s.manualRefundRecordedSatang),
-        ),
-      );
+      const difference =
+        BigInt(s.manualReceiptSatang) - BigInt(s.manualRefundRecordedSatang);
+      const absolute = difference < 0n ? -difference : difference;
+      const formatted = formatReportSatang(String(absolute));
+      return difference < 0n ? "-" + formatted : formatted;
     } catch {
       return "—";
     }
