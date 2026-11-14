@@ -35,3 +35,19 @@ Do not delete Git history, old Order APIs or old functional styles relied on by 
 - **Font:** unchanged self-hosted IBM Plex Sans Thai, pre-existing license and source pin; no new font/CDN request.
 - **Evidence:** Existing Local Demo Chromium CI now asserts actual computed sidebar/CTA/category colors and verifies the artwork URL plus QR ordering and merchant operations. Owner Visual UAT must compare the **generated concept** with the **real browser screenshots** before considering appearance approved. No Production deploy implied.
 - **Scope:** CSS/brand illustration and the minimum existing visual assertions only; no business-logic/Auth/Order/Payment/Infrastructure changes and no new Issue.
+
+## V6 Brand Decoration System — Owner-approved implementation, 14 Nov 2026
+**Rationale:** the approved AI concept has a sweeping gold header ribbon and a multi-layer orange/gold wave continuing over both the navigation and workspace, plus an illustrated local storefront and basket CTA. The previous page-scoped radial-gradient pseudo-elements were unable to traverse the sidebar and are now retired. The approved concept is *not* a literal application screenshot.
+
+**Reusable source assets and tokens (Customer app only):**
+- `--pos-decoration-ribbon` → `/v6-ribbon-top.svg`: header-and-workspace curved gold ribbon, CSS background shared across shell;
+- `--pos-decoration-wave` → `/v6-bottom-waves.svg`: transparent-top layered gold/orange waves, exactly one overlay spanning `.portal-content` (including sidebar);
+- `--pos-decoration-store` → `/v6-storefront.svg`: SVG storefront/produce/food-marker/shopping bag; replaces simplified prior asset without regenerating an incorrect school crest;
+- `--pos-decoration-cta` → `/v6-cta-flourish.svg`: curving basket graphic confined to the real `/orders` action; real link/Thai text and focus are unmodified.
+- Assets live at `apps/customer/public/`, are original independent vectors, share semantics in `libs/ui/src/pos-tokens.css`, and are applied **only** by `apps/customer/src/pos-v6-decoration.css` after `pos-v6-workspace.css`. No new runtime/image library, no decorative raster behind text.
+
+**Layer contract:** header z5; `.portal-content` isolation context; top ribbon z0; full-width bottom wave z3, with `pointer-events: none`; transparent workbench z4 and its artwork/real content; sidebar interactions protected above ornaments. Header and shell ribbon derive from the same SVG/alignment. Ornament is absent on order board, checkout, reports, stock, Admin and unauthenticated pages.
+
+**Responsive:** Desktop 1365px shows full ribbon/178px lower wave/large illustration. Tablet and phone (up to 980px) hide top ribbon to protect navigation; lower wave becomes 112px; at <=540px becomes 72px and illustration shrinks. The existing one-hand Guest QR checkout remains unchanged. Never hide information or require payment for a decorative effect.
+
+**Accessibility/security:** decorative CSS is not focusable, `pointer-events:none`, contrast and action states remain in DOM, content is above artwork. No fake payment/success claims or external image/font requests. Reduced motion has no animated ornament. Existing Local Demo Browser assertions validate SVG HTTP 200, actual computed CSS pseudo-layers, full 1365px wave, 320/390/768/1365 overflow, no decoration on Admin, plus the existing Guest→Merchant transaction. CI PASS is engineering proof only; actual Owner Visual UAT remains OPEN.
