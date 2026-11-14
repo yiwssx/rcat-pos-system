@@ -1,0 +1,55 @@
+# One-shot formatting only; removed immediately after its resulting commit.
+name: One-time RCAT template formatter
+on:
+  push:
+    branches:
+      - feat/ux-spartan-foundation-rcat-brand-20261114
+    paths:
+      - .github/workflows/ui-template-format-once.yml
+permissions:
+  contents: write
+concurrency:
+  group: format-rcat-ui-once
+  cancel-in-progress: true
+jobs:
+  format:
+    if: github.repository == 'yiwssx/rcat-pos-system' && github.ref == 'refs/heads/feat/ux-spartan-foundation-rcat-brand-20261114'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.23.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Restore reproducible deps
+        run: pnpm install --frozen-lockfile
+      - name: Format only five changed Angular templates
+        run: |
+          pnpm exec prettier --write \
+            apps/customer/src/app/app.component.ts \
+            apps/customer/src/app/guest-order.page.ts \
+            apps/customer/src/app/portal-home.page.ts \
+            apps/merchant/src/app/app.component.ts \
+            apps/admin/src/app/app.component.ts
+      - name: Commit formatting to this feature branch only
+        run: |
+          git add -- \
+            apps/customer/src/app/app.component.ts \
+            apps/customer/src/app/guest-order.page.ts \
+            apps/customer/src/app/portal-home.page.ts \
+            apps/merchant/src/app/app.component.ts \
+            apps/admin/src/app/app.component.ts
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m 'style(ux): apply repository Prettier to RCAT brand templates'
+          git fetch origin refs/heads/feat/ux-spartan-foundation-rcat-brand-20261114
+          git rebase FETCH_HEAD
+          git push origin HEAD:refs/heads/feat/ux-spartan-foundation-rcat-brand-20261114
