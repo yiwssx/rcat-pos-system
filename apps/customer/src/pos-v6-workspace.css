@@ -226,6 +226,12 @@
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
+/* The legacy store-card title was white on a dark promotional hero.
+   V6 uses a white operations card, so color must be explicitly reset. */
+.portal-stores .v6-store-card .v6-store-title h3 {
+  color: #253744;
+  opacity: 1;
+}
 .v6-store-title p {
   margin: 0.2rem 0 0;
   color: #76818b;
