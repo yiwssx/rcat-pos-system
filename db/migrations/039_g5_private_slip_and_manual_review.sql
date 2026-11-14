@@ -10,6 +10,10 @@ ALTER TABLE rcat.payment_requests DROP CONSTRAINT payment_requests_state_check;
 ALTER TABLE rcat.payment_requests ADD CONSTRAINT payment_requests_state_check
   CHECK(state IN ('awaiting_payment','slip_submitted','manual_confirmed'));
 
+ALTER TABLE rcat.payment_requests
+ ADD CONSTRAINT payment_requests_order_identity_unique
+ UNIQUE(tenant_id,store_id,id,order_id);
+
 CREATE TABLE rcat.payment_slip_evidence (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
@@ -40,8 +44,8 @@ CREATE TABLE rcat.payment_slip_evidence (
       AND bank_reference_digest IS NULL AND confirmed_amount_satang IS NULL)
   ),
   UNIQUE(tenant_id,store_id,sha256),
-  FOREIGN KEY(tenant_id,store_id,request_id)
-    REFERENCES rcat.payment_requests(tenant_id,store_id,id)
+  FOREIGN KEY(tenant_id,store_id,request_id,order_id)
+    REFERENCES rcat.payment_requests(tenant_id,store_id,id,order_id)
     ON DELETE RESTRICT,
   FOREIGN KEY(tenant_id,store_id,order_id)
     REFERENCES rcat.orders(tenant_id,store_id,id) ON DELETE RESTRICT
@@ -85,7 +89,7 @@ BEGIN
   END IF;
   IF p_png IS NULL OR octet_length(p_png) NOT BETWEEN 80 AND 524288 OR
      p_sha IS NULL OR octet_length(p_sha)<>32 OR
-     digest(p_png,'sha256')<>p_sha OR
+     sha256(p_png)<>p_sha OR
      substring(p_png from 1 for 8)<>decode('89504e470d0a1a0a','hex') THEN
     RAISE EXCEPTION 'Invalid payment evidence' USING ERRCODE='22023';
   END IF;
