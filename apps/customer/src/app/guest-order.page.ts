@@ -445,7 +445,9 @@ function guestError(error: unknown): string {
                     <strong>{{ productName(line.productId) }}</strong>
                     <span>{{ selectionNames(line.optionIds) }}</span>
                     @if (line.note) {
-                      <span class="guest-cart-note">หมายเหตุ: {{ line.note }}</span>
+                      <span class="guest-cart-note">
+                        หมายเหตุ: {{ line.note }}
+                      </span>
                     }
                   </div>
                   <div class="guest-qty">
@@ -504,7 +506,9 @@ function guestError(error: unknown): string {
               [disabled]="busy()"
               (input)="onDeliverTo($event)"
             />
-            <small>ทั้งสองช่องจำเป็นต้องกรอกก่อนส่งออเดอร์ ไม่ใช่ข้อมูลชำระเงิน</small>
+            <small>
+              ทั้งสองช่องจำเป็นต้องกรอกก่อนส่งออเดอร์ ไม่ใช่ข้อมูลชำระเงิน
+            </small>
           </fieldset>
           @if (notice() && cartOpen()) {
             <p class="guest-warning" role="status">{{ notice() }}</p>
