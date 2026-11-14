@@ -144,7 +144,7 @@ async function main() {
     // Reuse this authenticated, synthetic CI fixture to capture actual
     // management screens; no new service, database or payment checks.
     for (const management of [
-      { route: 'catalog', title: 'จัดการเมนูและสินค้า', ready: '.catalog-panel', file: 'catalog-desktop' },
+      { route: 'catalog', title: 'จัดการเมนูและสินค้า', ready: '.catalog-create-summary', file: 'catalog-desktop' },
       { route: 'inventory', title: 'สต็อกวัตถุดิบของร้าน', ready: '.inventory-panel', file: 'inventory-desktop' },
       { route: 'reports', title: 'รายงานออเดอร์ประจำวัน', ready: '.report-kpis', file: 'reports-desktop' },
     ]) {
