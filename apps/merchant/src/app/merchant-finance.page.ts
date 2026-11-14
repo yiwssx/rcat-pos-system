@@ -277,9 +277,7 @@ function satang(text: string): number | null {
 
         <details>
           <summary>
-            รายการผิดปกติและกระทบยอด ({{
-              data.summary.openExceptionCount
-            }}
+            รายการผิดปกติและกระทบยอด ({{ data.summary.openExceptionCount }}
             เปิดอยู่)
           </summary>
           <p>
