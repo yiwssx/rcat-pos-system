@@ -295,7 +295,10 @@ export class GuestTrackPage implements OnInit, OnDestroy {
         tracked.orderId,
         tracked.trackingToken,
       );
-      if (this.destroyed || this.session.tracking()?.orderId !== tracked.orderId) {
+      if (
+        this.destroyed ||
+        this.session.tracking()?.orderId !== tracked.orderId
+      ) {
         return;
       }
       this.payment.set(result.available ? result : null);
