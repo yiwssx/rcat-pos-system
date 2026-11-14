@@ -1,4 +1,6 @@
-# RCAT POS — Design System Brief (draft)
+# RCAT POS — Historical Design System Brief (V1–V5 superseded)
+
+> **CURRENT (14 Nov 2026):** Use [UI-V6-POS-WORKBENCH.md](UI-V6-POS-WORKBENCH.md) for all visual implementation. This document is archived for decisions/evidence only; it must not direct V6 component styling.
 
 **Status:** Design guidelines, not an approved visual brand or implemented UI.
 
