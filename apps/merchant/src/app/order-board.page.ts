@@ -126,7 +126,7 @@ function failureText(error: unknown): string {
       </div>
 
       <p class="board-notice v6-board-notice">
-        รับและเตรียมอาหารได้ทันที · ยังไม่เปิดรับชำระเงินในระบบ
+        รับและเตรียมอาหารได้ทันที · สถานะชำระเงินแยกจากงานครัว
       </p>
 
       @if (error()) {
@@ -285,7 +285,12 @@ function failureText(error: unknown): string {
                   }
                 </ul>
                 <div class="order-total">
-                  <span>ยอดออเดอร์ (ยังไม่ชำระเงิน)</span>
+                  <span>
+                    ยอดออเดอร์ ·
+                    {{ order.paymentState === "awaiting_payment"
+                      ? "รอลูกค้าชำระ / ร้านตรวจสอบ"
+                      : "ยังไม่เปิดคำขอชำระ" }}
+                  </span>
                   <strong class="money"
                     >{{ money(order.amountSatang) }} ฿</strong
                   >
