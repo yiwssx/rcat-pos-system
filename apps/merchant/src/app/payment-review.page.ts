@@ -8,7 +8,7 @@ import {
 } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { MerchantOrderApi, PaymentSlipReview } from "./merchant-order.api";
-import { formatSatang } from "./order-board.domain";
+import { formatOrderNumber, formatSatang } from "./order-board.domain";
 
 function satangFromInput(text: string): number | null {
   const match = /^([0-9]{1,7})(?:\.([0-9]{1,2}))?$/.exec(text.trim());
@@ -53,7 +53,7 @@ function satangFromInput(text: string): number | null {
                 [class.is-selected]="selected()?.slipId === item.slipId"
                 (click)="choose(item)"
               >
-                <strong>Order #{{ item.orderId.slice(0, 8) }}</strong>
+                <strong>Order {{ number(item.displayNumber) }}</strong>
                 <span>{{ money(item.amountSatang) }} ฿</span>
                 <small>ส่งเมื่อ {{ time(item.submittedAt) }}</small>
               </button>
@@ -62,7 +62,7 @@ function satangFromInput(text: string): number | null {
           @if (selected(); as slip) {
             <section class="review-detail" aria-labelledby="slip-heading">
               <h2 id="slip-heading">
-                ตรวจหลักฐานของ Order #{{ slip.orderId.slice(0, 8) }}
+                ตรวจหลักฐานของ Order {{ number(slip.displayNumber) }}
               </h2>
               <p>
                 <strong>ยอดที่ต้องรับ: {{ money(slip.amountSatang) }} ฿</strong>
@@ -271,6 +271,7 @@ export class PaymentReviewPage implements OnInit {
   readonly bankReference = signal("");
   readonly actualAmount = signal("");
   readonly money = formatSatang;
+  readonly number = formatOrderNumber;
   readonly imageUrl = computed(() => {
     const item = this.selected();
     return item

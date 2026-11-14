@@ -28,6 +28,7 @@ export interface OrderItem {
 
 export interface MerchantOrder {
   orderId: string;
+  displayNumber: string;
   tableId: string;
   visitId: string;
   amountSatang: number;
@@ -80,6 +81,7 @@ export interface OrderEventPage {
 
 export interface OrderHistory {
   orderId: string;
+  displayNumber: string;
   status: OrderStatus;
   paymentState: PaymentState;
   events: {
@@ -147,6 +149,13 @@ export function orderActions(
     return [{ label: "เสิร์ฟแล้ว", nextStatus: "served" }];
   }
   return [];
+}
+
+/** Short, stable order number per store. UUID remains internal. */
+export function formatOrderNumber(value: string | null | undefined): string {
+  return typeof value === "string" && /^[1-9][0-9]*$/.test(value)
+    ? "#" + value.padStart(3, "0")
+    : "#—";
 }
 
 export function formatSatang(satang: number): string {

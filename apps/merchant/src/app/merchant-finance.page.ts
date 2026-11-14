@@ -14,7 +14,7 @@ import {
   MerchantFinanceApi,
 } from "./merchant-finance.api";
 import { MerchantOrderApi } from "./merchant-order.api";
-import { formatSatang } from "./order-board.domain";
+import { formatOrderNumber, formatSatang } from "./order-board.domain";
 import { formatReportSatang } from "./operational-report.domain";
 
 const EXCEPTION_NAMES = [
@@ -130,7 +130,7 @@ function satang(text: string): number | null {
           <div class="finance-list">
             @for (order of data.outstandingOrders; track order.orderId) {
               <div class="finance-item">
-                <strong>Order #{{ order.orderId.slice(0, 8) }}</strong>
+                <strong>Order {{ number(order.displayNumber) }}</strong>
                 <span>{{ money(order.amountSatang) }} ฿</span>
                 <small
                   >{{ paymentLabel(order.paymentState) }} ·
@@ -157,7 +157,7 @@ function satang(text: string): number | null {
           <div class="finance-list">
             @for (refund of data.refunds; track refund.refundId) {
               <div class="finance-item">
-                <strong>Order #{{ refund.orderId.slice(0, 8) }}</strong>
+                <strong>Order {{ number(refund.displayNumber) }}</strong>
                 <span
                   >{{ money(refund.amountSatang) }} ฿ ·
                   {{ refundState(refund.state) }}</span
@@ -187,7 +187,7 @@ function satang(text: string): number | null {
           </div>
           @if (selectedRefund(); as refund) {
             <section class="finance-action-form">
-              <h3>บันทึกการโอนคืน Order #{{ refund.orderId.slice(0, 8) }}</h3>
+              <h3>บันทึกการโอนคืน Order {{ number(refund.displayNumber) }}</h3>
               <p>
                 ตรวจในบัญชีธนาคารก่อนทำเครื่องหมาย · ยอดคืน
                 {{ money(refund.amountSatang) }} ฿
@@ -237,7 +237,7 @@ function satang(text: string): number | null {
               <option value="">เลือกออเดอร์</option>
               @for (order of data.confirmedOrders; track order.orderId) {
                 <option [value]="order.orderId">
-                  #{{ order.orderId.slice(0, 8) }} ·
+                  #{{ order.displayNumber.padStart(3, '0') }} ·
                   {{ money(order.amountSatang) }} ฿
                 </option>
               }
@@ -396,6 +396,7 @@ export class MerchantFinancePage implements OnInit {
   readonly notice = signal("");
   readonly report = signal<FinanceReport | null>(null);
   readonly money = formatSatang;
+  readonly number = formatOrderNumber;
   readonly summaryMoney = formatReportSatang;
   readonly exceptionNames = EXCEPTION_NAMES;
   readonly refundOrderId = signal("");

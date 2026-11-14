@@ -5,6 +5,7 @@ import { firstValueFrom } from "rxjs";
 
 export interface FinanceOrder {
   orderId: string;
+  displayNumber: string;
   amountSatang: number;
   status: string;
   paymentState: string;
@@ -13,6 +14,7 @@ export interface FinanceOrder {
 export interface FinanceRefund {
   refundId: string;
   orderId: string;
+  displayNumber: string;
   amountSatang: number;
   reason: string;
   state: "pending" | "manually_recorded" | "voided";
@@ -23,6 +25,7 @@ export interface FinanceRefund {
 export interface FinanceException {
   exceptionId: string;
   orderId: string | null;
+  displayNumber: string | null;
   kind: string;
   amountSatang: number | null;
   note: string;

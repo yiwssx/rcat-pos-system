@@ -202,6 +202,7 @@ export class MerchantOrderApi {
 export interface PaymentSlipReview {
   slipId: string;
   orderId: string;
+  displayNumber: string;
   amountSatang: number;
   currency: "THB";
   revision: number;

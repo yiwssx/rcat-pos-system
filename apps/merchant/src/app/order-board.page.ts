@@ -13,6 +13,7 @@ import { HttpErrorResponse } from "@angular/common/http";
 import {
   appendOrderPage,
   formatSatang,
+  formatOrderNumber,
   hasEventCoverage,
   mergeEvents,
   missingOrderIds,
@@ -222,12 +223,12 @@ function failureText(error: unknown): string {
               <article
                 class="order-card"
                 [class.is-submitted]="order.status === 'submitted'"
-                [attr.aria-label]="'ออเดอร์ ' + order.orderId.slice(0, 8)"
+                [attr.aria-label]="'ออเดอร์ ' + number(order.displayNumber)"
               >
                 <div class="order-card-head">
                   <div>
                     <span class="order-number"
-                      >#{{ order.orderId.slice(0, 8) }}</span
+                      >{{ number(order.displayNumber) }}</span
                     >
                     <p class="order-meta">
                       โต๊ะ {{ order.tableId.slice(0, 8) }} ·
@@ -411,7 +412,7 @@ function failureText(error: unknown): string {
                     <span class="event-type">{{
                       statusLabel[event.status]
                     }}</span>
-                    <span>ออเดอร์ #{{ event.orderId.slice(0, 8) }}</span>
+                    <span>ออเดอร์ {{ eventNumber(event.orderId) }}</span>
                     <time>{{ time(event.occurredAt) }}</time>
                   </li>
                 }
@@ -439,6 +440,12 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
 
   readonly store = signal<MerchantStore | null>(null);
   readonly orders = signal<MerchantOrder[]>([]);
+  readonly number = formatOrderNumber;
+
+  eventNumber(orderId: string): string {
+    const order = this.orders().find((entry) => entry.orderId === orderId);
+    return formatOrderNumber(order?.displayNumber);
+  }
   readonly hasMoreOrders = signal(false);
   readonly loadedPages = signal(1);
   readonly maxInboxPages = MAX_INBOX_PAGES;

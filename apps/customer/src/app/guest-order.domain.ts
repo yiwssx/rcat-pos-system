@@ -88,6 +88,7 @@ export function normalizedItemNote(note: string): string {
 }
 export interface GuestCheckout {
   orderId: string;
+  displayNumber: string;
   trackingToken: string;
   amountSatang: number;
   currency: "THB";
@@ -113,6 +114,7 @@ export type GuestPaymentState =
 
 export interface GuestOrderStatus {
   orderId: string;
+  displayNumber: string;
   status: "submitted" | "accepted" | "preparing" | "served" | "cancelled";
   amountSatang: number;
   currency: "THB";
@@ -122,6 +124,7 @@ export interface GuestOrderStatus {
 }
 export interface GuestOrderHistory {
   orderId: string;
+  displayNumber: string;
   status: GuestOrderStatus["status"];
   paymentState: GuestPaymentState;
   events: {
@@ -130,6 +133,13 @@ export interface GuestOrderHistory {
     occurredAt: string;
   }[];
 }
+/** Public human order number: scoped to one store; never use as authentication. */
+export function formatOrderNumber(value: string | null | undefined): string {
+  return typeof value === "string" && /^[1-9][0-9]*$/.test(value)
+    ? "#" + value.padStart(3, "0")
+    : "#—";
+}
+
 export const ORDER_STATUS_LABEL: Readonly<
   Record<GuestOrderStatus["status"], string>
 > = {

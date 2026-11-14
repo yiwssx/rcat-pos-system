@@ -11,6 +11,7 @@ import {
 import { RouterLink } from "@angular/router";
 import {
   formatSatang,
+  formatOrderNumber,
   GuestOrderHistory,
   GuestOrderStatus,
   GuestPayable,
@@ -51,7 +52,7 @@ const TRACK_INTERVAL_MS = 15_000;
       } @else {
         <div class="guest-track-card">
           <p class="guest-track-id">
-            หมายเลขออเดอร์ #{{ session.tracking()!.orderId.slice(0, 8) }}
+            หมายเลขออเดอร์ {{ number(status()?.displayNumber) }}
           </p>
           @if (status()) {
             <span
@@ -209,6 +210,7 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   readonly slipError = signal("");
   readonly slipMessage = signal("");
   readonly status = signal<GuestOrderStatus | null>(null);
+  readonly number = formatOrderNumber;
   readonly history = signal<GuestOrderHistory | null>(null);
   readonly error = signal("");
   readonly loading = signal(false);
@@ -385,7 +387,7 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     if (!tracked || !payment) return;
     const anchor = this.document.createElement("a");
     anchor.href = payment.qrImageDataUrl;
-    anchor.download = `rcat-pos-order-${tracked.orderId.slice(0, 8)}-qr.png`;
+    anchor.download = `rcat-pos-order-${this.status()?.displayNumber ?? 'order'}-qr.png`;
     anchor.click();
   }
 
