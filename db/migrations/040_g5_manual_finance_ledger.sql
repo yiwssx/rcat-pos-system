@@ -364,7 +364,7 @@ END $$;
 REVOKE ALL ON FUNCTION rcat_private.request_manual_payment_refund(
  bytea,uuid,uuid,uuid,bigint,text,boolean) FROM PUBLIC;
 REVOKE ALL ON FUNCTION rcat_private.decide_manual_payment_refund(
- bytea,uuid,uuid,uuid,integer,text,bytea,bigint,boolean) FROM PUBLIC;
+ bytea,uuid,uuid,uuid,integer,text,bytea,bigint,boolean,boolean) FROM PUBLIC;
 REVOKE ALL ON FUNCTION rcat_private.open_manual_payment_exception(
  bytea,uuid,uuid,uuid,text,bigint,text,boolean) FROM PUBLIC;
 REVOKE ALL ON FUNCTION rcat_private.resolve_manual_payment_exception(
@@ -374,7 +374,7 @@ REVOKE ALL ON FUNCTION rcat_private.merchant_manual_payment_report(
 GRANT EXECUTE ON FUNCTION rcat_private.request_manual_payment_refund(
  bytea,uuid,uuid,uuid,bigint,text,boolean) TO rcat_auth;
 GRANT EXECUTE ON FUNCTION rcat_private.decide_manual_payment_refund(
- bytea,uuid,uuid,uuid,integer,text,bytea,bigint,boolean) TO rcat_auth;
+ bytea,uuid,uuid,uuid,integer,text,bytea,bigint,boolean,boolean) TO rcat_auth;
 GRANT EXECUTE ON FUNCTION rcat_private.open_manual_payment_exception(
  bytea,uuid,uuid,uuid,text,bigint,text,boolean) TO rcat_auth;
 GRANT EXECUTE ON FUNCTION rcat_private.resolve_manual_payment_exception(
