@@ -158,53 +158,32 @@ describe("customer route security and QR ordering", () => {
         },
       ],
     };
-    const first = changeModifierSelection(
-      visit,
-      "p1",
-      "sweet",
-      ["o1"],
-      "sweet-low",
-    );
+    function choose(
+      groupId: string,
+      selectedIds: string[],
+      optionId: string | null,
+    ): string[] {
+      return changeModifierSelection(visit, "p1", groupId, selectedIds, optionId);
+    }
+    const first = choose("sweet", ["o1"], "sweet-low");
     expect(first).toEqual(["o1", "sweet-low"]);
-    const switched = changeModifierSelection(
-      visit,
-      "p1",
-      "sweet",
-      first,
-      "sweet-high",
-    );
+    const switched = choose("sweet", first, "sweet-high");
     expect(switched).toEqual(["o1", "sweet-high"]);
     expect(selectedOptionError(visit, "p1", switched)).toBe(null);
-    const withIce = changeModifierSelection(
-      visit,
-      "p1",
-      "ice",
-      switched,
-      "ice-on",
-    );
-    expect(
-      estimateSatang(visit, [
-        { productId: "p1", optionIds: withIce, quantity: 1 },
-      ]),
-    ).toBe(12000);
-    expect(
-      changeModifierSelection(visit, "p1", "ice", withIce, null),
-    ).toEqual(switched);
-    expect(() =>
-      changeModifierSelection(visit, "p1", "sweet", switched, null),
-    ).toThrow();
-    expect(() =>
-      changeModifierSelection(visit, "p1", "sweet", switched, "foreign"),
-    ).toThrow();
+    const withIce = choose("ice", switched, "ice-on");
+    const items = [{ productId: "p1", optionIds: withIce, quantity: 1 }];
+    expect(estimateSatang(visit, items)).toBe(12000);
+    expect(choose("ice", withIce, null)).toEqual(switched);
+    expect(() => choose("sweet", switched, null)).toThrow();
+    expect(() => choose("sweet", switched, "foreign")).toThrow();
   });
 
   it("keeps multi-select modifiers independently bounded", () => {
     const first = changeModifierSelection(VISIT, "p1", "g1", [], "o1");
     const second = changeModifierSelection(VISIT, "p1", "g1", first, "o2");
     expect(second).toEqual(["o1", "o2"]);
-    expect(
-      changeModifierSelection(VISIT, "p1", "g1", second, "o1"),
-    ).toEqual(["o2"]);
+    const removed = changeModifierSelection(VISIT, "p1", "g1", second, "o1");
+    expect(removed).toEqual(["o2"]);
   });
 
   it("normalizes options, coalesces identical cart lines and handles signed satang", () => {
