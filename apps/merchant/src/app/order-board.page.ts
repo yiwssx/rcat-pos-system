@@ -83,7 +83,9 @@ function failureText(error: unknown): string {
         <button
           type="button"
           class="board-refresh"
-          [attr.aria-label]="refreshing() ? 'กำลังซิงก์ออเดอร์' : 'รีเฟรชออเดอร์'"
+          [attr.aria-label]="
+            refreshing() ? 'กำลังซิงก์ออเดอร์' : 'รีเฟรชออเดอร์'
+          "
           [disabled]="refreshing() || !connected()"
           (click)="refresh()"
         >
