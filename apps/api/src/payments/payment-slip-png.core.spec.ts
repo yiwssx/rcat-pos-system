@@ -33,10 +33,8 @@ describe("private slip PNG trust boundary", () => {
     ]);
     expect(validatePaymentSlipPng(fromCanvas).sha256.length).toBe(32);
 
-    const text = Buffer.from(
-      "0000000474455874736563726574",
-      "hex",
-    );
+    // Valid CRC text chunk, not merely malformed bytes: reject its content.
+    const text = Buffer.from("00000003744558744b0076f349b570", "hex");
     expect(() =>
       validatePaymentSlipPng(
         Buffer.concat([image.subarray(0, 33), text, image.subarray(33)]),
