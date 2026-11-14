@@ -9,7 +9,7 @@ import { RouterLink, RouterOutlet } from "@angular/router";
   template: ` <div class="layout">
     <header class="topbar">
       <a class="brand" routerLink="/" aria-label="RCAT POS หน้าแรก"
-        ><span class="brand-mark">R</span> RCAT
+        ><img class="brand-mark" src="/rcat-pos-logo.webp" width="38" height="38" alt="" /> RCAT
         <span class="brand-light">POS</span></a
       >
       <nav aria-label="นำทาง">
