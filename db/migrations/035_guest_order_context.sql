@@ -1,5 +1,6 @@
 -- G2/G3: Canonical identity, delivery and item notes are server snapshots.
 -- Old Orders retain NULL identity/delivery; trusted legacy SQL fixture remains compatible.
+-- Base function preserved from migration 027 (guest grant resolution), not 011.
 -- No Payment, stock reservation or Production behavior is introduced.
 ALTER TABLE rcat.orders
   ADD COLUMN ordered_by text,
@@ -76,7 +77,13 @@ BEGIN
  SELECT visit.* INTO v_visit FROM rcat.table_ordering_visits visit
  JOIN rcat.store_tables t ON t.id=visit.table_id
    AND t.tenant_id=visit.tenant_id AND t.store_id=visit.store_id
- WHERE visit.token_digest=p_visit_digest AND visit.revoked_at IS NULL
+ WHERE (
+   visit.token_digest=p_visit_digest OR EXISTS(
+     SELECT 1 FROM rcat.table_guest_grants g
+     WHERE g.visit_id=visit.id AND g.token_digest=p_visit_digest
+       AND g.expires_at>now()
+   )
+ ) AND visit.revoked_at IS NULL
    AND visit.expires_at>now() AND t.active;
  IF NOT FOUND THEN RAISE EXCEPTION 'Visit unavailable' USING ERRCODE='42501'; END IF;
  PERFORM 1 FROM rcat.store_tables t
