@@ -249,3 +249,37 @@ h1 {
     transition: background-color 160ms ease;
   }
 }
+
+/* Standalone Admin fallback shares Spartan semantic colors and typography. */
+:root {
+  --accent: #b94d1b;
+}
+body,
+.layout {
+  background: var(--background);
+  color: var(--foreground);
+}
+.brand-mark {
+  display: block;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #f0d3b7;
+  border-radius: 10px;
+  background: transparent;
+  object-fit: contain;
+}
+.brand-light,
+.eyebrow {
+  color: var(--primary);
+}
+.primary-link {
+  background: var(--primary);
+  border-radius: 12px;
+}
+.tile,
+.status-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 5px 22px rgb(50 44 38 / 4%);
+}
