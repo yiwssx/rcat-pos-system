@@ -71,9 +71,7 @@
             "index": "apps/merchant/src/index.html",
             "browser": "apps/merchant/src/main.ts",
             "tsConfig": "apps/merchant/tsconfig.app.json",
-            "styles": [
-              "apps/merchant/src/styles.css"
-            ],
+            "styles": ["apps/merchant/src/styles.css"],
             "assets": [
               {
                 "glob": "**/*",
@@ -125,9 +123,7 @@
             "index": "apps/admin/src/index.html",
             "browser": "apps/admin/src/main.ts",
             "tsConfig": "apps/admin/tsconfig.app.json",
-            "styles": [
-              "apps/admin/src/styles.css"
-            ],
+            "styles": ["apps/admin/src/styles.css"],
             "assets": [
               {
                 "glob": "**/*",

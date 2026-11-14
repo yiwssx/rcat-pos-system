@@ -164,7 +164,9 @@ import { RcatButtonDirective } from "@rcat/ui";
                           <h3>{{ store.storeName }}</h3>
                           <p>{{ store.tenantName }}</p>
                         </div>
-                        <span class="v6-store-role">{{ roles[store.role] }}</span>
+                        <span class="v6-store-role">{{
+                          roles[store.role]
+                        }}</span>
                       </div>
                       <div class="v6-store-action-grid">
                         <a
@@ -175,14 +177,18 @@ import { RcatButtonDirective } from "@rcat/ui";
                             store.storeId,
                           ]"
                         >
-                          <span class="v6-action-glyph" aria-hidden="true">≡</span>
+                          <span class="v6-action-glyph" aria-hidden="true"
+                            >≡</span
+                          >
                           <span>
                             <strong>เปิดกระดานออเดอร์</strong>
                             <small>รับรายการและติดตามงานครัว</small>
                           </span>
                           <span aria-hidden="true">›</span>
                         </a>
-                        @if (store.role === "owner" || store.role === "manager") {
+                        @if (
+                          store.role === "owner" || store.role === "manager"
+                        ) {
                           <a
                             class="v6-secondary-action"
                             [routerLink]="[
@@ -218,7 +224,8 @@ import { RcatButtonDirective } from "@rcat/ui";
                       </div>
                       @if (
                         session.localLogin() &&
-                        store.storeId === "70000000-0000-4000-8000-000000000002" &&
+                        store.storeId ===
+                          "70000000-0000-4000-8000-000000000002" &&
                         store.role === "owner"
                       ) {
                         <div class="portal-local-fixture v6-local-demo">
@@ -230,14 +237,19 @@ import { RcatButtonDirective } from "@rcat/ui";
                           >
                             เปิดโต๊ะทดลองเพื่อสั่งอาหาร
                           </button>
-                          <small>ข้อมูลทดลองเท่านั้น · เปิดรอบใหม่และยกเลิกรอบเดิม</small>
+                          <small
+                            >ข้อมูลทดลองเท่านั้น ·
+                            เปิดรอบใหม่และยกเลิกรอบเดิม</small
+                          >
                         </div>
                       }
                     </article>
                   } @empty {
                     <div class="v6-empty-workspace">
                       <h2>ยังไม่มีร้านในบัญชีนี้</h2>
-                      <p>ขอสิทธิ์จากเจ้าของร้าน หรือตั้งค่าร้านเพื่อเริ่มใช้งาน</p>
+                      <p>
+                        ขอสิทธิ์จากเจ้าของร้าน หรือตั้งค่าร้านเพื่อเริ่มใช้งาน
+                      </p>
                     </div>
                   }
                 </div>

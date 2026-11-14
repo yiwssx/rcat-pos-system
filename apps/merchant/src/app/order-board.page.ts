@@ -91,7 +91,11 @@ function failureText(error: unknown): string {
         </button>
       </header>
 
-      <div class="board-connection v6-board-connect" role="status" aria-live="polite">
+      <div
+        class="board-connection v6-board-connect"
+        role="status"
+        aria-live="polite"
+      >
         <span
           class="connection-indicator"
           [class.is-offline]="!connected()"
@@ -117,7 +121,8 @@ function failureText(error: unknown): string {
       </div>
 
       <p class="board-notice v6-board-notice">
-        รับออเดอร์และเตรียมอาหารได้โดยไม่ต้องรอการชำระเงิน · ระบบชำระเงินยังไม่เปิดใช้งาน
+        รับออเดอร์และเตรียมอาหารได้โดยไม่ต้องรอการชำระเงิน ·
+        ระบบชำระเงินยังไม่เปิดใช้งาน
       </p>
 
       @if (error()) {
@@ -137,7 +142,10 @@ function failureText(error: unknown): string {
           กำลังตรวจสอบข้อมูลร้านและสิทธิ์พนักงาน...
         </p>
       } @else if (store()) {
-        <div class="board-metrics v6-board-metrics" aria-label="กรองออเดอร์ตามสถานะ">
+        <div
+          class="board-metrics v6-board-metrics"
+          aria-label="กรองออเดอร์ตามสถานะ"
+        >
           <button
             type="button"
             class="v6-order-metric"
@@ -375,31 +383,33 @@ function failureText(error: unknown): string {
         <details class="board-events v6-board-events">
           <summary>
             <span>เหตุการณ์ล่าสุด</span>
-            <span class="v6-event-count">{{ events().length }} เหตุการณ์ · ดูบันทึก</span>
+            <span class="v6-event-count"
+              >{{ events().length }} เหตุการณ์ · ดูบันทึก</span
+            >
           </summary>
-        <section class="board-events" aria-labelledby="events-title">
-          <div class="board-controls">
-            <h2 id="events-title">เหตุการณ์ล่าสุด</h2>
-            <span>มาจาก Outbox ที่บันทึกในฐานข้อมูล</span>
-          </div>
-          @if (events().length === 0) {
-            <p class="board-empty">
-              ยังไม่มีเหตุการณ์ใหม่ที่รับจาก Outbox ในหน้าจอนี้
-            </p>
-          } @else {
-            <ol class="event-list">
-              @for (event of events(); track event.eventId) {
-                <li>
-                  <span class="event-type">{{
-                    statusLabel[event.status]
-                  }}</span>
-                  <span>ออเดอร์ #{{ event.orderId.slice(0, 8) }}</span>
-                  <time>{{ time(event.occurredAt) }}</time>
-                </li>
-              }
-            </ol>
-          }
-        </section>
+          <section class="board-events" aria-labelledby="events-title">
+            <div class="board-controls">
+              <h2 id="events-title">เหตุการณ์ล่าสุด</h2>
+              <span>มาจาก Outbox ที่บันทึกในฐานข้อมูล</span>
+            </div>
+            @if (events().length === 0) {
+              <p class="board-empty">
+                ยังไม่มีเหตุการณ์ใหม่ที่รับจาก Outbox ในหน้าจอนี้
+              </p>
+            } @else {
+              <ol class="event-list">
+                @for (event of events(); track event.eventId) {
+                  <li>
+                    <span class="event-type">{{
+                      statusLabel[event.status]
+                    }}</span>
+                    <span>ออเดอร์ #{{ event.orderId.slice(0, 8) }}</span>
+                    <time>{{ time(event.occurredAt) }}</time>
+                  </li>
+                }
+              </ol>
+            }
+          </section>
         </details>
       }
     </section>
@@ -452,10 +462,10 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
       filter === "in_progress"
         ? order.status === "accepted" || order.status === "preparing"
         : filter === "all"
-        ? true
-        : filter === "active"
-          ? order.status !== "served" && order.status !== "cancelled"
-          : order.status === filter,
+          ? true
+          : filter === "active"
+            ? order.status !== "served" && order.status !== "cancelled"
+            : order.status === filter,
     );
   });
   readonly pendingCount = computed(

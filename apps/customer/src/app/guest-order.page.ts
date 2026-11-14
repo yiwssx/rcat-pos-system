@@ -146,37 +146,37 @@ function guestError(error: unknown): string {
         <div class="v6-guest-filters">
           <div class="guest-menu-toolbar">
             <label class="guest-search">
-            <span class="guest-field-title">ค้นหาเมนู</span>
-            <input
-              type="search"
-              autocomplete="off"
-              placeholder="ค้นหาอาหารหรือเครื่องดื่ม"
-              [value]="search()"
-              (input)="onSearch($event)"
-            />
+              <span class="guest-field-title">ค้นหาเมนู</span>
+              <input
+                type="search"
+                autocomplete="off"
+                placeholder="ค้นหาอาหารหรือเครื่องดื่ม"
+                [value]="search()"
+                (input)="onSearch($event)"
+              />
             </label>
           </div>
           <div class="guest-categories" role="group" aria-label="หมวดหมู่">
-          <button
-            class="guest-category-chip"
-            type="button"
-            [class.is-active]="category() === ''"
-            [attr.aria-pressed]="category() === ''"
-            (click)="onCategoryChip('')"
-          >
-            ทั้งหมด
-          </button>
-          @for (group of visit.categories; track group.id) {
             <button
               class="guest-category-chip"
               type="button"
-              [class.is-active]="category() === group.id"
-              [attr.aria-pressed]="category() === group.id"
-              (click)="onCategoryChip(group.id)"
+              [class.is-active]="category() === ''"
+              [attr.aria-pressed]="category() === ''"
+              (click)="onCategoryChip('')"
             >
-              {{ group.name }}
+              ทั้งหมด
             </button>
-          }
+            @for (group of visit.categories; track group.id) {
+              <button
+                class="guest-category-chip"
+                type="button"
+                [class.is-active]="category() === group.id"
+                [attr.aria-pressed]="category() === group.id"
+                (click)="onCategoryChip(group.id)"
+              >
+                {{ group.name }}
+              </button>
+            }
           </div>
         </div>
 
@@ -185,9 +185,15 @@ function guestError(error: unknown): string {
             ไม่พบเมนูที่ต้องการ ลองค้นหาหรือเปลี่ยนหมวดหมู่
           </div>
         } @else {
-          <div class="guest-products v6-guest-products" aria-label="รายการอาหาร">
+          <div
+            class="guest-products v6-guest-products"
+            aria-label="รายการอาหาร"
+          >
             @for (product of products(); track product.id) {
-              <article class="guest-product v6-guest-product" [attr.aria-label]="product.name">
+              <article
+                class="guest-product v6-guest-product"
+                [attr.aria-label]="product.name"
+              >
                 <button
                   type="button"
                   class="guest-product-media"
