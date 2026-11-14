@@ -42,8 +42,7 @@ export function guestPaymentQrEnvelope(
     data.currency !== "THB" ||
     data.state !== "awaiting_payment" ||
     typeof data.createdAt !== "string" ||
-    (data.receiverKind !== "mobile" &&
-      data.receiverKind !== "national_id") ||
+    (data.receiverKind !== "mobile" && data.receiverKind !== "national_id") ||
     typeof data.receiverId !== "string"
   ) {
     throw new Error("Invalid server payment snapshot");
