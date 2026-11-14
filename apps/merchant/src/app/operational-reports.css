@@ -339,3 +339,43 @@
   border-left: 3px solid #cfaa82;
   border-radius: 11px;
 }
+
+/* V6 reports: sunny emphasis for metrics, restrained colors for source data. */
+.report-shell {
+  color: #23333d;
+  background: linear-gradient(180deg, #fffaf0, #fffefa);
+}
+.report-head h1,
+.report-card h2 {
+  color: #21313b;
+}
+.report-back {
+  color: #9e420c;
+}
+.report-kpis article,
+.report-card {
+  background: #fff;
+  border-color: #efd6bc;
+  box-shadow: 0 8px 22px rgb(181 70 11 / 6%);
+}
+.report-kpis article:first-child {
+  background: #fff2d8;
+  border-color: #f5c98b;
+}
+.report-kpis article:first-child strong {
+  color: #b93e05;
+}
+.report-controls input {
+  background: #fffefa;
+  border-color: #e8d0b7;
+}
+.report-controls button:not(.report-export) {
+  background: linear-gradient(105deg, #bf3e07, #d85408);
+  border-color: #bf3e07;
+  color: #fff;
+}
+.report-warning {
+  background: #fff2df;
+  border-color: #f3d4ab;
+  border-left-color: #dc8613;
+}
