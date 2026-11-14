@@ -13,7 +13,7 @@ import {
   formatSatang,
   GuestOrderHistory,
   GuestOrderStatus,
-  GuestPaymentRequest,
+  GuestActivePaymentRequest,
   ORDER_STATUS_LABEL,
 } from "./guest-order.domain";
 import { GuestOrderApi, GuestOrderSession } from "./guest-order.api";
@@ -171,9 +171,7 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   private interval?: ReturnType<typeof setInterval>;
   private destroyed = false;
   private paymentForOrder: string | null = null;
-  readonly payment = signal<
-    Extract<GuestPaymentRequest, { available: true }> | null
-  >(null);
+  readonly payment = signal<GuestActivePaymentRequest | null>(null);
   readonly paymentChecked = signal(false);
   readonly paymentLoading = signal(false);
   readonly paymentError = signal("");
