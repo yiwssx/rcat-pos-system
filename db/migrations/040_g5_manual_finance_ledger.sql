@@ -257,7 +257,7 @@ CREATE FUNCTION rcat_private.merchant_manual_payment_report(
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog
 AS $$
 DECLARE v_actor uuid;v_since timestamptz;v_summary jsonb;
- v_orders jsonb;v_refunds jsonb;v_exceptions jsonb;
+ v_orders jsonb;v_confirmed jsonb;v_refunds jsonb;v_exceptions jsonb;
 BEGIN
  v_actor:=rcat_private._catalog_actor(p_session,p_tenant,p_store,true);
  IF p_days IS NULL OR p_days NOT BETWEEN 1 AND 90 THEN
@@ -318,6 +318,16 @@ BEGIN
        o.payment_state<>'manual_confirmed' AND o.created_at>=v_since
    ORDER BY o.created_at DESC,o.id DESC LIMIT 50
  ) t;
+ SELECT coalesce(jsonb_agg(t.row_data ORDER BY t.created_at DESC),'[]'::jsonb)
+ INTO v_confirmed FROM (
+   SELECT o.created_at,jsonb_build_object(
+     'orderId',o.id,'amountSatang',o.amount_satang,
+     'status',o.status,'paymentState',o.payment_state,
+     'createdAt',o.created_at) row_data
+   FROM rcat.orders o WHERE o.tenant_id=p_tenant AND o.store_id=p_store
+     AND o.payment_state='manual_confirmed' AND o.created_at>=v_since
+   ORDER BY o.created_at DESC,o.id DESC LIMIT 50
+ ) t;
  SELECT coalesce(jsonb_agg(t.row_data ORDER BY t.requested_at DESC),'[]'::jsonb)
  INTO v_refunds FROM (
   SELECT r.requested_at,jsonb_build_object(
@@ -344,6 +354,7 @@ BEGIN
  RETURN jsonb_build_object(
    'windowDays',p_days,'generatedAt',now(),
    'summary',v_summary,'outstandingOrders',v_orders,
+   'confirmedOrders',v_confirmed,
    'refunds',v_refunds,'exceptions',v_exceptions,
    'verification','merchant_manual_only',
    'note','No bank/provider verification; totals describe different event cohorts'
