@@ -13,8 +13,8 @@
   position: relative;
   z-index: 5;
   background:
-    var(--pos-decoration-ribbon) center top /
-      100% var(--pos-decor-top-height) no-repeat,
+    var(--pos-decoration-ribbon) center top / 100% var(--pos-decor-top-height)
+      no-repeat,
     linear-gradient(100deg, #ffffff 0%, #fffdfa 72%, #fff3d9 100%);
 }
 
@@ -22,7 +22,11 @@
   position: relative;
   isolation: isolate;
   background:
-    radial-gradient(ellipse at 92% 13%, rgb(255 219 149 / 16%), transparent 48%),
+    radial-gradient(
+      ellipse at 92% 13%,
+      rgb(255 219 149 / 16%),
+      transparent 48%
+    ),
     linear-gradient(180deg, #fffaf3 0%, #fffdfa 72%, #fff5e3 100%);
 }
 
@@ -42,8 +46,7 @@
   top: -64px;
   height: var(--pos-decor-top-height);
   z-index: 0;
-  background: var(--pos-decoration-ribbon) center top /
-    100% 100% no-repeat;
+  background: var(--pos-decoration-ribbon) center top / 100% 100% no-repeat;
 }
 
 /* One continuous wave crosses the merchant navigation and work area,
@@ -52,8 +55,7 @@
   bottom: 0;
   height: var(--pos-decor-bottom-height);
   z-index: 3;
-  background: var(--pos-decoration-wave) center bottom /
-    100% 100% no-repeat;
+  background: var(--pos-decoration-wave) center bottom / 100% 100% no-repeat;
 }
 
 .portal-content:has(.v6-home) .portal-sidebar > * {
