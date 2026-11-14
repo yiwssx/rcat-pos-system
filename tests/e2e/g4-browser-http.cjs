@@ -339,6 +339,12 @@ async function browserFlow(fixture) {
     // product, edits its price, then archives the product without touching
     // the original Order fixture or its payment state.
     await second.goto(merchant + "/catalog/" + tenant + "/" + store);
+    const createDisclosure = second.locator("details.catalog-create");
+    await createDisclosure.locator("summary").click();
+    assert.ok(
+      await createDisclosure.evaluate((element) => element.open),
+      "Creation forms must be reachable via the disclosure",
+    );
     await second.getByRole("heading", { name: "เพิ่มหมวดหมู่" }).waitFor();
     await second.getByLabel("ชื่อหมวดหมู่").fill("E2E ทดสอบเมนู");
     await second.getByLabel("รหัสหมวดหมู่ (ภาษาอังกฤษ)")

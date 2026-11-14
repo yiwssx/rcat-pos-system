@@ -15,6 +15,7 @@ import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import {
   addToCart,
   changeCartQuantity,
+  changeModifierSelection,
   cartNeedsReview,
   estimateSatang,
   formatSatang,
@@ -315,17 +316,31 @@ function guestError(error: unknown): string {
               <fieldset class="guest-options">
                 <legend>
                   {{ group.name }}
-                  <span>เลือก {{ group.minSelect }}–{{ group.maxSelect }}</span>
+                  <span>{{ modifierGroupHint(group) }}</span>
                 </legend>
                 @if (options(group.id).length < group.minSelect) {
                   <p class="guest-warning">
                     ตัวเลือกไม่เพียงพอ กรุณาแจ้งร้านค้า
                   </p>
                 }
+                @if (group.maxSelect === 1 && group.minSelect === 0) {
+                  <label class="guest-option">
+                    <input
+                      type="radio"
+                      [name]="'modifier-' + group.id"
+                      [checked]="!hasGroupSelection(product.id, group)"
+                      [disabled]="busy()"
+                      (change)="clearOptionGroup(product.id, group)"
+                    />
+                    <span>ไม่เพิ่มตัวเลือก</span>
+                    <span class="guest-option-price">+0.00 ฿</span>
+                  </label>
+                }
                 @for (choice of options(group.id); track choice.id) {
                   <label class="guest-option">
                     <input
-                      type="checkbox"
+                      [type]="group.maxSelect === 1 ? 'radio' : 'checkbox'"
+                      [name]="'modifier-' + group.id"
                       [checked]="isSelected(product.id, choice.id)"
                       [disabled]="
                         busy() || optionDisabled(product.id, group, choice.id)
@@ -786,6 +801,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     optionId: string,
   ): boolean {
     const ids = this.selected()[productId] ?? [];
+    if (group.maxSelect === 1) return false; // Radios must remain switchable.
     return (
       !ids.includes(optionId) &&
       ids.filter((id) =>
@@ -793,20 +809,49 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       ).length >= group.maxSelect
     );
   }
+  modifierGroupHint(group: GuestModifierGroup): string {
+    if (group.maxSelect === 1) {
+      return group.minSelect === 1
+        ? "จำเป็น · เลือก 1"
+        : "ไม่จำเป็น · เลือกได้ 1";
+    }
+    return `เลือก ${group.minSelect}–${group.maxSelect}`;
+  }
+  hasGroupSelection(productId: string, group: GuestModifierGroup): boolean {
+    const options = new Set(this.options(group.id).map((option) => option.id));
+    return (this.selected()[productId] ?? []).some((id) => options.has(id));
+  }
+  private updateOptionGroup(
+    productId: string,
+    group: GuestModifierGroup,
+    optionId: string | null,
+  ): void {
+    const visit = this.session.visit();
+    if (!visit || this.busy()) return;
+    try {
+      const next = changeModifierSelection(
+        visit,
+        productId,
+        group.id,
+        this.selected()[productId] ?? [],
+        optionId,
+      );
+      this.selected.update((values) => ({ ...values, [productId]: next }));
+      this.notice.set("");
+      this.detailError.set("");
+    } catch (error) {
+      this.detailError.set(guestError(error));
+    }
+  }
   toggleOption(
     productId: string,
     group: GuestModifierGroup,
     optionId: string,
   ): void {
-    const ids = this.selected()[productId] ?? [];
-    const next = ids.includes(optionId)
-      ? ids.filter((x) => x !== optionId)
-      : this.optionDisabled(productId, group, optionId)
-        ? ids
-        : [...ids, optionId];
-    this.selected.update((values) => ({ ...values, [productId]: next }));
-    this.notice.set("");
-    this.detailError.set("");
+    this.updateOptionGroup(productId, group, optionId);
+  }
+  clearOptionGroup(productId: string, group: GuestModifierGroup): void {
+    this.updateOptionGroup(productId, group, null);
   }
 
   addOrCustomize(product: GuestProduct): void {
@@ -820,6 +865,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     if (this.busy()) return;
     this.detailError.set("");
     this.detailQty.set(1);
+    // A fresh product sheet must not silently reuse the previous item's choices.
+    this.selected.update((values) => ({ ...values, [product.id]: [] }));
     this.activeProduct.set(product);
     this.detailDialog?.nativeElement.showModal();
   }
