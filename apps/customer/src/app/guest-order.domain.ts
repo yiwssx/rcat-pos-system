@@ -105,7 +105,7 @@ export type GuestPaymentRequest =
       currency: "THB";
       state: "awaiting_payment";
       createdAt: string;
-      qrSvg: string;
+      qrImageDataUrl: string;
       merchantConfirmation: false;
     };
 
