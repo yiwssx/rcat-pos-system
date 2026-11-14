@@ -30,6 +30,7 @@ export function validatePaymentSlipPng(raw: unknown): {
   let count = 0;
   let hasImageData = false;
   let ended = false;
+  const acceptedImageChunks = new Set<string>();
   while (offset < raw.length) {
     if (raw.length - offset < 12) {
       throw new RangeError("Invalid PNG structure");
@@ -79,11 +80,37 @@ export function validatePaymentSlipPng(raw: unknown): {
         throw new RangeError("Invalid PNG end");
       }
       ended = true;
+    } else if (
+      type === "pHYs" ||
+      type === "gAMA" ||
+      type === "sRGB" ||
+      type === "cHRM"
+    ) {
+      // Browsers may encode standard resolution/color information in PNG.
+      // These fixed-size, non-identifying chunks are safe; EXIF, textual,
+      // ICC, animation and other arbitrary ancillary chunks remain forbidden.
+      const fixedLength: Record<string, number> = {
+        pHYs: 9,
+        gAMA: 4,
+        sRGB: 1,
+        cHRM: 32,
+      };
+      if (
+        hasImageData ||
+        acceptedImageChunks.has(type) ||
+        length !== fixedLength[type] ||
+        (type === "pHYs" && data[8]! > 1) ||
+        (type === "sRGB" && data[0]! > 3)
+      ) {
+        throw new RangeError("Invalid PNG image metadata");
+      }
+      acceptedImageChunks.add(type);
     } else {
-      // Intentionally reject tEXt/iTXt/eXIf and ancillary metadata.
+      // Intentionally reject tEXt/iTXt/eXIf/iCCP, APNG and unknown chunks.
       throw new RangeError("Unsafe PNG metadata or chunk");
     }
     count += 1;
+    if (count > 64) throw new RangeError("Too many PNG chunks");
     offset = chunkEnd;
   }
   if (!ended || chunks.length < 1) {
