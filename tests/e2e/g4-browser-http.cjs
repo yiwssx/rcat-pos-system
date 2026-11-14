@@ -492,9 +492,15 @@ async function browserFlow(fixture) {
     assert.match(activeMedia.headers()["content-type"] ?? "", /^image\/webp/);
     assert.equal(activeMedia.headers()["x-content-type-options"], "nosniff");
     await revisedItem.locator(".catalog-media-preview").waitFor();
-    assert.ok(await revisedItem.locator(".catalog-media-preview")
-      .evaluate((img) => img.complete && img.naturalWidth > 0),
-    "Browser failed to decode generated WebP product photo");
+    // The img element can be visible before Chromium finishes decoding the
+    // asynchronous WebP response (especially after loading four local Thai
+    // font faces). Wait for actual browser decode, not an arbitrary sleep.
+    await second.waitForFunction(
+      () => [...document.querySelectorAll(".catalog-media-preview")]
+        .some((img) => img instanceof HTMLImageElement && img.complete && img.naturalWidth > 0),
+      null,
+      { timeout: 15000 },
+    );
     const foreignMedia = await secondContext.request.get(
       customer + "/api/guest/catalog-media/" + tenant +
         "/20000000-0000-4000-8000-000000000002/" + mediaProductId,

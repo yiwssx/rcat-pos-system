@@ -1,4 +1,6 @@
-# RCAT POS — Visual Design V5 (13 November 2026)
+# RCAT POS — Visual Design V5 (historical; retired 14 November 2026)
+
+> **RETIRED:** Owner rejected V5 visual acceptance. This file is historical evidence; current work follows [UI-V6-POS-WORKBENCH.md](UI-V6-POS-WORKBENCH.md).
 
 ## Purpose
 The owner explicitly rejected the earlier visual result despite successful tests:

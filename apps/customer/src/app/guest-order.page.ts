@@ -63,7 +63,7 @@ function guestError(error: unknown): string {
   imports: [RouterLink],
   styleUrls: ["./guest-order.css"],
   template: `
-    <section class="guest-shell" aria-labelledby="guest-title">
+    <section class="guest-shell v6-guest-shop" aria-labelledby="guest-title">
       <header class="guest-header">
         <div class="guest-brand">
           <img
@@ -135,47 +135,49 @@ function guestError(error: unknown): string {
       }
 
       @if (session.visit(); as visit) {
-        <div class="guest-menu-intro">
+        <div class="guest-menu-intro v6-guest-intro">
           <div>
-            <span class="guest-menu-kicker">สั่งอาหารได้เลย</span>
-            <p class="guest-menu-intro-title">เลือกเมนูที่ชอบ</p>
+            <span class="guest-menu-kicker">เมนูของร้าน</span>
+            <h2 class="guest-menu-intro-title">เลือกอาหารและเครื่องดื่ม</h2>
           </div>
           <span class="guest-table-chip">โต๊ะ {{ visit.tableLabel }}</span>
         </div>
 
-        <div class="guest-menu-toolbar">
-          <label class="guest-search">
-            <span class="guest-field-title">ค้นหาเมนู</span>
-            <input
-              type="search"
-              autocomplete="off"
-              placeholder="ค้นหาอาหารหรือเครื่องดื่ม"
-              [value]="search()"
-              (input)="onSearch($event)"
-            />
-          </label>
-        </div>
-        <div class="guest-categories" role="group" aria-label="หมวดหมู่">
-          <button
-            class="guest-category-chip"
-            type="button"
-            [class.is-active]="category() === ''"
-            [attr.aria-pressed]="category() === ''"
-            (click)="onCategoryChip('')"
-          >
-            ทั้งหมด
-          </button>
-          @for (group of visit.categories; track group.id) {
+        <div class="v6-guest-filters">
+          <div class="guest-menu-toolbar">
+            <label class="guest-search">
+              <span class="guest-field-title">ค้นหาเมนู</span>
+              <input
+                type="search"
+                autocomplete="off"
+                placeholder="ค้นหาอาหารหรือเครื่องดื่ม"
+                [value]="search()"
+                (input)="onSearch($event)"
+              />
+            </label>
+          </div>
+          <div class="guest-categories" role="group" aria-label="หมวดหมู่">
             <button
               class="guest-category-chip"
               type="button"
-              [class.is-active]="category() === group.id"
-              [attr.aria-pressed]="category() === group.id"
-              (click)="onCategoryChip(group.id)"
+              [class.is-active]="category() === ''"
+              [attr.aria-pressed]="category() === ''"
+              (click)="onCategoryChip('')"
             >
-              {{ group.name }}
+              ทั้งหมด
             </button>
-          }
+            @for (group of visit.categories; track group.id) {
+              <button
+                class="guest-category-chip"
+                type="button"
+                [class.is-active]="category() === group.id"
+                [attr.aria-pressed]="category() === group.id"
+                (click)="onCategoryChip(group.id)"
+              >
+                {{ group.name }}
+              </button>
+            }
+          </div>
         </div>
 
         @if (products().length === 0 && !loading()) {
@@ -183,9 +185,15 @@ function guestError(error: unknown): string {
             ไม่พบเมนูที่ต้องการ ลองค้นหาหรือเปลี่ยนหมวดหมู่
           </div>
         } @else {
-          <div class="guest-products" aria-label="รายการอาหาร">
+          <div
+            class="guest-products v6-guest-products"
+            aria-label="รายการอาหาร"
+          >
             @for (product of products(); track product.id) {
-              <article class="guest-product" [attr.aria-label]="product.name">
+              <article
+                class="guest-product v6-guest-product"
+                [attr.aria-label]="product.name"
+              >
                 <button
                   type="button"
                   class="guest-product-media"
@@ -212,7 +220,7 @@ function guestError(error: unknown): string {
                     >
                   }
                 </button>
-                <div class="guest-product-info">
+                <div class="guest-product-info v6-guest-product-info">
                   <span class="guest-product-category">{{
                     categoryName(product.categoryId)
                   }}</span>

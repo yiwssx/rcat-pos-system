@@ -31,6 +31,19 @@ async function main() {
     await page.getByLabel('รหัสผ่านทดลอง').fill(password);
     await page.getByRole('button', { name: 'เข้าสู่ระบบทดลอง', exact: true }).click();
     await page.getByRole('heading',{name:'เริ่มงานที่ร้าน',exact:true}).waitFor();
+    const thaiFontResponse = await context.request.get(merchant + '/fonts/IBMPlexSansThai-Regular.ttf');
+    assert.equal(thaiFontResponse.status(), 200, 'Self-hosted Thai font must be served by the app');
+    const fontReport = await page.evaluate(async () => {
+      await document.fonts.load('400 16px "RCAT Plex Thai"');
+      await document.fonts.load('700 20px "RCAT Plex Thai"');
+      return {
+        actual: getComputedStyle(document.querySelector('.portal-layout')).fontFamily,
+        loadedRegular: document.fonts.check('400 16px "RCAT Plex Thai"'),
+        loadedBold: document.fonts.check('700 20px "RCAT Plex Thai"'),
+      };
+    });
+    assert.ok(fontReport.actual.includes('RCAT Plex Thai') && fontReport.loadedRegular && fontReport.loadedBold,
+      'Thai/Latin interface must use genuinely loaded 400/700 IBM Plex Sans Thai');
     const officialLogo = page.locator('img.portal-brand-image');
     await officialLogo.waitFor();
     assert.equal(await officialLogo.evaluate(img => img.complete && img.naturalWidth === 96), true,
@@ -79,6 +92,13 @@ async function main() {
     await adminPage.goto(admin + '/settings');
     await adminPage.getByRole('heading', { name: 'ร้านทดลอง RCAT', exact: true }).waitFor();
     await adminPage.locator('.owner-stores').getByRole('link', { name: 'จัดการบุคลากรและคำเชิญ' }).waitFor();
+    const createDisclosure = adminPage.locator('details.v6-owner-disclosure').first();
+    assert.equal(await createDisclosure.evaluate(el => el.open), false,
+      'Owner creation form stays collapsed until the user requests it');
+    await createDisclosure.locator('summary').click();
+    assert.equal(await createDisclosure.evaluate(el => el.open), true,
+      'Owner can expand the native keyboard-accessible creation form');
+    await createDisclosure.locator('summary').click();
     await adminPage.screenshot({ path: '/tmp/rcat-portal-owner-mobile.png', fullPage: true });
     // All three local hosts retain a trusted-certificate path for Node fetch too.
     for (const origin of [customer]) {
@@ -104,6 +124,11 @@ async function main() {
     await tableView.screenshot({ path: '/tmp/rcat-portal-tables-mobile.png', fullPage: true });
     await staticPage.getByRole('button', { name: 'ตรวจสอบอีกครั้ง' }).click();
     await staticPage.locator('.guest-product').first().waitFor();
+    const guestFontLoaded = await staticPage.evaluate(async () => {
+      await document.fonts.load('400 16px "RCAT Plex Thai"');
+      return document.fonts.check('400 16px "RCAT Plex Thai"');
+    });
+    assert.equal(guestFontLoaded, true, 'Guest QR order must render with the self-hosted Thai font');
     const guestLogo = staticPage.locator('img.guest-brand-image');
     await guestLogo.waitFor();
     assert.equal(await guestLogo.evaluate(img => img.complete && img.naturalWidth === 96), true,

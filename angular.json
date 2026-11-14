@@ -16,7 +16,10 @@
             "index": "apps/customer/src/index.html",
             "browser": "apps/customer/src/main.ts",
             "tsConfig": "apps/customer/tsconfig.app.json",
-            "styles": ["apps/customer/src/styles.css"],
+            "styles": [
+              "apps/customer/src/styles.css",
+              "apps/customer/src/pos-v6-workspace.css"
+            ],
             "assets": [
               {
                 "glob": "**/*",
@@ -120,7 +123,14 @@
             "index": "apps/admin/src/index.html",
             "browser": "apps/admin/src/main.ts",
             "tsConfig": "apps/admin/tsconfig.app.json",
-            "styles": ["apps/admin/src/styles.css"]
+            "styles": ["apps/admin/src/styles.css"],
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "apps/admin/public",
+                "output": "/"
+              }
+            ]
           },
           "configurations": {
             "production": {

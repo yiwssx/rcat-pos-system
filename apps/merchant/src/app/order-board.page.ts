@@ -68,12 +68,12 @@ function failureText(error: unknown): string {
   styleUrls: ["./order-board.css"],
   template: `
     <section class="board" aria-labelledby="board-title">
-      <div class="board-head">
-        <div>
+      <header class="board-head v6-board-head">
+        <div class="v6-board-heading">
           <a routerLink="/" class="board-back">← เปลี่ยนร้าน</a>
-          <span class="eyebrow">MERCHANT / ORDER OPERATIONS</span>
+          <span class="v6-board-kicker">ORDER MANAGEMENT</span>
           <h1 id="board-title">กระดานออเดอร์</h1>
-          <p class="lede">
+          <p class="v6-board-store">
             {{ store()?.storeName || "กำลังตรวจสอบสิทธิ์ร้าน" }}
             @if (store()) {
               <span>· {{ roleLabel[store()!.role] }}</span>
@@ -82,19 +82,25 @@ function failureText(error: unknown): string {
         </div>
         <button
           type="button"
-          class="primary-link board-refresh"
-          [disabled]="refreshing()"
+          class="board-refresh"
+          [attr.aria-label]="
+            refreshing() ? 'กำลังซิงก์ออเดอร์' : 'รีเฟรชออเดอร์'
+          "
+          [disabled]="refreshing() || !connected()"
           (click)="refresh()"
         >
-          {{ refreshing() ? "กำลังซิงก์..." : "รีเฟรชออเดอร์" }}
+          <span aria-hidden="true">↻</span>
+          <span class="v6-refresh-label">{{
+            refreshing() ? "กำลังซิงก์..." : "รีเฟรชออเดอร์"
+          }}</span>
         </button>
-      </div>
+      </header>
 
-      <p class="board-notice">
-        การรับออเดอร์ไม่ใช่การรับชำระเงิน · สถานะ Payment ยังไม่เปิดใช้งาน
-      </p>
-
-      <div class="board-connection" role="status" aria-live="polite">
+      <div
+        class="board-connection v6-board-connect"
+        role="status"
+        aria-live="polite"
+      >
         <span
           class="connection-indicator"
           [class.is-offline]="!connected()"
@@ -103,14 +109,14 @@ function failureText(error: unknown): string {
           !connected()
             ? "ออฟไลน์ · รอเชื่อมต่ออีกครั้ง"
             : streamState() === "streaming"
-              ? "SSE ทำงาน · ออเดอร์แจ้งอัตโนมัติ · ตรวจสอบซ้ำทุก 60 วินาที"
+              ? "เชื่อมต่อแล้ว · ออเดอร์แจ้งอัตโนมัติ"
               : streamState() === "connecting"
-                ? "กำลังเชื่อม SSE · ใช้ Polling สำรองทุก 10 วินาที"
+                ? "กำลังเชื่อมต่อ · ตรวจสอบสำรอง"
                 : streamState() === "blocked"
                   ? "ถูกตัดสิทธิ์การแจ้งเตือน · กรุณาเข้าสู่ระบบใหม่"
                   : streamState() === "paused"
-                    ? "หยุด SSE ระหว่างซ่อนแท็บ · จะซิงก์เมื่อกลับมา"
-                    : "Polling สำรองทุก 10 วินาที · SSE กำลังเชื่อมต่อใหม่"
+                    ? "พักการแจ้งเตือน · ซิงก์เมื่อกลับมา"
+                    : "กำลังเชื่อมต่อใหม่ · ตรวจสอบสำรอง"
         }}
         @if (lastSynced()) {
           <span
@@ -118,6 +124,10 @@ function failureText(error: unknown): string {
           >
         }
       </div>
+
+      <p class="board-notice v6-board-notice">
+        รับและเตรียมอาหารได้ทันที · ยังไม่เปิดรับชำระเงินในระบบ
+      </p>
 
       @if (error()) {
         <div class="board-alert" role="alert">
@@ -136,19 +146,43 @@ function failureText(error: unknown): string {
           กำลังตรวจสอบข้อมูลร้านและสิทธิ์พนักงาน...
         </p>
       } @else if (store()) {
-        <div class="board-metrics" aria-label="สรุปออเดอร์ที่แสดง">
-          <div>
-            <strong>{{ pendingCount() }}</strong
-            ><span>รอรับออเดอร์</span>
-          </div>
-          <div>
-            <strong>{{ preparingCount() }}</strong
-            ><span>รับแล้ว / กำลังเตรียม</span>
-          </div>
-          <div>
-            <strong>{{ servedCount() }}</strong
-            ><span>เสิร์ฟแล้ว</span>
-          </div>
+        <div
+          class="board-metrics v6-board-metrics"
+          aria-label="กรองออเดอร์ตามสถานะ"
+        >
+          <button
+            type="button"
+            class="v6-order-metric"
+            [class.v6-selected]="filter() === 'submitted'"
+            [attr.aria-pressed]="filter() === 'submitted'"
+            (click)="setQueueFilter('submitted')"
+          >
+            <span>รอรับออเดอร์</span>
+            <strong>{{ pendingCount() }}</strong>
+            <small>แตะเพื่อดูรายการใหม่</small>
+          </button>
+          <button
+            type="button"
+            class="v6-order-metric"
+            [class.v6-selected]="filter() === 'in_progress'"
+            [attr.aria-pressed]="filter() === 'in_progress'"
+            (click)="setQueueFilter('in_progress')"
+          >
+            <span>กำลังดำเนินงาน</span>
+            <strong>{{ preparingCount() }}</strong>
+            <small>รับแล้ว / กำลังเตรียม</small>
+          </button>
+          <button
+            type="button"
+            class="v6-order-metric"
+            [class.v6-selected]="filter() === 'served'"
+            [attr.aria-pressed]="filter() === 'served'"
+            (click)="setQueueFilter('served')"
+          >
+            <span>เสิร์ฟแล้ว</span>
+            <strong>{{ servedCount() }}</strong>
+            <small>รายการเสร็จสิ้น</small>
+          </button>
         </div>
 
         <div class="board-controls">
@@ -159,7 +193,8 @@ function failureText(error: unknown): string {
             [value]="filter()"
             (change)="changeFilter($event)"
           >
-            <option value="active">ออเดอร์ที่กำลังดำเนินงาน</option>
+            <option value="active">ออเดอร์ที่ยังไม่เสร็จ</option>
+            <option value="in_progress">รับแล้ว / กำลังเตรียม</option>
             <option value="all">ทั้งหมดที่โหลด</option>
             <option value="submitted">รอรับ</option>
             <option value="accepted">รับแล้ว</option>
@@ -349,29 +384,37 @@ function failureText(error: unknown): string {
           </div>
         }
 
-        <section class="board-events" aria-labelledby="events-title">
-          <div class="board-controls">
-            <h2 id="events-title">เหตุการณ์ล่าสุด</h2>
-            <span>มาจาก Outbox ที่บันทึกในฐานข้อมูล</span>
-          </div>
-          @if (events().length === 0) {
-            <p class="board-empty">
-              ยังไม่มีเหตุการณ์ใหม่ที่รับจาก Outbox ในหน้าจอนี้
-            </p>
-          } @else {
-            <ol class="event-list">
-              @for (event of events(); track event.eventId) {
-                <li>
-                  <span class="event-type">{{
-                    statusLabel[event.status]
-                  }}</span>
-                  <span>ออเดอร์ #{{ event.orderId.slice(0, 8) }}</span>
-                  <time>{{ time(event.occurredAt) }}</time>
-                </li>
-              }
-            </ol>
-          }
-        </section>
+        <details class="board-events v6-board-events">
+          <summary>
+            <span>เหตุการณ์ล่าสุด</span>
+            <span class="v6-event-count"
+              >{{ events().length }} เหตุการณ์ · ดูบันทึก</span
+            >
+          </summary>
+          <section class="board-events" aria-labelledby="events-title">
+            <div class="board-controls">
+              <h2 id="events-title">เหตุการณ์ล่าสุด</h2>
+              <span>มาจาก Outbox ที่บันทึกในฐานข้อมูล</span>
+            </div>
+            @if (events().length === 0) {
+              <p class="board-empty">
+                ยังไม่มีเหตุการณ์ใหม่ที่รับจาก Outbox ในหน้าจอนี้
+              </p>
+            } @else {
+              <ol class="event-list">
+                @for (event of events(); track event.eventId) {
+                  <li>
+                    <span class="event-type">{{
+                      statusLabel[event.status]
+                    }}</span>
+                    <span>ออเดอร์ #{{ event.orderId.slice(0, 8) }}</span>
+                    <time>{{ time(event.occurredAt) }}</time>
+                  </li>
+                }
+              </ol>
+            }
+          </section>
+        </details>
       }
     </section>
   `,
@@ -406,6 +449,10 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     "connecting" | "streaming" | "polling" | "paused" | "blocked"
   >("polling");
   readonly filter = signal("active");
+
+  setQueueFilter(value: string): void {
+    this.filter.set(value);
+  }
   readonly history = signal<OrderHistory | null>(null);
   readonly selectedHistoryId = signal<string | null>(null);
   readonly historyLoadingId = signal<string | null>(null);
@@ -416,11 +463,13 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
   readonly visibleOrders = computed(() => {
     const filter = this.filter();
     return this.orders().filter((order) =>
-      filter === "all"
-        ? true
-        : filter === "active"
-          ? order.status !== "served" && order.status !== "cancelled"
-          : order.status === filter,
+      filter === "in_progress"
+        ? order.status === "accepted" || order.status === "preparing"
+        : filter === "all"
+          ? true
+          : filter === "active"
+            ? order.status !== "served" && order.status !== "cancelled"
+            : order.status === filter,
     );
   });
   readonly pendingCount = computed(

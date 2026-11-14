@@ -1,0 +1,61 @@
+/* Source: google/fonts at 29b4ec6df2522a8aee279414b78a07910b065874.
+   Copyright IBM Corp. SIL OFL 1.1 under /fonts/OFL.txt.
+   Self-hosted, no third-party requests, Thai + Latin in the same family. */
+@font-face {
+  font-family: "RCAT Plex Thai";
+  src: url("/fonts/IBMPlexSansThai-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "RCAT Plex Thai";
+  src: url("/fonts/IBMPlexSansThai-Medium.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "RCAT Plex Thai";
+  src: url("/fonts/IBMPlexSansThai-SemiBold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "RCAT Plex Thai";
+  src: url("/fonts/IBMPlexSansThai-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+}
+:root {
+  --pos-font: "RCAT Plex Thai", "Noto Sans Thai", Tahoma, sans-serif;
+}
+html,
+body,
+button,
+input,
+select,
+textarea,
+option,
+.rcat-btn,
+.portal-layout,
+.guest-shell,
+.layout,
+.board,
+.owner-shell {
+  font-family: var(--pos-font) !important;
+  font-synthesis: none;
+}
+body {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+button,
+input,
+select,
+textarea {
+  letter-spacing: 0;
+}

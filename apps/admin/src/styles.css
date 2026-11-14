@@ -4,6 +4,7 @@
 @import "@spartan-ng/brain/hlm-tailwind-preset.css";
 @import "../../../libs/ui/src/pos-tokens.css";
 @import "../../../libs/ui/src/spartan-theme.css";
+@import "../../../libs/ui/src/pos-thai-type.css";
 :root {
   color-scheme: light;
   font-family:
