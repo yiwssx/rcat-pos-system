@@ -1,5 +1,5 @@
 /** Pure fail-closed validation of manual finance forms (no bank API). */
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const PAYMENT_EXCEPTION_KINDS = [
   "underpayment",
   "overpayment",
