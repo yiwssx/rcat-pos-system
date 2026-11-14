@@ -49,13 +49,6 @@ jobs:
       - name: Install from committed lockfile
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm install --frozen-lockfile
-      # Temporary formatter diff for new Merchant receiver HTML; remove after applying.
-      - name: Payment receiver template formatting delta
-        if: github.event_name == 'pull_request' && steps.impact.outputs.workspace == 'true'
-        run: |
-          pnpm exec prettier --write apps/merchant/src/app/merchant-payment-receiver.page.html
-          git --no-pager diff --unified=1 -- apps/merchant/src/app/merchant-payment-receiver.page.html
-          git restore -- apps/merchant/src/app/merchant-payment-receiver.page.html
       - name: Display Nx projects
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm exec nx show projects
