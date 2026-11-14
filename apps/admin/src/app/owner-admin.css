@@ -401,3 +401,31 @@
     font-size: 1.75rem;
   }
 }
+
+/* RCAT POS V6 / deliberate admin density, not a tall single-page form. */
+.owner-shell h1 {
+  color: #202c34;
+}
+.owner-panel {
+  border-color: #e9e0d8;
+  border-radius: 18px;
+  box-shadow: 0 6px 22px rgb(50 44 38 / 4%);
+}
+.owner-form input,
+.owner-form select,
+.owner-staff-controls select {
+  background: #fffdfa;
+  border-color: #d9cfc5;
+  border-radius: 12px;
+}
+.owner-form button,
+.owner-login {
+  background: #b94d1b;
+  border-color: #b94d1b;
+}
+.owner-form input:focus-visible,
+.owner-form select:focus-visible,
+.owner-form button:focus-visible {
+  outline: 3px solid #b94d1b;
+  outline-offset: 2px;
+}

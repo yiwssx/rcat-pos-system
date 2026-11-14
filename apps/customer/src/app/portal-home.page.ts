@@ -14,11 +14,12 @@ import { RouterLink } from "@angular/router";
 import { firstValueFrom } from "rxjs";
 import { PortalSession } from "./portal-session.service";
 import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
+import { RcatButtonDirective } from "@rcat/ui";
 
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, RcatButtonDirective],
   template: `
     <section class="portal-home" aria-labelledby="portal-title">
       @switch (session.phase()) {
@@ -37,6 +38,7 @@ import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
             <button
               type="button"
               class="portal-button"
+              rcatBtn
               (click)="session.refresh()"
             >
               ลองเชื่อมต่ออีกครั้ง
@@ -46,6 +48,15 @@ import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
         @case ("guest") {
           <div class="portal-landing">
             <div class="portal-landing-intro">
+              <div class="portal-hero-brand">
+                <img
+                  src="/rcat-pos-logo.webp"
+                  width="68"
+                  height="68"
+                  alt="โลโก้ RCAT POS System"
+                />
+                <span>RCAT POS SYSTEM</span>
+              </div>
               <span class="portal-eyebrow">RCAT POS / QR ORDERING</span>
               <h1 id="portal-title">
                 สั่งอาหารง่าย <span>จัดการร้านในที่เดียว</span>
@@ -67,7 +78,13 @@ import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
               </p>
             </div>
             <div class="portal-login-card">
-              <span class="portal-login-icon" aria-hidden="true">R</span>
+              <img
+                class="portal-login-brand-image"
+                src="/rcat-pos-logo.webp"
+                width="72"
+                height="72"
+                alt=""
+              />
               <span class="portal-eyebrow">MERCHANT WORKSPACE</span>
               <h2>เข้าสู่พื้นที่จัดการร้าน</h2>
               <p>สำหรับเจ้าของร้านและพนักงานที่ได้รับสิทธิ์เท่านั้น</p>
@@ -101,7 +118,7 @@ import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
                 </form>
                 <small>ใช้บัญชีและรหัสผ่านจาก Terminal ของ Local Demo</small>
               } @else {
-                <a class="portal-button" href="/api/auth/google/start"
+                <a class="portal-button" rcatBtn href="/api/auth/google/start"
                   >เข้าสู่ระบบด้วย Google @rcat.ac.th</a
                 >
               }

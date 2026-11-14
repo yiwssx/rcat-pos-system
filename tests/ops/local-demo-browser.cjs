@@ -31,6 +31,10 @@ async function main() {
     await page.getByLabel('รหัสผ่านทดลอง').fill(password);
     await page.getByRole('button', { name: 'เข้าสู่ระบบทดลอง', exact: true }).click();
     await page.getByRole('heading',{name:'เริ่มงานที่ร้าน',exact:true}).waitFor();
+    const officialLogo = page.locator('img.portal-brand-image');
+    await officialLogo.waitFor();
+    assert.equal(await officialLogo.evaluate(img => img.complete && img.naturalWidth === 96), true,
+      'Uploaded RCAT POS artwork must load as a real image in the portal');
     // Verify the actual viewport being tested: the old check ran only after
     // changing to desktop width but mistakenly claimed 320px coverage.
     for (const viewport of [
@@ -100,6 +104,10 @@ async function main() {
     await tableView.screenshot({ path: '/tmp/rcat-portal-tables-mobile.png', fullPage: true });
     await staticPage.getByRole('button', { name: 'ตรวจสอบอีกครั้ง' }).click();
     await staticPage.locator('.guest-product').first().waitFor();
+    const guestLogo = staticPage.locator('img.guest-brand-image');
+    await guestLogo.waitFor();
+    assert.equal(await guestLogo.evaluate(img => img.complete && img.naturalWidth === 96), true,
+      'Guest QR menu must load the committed RCAT POS logo');
     assert.equal(await staticPage.locator('header.portal-header').isVisible(), false,
       'Guest ordering should not repeat the portal masthead');
     assert.equal(await staticPage.locator('header.guest-header').isVisible(), true);
