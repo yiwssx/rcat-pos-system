@@ -202,11 +202,11 @@ describe("customer route security and QR ordering", () => {
     expect(same.map((line) => line.quantity)).toEqual([2, 1]);
     expect(same.map((line) => line.note)).toEqual(["ไม่ใส่ผัก", "แยกผัก"]);
     expect(estimateSatang(VISIT, same)).toBe(34500);
-    expect(normalizedItemNote("  ไม่   ใส่   พริก  ")).toBe(
-      "ไม่ ใส่ พริก",
-    );
-    expect(() => normalizedItemNote("ก".repeat(241))).toThrow();
-    expect(() => addToCart(VISIT, [], "p1", ["o1"], "x".repeat(241))).toThrow();
+    const normalized = normalizedItemNote("  ไม่   ใส่   พริก  ");
+    expect(normalized).toBe("ไม่ ใส่ พริก");
+    const tooLong = "x".repeat(241);
+    expect(() => normalizedItemNote(tooLong)).toThrow();
+    expect(() => addToCart(VISIT, [], "p1", ["o1"], tooLong)).toThrow();
   });
 
   it("requires a bounded Thai checkout identity and delivery point", () => {
