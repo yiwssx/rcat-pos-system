@@ -14,6 +14,7 @@ export interface OrderItem {
   productName: string;
   quantity: number;
   lineTotalSatang: number;
+  note?: string | null;
   options: readonly { name: string; priceDeltaSatang: number }[];
 }
 
@@ -23,6 +24,8 @@ export interface MerchantOrder {
   visitId: string;
   amountSatang: number;
   currency: "THB";
+  orderedBy?: string | null;
+  deliverTo?: string | null;
   status: OrderStatus;
   paymentState: "not_requested";
   createdAt: string;
