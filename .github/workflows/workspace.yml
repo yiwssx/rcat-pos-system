@@ -49,6 +49,13 @@ jobs:
       - name: Install from committed lockfile
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm install --frozen-lockfile
+      # Temporary one-file formatter diagnostic; remove before merge.
+      - name: Diagnostic diff for Guest payment template
+        if: github.event_name == 'pull_request' && steps.impact.outputs.workspace == 'true'
+        run: |
+          pnpm exec prettier --write apps/customer/src/app/guest-track.page.ts
+          git --no-pager diff -- apps/customer/src/app/guest-track.page.ts
+          git restore -- apps/customer/src/app/guest-track.page.ts
       - name: Display Nx projects
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm exec nx show projects
