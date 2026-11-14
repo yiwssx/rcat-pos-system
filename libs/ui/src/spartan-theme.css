@@ -1,0 +1,88 @@
+/* RCAT-owned semantic theme, matching spartan's customizable Helm model. */
+:root {
+  --background: #f7f5f1;
+  --foreground: #202c34;
+  --card: #ffffff;
+  --card-foreground: #202c34;
+  --popover: #ffffff;
+  --popover-foreground: #202c34;
+  --primary: #b94d1b;
+  --primary-foreground: #ffffff;
+  --secondary: #f5ebe1;
+  --secondary-foreground: #523322;
+  --muted: #f3f2ef;
+  --muted-foreground: #647078;
+  --accent: #ffefdf;
+  --accent-foreground: #8b3718;
+  --destructive: #a33135;
+  --border: #e8e2dd;
+  --input: #d6d0c9;
+  --ring: #b94d1b;
+  --radius: 0.875rem;
+}
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+}
+.rcat-btn {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--primary);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font: inherit;
+  font-size: 0.91rem;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+.rcat-btn:hover:not(:disabled) {
+  background: #993b13;
+  border-color: #993b13;
+}
+.rcat-btn[data-variant="secondary"] {
+  border-color: #e9e1db;
+  background: #f5ebe1;
+  color: #67371f;
+}
+.rcat-btn[data-variant="outline"] {
+  border-color: #d2c8bf;
+  background: #ffffff;
+  color: #3d4950;
+}
+.rcat-btn:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+.rcat-btn:disabled,
+.rcat-btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.54;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rcat-btn {
+    transition: none;
+  }
+}
