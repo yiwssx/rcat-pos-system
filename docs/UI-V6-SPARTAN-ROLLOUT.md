@@ -1,4 +1,6 @@
-# RCAT POS UI V6 — Spartan Angular + Official RCAT Brand
+# RCAT POS UI V6 — Spartan Angular + Official RCAT Brand (foundation history)
+
+> **CURRENT:** This is the PR #105 foundation record. V6 screen design and Thai font must follow [UI-V6-POS-WORKBENCH.md](UI-V6-POS-WORKBENCH.md).
 **Date:** 14 November 2026  
 **Status:** Implemented foundation on isolated branch; Owner Visual UAT remains OPEN.  
 **Work owner:** Existing UI/UX unified tracker #102 and master #13; no new Epic/Issue.
