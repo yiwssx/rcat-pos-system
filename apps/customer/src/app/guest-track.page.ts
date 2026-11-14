@@ -9,10 +9,12 @@ import {
   signal,
 } from "@angular/core";
 import { RouterLink } from "@angular/router";
+import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import {
   formatSatang,
   GuestOrderHistory,
   GuestOrderStatus,
+  GuestPaymentRequest,
   ORDER_STATUS_LABEL,
 } from "./guest-order.domain";
 import { GuestOrderApi, GuestOrderSession } from "./guest-order.api";
@@ -35,10 +37,6 @@ const TRACK_INTERVAL_MS = 15_000;
       <p class="guest-context">
         แสดงสถานะจากร้านค้าโดยตรง · การส่งออเดอร์สำเร็จไม่ใช่การชำระเงินสำเร็จ
       </p>
-      <div class="guest-payment-alert" role="note">
-        ยังไม่เปิดรับการชำระเงินในระบบนี้ (Payment: not_requested)
-      </div>
-
       @if (!online()) {
         <p class="guest-warning" role="status">
           ออฟไลน์ · สถานะออเดอร์ล่าสุดอาจเปลี่ยนแล้ว
@@ -76,6 +74,68 @@ const TRACK_INTERVAL_MS = 15_000;
           @if (error()) {
             <div class="guest-error" role="alert">{{ error() }}</div>
           }
+          @if (status()?.status === "cancelled") {
+            <p class="guest-payment-alert" role="note">
+              ออเดอร์ถูกยกเลิกแล้ว · ไม่สามารถสร้าง QR ชำระเงินใหม่ได้
+            </p>
+          } @else if (payment()) {
+            <section class="guest-payment-card" aria-labelledby="payment-title">
+              <h2 id="payment-title">ชำระเงินด้วย PromptPay</h2>
+              <p class="guest-context">
+                ยอดที่ระบบระบุ {{ money(payment()!.amountSatang) }} ฿
+                · สามารถชำระภายหลังได้
+              </p>
+              @if (paymentUrl()) {
+                <img
+                  class="guest-payment-qr"
+                  [src]="paymentUrl()"
+                  alt="QR PromptPay ของออเดอร์นี้"
+                  width="240"
+                  height="240"
+                />
+              }
+              <p class="guest-context">
+                ใช้แอปธนาคารสแกน หรือบันทึกรูป QR
+                เพื่อนำเข้าแอปธนาคารบนโทรศัพท์เครื่องเดียวกัน
+              </p>
+              <div class="guest-track-actions">
+                <button type="button" (click)="savePaymentQr()">
+                  บันทึก QR
+                </button>
+                <button
+                  type="button"
+                  class="guest-subtle"
+                  [disabled]="paymentLoading() || !online()"
+                  (click)="loadPayment(true)"
+                >
+                  ตรวจสอบ QR อีกครั้ง
+                </button>
+              </div>
+              <p class="guest-payment-alert" role="note">
+                QR ไม่ใช่หลักฐานว่าเงินเข้าแล้ว
+                การส่งสลิปและการยืนยันโดยร้านยังอยู่ระหว่างพัฒนา
+              </p>
+            </section>
+          } @else if (paymentLoading()) {
+            <p class="guest-status" role="status">
+              กำลังตรวจสอบช่องทางชำระเงิน...
+            </p>
+          } @else if (paymentChecked()) {
+            <div class="guest-payment-alert" role="note">
+              ยังไม่เปิดรับการชำระเงินในระบบนี้ (Payment: not_requested)
+              <button
+                type="button"
+                class="guest-subtle"
+                [disabled]="!online()"
+                (click)="loadPayment(true)"
+              >
+                ตรวจสอบช่องทางอีกครั้ง
+              </button>
+            </div>
+          }
+          @if (paymentError()) {
+            <p class="guest-warning" role="status">{{ paymentError() }}</p>
+          }
           @if (history()?.events?.length) {
             <h2>ประวัติสถานะ</h2>
             <ol class="guest-timeline">
@@ -112,9 +172,19 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   readonly session = inject(GuestOrderSession);
   private readonly api = inject(GuestOrderApi);
   private readonly document = inject(DOCUMENT);
+  private readonly sanitizer = inject(DomSanitizer);
   private readonly window = this.document.defaultView;
   private interval?: ReturnType<typeof setInterval>;
   private destroyed = false;
+  private paymentForOrder: string | null = null;
+  private qrObjectUrl: string | null = null;
+  readonly payment = signal<
+    Extract<GuestPaymentRequest, { available: true }> | null
+  >(null);
+  readonly paymentUrl = signal<SafeUrl | null>(null);
+  readonly paymentChecked = signal(false);
+  readonly paymentLoading = signal(false);
+  readonly paymentError = signal("");
   readonly status = signal<GuestOrderStatus | null>(null);
   readonly history = signal<GuestOrderHistory | null>(null);
   readonly error = signal("");
@@ -142,6 +212,7 @@ export class GuestTrackPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    this.revokeQrUrl();
     if (this.interval) clearInterval(this.interval);
     this.window?.removeEventListener("focus", this.onResume);
     this.window?.removeEventListener("online", this.onResume);
@@ -183,6 +254,13 @@ export class GuestTrackPage implements OnInit, OnDestroy {
       );
       if (this.destroyed) return;
       this.status.set(latest);
+      if (latest.status === "cancelled") {
+        this.revokeQrUrl();
+        this.payment.set(null);
+        this.paymentChecked.set(true);
+      } else {
+        void this.loadPayment();
+      }
       const timeline = await this.api.history(
         tracked.orderId,
         tracked.trackingToken,
@@ -204,7 +282,79 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     }
   }
 
+  private revokeQrUrl(): void {
+    if (this.qrObjectUrl && this.window) {
+      this.window.URL.revokeObjectURL(this.qrObjectUrl);
+    }
+    this.qrObjectUrl = null;
+    this.paymentUrl.set(null);
+  }
+
+  async loadPayment(force = false): Promise<void> {
+    const tracked = this.session.recoverTracking();
+    if (
+      !tracked ||
+      !this.online() ||
+      this.destroyed ||
+      this.paymentLoading() ||
+      this.status()?.status === "cancelled" ||
+      (!force && this.paymentForOrder === tracked.orderId)
+    ) {
+      return;
+    }
+    this.paymentForOrder = tracked.orderId;
+    this.paymentLoading.set(true);
+    this.paymentChecked.set(false);
+    this.paymentError.set("");
+    try {
+      const result = await this.api.paymentRequest(
+        tracked.orderId,
+        tracked.trackingToken,
+      );
+      if (this.destroyed || this.session.tracking()?.orderId !== tracked.orderId) {
+        return;
+      }
+      this.revokeQrUrl();
+      this.payment.set(null);
+      if (result.available) {
+        const svg = new Blob([result.qrSvg], { type: "image/svg+xml" });
+        const objectUrl = this.window?.URL.createObjectURL(svg);
+        if (!objectUrl) {
+          throw new Error("Payment QR cannot be displayed");
+        }
+        this.qrObjectUrl = objectUrl;
+        // Only our own read-only image Blob is marked safe; never inject
+        // third-party SVG via innerHTML or trust arbitrary received URLs.
+        this.paymentUrl.set(
+          this.sanitizer.bypassSecurityTrustUrl(objectUrl),
+        );
+        this.payment.set(result);
+      }
+      this.paymentChecked.set(true);
+    } catch {
+      if (this.destroyed) return;
+      this.paymentError.set("ยังตรวจสอบช่องทางชำระเงินไม่ได้ โปรดลองอีกครั้ง");
+      this.paymentChecked.set(true);
+    } finally {
+      if (!this.destroyed) this.paymentLoading.set(false);
+    }
+  }
+
+  savePaymentQr(): void {
+    const tracked = this.session.tracking();
+    if (!tracked || !this.qrObjectUrl) return;
+    const anchor = this.document.createElement("a");
+    anchor.href = this.qrObjectUrl;
+    anchor.download = `rcat-pos-order-${tracked.orderId.slice(0, 8)}-qr.svg`;
+    anchor.click();
+  }
+
   clear(): void {
+    this.revokeQrUrl();
+    this.payment.set(null);
+    this.paymentChecked.set(false);
+    this.paymentForOrder = null;
+    this.paymentError.set("");
     this.session.clearTracking();
     this.status.set(null);
     this.history.set(null);
