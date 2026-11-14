@@ -95,19 +95,33 @@ export interface GuestCheckout {
   paymentState: "not_requested";
   replayed: boolean;
 }
+export type GuestPaymentRequest =
+  | { available: false }
+  | {
+      available: true;
+      requestId: string;
+      orderId: string;
+      amountSatang: number;
+      currency: "THB";
+      state: "awaiting_payment";
+      createdAt: string;
+      qrSvg: string;
+      merchantConfirmation: false;
+    };
+
 export interface GuestOrderStatus {
   orderId: string;
   status: "submitted" | "accepted" | "preparing" | "served" | "cancelled";
   amountSatang: number;
   currency: "THB";
-  paymentState: "not_requested";
+  paymentState: "not_requested" | "awaiting_payment";
   createdAt: string;
   updatedAt: string;
 }
 export interface GuestOrderHistory {
   orderId: string;
   status: GuestOrderStatus["status"];
-  paymentState: "not_requested";
+  paymentState: "not_requested" | "awaiting_payment";
   events: {
     status: GuestOrderStatus["status"];
     fromStatus: GuestOrderStatus["status"] | null;
