@@ -41,7 +41,7 @@ function failure(error: unknown): string {
   template: `
     <div class="owner-shell">
       <header class="owner-intro">
-        <span class="eyebrow">RCAT POS / TENANT OPERATIONS</span>
+        <span class="eyebrow">ADMINISTRATION / RCAT POS</span>
         <h1>จัดการร้านค้าและบัญชีบุคลากร</h1>
         <p class="owner-muted">
           พื้นที่บริหารร้านที่บัญชีนี้ได้รับสิทธิ์เท่านั้น
@@ -65,8 +65,7 @@ function failure(error: unknown): string {
           </div>
         }
         <p class="owner-alert" role="note">
-          ระบบยังเป็นระยะพัฒนา · การสร้างร้านหรือจัดการพนักงานจะสำเร็จ ต่อเมื่อ
-          Backend ยืนยันธุรกรรมแล้วเท่านั้น · ยังไม่มีระบบรับเงิน
+          การสร้างร้านและจัดการพนักงานมีผลเมื่อระบบยืนยันเท่านั้น · ยังไม่เปิดรับชำระเงิน
         </p>
       </header>
 
@@ -125,9 +124,13 @@ function failure(error: unknown): string {
           }
         </section>
 
-        <div class="owner-grid">
-          <section class="owner-panel" aria-labelledby="create-title">
-            <h2 id="create-title">สร้างร้านใหม่</h2>
+        <div class="owner-grid v6-owner-actions">
+          <details class="owner-panel v6-owner-disclosure" aria-labelledby="create-title">
+            <summary>
+              <strong id="create-title">สร้างร้านใหม่</strong>
+              <span>สร้างร้านและหน่วยงานสำหรับบัญชีที่ได้รับสิทธิ์</span>
+            </summary>
+            <div class="v6-owner-form-body">
             <p class="owner-muted">
               เปิดเฉพาะบัญชีที่ได้รับอนุมัติแล้ว จำกัดจำนวนร้านตาม Backend
             </p>
@@ -186,10 +189,15 @@ function failure(error: unknown): string {
                 {{ pending() ? "กำลังดำเนินการ..." : "สร้างร้านค้า" }}
               </button>
             </form>
-          </section>
+            </div>
+          </details>
 
-          <section class="owner-panel" aria-labelledby="accept-title">
-            <h2 id="accept-title">รับคำเชิญเข้าร้าน</h2>
+          <details class="owner-panel v6-owner-disclosure" aria-labelledby="accept-title">
+            <summary>
+              <strong id="accept-title">รับคำเชิญเข้าร้าน</strong>
+              <span>เข้าร่วมร้านที่เจ้าของร้านเชิญไว้แล้ว</span>
+            </summary>
+            <div class="v6-owner-form-body">
             <p class="owner-muted">
               ใช้รหัสคำเชิญแบบใช้ครั้งเดียวที่เจ้าของร้านส่งให้
               ไม่ควรนำรหัสนี้ใส่ URL หรือส่งในกลุ่มสาธารณะ
@@ -216,7 +224,8 @@ function failure(error: unknown): string {
               หากยังไม่มีบัญชีที่ได้รับอนุมัติ โปรดติดต่อผู้ดูแลก่อน
               การรับคำเชิญไม่ได้สร้างบัญชี Google ใหม่
             </p>
-          </section>
+            </div>
+          </details>
         </div>
       }
     </div>
