@@ -27,7 +27,7 @@ export interface MerchantOrder {
   orderedBy?: string | null;
   deliverTo?: string | null;
   status: OrderStatus;
-  paymentState: "not_requested" | "awaiting_payment";
+  paymentState: "not_requested" | "awaiting_payment" | "slip_submitted" | "manual_confirmed";
   createdAt: string;
   updatedAt: string;
   items: readonly OrderItem[];
@@ -73,7 +73,7 @@ export interface OrderEventPage {
 export interface OrderHistory {
   orderId: string;
   status: OrderStatus;
-  paymentState: "not_requested" | "awaiting_payment";
+  paymentState: "not_requested" | "awaiting_payment" | "slip_submitted" | "manual_confirmed";
   events: {
     eventId: number | null;
     status: OrderStatus;
