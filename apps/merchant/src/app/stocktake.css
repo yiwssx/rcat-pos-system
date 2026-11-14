@@ -204,3 +204,42 @@
     flex: 1;
   }
 }
+
+/* V6 stocktake: consistent brand without recoding destructive actions. */
+.stocktake-shell {
+  color: #20313b;
+  background: linear-gradient(180deg, #fffaf0, #fffefa);
+}
+.stocktake-panel,
+.stocktake-record {
+  background: #fff;
+  border-color: #efdbc5;
+  box-shadow: 0 7px 21px rgb(173 66 10 / 5%);
+}
+.stocktake-shell h1,
+.stocktake-shell h2,
+.stocktake-shell h3 {
+  color: #23333c;
+}
+.stocktake-back {
+  color: #99420e;
+}
+.stocktake-caution {
+  background: #fff3dd;
+  border-color: #f0d4ab;
+}
+.stocktake-form input,
+.stocktake-form select {
+  background: #fffefa;
+  border-color: #e8d0b5;
+}
+.stocktake-shell button:not(.stocktake-reject):not(:disabled) {
+  background: linear-gradient(110deg, #bd3d06, #d95007);
+  border-color: #bd3d06;
+  color: #fff;
+}
+.stocktake-shell button.stocktake-reject {
+  background: #fff;
+  color: #a33135;
+  border-color: #dda6a5;
+}
