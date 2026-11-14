@@ -82,6 +82,8 @@ async function main() {
         pointerEvents: bottom.pointerEvents,
         cta: cta.backgroundImage,
         main: getComputedStyle(document.querySelector('.portal-home')).backgroundColor,
+        hintClearance: shell.getBoundingClientRect().bottom
+          - document.querySelector('.portal-nav-hint').getBoundingClientRect().bottom,
       };
     });
     assert.match(ornament.top, /v6-ribbon-top\.svg/, 'Top gold ribbon must be mounted on the full application shell');
@@ -90,6 +92,7 @@ async function main() {
     assert.equal(ornament.pointerEvents, 'none', 'Decorative overlays must never intercept POS clicks');
     assert.match(ornament.cta, /v6-cta-flourish\.svg/, 'Order CTA must use the shared basket flourish');
     assert.equal(ornament.main, 'rgba(0, 0, 0, 0)', 'Workspace must be transparent so shell ornaments remain visible');
+    assert.ok(ornament.hintClearance > 54, 'Sidebar hint must remain readable above the golden wave crest');
     await page.setViewportSize({ width: 320, height: 780 });
     const officialLogo = page.locator('img.portal-brand-image');
     await officialLogo.waitFor();
