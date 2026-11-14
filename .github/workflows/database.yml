@@ -131,6 +131,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/guest-orders.sql
       - name: Verify required guest identity, delivery and per-item snapshot recovery
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/guest-order-context.sql
+      - name: Verify stable per-store human Order numbers and replay safety
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-display-numbers.sql
       - name: Verify dormant G5-M1 merchant PromptPay receiver scope, CAS and RLS
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/g5-merchant-receiver.sql
       - name: Verify guest Order scoped dual-gated Payment Request and kitchen independence
