@@ -163,7 +163,13 @@ describe("customer route security and QR ordering", () => {
       selectedIds: string[],
       optionId: string | null,
     ): string[] {
-      return changeModifierSelection(visit, "p1", groupId, selectedIds, optionId);
+      return changeModifierSelection(
+        visit,
+        "p1",
+        groupId,
+        selectedIds,
+        optionId,
+      );
     }
     const first = choose("sweet", ["o1"], "sweet-low");
     expect(first).toEqual(["o1", "sweet-low"]);
