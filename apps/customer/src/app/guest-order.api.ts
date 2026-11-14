@@ -11,6 +11,7 @@ import {
   normalizedOrderContext,
   GuestOrderHistory,
   GuestOrderStatus,
+  GuestPaymentRequest,
   GuestVisit,
 } from "./guest-order.domain";
 
@@ -119,6 +120,19 @@ export class GuestOrderApi {
     return firstValueFrom(
       this.http.get<GuestOrderStatus>(
         "/api/guest/orders/" + encodeURIComponent(orderId) + "/status",
+        { headers: { Authorization: `Bearer ${token}` } },
+      ),
+    );
+  }
+
+  paymentRequest(
+    orderId: string,
+    token: string,
+  ): Promise<GuestPaymentRequest> {
+    return firstValueFrom(
+      this.http.post<GuestPaymentRequest>(
+        "/api/guest/orders/" + encodeURIComponent(orderId) + "/payment-request",
+        {},
         { headers: { Authorization: `Bearer ${token}` } },
       ),
     );
