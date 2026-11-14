@@ -14,11 +14,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const KEY = /^[A-Za-z0-9_-]{16,96}$/;
 
 /** Normalize before hashing the canonical order request; never echo PII in errors. */
-function boundedText(
-  raw: unknown,
-  max: number,
-  required: boolean,
-): string {
+function boundedText(raw: unknown, max: number, required: boolean): string {
   if (typeof raw !== "string") {
     throw new BadRequestException("Invalid order context");
   }
