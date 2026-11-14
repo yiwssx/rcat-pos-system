@@ -3,6 +3,12 @@ export type OrderStatus =
   "submitted" | "accepted" | "preparing" | "served" | "cancelled";
 export type PaymentState =
   "not_requested" | "awaiting_payment" | "slip_submitted" | "manual_confirmed";
+export const PAYMENT_STATUS_LABEL: Readonly<Record<PaymentState, string>> = {
+  not_requested: "ยังไม่เปิดคำขอชำระ",
+  awaiting_payment: "รอชำระเงิน",
+  slip_submitted: "ส่งสลิปแล้ว · รอร้านตรวจสอบ",
+  manual_confirmed: "ร้านยืนยันรับเงินแล้ว (ตรวจด้วยตนเอง)",
+};
 
 export interface MerchantStore {
   tenantId: string;

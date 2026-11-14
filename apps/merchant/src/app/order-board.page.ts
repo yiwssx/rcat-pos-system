@@ -23,6 +23,7 @@ import {
   OrderEvent,
   OrderHistory,
   OrderStatus,
+  PAYMENT_STATUS_LABEL,
   orderActions,
   ROLE_LABEL,
   STATUS_LABEL,
@@ -287,11 +288,7 @@ function failureText(error: unknown): string {
                 <div class="order-total">
                   <span>
                     ยอดออเดอร์ ·
-                    {{
-                      order.paymentState === "awaiting_payment"
-                        ? "รอลูกค้าชำระ / ร้านตรวจสอบ"
-                        : "ยังไม่เปิดคำขอชำระ"
-                    }}
+                    {{ paymentStatusLabel[order.paymentState] }}
                   </span>
                   <strong class="money"
                     >{{ money(order.amountSatang) }} ฿</strong
@@ -465,6 +462,7 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
   readonly historyLoadingId = signal<string | null>(null);
   readonly statusLabel = STATUS_LABEL;
   readonly roleLabel = ROLE_LABEL;
+  readonly paymentStatusLabel = PAYMENT_STATUS_LABEL;
   readonly money = formatSatang;
 
   readonly visibleOrders = computed(() => {
