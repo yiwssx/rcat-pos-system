@@ -48,6 +48,7 @@ export interface FinanceReport {
     openExceptionCount: number;
   };
   outstandingOrders: FinanceOrder[];
+  confirmedOrders: FinanceOrder[];
   refunds: FinanceRefund[];
   exceptions: FinanceException[];
 }
