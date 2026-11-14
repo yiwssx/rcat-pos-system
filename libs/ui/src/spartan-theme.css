@@ -1,23 +1,23 @@
 /* RCAT-owned semantic theme, matching spartan's customizable Helm model. */
 :root {
-  --background: #f7f5f1;
-  --foreground: #202c34;
+  --background: #fffaf3;
+  --foreground: #1f2933;
   --card: #ffffff;
-  --card-foreground: #202c34;
+  --card-foreground: #1f2933;
   --popover: #ffffff;
-  --popover-foreground: #202c34;
-  --primary: #b94d1b;
+  --popover-foreground: #1f2933;
+  --primary: #c94108;
   --primary-foreground: #ffffff;
-  --secondary: #f5ebe1;
-  --secondary-foreground: #523322;
-  --muted: #f3f2ef;
-  --muted-foreground: #647078;
-  --accent: #ffefdf;
-  --accent-foreground: #8b3718;
+  --secondary: #fff1dd;
+  --secondary-foreground: #70370d;
+  --muted: #fff7ea;
+  --muted-foreground: #576777;
+  --accent: #e4faf3;
+  --accent-foreground: #075c54;
   --destructive: #a33135;
-  --border: #e8e2dd;
-  --input: #d6d0c9;
-  --ring: #b94d1b;
+  --border: #eedfce;
+  --input: #dfcebc;
+  --ring: #087c72;
   --radius: 0.875rem;
 }
 @theme inline {
@@ -59,18 +59,18 @@
     box-shadow 140ms ease;
 }
 .rcat-btn:hover:not(:disabled) {
-  background: #993b13;
-  border-color: #993b13;
+  background: #a73206;
+  border-color: #a73206;
 }
 .rcat-btn[data-variant="secondary"] {
-  border-color: #e9e1db;
-  background: #f5ebe1;
-  color: #67371f;
+  border-color: #f0d8bb;
+  background: #fff2df;
+  color: #7f3b13;
 }
 .rcat-btn[data-variant="outline"] {
-  border-color: #d2c8bf;
+  border-color: #dfcdbd;
   background: #ffffff;
-  color: #3d4950;
+  color: #263742;
 }
 .rcat-btn:focus-visible {
   outline: 3px solid var(--ring);
