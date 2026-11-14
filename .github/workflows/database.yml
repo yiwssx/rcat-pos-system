@@ -137,6 +137,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/g5-guest-payment-request.sql
       - name: Verify private G5 slip review and bank-check transitions
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/g5-private-slip-review.sql
+      - name: Verify manual finance refund and exception reconciliation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/g5-manual-finance-ledger.sql
       - name: Verify read-only operator Outbox retention preview and runtime privilege isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/outbox-retention-preview.sql
       - name: Verify merchant Order inbox, authorized transitions and audit
