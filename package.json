@@ -23,6 +23,7 @@
     "format:check": "prettier --check 'apps/**/*.{ts,html,css,json}' 'libs/**/*.ts' 'nx.json' 'angular.json' 'package.json'"
   },
   "dependencies": {
+    "@angular/cdk": "~22.2.7",
     "@angular/common": "~22.2.0",
     "@angular/compiler": "~22.2.0",
     "@angular/core": "~22.2.0",
@@ -32,10 +33,11 @@
     "@nestjs/common": "^11.1.0",
     "@nestjs/core": "^11.1.0",
     "@nestjs/platform-express": "^11.1.0",
-    "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2",
+    "@spartan-ng/brain": "1.9.0",
     "pg": "8.23.1",
-    "qrcode": "1.5.4"
+    "qrcode": "1.5.4",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@angular/build": "~22.2.0",
@@ -43,12 +45,16 @@
     "@angular/compiler-cli": "~22.2.0",
     "@nx/angular": "24.0.3",
     "@nx/nest": "24.0.3",
+    "@spartan-ng/cli": "1.9.0",
+    "@tailwindcss/postcss": "^4.3.5",
     "@types/node": "^24.0.0",
+    "@types/pg": "8.23.1",
     "nx": "24.0.3",
+    "postcss": "^8.5.32",
     "prettier": "^3.6.0",
-    "typescript": "~6.0.0",
-    "vitest": "^4.0.0",
+    "tailwindcss": "^4.3.5",
     "tsx": "^4.20.0",
-    "@types/pg": "8.23.1"
+    "typescript": "~6.0.0",
+    "vitest": "^4.0.0"
   }
 }
