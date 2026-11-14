@@ -1,0 +1,175 @@
+/* V6 Brand Decoration System — single authoritative layer for ornamental art.
+   Keep this file AFTER the operational workspace styles. The artwork is visual
+   only: it never carries order/payment meaning or intercepts interaction. */
+.portal-layout:has(.v6-home) {
+  --pos-decor-top-height: 230px;
+  --pos-decor-bottom-height: 178px;
+  --pos-decor-side-width: clamp(220px, 36vw, 460px);
+}
+
+/* Header and body share the exact same full-width SVG alignment so the
+   gold ribbon reads as one continuous gesture instead of two stickers. */
+.portal-layout:has(.v6-home) .portal-header {
+  position: relative;
+  z-index: 5;
+  background:
+    url("/v6-ribbon-top.svg") center top /
+      100% var(--pos-decor-top-height) no-repeat,
+    linear-gradient(100deg, #ffffff 0%, #fffdfa 72%, #fff3d9 100%);
+}
+
+.portal-content:has(.v6-home) {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 92% 13%, rgb(255 219 149 / 16%), transparent 48%),
+    linear-gradient(180deg, #fffaf3 0%, #fffdfa 72%, #fff5e3 100%);
+}
+
+.portal-content:has(.v6-home)::before,
+.portal-content:has(.v6-home)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+/* Starts at the header's top edge and continues under the main surface.
+   The previous page-contained pseudo shapes could not span this shell. */
+.portal-content:has(.v6-home)::before {
+  top: -64px;
+  height: var(--pos-decor-top-height);
+  z-index: 0;
+  background: url("/v6-ribbon-top.svg") center top /
+    100% 100% no-repeat;
+}
+
+/* One continuous wave crosses the merchant navigation and work area,
+   stopping precisely above the footer. Full-width SVG does not add scroll. */
+.portal-content:has(.v6-home)::after {
+  bottom: 0;
+  height: var(--pos-decor-bottom-height);
+  z-index: 3;
+  background: url("/v6-bottom-waves.svg") center bottom /
+    100% 100% no-repeat;
+}
+
+.portal-content:has(.v6-home) .portal-sidebar > * {
+  position: relative;
+  z-index: 4;
+}
+
+/* Main content sits above both ornaments. Its page background must be
+   transparent; otherwise it would conceal the shell-level ribbon and waves. */
+.portal-content:has(.v6-home) .portal-home:has(.v6-home) {
+  position: relative;
+  z-index: 4;
+  isolation: isolate;
+  overflow: hidden;
+  background: transparent;
+  padding-bottom: clamp(9rem, 16vw, 12.5rem);
+}
+
+.portal-content:has(.v6-home) .portal-home:has(.v6-home)::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  right: max(0px, calc((100% - 1330px) / 2));
+  bottom: 0;
+  width: var(--pos-decor-side-width);
+  height: clamp(125px, 19vw, 245px);
+  pointer-events: none;
+  background: url("/v6-storefront.svg") right bottom / contain no-repeat;
+}
+
+.portal-content:has(.v6-home) .portal-home:has(.v6-home) > .v6-home {
+  position: relative;
+  z-index: 1;
+}
+
+/* The mock's sweeping basket graphic becomes a reusable component flourish,
+   not a static screenshot baked under interactive Thai text. */
+.portal-layout:has(.v6-home) .v6-main-action::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  right: 5%;
+  top: 0;
+  bottom: 0;
+  width: 48%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+  transform: none;
+  pointer-events: none;
+  opacity: 0.9;
+  background: url("/v6-cta-flourish.svg") right center / contain no-repeat;
+}
+
+.portal-layout:has(.v6-home) .v6-main-action > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Keep real controls accessible and surfaces readable above wave art. */
+.portal-layout:has(.v6-home) .portal-footer {
+  position: relative;
+  z-index: 5;
+  background: #fff;
+}
+
+@media (max-width: 980px) {
+  .portal-layout:has(.v6-home) {
+    --pos-decor-bottom-height: 112px;
+    --pos-decor-side-width: min(45vw, 255px);
+  }
+
+  /* On tablets/phones the ribbon would compete with the login/store header.
+     Keep the task UI uncluttered; preserve the small branded footer wave. */
+  .portal-layout:has(.v6-home) .portal-header {
+    background: linear-gradient(100deg, #ffffff, #fff8ea);
+  }
+
+  .portal-content:has(.v6-home)::before {
+    display: none;
+  }
+
+  .portal-content:has(.v6-home) .portal-home:has(.v6-home) {
+    padding-bottom: 7.75rem;
+  }
+
+  .portal-content:has(.v6-home) .portal-sidebar > * {
+    z-index: 4;
+  }
+}
+
+@media (max-width: 540px) {
+  .portal-layout:has(.v6-home) {
+    --pos-decor-bottom-height: 72px;
+    --pos-decor-side-width: min(43vw, 164px);
+  }
+
+  .portal-content:has(.v6-home) .portal-home:has(.v6-home) {
+    padding-bottom: 5.5rem;
+  }
+
+  .portal-content:has(.v6-home) .portal-home:has(.v6-home)::after {
+    width: var(--pos-decor-side-width);
+    height: 100px;
+  }
+
+  .portal-layout:has(.v6-home) .v6-main-action::after {
+    width: 36%;
+    opacity: 0.4;
+  }
+}
+
+/* Decoration stays static; interaction motion belongs to real controls. */
+@media (prefers-reduced-motion: reduce) {
+  .portal-layout:has(.v6-home) .v6-main-action::after {
+    animation: none;
+    transition: none;
+  }
+}
