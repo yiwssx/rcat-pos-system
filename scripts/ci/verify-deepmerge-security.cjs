@@ -2,7 +2,7 @@
 // Execute against the *installed patched package*, not against a copied test
 // implementation. Fail when the pnpm 4.3.1 patch isn't applied.
 const assert = require("node:assert/strict");
-const { readdirSync } = require("node:fs");
+const { readdirSync, readFileSync } = require("node:fs");
 const path = require("node:path");
 
 const store = path.resolve(__dirname, "../../node_modules/.pnpm");
@@ -10,9 +10,16 @@ const candidates = readdirSync(store).filter((name) =>
   name.startsWith("deepmerge@4.3.1"),
 );
 assert.equal(candidates.length, 1, "One deepmerge 4.3.1 patch expected");
-const deepmerge = require(
+const modulePath = require.resolve(
   path.join(store, candidates[0], "node_modules", "deepmerge"),
 );
+const loadedSource = readFileSync(modulePath, "utf8");
+assert.match(
+  loadedSource,
+  /function keyIsForbidden\(key\)/,
+  "The installed deepmerge package is unpatched: " + modulePath,
+);
+const deepmerge = require(modulePath);
 
 function assertClean(result) {
   assert.equal(Object.getPrototypeOf(result), Object.prototype);
