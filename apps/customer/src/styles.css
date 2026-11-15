@@ -1686,6 +1686,26 @@ body {
   width: 58px;
   height: 58px;
 }
+/* The brand lockup is inline-flex: an unscoped inline eyebrow used to sit
+   beside it. Force a separate, compact QR label line on every viewport. */
+.portal-landing-intro .portal-hero-brand {
+  margin-bottom: 0.7rem;
+}
+.portal-landing-intro .portal-qr-tagline {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 1.15rem;
+  padding: 0.35rem 0.75rem;
+  color: #963707;
+  background: #fff0d4;
+  border: 1px solid #f0d1a5;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  line-height: 1.5;
+}
 .portal-landing-intro h1 {
   font-size: clamp(2.25rem, 4.2vw, 3.65rem);
   line-height: 1.22;
