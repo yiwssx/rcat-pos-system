@@ -16,13 +16,13 @@ References:
 - https://github.com/advisories/GHSA-g3hv-75wg-m249 (minimatch fixed 11.0.1+)
 - https://github.com/isaacs/minimatch/releases
 
-## Remaining LOW deepmerge finding — triage, not a code fix
+## Remaining LOW deepmerge finding — local source mitigation, scanner may still flag
 
-- GitHub currently flags `deepmerge@4.3.1` (GHSA-gcqx-w48m-w2h4), has **no patched version** in the reviewed advisory.
-- Installed here transitively via **`@nx/jest → jest-config`**, development/tooling dependency only. No evidence that RCAT POS invokes it on untrusted customer data paths or within the deployed API.
-- Advisory status is **disputed across providers**: GitHub still displays the alert, whereas Snyk reports a revocation and GitLab says the advisory was withdrawn (as checked 15 Nov 2026). Provider disagreement must not be represented as a patched version or an automatically dismissed GitHub alert.
-- Do **not** downgrade to an older potentially vulnerable version, change test frameworks merely to reduce the Alert count, force an undocumented alternate package, or dismiss without owner acknowledgement and evidence. If GitHub formally withdraws it, let the scanner reconcile; otherwise upstream removal/fix or a scoped approved exception is needed.
-- Treat the GitHub UI as the authoritative current alert state. The GitHub connection available for this work cannot read or dismiss private Dependabot Alerts directly; **never claim 0 active alerts from a lockfile-only commit**.
+- GitHub flags `deepmerge@4.3.1` (GHSA-gcqx-w48m-w2h4), **no upstream patched version**. The current GitHub Alert #2 identifies transitive chains from `@nx/angular`, `@nx/nest`, and `@spartan-ng/cli`; these root dependencies are **developer/build tooling**, not direct Payment API runtime dependencies. Another lockfile chain is `@nx/jest → jest-config`.
+- **Mitigation implemented in PR #112:** `pnpm-workspace.yaml` pins `deepmerge@4.3.1` to `patches/deepmerge@4.3.1.patch` with content hash recorded in the pnpm-generated lockfile. Patch rejects `__proto__`, `constructor`, and `prototype` keys from **both** source and target objects, and fails closed if a Proxy `in` trap throws. The original upstream files remain unmodified in the external registry; this is a locally maintained downstream patch, not an upstream advisory fix.
+- A targeted test, `node scripts/ci/verify-deepmerge-security.cjs`, **loads the actual installed patched module** and asserts the advisory's null-prototype attack, malicious target keys and recursive variants cannot mutate the returned prototype. It also verifies ordinary config and array merges remain compatible. An existing Workspace CI step executes the test after a frozen pnpm installation; PR acceptance requires its result to pass.
+- **Alert visibility:** Dependabot compares published package name+version against GitHub's advisory range. A patched local `4.3.1` installation may **still display an OPEN alert**, even though the targeted PoC is mitigated in installed code. Never claim `0` alerts, or dismiss the alert as `fixed`, on patch evidence alone. GitHub's current advisory has no patched version. A future upstream fix/removal would be preferable and should remove the local patch.
+- Advisory status remains **disputed**: GitHub reports it open, GitLab documents withdrawal as of 9 Nov 2026; provider disagreement does not prove the code safe. The scoped local code patch is precautionary mitigation. No Production deployment or operator audit evidence is implied.
 
 References:
 - https://github.com/advisories/GHSA-gcqx-w48m-w2h4
