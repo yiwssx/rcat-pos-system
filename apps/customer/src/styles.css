@@ -1691,7 +1691,7 @@ body {
 .portal-landing-intro .portal-hero-brand {
   margin-bottom: 0.7rem;
 }
-.portal-landing-intro .portal-qr-tagline {
+.portal-landing-intro > .portal-eyebrow {
   display: block;
   width: fit-content;
   max-width: 100%;
