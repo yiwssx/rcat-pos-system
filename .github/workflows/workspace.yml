@@ -46,13 +46,6 @@ jobs:
         with:
           node-version-file: .node-version
           cache: pnpm
-      # One-shot pnpm lock regeneration proof; delete after committing lockfile.
-      - name: Capture patched deepmerge lockfile delta
-        if: github.event_name == 'pull_request' && steps.impact.outputs.workspace == 'true'
-        run: |
-          pnpm install --lockfile-only --ignore-scripts
-          git --no-pager diff --unified=1 -- pnpm-lock.yaml
-          git restore -- pnpm-lock.yaml
       - name: Install from committed lockfile
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm install --frozen-lockfile
