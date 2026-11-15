@@ -76,7 +76,7 @@ jobs:
       PGPASSWORD: test-only-ci-password
       GUEST_TABLE_CODE_PEPPER: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Install PostgreSQL client
@@ -170,12 +170,12 @@ jobs:
       - name: Verify exceptional post-preparation stock returns, dual approval and exact allocation ceiling
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-exception-stock-return.sql
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 10.23.0
           run_install: false
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: pnpm
