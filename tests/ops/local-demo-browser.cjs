@@ -31,18 +31,18 @@ async function main() {
       { width: 1365, height: 900, name: 'desktop' },
     ]) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
-      const label = page.locator('.portal-qr-tagline');
+      const label = page.locator('.portal-landing-intro > .portal-eyebrow');
       await label.waitFor();
       const geometry = await page.evaluate(() => {
         const logo = document.querySelector('.portal-hero-brand').getBoundingClientRect();
-        const tag = document.querySelector('.portal-qr-tagline').getBoundingClientRect();
+        const tag = document.querySelector('.portal-landing-intro > .portal-eyebrow').getBoundingClientRect();
         return {
           logoBottom: logo.bottom,
           tagTop: tag.top,
           tagRight: tag.right,
           viewportWidth: document.documentElement.clientWidth,
           documentWidth: document.documentElement.scrollWidth,
-          background: getComputedStyle(document.querySelector('.portal-qr-tagline')).backgroundColor,
+          background: getComputedStyle(document.querySelector('.portal-landing-intro > .portal-eyebrow')).backgroundColor,
         };
       });
       assert.ok(geometry.tagTop >= geometry.logoBottom,
