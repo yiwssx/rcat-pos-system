@@ -57,7 +57,7 @@ import { RcatButtonDirective } from "@rcat/ui";
                 />
                 <span>RCAT POS SYSTEM</span>
               </div>
-              <span class="portal-eyebrow portal-qr-tagline">RCAT POS / QR ORDERING</span>
+              <span class="portal-eyebrow">RCAT POS / QR ORDERING</span>
               <h1 id="portal-title">
                 สั่งอาหารง่าย <span>จัดการร้านในที่เดียว</span>
               </h1>
