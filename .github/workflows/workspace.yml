@@ -49,6 +49,9 @@ jobs:
       - name: Install from committed lockfile
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm install --frozen-lockfile
+      - name: Verify the installed deepmerge prototype guard
+        if: steps.impact.outputs.workspace == 'true'
+        run: node scripts/ci/verify-deepmerge-security.cjs
       - name: Display Nx projects
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm exec nx show projects
