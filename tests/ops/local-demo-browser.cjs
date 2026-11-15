@@ -24,6 +24,41 @@ async function main() {
     assert.equal(alias.headers.get('location'),'/');
     await page.goto(merchant + '/local');
     await page.getByRole('button', {name:'เข้าสู่ระบบทดลอง',exact:true}).waitFor();
+    // Guard the real bug: the inline QR eyebrow previously appeared beside
+    // the logo as a displaced block rather than beneath the brand lockup.
+    for (const viewport of [
+      { width: 320, height: 780, name: 'mobile' },
+      { width: 1365, height: 900, name: 'desktop' },
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      const label = page.locator('.portal-landing-intro > .portal-eyebrow');
+      await label.waitFor();
+      const geometry = await page.evaluate(() => {
+        const logo = document.querySelector('.portal-hero-brand').getBoundingClientRect();
+        const tag = document.querySelector('.portal-landing-intro > .portal-eyebrow').getBoundingClientRect();
+        return {
+          logoBottom: logo.bottom,
+          tagTop: tag.top,
+          tagRight: tag.right,
+          viewportWidth: document.documentElement.clientWidth,
+          documentWidth: document.documentElement.scrollWidth,
+          background: getComputedStyle(document.querySelector('.portal-landing-intro > .portal-eyebrow')).backgroundColor,
+        };
+      });
+      assert.ok(geometry.tagTop >= geometry.logoBottom,
+        'QR label must appear BELOW the logo at ' + viewport.width + 'px');
+      assert.ok(geometry.tagRight <= geometry.viewportWidth + 1,
+        'QR label overflows to the right at ' + viewport.width + 'px');
+      assert.ok(geometry.documentWidth <= geometry.viewportWidth + 1,
+        'QR landing screen has horizontal overflow at ' + viewport.width + 'px');
+      assert.equal(geometry.background, 'rgb(255, 240, 212)',
+        'QR label must use the RCAT warm-orange design token treatment');
+      await page.screenshot({
+        path: '/tmp/rcat-portal-login-' + viewport.name + '.png',
+        fullPage: true,
+      });
+    }
+    await page.setViewportSize({ width: 320, height: 780 });
     assert.ok(await page.getByLabel('อีเมลบัญชีทดลอง').isVisible());
     await page.getByLabel('รหัสผ่านทดลอง').fill('invalid-local-password');
     await page.getByRole('button', { name: 'เข้าสู่ระบบทดลอง', exact: true }).click();
