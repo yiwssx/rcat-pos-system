@@ -671,6 +671,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       const token = sanitizedVisitToken(fragment);
       if (!token) {
         this.loading.set(false);
+        this.session.invalidateVisit();
         this.qrIssue.set("invalid");
         return;
       }
@@ -732,8 +733,10 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   }
 
   private invalidateExpiredVisit(): void {
-    // Revoked/expired tokens must never leave an actionable old cart on screen.
+    // Revoked/expired tokens must never leave an actionable old cart or sheet.
     // The permanent printed QR may issue a *new* visit after explicit action.
+    if (this.detailDialog?.nativeElement.open) this.closeProduct();
+    if (this.cartDialog?.nativeElement.open) this.closeCart();
     this.session.invalidateVisit();
     this.scanToken = null;
     this.products.set([]);
