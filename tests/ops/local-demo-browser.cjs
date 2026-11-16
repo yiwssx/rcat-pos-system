@@ -243,6 +243,7 @@ async function main() {
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-menu-phone.png', fullPage: true });
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' }).getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
     await staticPage.getByRole('dialog', { name: 'ข้าวผัด' }).getByRole('button', { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
+    await staticPage.locator('.guest-cart-shortcut').waitFor({ state: 'visible' });
     const guestLight = await staticPage.evaluate(() => {
       const host = document.querySelector('.guest-shell');
       const bar = document.querySelector('.guest-cart-shortcut');
