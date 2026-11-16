@@ -198,9 +198,20 @@ function guestError(error: unknown): string {
         <div class="v6-guest-filters">
           <div class="guest-menu-toolbar">
             <div class="guest-search">
-              <label class="guest-field-title" for="guest-menu-search">ค้นหาเมนู</label>
-              <svg class="guest-search-icon" viewBox="0 0 24 24" width="20" height="20"
-                fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+              <label class="guest-field-title" for="guest-menu-search"
+                >ค้นหาเมนู</label
+              >
+              <svg
+                class="guest-search-icon"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+                focusable="false"
+              >
                 <circle cx="10.75" cy="10.75" r="6.5"></circle>
                 <path d="m16 16 4.5 4.5"></path>
               </svg>
@@ -214,8 +225,14 @@ function guestError(error: unknown): string {
                 (input)="onSearch($event)"
               />
               @if (search()) {
-                <button class="guest-search-clear" type="button"
-                  aria-label="ล้างคำค้นหา" (click)="clearSearch()">×</button>
+                <button
+                  class="guest-search-clear"
+                  type="button"
+                  aria-label="ล้างคำค้นหา"
+                  (click)="clearSearch()"
+                >
+                  ×
+                </button>
               }
             </div>
           </div>
