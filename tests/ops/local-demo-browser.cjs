@@ -254,8 +254,8 @@ async function main() {
     await staticPage.setViewportSize({ width: 390, height: 844 });
     const searchbox = staticPage.getByRole('searchbox', { name: 'ค้นหาเมนู' });
     await searchbox.fill('น้ำ');
-    await staticPage.getByRole('button', { name: 'ล้างคำค้นหา' }).click();
-    // Await Angular's next render; click completion itself is not change detection.
+    // Native searchbox clearing must restore the unfiltered menu.
+    await searchbox.fill('');
     await staticPage.waitForFunction(() => document.querySelector('#guest-menu-search').value === '');
     await staticPage.waitForFunction(() => document.querySelectorAll('.guest-product').length === 3);
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-menu-phone.png', fullPage: true });
