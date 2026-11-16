@@ -69,8 +69,7 @@ describe("customer route security and QR ordering", () => {
     expect(
       routes.some(
         (route) =>
-          route.path?.startsWith("payments/") &&
-          !route.canActivate?.length,
+          route.path?.startsWith("payments/") && !route.canActivate?.length,
       ),
     ).toBe(false);
   });
