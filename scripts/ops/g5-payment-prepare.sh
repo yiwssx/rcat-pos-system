@@ -58,7 +58,7 @@ if [[ -n "$missing" ]]; then
   echo "PAYMENT_PREPARE=ACTION_REQUIRED"
   echo "Missing real operator-owned configuration keys:$missing"
   echo "Edit locally: sudoedit $env_file"
-  echo 'PAYMENT_QR=OFF PAYMENT_SLIP=OFF REAL_MONEY=NOT_ENABLED'
+  echo 'PAYMENT_RELEASE_FLAGS=UNCHANGED REAL_MONEY=NOT_ENABLED_BY_THIS_SCRIPT'
   exit 0
 fi
 
