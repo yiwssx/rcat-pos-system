@@ -34,6 +34,10 @@ services:
       PORT: "3000"
       RCAT_API_BIND_HOST: "0.0.0.0"
       ENABLE_DEVELOPMENT_AUTH: "false"
+      # OFF unless independently approved under G4/G6 #81; never configure these in Local Demo.
+      RCAT_POS_PAYMENT_QR_RELEASE_APPROVED: ${RCAT_POS_PAYMENT_QR_RELEASE_APPROVED:-false}
+      RCAT_POS_PAYMENT_SLIP_RELEASE_APPROVED: ${RCAT_POS_PAYMENT_SLIP_RELEASE_APPROVED:-false}
+      RCAT_POS_PAYMENT_FINANCE_RELEASE_APPROVED: ${RCAT_POS_PAYMENT_FINANCE_RELEASE_APPROVED:-false}
       AUTH_DATABASE_URL: ${AUTH_DATABASE_URL:?Provide restricted auth login URL}
       TENANT_DATABASE_URL: ${TENANT_DATABASE_URL:?Provide restricted tenant login URL}
       AUTH_ALLOWED_ORIGINS: ${RCAT_POS_PUBLIC_ORIGIN:?Provide the single HTTPS public origin}
