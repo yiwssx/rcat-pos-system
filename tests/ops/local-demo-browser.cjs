@@ -235,11 +235,11 @@ async function main() {
       'Guest ordering should not repeat the portal masthead');
     assert.equal(await staticPage.locator('header.guest-header').isVisible(), true);
     const guestPalette = await staticPage.evaluate(() => ({
-      active: getComputedStyle(document.querySelector('.guest-category-chip.is-active')).backgroundImage,
-      cta: getComputedStyle(document.querySelector('.guest-add')).backgroundImage,
+      active: getComputedStyle(document.querySelector('.guest-category-chip.is-active')).backgroundColor,
+      cta: getComputedStyle(document.querySelector('.guest-add')).backgroundColor,
     }));
-    assert.match(guestPalette.active, /linear-gradient/, 'Guest category selection must use vivid orange');
-    assert.match(guestPalette.cta, /linear-gradient/, 'Guest add-to-cart action must use vivid orange');
+    assert.equal(guestPalette.active, 'rgb(201, 65, 8)', 'Guest category selection uses accessible solid brand orange');
+    assert.equal(guestPalette.cta, 'rgb(201, 65, 8)', 'Guest add-to-cart uses accessible solid brand orange');
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-menu-phone.png', fullPage: true });
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' }).getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
     await staticPage.getByRole('dialog', { name: 'ข้าวผัด' }).getByRole('button', { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
