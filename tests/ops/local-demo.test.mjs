@@ -20,7 +20,7 @@ exit 0
 `);
   mock("git", "echo 0123456789ab\n");
   mock("ss", 'if [[ "${MOCK_BUSY:-no}" == yes ]]; then echo LISTEN; fi\n');
-  const run = (command = "up", extra = {}) => spawnSync("bash", [script, command], {
+  const run = (command = "up", extra = {}) => spawnSync("bash", [script, ...command.split(" ")], {
     encoding: "utf8", timeout: 30_000,
     env: { ...process.env, PATH: bin + ":" + process.env.PATH, MOCK_LOG: join(dir, "calls"), ...extra },
   });
