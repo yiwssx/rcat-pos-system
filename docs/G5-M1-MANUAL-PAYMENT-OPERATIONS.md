@@ -27,6 +27,42 @@ The code defaults to inactive. The operator must explicitly approve **all** rele
 
 **There is no Merchant toggle to enable the receiver.** Changing the receiver disables it. Earlier unpaid QR snapshots must not re-expose an outdated receiver. Cashier/kitchen have no right to payment evidence, review, or finance ledger. Merchant writes require session, Origin and CSRF; guest evidence requires Order-specific Bearer and shared abuse budget. Invalid and cross-store actions are rejected by both API and SQL.
 
+## Privileged per-store activation after G4/G6 acceptance
+
+After independently verified HTTPS, real Google login, DB/backup restore, approved
+private slip/backup retention and the store's **actual** receiving-account ownership,
+the authorized operator may open exactly one store. This is not a Public UI toggle.
+
+1. Owner/Manager enters the receiving PromptPay ID in **ตั้งค่าบัญชีรับเงิน**.
+2. Operator checks the masked store receiver and its current revision:
+
+```bash
+cd /opt/rcat-pos-system
+sudo bash scripts/ops/g5-receiver-gate.sh status TENANT_UUID STORE_UUID
+```
+
+3. Only after signed G6 approval and active API QR+slip release flags:
+
+```bash
+sudo env RCAT_POS_PAYMENT_G6_GO_NOGO=approved \
+  RCAT_POS_PAYMENT_APPROVAL_REF=PRIVATE_APPROVAL_REFERENCE \
+  bash scripts/ops/g5-receiver-gate.sh enable TENANT_UUID STORE_UUID REVISION --apply
+```
+
+4. For emergency suspension (no deletion of old transfer evidence):
+
+```bash
+sudo env RCAT_POS_PAYMENT_APPROVAL_REF=PRIVATE_INCIDENT_REFERENCE \
+  bash scripts/ops/g5-receiver-gate.sh disable TENANT_UUID STORE_UUID REVISION --apply
+```
+
+Exact tenant/store UUIDs, revision locking, an explicit apply switch, a private
+approval reference and redacted SQL audit prevent accidental cross-store switches.
+The script neither verifies a bank account nor independently verifies owner signoff.
+**Do not run it in Local Demo or use the staging stack as an unapproved Production release.**
+One bounded actual bank-in/manual-confirmation reconciliation is still mandatory
+before opening customer-facing payments. Keep #81 OPEN until evidence exists.
+
 ## Manual reconciliation procedure
 
 1. In Merchant, select **กระทบยอดและคืนเงิน** for an authorized store. Use 7/30/90 days.
