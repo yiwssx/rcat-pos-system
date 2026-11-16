@@ -61,7 +61,7 @@ function guestError(error: unknown): string {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
-  styleUrls: ["./guest-order.css"],
+  styleUrls: ["./guest-order.css", "./guest-order-ios.css"],
   template: `
     <section class="guest-shell v6-guest-shop" aria-labelledby="guest-title">
       <header class="guest-header">
