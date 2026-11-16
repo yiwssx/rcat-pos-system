@@ -32,7 +32,8 @@ fi
 mode="$(stat -c %a "$env_file")"
 [[ "$mode" =~ ^[0-7]{3,4}$ ]] || fail "Invalid env permissions"
 (( (8#$mode & 077) == 0 )) || fail "Portal env must be mode 600"
-[[ "$(stat -c %u "$env_file")" == "$EUID" ]] || fail "Use owning operator"
+[[ "$EUID" == 0 || "$(stat -c %u "$env_file")" == "$EUID" ]] ||
+  fail "Run as root or the protected env owner"
 docker_local() {
   env -u DOCKER_HOST -u DOCKER_CONTEXT -u DOCKER_TLS -u DOCKER_TLS_VERIFY \
     -u DOCKER_CERT_PATH docker --host=unix:///var/run/docker.sock \
