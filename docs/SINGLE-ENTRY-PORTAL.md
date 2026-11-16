@@ -24,7 +24,15 @@ server-granted store memberships. The owner configures Domain/OAuth/host setting
   its canonical deployment is a single compiled Angular site, not iframe/redirect
   switching among the three apps. Their legacy deploy manifests are not the
   single-entry deployment path.
-- The canonical portal's Service Worker caches vetted public static assets only.
+- Owner/Manager now has three existing G5-M1 Payment screens through the single
+portal: `/payments/receiver/:tenantId/:storeId`, `/payments/:tenantId/:storeId`
+and `/payments/finance/:tenantId/:storeId`. They reuse the Merchant components
+and existing API/SQL authorization, additionally protected by the scoped portal
+guard. They are **configuration and manual-review screens only**: saving a
+PromptPay recipient does not enable it, and the real-money release flags
+and #81 remain OFF/gated. No Bank API or real Payment authorization is added.
+
+The canonical portal's Service Worker caches vetted public static assets only.
   Never cache API, authenticated HTML, mutations, guest/order data or logout.
 
 The first screen introduces QR ordering and a single staff login; authenticated

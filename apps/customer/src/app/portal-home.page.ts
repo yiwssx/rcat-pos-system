@@ -211,6 +211,39 @@ import { RcatButtonDirective } from "@rcat/ui";
                             <span aria-hidden="true">▦</span>
                             โต๊ะและ QR
                           </a>
+                          <a
+                            class="v6-secondary-action"
+                            [routerLink]="[
+                              '/payments/receiver',
+                              store.tenantId,
+                              store.storeId,
+                            ]"
+                          >
+                            <span aria-hidden="true">฿</span>
+                            ตั้งค่าบัญชี PromptPay
+                          </a>
+                          <a
+                            class="v6-secondary-action"
+                            [routerLink]="[
+                              '/payments',
+                              store.tenantId,
+                              store.storeId,
+                            ]"
+                          >
+                            <span aria-hidden="true">▤</span>
+                            ตรวจสลิป
+                          </a>
+                          <a
+                            class="v6-secondary-action"
+                            [routerLink]="[
+                              '/payments/finance',
+                              store.tenantId,
+                              store.storeId,
+                            ]"
+                          >
+                            <span aria-hidden="true">≋</span>
+                            กระทบยอดและคืนเงิน
+                          </a>
                         }
                         @if (store.role === "owner") {
                           <a
