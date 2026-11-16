@@ -74,7 +74,7 @@ import { RcatButtonDirective } from "@rcat/ui";
                 >ติดตามออเดอร์ของฉัน <span aria-hidden="true">→</span></a
               >
               <p class="portal-guest-help">
-                QR สั่งอาหารไม่ใช่ QR ชำระเงิน และยังไม่มีการรับชำระเงินผ่านระบบ
+                QR สั่งอาหารและ QR ชำระเงินเป็นคนละรายการ โปรดตรวจสอบยอดก่อนโอน
               </p>
             </div>
             <div class="portal-login-card">
@@ -90,7 +90,7 @@ import { RcatButtonDirective } from "@rcat/ui";
               <p>สำหรับเจ้าของร้านและพนักงานที่ได้รับสิทธิ์เท่านั้น</p>
               @if (session.localLogin()) {
                 <form (submit)="login($event)">
-                  <label for="portal-email">อีเมลบัญชีทดลอง</label>
+                  <label for="portal-email">อีเมลบัญชี admin_demo / merchant_demo</label>
                   <input
                     id="portal-email"
                     type="email"
@@ -99,7 +99,7 @@ import { RcatButtonDirective } from "@rcat/ui";
                     (input)="email.set(value($event))"
                     required
                   />
-                  <label for="portal-password">รหัสผ่านทดลอง</label>
+                  <label for="portal-password">รหัสผ่าน Demo</label>
                   <input
                     id="portal-password"
                     type="password"
@@ -113,7 +113,7 @@ import { RcatButtonDirective } from "@rcat/ui";
                     class="portal-button"
                     [disabled]="busy()"
                   >
-                    {{ busy() ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบทดลอง" }}
+                    {{ busy() ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ Demo" }}
                   </button>
                 </form>
                 <small>ใช้บัญชีและรหัสผ่านจาก Terminal ของ Local Demo</small>
@@ -268,10 +268,10 @@ import { RcatButtonDirective } from "@rcat/ui";
                             (click)="demoOrder()"
                             [disabled]="busy()"
                           >
-                            เปิดโต๊ะทดลองเพื่อสั่งอาหาร
+                            เปิดโต๊ะ Demo เพื่อสั่งอาหาร
                           </button>
                           <small
-                            >ข้อมูลทดลองเท่านั้น ·
+                            >ข้อมูล Local Demo ·
                             เปิดรอบใหม่และยกเลิกรอบเดิม</small
                           >
                         </div>
@@ -337,7 +337,7 @@ export class PortalHomePage {
   private readonly http = inject(HttpClient);
   private readonly document = inject(DOCUMENT);
   readonly roles = ROLE_LABEL;
-  readonly email = signal("owner@demo.invalid");
+  readonly email = signal("admin_demo@demo.invalid");
   readonly password = signal("");
   readonly busy = signal(false);
   readonly error = signal("");
@@ -375,7 +375,7 @@ export class PortalHomePage {
         throw new Error("Invalid demo URL");
       this.document.location.assign(target.href);
     } catch {
-      this.session.notice.set("เปิดโต๊ะทดลองไม่สำเร็จ กรุณาลองอีกครั้ง");
+      this.session.notice.set("เปิดโต๊ะ Demo ไม่สำเร็จ กรุณาลองอีกครั้ง");
     } finally {
       this.busy.set(false);
     }
