@@ -35,13 +35,13 @@ test("first start generates private files, keeps credentials on repeat, and uses
     let result = x.run("up", { DOCKER_HOST: "tcp://unrelated:2376", DOCKER_CONTEXT: "other" });
     assert.equal(result.status, 0, result.stderr);
     const env = readFileSync(x.env, "utf8");
-    const password = readFileSync(join(x.state, "owner-password"), "utf8").trim();
+    const password = readFileSync(join(x.state, "admin-password"), "utf8").trim();
     assert.match(result.stdout, /LOCAL_DEMO_READY/);
     assert.ok(!(result.stdout + result.stderr).includes(password));
     result = x.run();
     assert.equal(result.status, 0, result.stderr);
     assert.equal(readFileSync(x.env, "utf8"), env);
-    assert.equal(readFileSync(join(x.state, "owner-password"), "utf8").trim(), password);
+    assert.equal(readFileSync(join(x.state, "admin-password"), "utf8").trim(), password);
     assert.match(x.log(), /-p rcat-pos-local -f .*compose\.local\.yaml/);
     assert.match(x.log(), /run --rm --no-deps migrator/);
     assert.match(x.log(), /run --rm --no-deps seed/);
@@ -51,7 +51,26 @@ test("first start generates private files, keeps credentials on repeat, and uses
     assert.equal(credentials.status, 0, credentials.stderr);
     assert.ok(credentials.stdout.includes(password));
     assert.equal(x.run("stop").status, 0);
-    assert.equal(readFileSync(join(x.state, "owner-password"), "utf8").trim(), password);
+    assert.equal(readFileSync(join(x.state, "admin-password"), "utf8").trim(), password);
+  } finally { x.clean(); }
+});
+
+test("reset --apply regenerates only local demo credentials and both scoped accounts", () => {
+  const x = fixture();
+  try {
+    assert.equal(x.run("up").status, 0);
+    const before = readFileSync(join(x.state, "admin-password"), "utf8");
+    assert.equal(x.run("reset").status, 1);
+    const reset = x.run("reset --apply");
+    assert.equal(reset.status, 0, reset.stderr);
+    assert.match(reset.stdout, /LOCAL_DEMO_OLD_CREDENTIALS=REMOVED/);
+    assert.match(reset.stdout, /LOCAL_DEMO_READY/);
+    assert.notEqual(readFileSync(join(x.state, "admin-password"), "utf8"), before);
+    assert.match(readFileSync(join(x.state, "merchant-password"), "utf8"), /^[a-f0-9]{64}\n$/);
+    const accountOutput = x.run("credentials");
+    assert.match(accountOutput.stdout, /admin_demo@demo.invalid/);
+    assert.match(accountOutput.stdout, /merchant_demo@demo.invalid/);
+    assert.doesNotMatch(x.log(), /compose\.staging|compose\.portal|prune/);
   } finally { x.clean(); }
 });
 
@@ -86,8 +105,8 @@ test("unsafe permissions, symlinks and mismatched runtime passwords fail before 
     writeFileSync(x.env, original.replace(/RCAT_LOCAL_AUTH_PASSWORD=.+/, "RCAT_LOCAL_AUTH_PASSWORD=" + "0".repeat(64)));
     assert.match(x.run().stderr, /differs from its secret/);
     writeFileSync(x.env, original);
-    rmSync(join(x.state, "owner-password"));
-    symlinkSync(join(x.state, "auth-password"), join(x.state, "owner-password"));
+    rmSync(join(x.state, "admin-password"));
+    symlinkSync(join(x.state, "auth-password"), join(x.state, "admin-password"));
     assert.match(x.run().stderr, /unsafe local file/);
     assert.notEqual(x.run("reset").status, 0);
   } finally { x.clean(); }
