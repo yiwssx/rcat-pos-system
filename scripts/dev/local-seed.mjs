@@ -20,7 +20,8 @@ const pool = new Pool({
 });
 const tenant = "70000000-0000-4000-8000-000000000001";
 const store = "70000000-0000-4000-8000-000000000002";
-const owner = "70000000-0000-4000-8000-000000000003";
+const admin = "70000000-0000-4000-8000-000000000003";
+const merchant = "70000000-0000-4000-8000-000000000006";
 const category = "70000000-0000-4000-8000-000000000004";
 try {
   const db = await pool.connect();
@@ -51,19 +52,22 @@ try {
       const existing = await db.query("SELECT 1 FROM rcat.users UNION ALL SELECT 1 FROM rcat.tenants LIMIT 1");
       if (existing.rowCount) throw new Error("Refusing to seed an unrecognized nonempty database");
       await db.query("INSERT INTO rcat.users(id,email,password_hash) VALUES($1,$2,$3)",
-        [owner, "owner@demo.invalid", await hashPassword(secret("owner"))]);
-      await db.query("INSERT INTO rcat.tenants(id,slug,display_name) VALUES($1,'local-demo','RCAT Local Demo')", [tenant]);
-      await db.query("INSERT INTO rcat.tenant_memberships(tenant_id,user_id,role) VALUES($1,$2,'owner')", [tenant, owner]);
-      await db.query("INSERT INTO rcat.stores(id,tenant_id,slug,display_name) VALUES($1,$2,'demo-cafe','ร้านทดลอง RCAT')", [store, tenant]);
-      await db.query("INSERT INTO rcat.menu_categories(id,tenant_id,store_id,slug,name) VALUES($1,$2,$3,'demo-menu','เมนูทดลอง')", [category, tenant, store]);
+        [admin, "admin_demo@demo.invalid", await hashPassword(secret("admin"))]);
+      await db.query("INSERT INTO rcat.users(id,email,password_hash) VALUES($1,$2,$3)",
+        [merchant, "merchant_demo@demo.invalid", await hashPassword(secret("merchant"))]);
+      await db.query("INSERT INTO rcat.tenants(id,slug,display_name) VALUES($1,'rcat-demo','RCAT Demo')", [tenant]);
+      await db.query("INSERT INTO rcat.tenant_memberships(tenant_id,user_id,role) VALUES($1,$2,'owner')", [tenant, admin]);
+      await db.query("INSERT INTO rcat.tenant_memberships(tenant_id,user_id,role) VALUES($1,$2,'manager')", [tenant, merchant]);
+      await db.query("INSERT INTO rcat.stores(id,tenant_id,slug,display_name) VALUES($1,$2,'rcat-cafe','RCAT Cafe')", [store, tenant]);
+      await db.query("INSERT INTO rcat.menu_categories(id,tenant_id,store_id,slug,name) VALUES($1,$2,$3,'main-menu','เมนูหลัก')", [category, tenant, store]);
       for (const [name, price] of [["ข้าวกะเพรา", 4500], ["ข้าวผัด", 4000], ["น้ำดื่ม", 1000]]) {
         await db.query("INSERT INTO rcat.menu_products(tenant_id,store_id,category_id,name,price_satang) VALUES($1,$2,$3,$4,$5)", [tenant, store, category, name, price]);
       }
-      await db.query("INSERT INTO rcat.store_tables(id,tenant_id,store_id,label) VALUES($1,$2,$3,'โต๊ะทดลอง 1')", ["70000000-0000-4000-8000-000000000005", tenant, store]);
+      await db.query("INSERT INTO rcat.store_tables(id,tenant_id,store_id,label) VALUES($1,$2,$3,'โต๊ะ 1')", ["70000000-0000-4000-8000-000000000005", tenant, store]);
       await db.query("INSERT INTO rcat_private.local_demo_seed VALUES(1)");
     }
     await db.query("COMMIT");
-    console.log("LOCAL_DEMO_SEED_READY (existing menu, orders and password preserved)");
+    console.log("LOCAL_DEMO_SEED_READY (admin_demo=owner; merchant_demo=manager; existing data preserved until explicit reset)");
   } catch (error) {
     await db.query("ROLLBACK");
     throw error;

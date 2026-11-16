@@ -104,7 +104,7 @@ services:
     environment:
       NODE_ENV: development
       RCAT_POS_LOCAL_DEMO: "true"
-    secrets: [local_dba, local_auth, local_tenant, local_owner]
+    secrets: [local_dba, local_auth, local_tenant, local_admin, local_merchant]
     volumes:
       - ./scripts/dev/local-seed.mjs:/work/scripts/dev/local-seed.mjs:ro
     networks: [database_private]
@@ -118,8 +118,10 @@ secrets:
     file: ./.secrets/local-demo/auth-password
   local_tenant:
     file: ./.secrets/local-demo/tenant-password
-  local_owner:
-    file: ./.secrets/local-demo/owner-password
+  local_admin:
+    file: ./.secrets/local-demo/admin-password
+  local_merchant:
+    file: ./.secrets/local-demo/merchant-password
 
 networks:
   app_private: {}

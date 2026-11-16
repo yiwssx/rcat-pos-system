@@ -98,7 +98,7 @@ import { MerchantOrderApi } from "./merchant-order.api";
               <a
                 class="store-report-link"
                 [routerLink]="['/payments', store.tenantId, store.storeId]"
-                >คิวตรวจสลิป (ระบบทดลอง)</a
+                >คิวตรวจสลิป</a
               >
               <a
                 class="store-report-link"
