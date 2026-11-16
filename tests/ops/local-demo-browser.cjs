@@ -13,7 +13,7 @@ const customer = 'https://localhost:11880';
 const admin = 'https://localhost:11880';
 const tenant = '70000000-0000-4000-8000-000000000001';
 const store = '70000000-0000-4000-8000-000000000002';
-const password = readFileSync('.secrets/local-demo/owner-password', 'utf8').trim();
+const password = readFileSync('.secrets/local-demo/admin-password', 'utf8').trim();
 async function main() {
   const browser = await chromium.launch({ headless: true, args: ['--ignore-certificate-errors', '--host-resolver-rules=MAP localhost 127.0.0.1'] });
   try {
@@ -23,7 +23,7 @@ async function main() {
     assert.equal(alias.status,302);
     assert.equal(alias.headers.get('location'),'/');
     await page.goto(merchant + '/local');
-    await page.getByRole('button', {name:'เข้าสู่ระบบทดลอง',exact:true}).waitFor();
+    await page.getByRole('button', {name:'เข้าสู่ระบบ Demo',exact:true}).waitFor();
     // Guard the real bug: the inline QR eyebrow previously appeared beside
     // the logo as a displaced block rather than beneath the brand lockup.
     for (const viewport of [
@@ -59,12 +59,12 @@ async function main() {
       });
     }
     await page.setViewportSize({ width: 320, height: 780 });
-    assert.ok(await page.getByLabel('อีเมลบัญชีทดลอง').isVisible());
-    await page.getByLabel('รหัสผ่านทดลอง').fill('invalid-local-password');
-    await page.getByRole('button', { name: 'เข้าสู่ระบบทดลอง', exact: true }).click();
+    assert.ok(await page.getByLabel('อีเมลบัญชี admin_demo / merchant_demo').isVisible());
+    await page.getByLabel('รหัสผ่าน Demo').fill('invalid-local-password');
+    await page.getByRole('button', { name: 'เข้าสู่ระบบ Demo', exact: true }).click();
     await page.getByRole('alert').filter({hasText:'อีเมลหรือรหัสผ่านไม่ถูกต้อง'}).waitFor();
-    await page.getByLabel('รหัสผ่านทดลอง').fill(password);
-    await page.getByRole('button', { name: 'เข้าสู่ระบบทดลอง', exact: true }).click();
+    await page.getByLabel('รหัสผ่าน Demo').fill(password);
+    await page.getByRole('button', { name: 'เข้าสู่ระบบ Demo', exact: true }).click();
     await page.getByRole('heading',{name:'เริ่มงานที่ร้าน',exact:true}).waitFor();
     const thaiFontResponse = await context.request.get(merchant + '/fonts/IBMPlexSansThai-Regular.ttf');
     assert.equal(thaiFontResponse.status(), 200, 'Self-hosted Thai font must be served by the app');
@@ -407,7 +407,7 @@ async function main() {
 
     // Repeat the actual one-command launcher; no duplicate fixtures/password reset.
     execFileSync('bash', ['scripts/ops/local-demo.sh', 'up'], { stdio: 'pipe', timeout: 180000 });
-    assert.equal(readFileSync('.secrets/local-demo/owner-password', 'utf8').trim(), password);
+    assert.equal(readFileSync('.secrets/local-demo/admin-password', 'utf8').trim(), password);
     await page.getByRole('button', { name: 'ตรวจสถานะล่าสุด' }).click();
     await page.locator('.guest-order-state').getByText('รับออเดอร์แล้ว').waitFor();
     await page.getByText('Payment: not_requested').waitFor();
@@ -420,7 +420,7 @@ async function main() {
     // Deep links survive reload without showing the login view while auth loads.
     await board.reload();
     await card.getByText('รับออเดอร์แล้ว', {exact:true}).waitFor();
-    assert.equal(await board.getByRole('button',{name:'เข้าสู่ระบบทดลอง',exact:true}).count(),0);
+    assert.equal(await board.getByRole('button',{name:'เข้าสู่ระบบ Demo',exact:true}).count(),0);
     // Server role data determines visible navigation and guards guessed owner URLs.
     const cashier = await browser.newContext({ignoreHTTPSErrors:true});
     await cashier.addCookies(await context.cookies());
@@ -436,19 +436,19 @@ async function main() {
     assert.equal(new URL(cashierPage.url()).pathname,'/');
     await cashier.close();
     await board.getByRole('button',{name:'ออกจากระบบ',exact:true}).click();
-    await board.getByRole('button',{name:'เข้าสู่ระบบทดลอง',exact:true}).waitFor();
+    await board.getByRole('button',{name:'เข้าสู่ระบบ Demo',exact:true}).waitFor();
     await board.goto(merchant + `/orders/${tenant}/${store}`);
-    await board.getByRole('button',{name:'เข้าสู่ระบบทดลอง',exact:true}).waitFor();
+    await board.getByRole('button',{name:'เข้าสู่ระบบ Demo',exact:true}).waitFor();
     await board.waitForURL(merchant + '/');
     assert.equal(new URL(board.url()).pathname,'/');
     // A failed auth service is an error/retry state, not a misleading login form.
     await board.route('**/api/auth/me', route => route.fulfill({status:503,json:{message:'unavailable'}}));
     await board.reload();
     await board.getByRole('heading',{name:'ยังเชื่อมต่อระบบไม่ได้'}).waitFor();
-    assert.equal(await board.getByRole('button',{name:'เข้าสู่ระบบทดลอง',exact:true}).count(),0);
+    assert.equal(await board.getByRole('button',{name:'เข้าสู่ระบบ Demo',exact:true}).count(),0);
     await board.unroute('**/api/auth/me');
     await board.getByRole('button',{name:'ลองเชื่อมต่ออีกครั้ง'}).click();
-    await board.getByRole('button',{name:'เข้าสู่ระบบทดลอง',exact:true}).waitFor();
+    await board.getByRole('button',{name:'เข้าสู่ระบบ Demo',exact:true}).waitFor();
     await context.close();
     console.log('PASS: single-origin portal, role menus/route denial, Secure login/logout, multi-viewport UI evidence, deep-link reload, auth failure/retry, Guest→Order→Merchant, CSRF denial and repeat launch');
   } finally { await browser.close(); }
