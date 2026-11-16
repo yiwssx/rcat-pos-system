@@ -60,7 +60,7 @@ protected Local secrets. Other Compose projects are untouched.
 
 The Local Nginx runtime config permits the demonstration login UI; backend
 password auth still requires development mode. Production/Staging static config
-is false and cannot enable password auth server-side. The protected owner account
+is false and cannot enable password auth server-side. The protected admin_demo owner account
 also has a Local-only sample-table button that rotates a visit link through the
 normal authenticated/CSRF-checked API. Guests in real staging scan the store QR.
 
