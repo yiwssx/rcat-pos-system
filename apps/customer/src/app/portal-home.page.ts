@@ -90,7 +90,9 @@ import { RcatButtonDirective } from "@rcat/ui";
               <p>สำหรับเจ้าของร้านและพนักงานที่ได้รับสิทธิ์เท่านั้น</p>
               @if (session.localLogin()) {
                 <form (submit)="login($event)">
-                  <label for="portal-email">อีเมลบัญชี admin_demo / merchant_demo</label>
+                  <label for="portal-email"
+                    >อีเมลบัญชี admin_demo / merchant_demo</label
+                  >
                   <input
                     id="portal-email"
                     type="email"
