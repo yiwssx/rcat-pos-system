@@ -10,7 +10,7 @@ sudo bash scripts/ops/local-demo.sh up
 sudo bash scripts/ops/local-demo.sh credentials
 ```
 
-Use the generated `owner@demo.invalid` account. The page has a Local-only password
+Use the generated `admin_demo@demo.invalid` (store owner) or `merchant_demo@demo.invalid` (manager) account. The page has a Local-only password
 form and then shows the stores/tasks allowed for that account. No Admin/Merchant
 application switch. Open **จัดการโต๊ะ / QR** for your store and press **เปิดรับออเดอร์**.
 New or migrated stores start **closed** by default. The same permanent QR opens
@@ -30,7 +30,7 @@ Worker/PWA testing requires the certificate to be trusted by the browser/OS; do
 not globally disable TLS verification. `/local` redirects to `/` for old bookmarks.
 
 The startup script creates protected local passwords/TLS and an isolated database,
-with one store, table and three menu items. Repeated starts preserve its data and
+with two scoped accounts, one store, a table and three menu items. Repeated starts preserve its data and
 passwords. Updating from the old three-port demo removes only orphan containers
 in this Local Compose project; PostgreSQL data and protected secrets remain.
 Missing secrets for an existing database fail safely rather than reset passwords.
@@ -40,7 +40,23 @@ sudo bash scripts/ops/local-demo.sh status
 sudo bash scripts/ops/local-demo.sh stop
 ```
 
+To intentionally clear **only** the isolated Local Demo database, old orders,
+accounts and private Local Demo passwords, then recreate fresh `admin_demo`
+(owner) and `merchant_demo` (manager), use:
+
+```bash
+cd /opt/rcat-pos-system
+sudo bash scripts/ops/local-demo.sh reset --apply
+sudo bash scripts/ops/local-demo.sh credentials
+```
+
+**Irreversible:** This removes the `rcat-pos-local_local_postgres_data` Docker volume.
+It does not remove `rcat-pos-staging`, `.env.portal`, PostgreSQL Staging,
+financial records, backups or bank configuration. The UI account labels do
+not grant any cross-tenant platform-admin privileges. Real-funds pilot remains
+separate from Local Demo and requires a protected merchant authentication flow.
+
 Stop preserves data. No host API/database ports, schedules, retention or other
-Compose projects are changed. No live payment. Never load real customer data into
+Compose projects are changed. No live payment in Local Demo. Never load real customer data into
 the development-auth profile. See [the single-entry handoff](SINGLE-ENTRY-PORTAL.md)
 for one-origin Staging configuration and the store QR opening policy.
