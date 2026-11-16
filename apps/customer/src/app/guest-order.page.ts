@@ -123,6 +123,10 @@ function guestError(error: unknown): string {
         </section>
       }
 
+      @if (recoveryNotice() && session.visit()) {
+        <p class="guest-recovery-notice" role="status">{{ recoveryNotice() }}</p>
+      }
+
       @if (loading()) {
         <div class="guest-status" role="status">กำลังโหลดเมนูอาหาร...</div>
       } @else if (qrIssue(); as issue) {
@@ -193,16 +197,27 @@ function guestError(error: unknown): string {
 
         <div class="v6-guest-filters">
           <div class="guest-menu-toolbar">
-            <label class="guest-search">
-              <span class="guest-field-title">ค้นหาเมนู</span>
+            <div class="guest-search">
+              <label class="guest-field-title" for="guest-menu-search">ค้นหาเมนู</label>
+              <svg class="guest-search-icon" viewBox="0 0 24 24" width="20" height="20"
+                fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                <circle cx="10.75" cy="10.75" r="6.5"></circle>
+                <path d="m16 16 4.5 4.5"></path>
+              </svg>
               <input
+                #menuSearch
+                id="guest-menu-search"
                 type="search"
                 autocomplete="off"
                 placeholder="ค้นหาอาหารหรือเครื่องดื่ม"
                 [value]="search()"
                 (input)="onSearch($event)"
               />
-            </label>
+              @if (search()) {
+                <button class="guest-search-clear" type="button"
+                  aria-label="ล้างคำค้นหา" (click)="clearSearch()">×</button>
+              }
+            </div>
           </div>
           <div class="guest-categories" role="group" aria-label="หมวดหมู่">
             <button
@@ -615,6 +630,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     "reconnect" | "unavailable" | "invalid" | "missing" | null
   >(null);
   readonly notice = signal("");
+  readonly recoveryNotice = signal("");
   readonly search = signal("");
   readonly category = signal("");
   readonly hasMore = signal(false);
@@ -631,6 +647,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   @ViewChild("detailDialog")
   private detailDialog?: ElementRef<HTMLDialogElement>;
   @ViewChild("cartDialog") private cartDialog?: ElementRef<HTMLDialogElement>;
+  @ViewChild("menuSearch") private menuSearch?: ElementRef<HTMLInputElement>;
   readonly online = signal(true);
   readonly staticTable = signal<{
     tenantId: string;
@@ -644,6 +661,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   private readonly win = this.document.defaultView;
   readonly products = signal<GuestProduct[]>([]);
   private requestVersion = 0;
+  // Bounded automatic regrant for a permanent printed QR; no retry loop.
+  private printedReconnectAttempted = false;
   private searchTimer?: ReturnType<typeof setTimeout>;
   readonly cartQty = computed(() =>
     this.session.cart().reduce((sum, item) => sum + item.quantity, 0),
@@ -739,13 +758,39 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     if (this.cartDialog?.nativeElement.open) this.closeCart();
     this.session.invalidateVisit();
     this.scanToken = null;
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchTimer = undefined;
     this.products.set([]);
     this.nextCursor.set(null);
     this.hasMore.set(false);
     this.selected.set({});
+    this.search.set("");
+    this.category.set("");
+    this.orderedBy.set("");
+    this.deliverTo.set("");
     this.notice.set("");
+    this.recoveryNotice.set("");
     this.error.set("");
     this.qrIssue.set(this.staticTable() ? "reconnect" : "invalid");
+  }
+
+  private async recoverExpiredPrintedVisit(): Promise<void> {
+    const hadCart = this.cartQty() > 0;
+    // Never replay an old cart, order, token or pending idempotency key.
+    this.invalidateExpiredVisit();
+    if (!this.staticTable() || this.printedReconnectAttempted || !this.online())
+      return;
+    this.printedReconnectAttempted = true;
+    // The server validates the table and store switch before issuing a new grant.
+    // Failure or a second expired grant falls back to the explicit recovery UI.
+    await this.openStaticTable();
+    if (this.session.visit()) {
+      this.recoveryNotice.set(
+        hadCart
+          ? "เชื่อมต่อโต๊ะใหม่แล้ว ตะกร้าเดิมถูกล้างเพื่อความปลอดภัย กรุณาเลือกเมนูอีกครั้ง"
+          : "เชื่อมต่อโต๊ะใหม่แล้ว สามารถเลือกเมนูอาหารได้",
+      );
+    }
   }
 
   private async load(token: string): Promise<void> {
@@ -769,7 +814,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     } catch (error) {
       if (version !== this.requestVersion) return;
       if (error instanceof HttpErrorResponse && error.status === 404) {
-        this.invalidateExpiredVisit();
+        await this.recoverExpiredPrintedVisit();
       } else {
         this.error.set(guestError(error));
       }
@@ -856,6 +901,13 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     }
   }
 
+  clearSearch(): void {
+    if (!this.search()) return;
+    this.search.set("");
+    this.scheduleSearchReload(0);
+    this.menuSearch?.nativeElement.focus();
+  }
+
   onCategoryChip(categoryId: string): void {
     if (this.category() === categoryId) return;
     this.category.set(categoryId);
@@ -899,7 +951,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     } catch (error) {
       if (version === this.requestVersion) {
         if (error instanceof HttpErrorResponse && error.status === 404) {
-          this.invalidateExpiredVisit();
+          await this.recoverExpiredPrintedVisit();
         } else {
           this.notice.set(guestError(error));
         }
