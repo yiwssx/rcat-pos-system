@@ -185,7 +185,7 @@ async function main() {
     // The very same compiled Admin app must retrieve the seeded tenant owner.
     const adminPage = await context.newPage();
     await adminPage.goto(admin + '/settings');
-    await adminPage.getByRole('heading', { name: 'ร้านทดลอง RCAT', exact: true }).waitFor();
+    await adminPage.getByRole('heading', { name: 'RCAT Cafe', exact: true }).waitFor();
     const noDecoration = await adminPage.evaluate(() =>
       getComputedStyle(document.querySelector('.portal-content'), '::after').content);
     assert.equal(noDecoration, 'none', 'Do not apply homepage ornaments to actual Admin tasks');
@@ -355,7 +355,7 @@ async function main() {
     await guest.close();
     await tableView.close();
 
-    await page.getByRole('button', { name: 'เปิดโต๊ะทดลองเพื่อสั่งอาหาร', exact: true }).click();
+    await page.getByRole('button', { name: 'เปิดโต๊ะ Demo เพื่อสั่งอาหาร', exact: true }).click();
     await page.waitForURL(customer + '/order', { timeout: 30000 });
     const product = page.locator('.guest-product', { hasText: 'ข้าวกะเพรา' });
     await product.waitFor();
@@ -424,7 +424,7 @@ async function main() {
     // Server role data determines visible navigation and guards guessed owner URLs.
     const cashier = await browser.newContext({ignoreHTTPSErrors:true});
     await cashier.addCookies(await context.cookies());
-    await cashier.route('**/api/auth/merchant-stores', route => route.fulfill({json:{stores:[{tenantId:tenant,storeId:store,tenantName:'Demo',storeName:'ร้านทดลอง RCAT',role:'cashier'}]}}));
+    await cashier.route('**/api/auth/merchant-stores', route => route.fulfill({json:{stores:[{tenantId:tenant,storeId:store,tenantName:'Demo',storeName:'RCAT Cafe',role:'cashier'}]}}));
     const cashierPage = await cashier.newPage();
     await cashierPage.goto(merchant + '/');
     await cashierPage.getByRole('heading',{name:'เริ่มงานที่ร้าน',exact:true}).waitFor();
