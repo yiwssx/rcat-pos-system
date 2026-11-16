@@ -212,8 +212,8 @@ function guestError(error: unknown): string {
                 aria-hidden="true"
                 focusable="false"
               >
-                <circle cx="10.75" cy="10.75" r="6.5"></circle>
-                <path d="m16 16 4.5 4.5"></path>
+                <circle cx="10.75" cy="10.75" r="6.5" />
+                <path d="m16 16 4.5 4.5" />
               </svg>
               <input
                 #menuSearch
