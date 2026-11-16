@@ -58,11 +58,13 @@ docker_local exec -T postgres sh -ec '
 ' sh "$action" "$tenant" "$store" "$revision" "$approval" <<'SQL'
 BEGIN;
 SET LOCAL lock_timeout = '5s';
-SELECT set_config('rcat.g5.action', :'g5_action', true);
-SELECT set_config('rcat.g5.tenant', :'g5_tenant', true);
-SELECT set_config('rcat.g5.store', :'g5_store', true);
-SELECT set_config('rcat.g5.revision', :'g5_revision', true);
-SELECT set_config('rcat.g5.approval', :'g5_approval', true);
+SELECT
+  set_config('rcat.g5.action', :'g5_action', true),
+  set_config('rcat.g5.tenant', :'g5_tenant', true),
+  set_config('rcat.g5.store', :'g5_store', true),
+  set_config('rcat.g5.revision', :'g5_revision', true),
+  set_config('rcat.g5.approval', :'g5_approval', true)
+\g /dev/null
 DO $g5$
 DECLARE
   a text := current_setting('rcat.g5.action');
