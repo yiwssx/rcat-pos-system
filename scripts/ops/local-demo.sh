@@ -63,7 +63,7 @@ c() {
 if [[ "$1" == reset ]]; then
   # Explicitly destructive ONLY for the fixed, isolated rcat-pos-local project.
   # Never touch .env.portal, staging PostgreSQL, PromptPay, or other Compose volumes.
-  [[ "$2" == --apply && "$EUID" == 0 ]] || fail 'Explicit root reset --apply required'
+  [[ "$2" == --apply ]] || fail 'Explicit reset --apply required'
   [[ ! -L "$env_file" && ! -L "$state" && ! -L "$root/.secrets" ]] ||
     fail 'Refusing symlinked local paths'
   if [[ -e "$env_file" ]]; then protected_file "$env_file"; fi
