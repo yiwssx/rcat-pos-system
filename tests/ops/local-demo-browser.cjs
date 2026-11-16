@@ -255,7 +255,8 @@ async function main() {
     const searchbox = staticPage.getByRole('searchbox', { name: 'ค้นหาเมนู' });
     await searchbox.fill('น้ำ');
     await staticPage.getByRole('button', { name: 'ล้างคำค้นหา' }).click();
-    assert.equal(await searchbox.inputValue(), '', 'Clear search must reset the input');
+    // Await Angular's next render; click completion itself is not change detection.
+    await staticPage.waitForFunction(() => document.querySelector('#guest-menu-search').value === '');
     await staticPage.waitForFunction(() => document.querySelectorAll('.guest-product').length === 3);
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-menu-phone.png', fullPage: true });
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' }).getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
