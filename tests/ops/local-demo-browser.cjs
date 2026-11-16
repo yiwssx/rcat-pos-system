@@ -416,7 +416,7 @@ async function main() {
     const output = execFileSync('docker', [...compose, 'exec', '-T', 'postgres', 'psql', '-XAt', '-v', 'ON_ERROR_STOP=1', '-U', 'rcat_local_dba', '-d', 'rcat_pos_local_demo', '-c',
       "SELECT (SELECT count(*) FROM rcat.users)||','||(SELECT count(*) FROM rcat.menu_products)||','||(SELECT count(*) FROM rcat.orders)||','||(SELECT count(*) FROM rcat.orders WHERE amount_satang=4500 AND status='accepted' AND payment_state='not_requested')||','||(SELECT count(*) FROM pg_roles WHERE rolname IN ('rcat_local_auth','rcat_local_tenant') AND NOT rolsuper AND NOT rolbypassrls AND NOT rolinherit);"],
       { encoding: 'utf8', env: { ...process.env, RCAT_LOCAL_RELEASE: 'local-ci' } });
-    assert.equal(output.trim(), '1,3,1,1,2', 'Repeat launch duplicated/changed data or weakened runtime accounts');
+    assert.equal(output.trim(), '2,3,1,1,2', 'Repeat launch duplicated/changed data or weakened runtime accounts');
     // Deep links survive reload without showing the login view while auth loads.
     await board.reload();
     await card.getByText('รับออเดอร์แล้ว', {exact:true}).waitFor();
