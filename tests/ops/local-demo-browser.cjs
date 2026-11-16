@@ -244,7 +244,7 @@ async function main() {
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' }).getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
     await staticPage.getByRole('dialog', { name: 'ข้าวผัด' }).getByRole('button', { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
     const guestLight = await staticPage.evaluate(() => {
-      const host = document.querySelector('app-guest-order-page');
+      const host = document.querySelector('.guest-shell');
       const bar = document.querySelector('.guest-cart-shortcut');
       const action = document.querySelector('.guest-cart-shortcut-action');
       return {
