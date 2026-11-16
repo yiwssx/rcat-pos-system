@@ -124,7 +124,9 @@ function guestError(error: unknown): string {
       }
 
       @if (recoveryNotice() && session.visit()) {
-        <p class="guest-recovery-notice" role="status">{{ recoveryNotice() }}</p>
+        <p class="guest-recovery-notice" role="status">
+          {{ recoveryNotice() }}
+        </p>
       }
 
       @if (loading()) {
