@@ -15,6 +15,7 @@ export function permitsRoute(
     catalog: ["owner", "manager"],
     tables: ["owner", "manager"],
     reports: ["owner", "manager"],
+    payments: ["owner", "manager"],
     inventory: ["owner", "manager", "kitchen"],
     staff: ["owner"],
   };

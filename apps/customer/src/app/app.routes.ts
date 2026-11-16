@@ -34,6 +34,33 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "payments/receiver/:tenantId/:storeId",
+    canActivate: [portalAccess],
+    data: { permission: "payments" },
+    loadComponent: () =>
+      import("../../../merchant/src/app/merchant-payment-receiver.page").then(
+        (m) => m.MerchantPaymentReceiverPage,
+      ),
+  },
+  {
+    path: "payments/:tenantId/:storeId",
+    canActivate: [portalAccess],
+    data: { permission: "payments" },
+    loadComponent: () =>
+      import("../../../merchant/src/app/payment-review.page").then(
+        (m) => m.PaymentReviewPage,
+      ),
+  },
+  {
+    path: "payments/finance/:tenantId/:storeId",
+    canActivate: [portalAccess],
+    data: { permission: "payments" },
+    loadComponent: () =>
+      import("../../../merchant/src/app/merchant-finance.page").then(
+        (m) => m.MerchantFinancePage,
+      ),
+  },
+  {
     path: "tables/:tenantId/:storeId",
     canActivate: [portalAccess],
     data: { permission: "tables" },
