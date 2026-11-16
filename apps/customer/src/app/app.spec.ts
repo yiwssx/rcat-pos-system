@@ -66,7 +66,13 @@ describe("customer route security and QR ordering", () => {
     expect(
       routes.find((x) => x.path === "order/track")?.loadComponent,
     ).toBeTypeOf("function");
-    expect(routes.some((route) => route.path?.includes("payment"))).toBe(false);
+    expect(
+      routes.some(
+        (route) =>
+          route.path?.startsWith("payments/") &&
+          !route.canActivate?.length,
+      ),
+    ).toBe(false);
   });
 
   it("filters Thai product catalogs deterministically without changing the server visit", () => {

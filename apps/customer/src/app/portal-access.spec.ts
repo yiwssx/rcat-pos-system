@@ -38,11 +38,24 @@ describe("single-entry route permissions", () => {
     const manager = { ...store, role: "manager" as const };
     expect(permitsRoute([], "payments", "tenant-a", "store-a")).toBe(false);
     expect(permitsRoute([store], "payments", "tenant-a", "store-a")).toBe(false);
-    expect(permitsRoute([{ ...store, role: "kitchen" }], "payments", "tenant-a", "store-a")).toBe(false);
+    expect(
+      permitsRoute(
+        [{ ...store, role: "kitchen" }],
+        "payments",
+        "tenant-a",
+        "store-a",
+      ),
+    ).toBe(false);
     expect(permitsRoute([owner], "payments", "tenant-a", "store-a")).toBe(true);
-    expect(permitsRoute([manager], "payments", "tenant-a", "store-a")).toBe(true);
-    expect(permitsRoute([owner], "payments", "tenant-b", "store-a")).toBe(false);
-    expect(permitsRoute([owner], "payments", "tenant-a", "store-b")).toBe(false);
+    expect(permitsRoute([manager], "payments", "tenant-a", "store-a")).toBe(
+      true,
+    );
+    expect(permitsRoute([owner], "payments", "tenant-b", "store-a")).toBe(
+      false,
+    );
+    expect(permitsRoute([owner], "payments", "tenant-a", "store-b")).toBe(
+      false,
+    );
   });
   it("keeps owner, manager and kitchen capabilities distinct", () => {
     expect(
