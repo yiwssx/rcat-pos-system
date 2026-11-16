@@ -153,7 +153,8 @@ function guestError(error: unknown): string {
               QR ที่ติดโต๊ะยังใช้ได้ กรุณาเชื่อมต่อโต๊ะใหม่เพื่อเริ่มตะกร้าใหม่
               รายการเดิมจะไม่ถูกส่งอัตโนมัติ
             } @else if (issue === "unavailable") {
-              ไม่สามารถเปิดโต๊ะจาก QR นี้ได้ กรุณาตรวจสอบกับร้านหรือขอ QR โต๊ะที่ถูกต้อง
+              ไม่สามารถเปิดโต๊ะจาก QR นี้ได้ กรุณาตรวจสอบกับร้านหรือขอ QR
+              โต๊ะที่ถูกต้อง
             } @else {
               กรุณาสแกน QR สำหรับสั่งอาหารจากร้านอีกครั้งเพื่อเริ่มรายการใหม่
             }
@@ -610,7 +611,9 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly loading = signal(true);
   readonly busy = signal(false);
   readonly error = signal("");
-  readonly qrIssue = signal<"reconnect" | "unavailable" | "invalid" | "missing" | null>(null);
+  readonly qrIssue = signal<
+    "reconnect" | "unavailable" | "invalid" | "missing" | null
+  >(null);
   readonly notice = signal("");
   readonly search = signal("");
   readonly category = signal("");
