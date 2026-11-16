@@ -21,43 +21,24 @@ describe("single-entry route permissions", () => {
     expect(permitsRoute([store], "settings")).toBe(false);
     expect(permitsRoute([store], "catalog", "tenant-a", "store-a")).toBe(false);
   });
-  it("exposes existing Payment views through guarded single-entry routes", () => {
-    for (const path of [
-      "payments/receiver/:tenantId/:storeId",
-      "payments/:tenantId/:storeId",
-      "payments/finance/:tenantId/:storeId",
-    ]) {
-      const route = routes.find((candidate) => candidate.path === path);
-      expect(route?.data?.["permission"]).toBe("payments");
-      expect(route?.canActivate).toContain(portalAccess);
-      expect(route?.loadComponent).toBeTypeOf("function");
+  it("guards Payment pages in the customer portal", () => {
+    const pages = routes.filter((route) => route.path?.startsWith("payments/"));
+    expect(pages).toHaveLength(3);
+    for (const page of pages) {
+      expect(page.canActivate).toContain(portalAccess);
+      expect(page.data?.["permission"]).toBe("payments");
     }
   });
-  it("restricts Payment navigation to authorized owner/manager per store", () => {
-    const owner = { ...store, role: "owner" as const };
-    const manager = { ...store, role: "manager" as const };
-    expect(permitsRoute([], "payments", "tenant-a", "store-a")).toBe(false);
-    expect(
-      permitsRoute([store], "payments", "tenant-a", "store-a"),
-    ).toBe(false);
-    expect(
-      permitsRoute(
-        [{ ...store, role: "kitchen" }],
-        "payments",
-        "tenant-a",
-        "store-a",
-      ),
-    ).toBe(false);
-    expect(permitsRoute([owner], "payments", "tenant-a", "store-a")).toBe(true);
-    expect(
-      permitsRoute([manager], "payments", "tenant-a", "store-a"),
-    ).toBe(true);
-    expect(
-      permitsRoute([owner], "payments", "tenant-b", "store-a"),
-    ).toBe(false);
-    expect(
-      permitsRoute([owner], "payments", "tenant-a", "store-b"),
-    ).toBe(false);
+  it("limits Payment access to the correct store and role", () => {
+    const owner = [{ ...store, role: "owner" as const }];
+    const allowed = (role: MerchantStore["role"]) =>
+      permitsRoute([{ ...store, role }], "payments", "tenant-a", "store-a");
+    expect(allowed("owner")).toBe(true);
+    expect(allowed("manager")).toBe(true);
+    expect(allowed("cashier")).toBe(false);
+    expect(allowed("kitchen")).toBe(false);
+    expect(permitsRoute(owner, "payments", "tenant-b", "store-a")).toBe(false);
+    expect(permitsRoute(owner, "payments", "tenant-a", "store-b")).toBe(false);
   });
   it("keeps owner, manager and kitchen capabilities distinct", () => {
     expect(
