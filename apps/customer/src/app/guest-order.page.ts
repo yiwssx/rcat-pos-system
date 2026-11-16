@@ -197,26 +197,9 @@ function guestError(error: unknown): string {
 
         <div class="v6-guest-filters">
           <div class="guest-menu-toolbar">
-            <div class="guest-search">
-              <label class="guest-field-title" for="guest-menu-search"
-                >ค้นหาเมนู</label
-              >
-              <svg
-                class="guest-search-icon"
-                viewBox="0 0 24 24"
-                width="20"
-                height="20"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <circle cx="10.75" cy="10.75" r="6.5" />
-                <path d="m16 16 4.5 4.5" />
-              </svg>
+            <label class="guest-search">
+              <span class="guest-field-title">ค้นหาเมนู</span>
               <input
-                #menuSearch
                 id="guest-menu-search"
                 type="search"
                 autocomplete="off"
@@ -224,17 +207,7 @@ function guestError(error: unknown): string {
                 [value]="search()"
                 (input)="onSearch($event)"
               />
-              @if (search()) {
-                <button
-                  class="guest-search-clear"
-                  type="button"
-                  aria-label="ล้างคำค้นหา"
-                  (click)="clearSearch()"
-                >
-                  ×
-                </button>
-              }
-            </div>
+            </label>
           </div>
           <div class="guest-categories" role="group" aria-label="หมวดหมู่">
             <button
@@ -664,7 +637,6 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   @ViewChild("detailDialog")
   private detailDialog?: ElementRef<HTMLDialogElement>;
   @ViewChild("cartDialog") private cartDialog?: ElementRef<HTMLDialogElement>;
-  @ViewChild("menuSearch") private menuSearch?: ElementRef<HTMLInputElement>;
   readonly online = signal(true);
   readonly staticTable = signal<{
     tenantId: string;
@@ -916,13 +888,6 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       this.search.set(event.target.value);
       this.scheduleSearchReload(300);
     }
-  }
-
-  clearSearch(): void {
-    if (!this.search()) return;
-    this.search.set("");
-    this.scheduleSearchReload(0);
-    this.menuSearch?.nativeElement.focus();
   }
 
   onCategoryChip(categoryId: string): void {
