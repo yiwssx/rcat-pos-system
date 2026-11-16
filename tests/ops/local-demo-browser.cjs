@@ -240,6 +240,24 @@ async function main() {
     }));
     assert.equal(guestPalette.active, 'rgb(201, 65, 8)', 'Guest category selection uses accessible solid brand orange');
     assert.equal(guestPalette.cta, 'rgb(201, 65, 8)', 'Guest add-to-cart uses accessible solid brand orange');
+    // The desktop filter is one compact rail, not a full-width stacked form.
+    await staticPage.setViewportSize({ width: 1365, height: 900 });
+    const filterSize = await staticPage.evaluate(() => {
+      const rail = document.querySelector('.v6-guest-filters').getBoundingClientRect();
+      const field = document.querySelector('#guest-menu-search').getBoundingClientRect();
+      return { railHeight: rail.height, fieldWidth: field.width };
+    });
+    assert.ok(filterSize.railHeight < 85, 'Desktop search/categories should use one compact row');
+    assert.ok(filterSize.fieldWidth < 460, 'Desktop search should not occupy the entire screen');
+    assert.equal(await staticPage.getByRole('searchbox', { name: 'ค้นหาเมนู' }).count(), 1);
+    await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-search-desktop.png', fullPage: true });
+    await staticPage.setViewportSize({ width: 390, height: 844 });
+    const searchbox = staticPage.getByRole('searchbox', { name: 'ค้นหาเมนู' });
+    await searchbox.fill('น้ำ');
+    // Native searchbox clearing must restore the unfiltered menu.
+    await searchbox.fill('');
+    await staticPage.waitForFunction(() => document.querySelector('#guest-menu-search').value === '');
+    await staticPage.waitForFunction(() => document.querySelectorAll('.guest-product').length === 3);
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-menu-phone.png', fullPage: true });
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' }).getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
     await staticPage.getByRole('dialog', { name: 'ข้าวผัด' }).getByRole('button', { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
@@ -276,11 +294,35 @@ async function main() {
     await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).click();
     await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).waitFor();
 
-    // A printed QR is permanent even when a short-lived visit is revoked.
-    // Recreate a cart, simulate an expired page token, and require an explicit
-    // fresh visit; never retain or auto-submit the old cart.
+    // A permanent printed QR should recover one expired read grant without
+    // showing a misleading expired-QR screen or retaining the old cart.
     await staticPage.getByRole('button', { name: 'ตรวจสอบอีกครั้ง' }).click();
     await staticPage.locator('.guest-product').first().waitFor();
+    await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' })
+      .getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
+    await staticPage.getByRole('dialog', { name: 'ข้าวผัด' })
+      .getByRole('button', { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
+    await staticPage.locator('.guest-cart-shortcut').waitFor();
+    let reconnectOpens = 0;
+    await staticPage.route('**/api/guest/ordering-table/open', route => {
+      reconnectOpens += 1;
+      return route.continue();
+    });
+    await staticPage.route('**/api/guest/ordering-visit/page', route =>
+      route.fulfill({ status: 404, contentType: 'application/json',
+        body: '{"message":"Ordering visit unavailable"}' }), { times: 1 });
+    await staticPage.getByRole('searchbox', { name: 'ค้นหาเมนู' }).fill('ข้าว');
+    await staticPage.getByText('เชื่อมต่อโต๊ะใหม่แล้ว ตะกร้าเดิมถูกล้างเพื่อความปลอดภัย กรุณาเลือกเมนูอีกครั้ง').waitFor();
+    await staticPage.locator('.guest-product').first().waitFor();
+    assert.equal(reconnectOpens, 1, 'Only one silent printed-QR reconnect is permitted');
+    assert.equal(await staticPage.locator('.guest-cart-shortcut').count(), 0,
+      'Recovered visit must start with an empty cart and no stale checkout');
+    assert.equal(await staticPage.getByRole('heading', { name: 'รอบโต๊ะเดิมสิ้นสุดแล้ว' }).count(), 0,
+      'Single expired read grant must not strand the guest on an expired-QR screen');
+    await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-auto-reconnect-phone.png', fullPage: true });
+
+    // A second expired response cannot cause an unbounded regrant loop.
+    // Show an actionable manual fallback; never replay the previous cart.
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' })
       .getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
     await staticPage.getByRole('dialog', { name: 'ข้าวผัด' })
@@ -289,18 +331,19 @@ async function main() {
     await staticPage.route('**/api/guest/ordering-visit/page', route =>
       route.fulfill({ status: 404, contentType: 'application/json',
         body: '{"message":"Ordering visit unavailable"}' }));
-    await staticPage.getByPlaceholder('ค้นหาอาหารหรือเครื่องดื่ม').fill('ข้าว');
+    await staticPage.getByRole('searchbox', { name: 'ค้นหาเมนู' }).fill('น้ำ');
     await staticPage.getByRole('heading', { name: 'รอบโต๊ะเดิมสิ้นสุดแล้ว' }).waitFor();
+    assert.equal(reconnectOpens, 1, 'A subsequent failure must not auto-reconnect indefinitely');
     assert.equal(await staticPage.locator('.guest-product').count(), 0,
-      'Revoked visit must not show old menu after page HTTP 404');
+      'Expired visit must not show a stale menu');
     assert.equal(await staticPage.locator('.guest-cart-shortcut').count(), 0,
-      'Revoked visit must invalidate old cart and never offer stale checkout');
+      'Expired visit must not offer a stale cart');
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-qr-reconnect-phone.png', fullPage: true });
     await staticPage.unroute('**/api/guest/ordering-visit/page');
     await staticPage.getByRole('button', { name: 'ตรวจสอบและเชื่อมต่อโต๊ะใหม่' }).click();
     await staticPage.locator('.guest-product').first().waitFor();
     assert.equal(await staticPage.locator('.guest-cart-shortcut').count(), 0,
-      'Reconnected table must begin with an empty cart');
+      'Manual recovery must also begin with an empty cart');
     await staticPage.setViewportSize({ width: 320, height: 780 });
     const guestWidth = await staticPage.evaluate(() => ({
       viewport: document.documentElement.clientWidth,

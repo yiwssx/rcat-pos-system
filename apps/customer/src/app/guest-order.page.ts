@@ -123,6 +123,12 @@ function guestError(error: unknown): string {
         </section>
       }
 
+      @if (recoveryNotice() && session.visit()) {
+        <p class="guest-recovery-notice" role="status">
+          {{ recoveryNotice() }}
+        </p>
+      }
+
       @if (loading()) {
         <div class="guest-status" role="status">กำลังโหลดเมนูอาหาร...</div>
       } @else if (qrIssue(); as issue) {
@@ -196,6 +202,7 @@ function guestError(error: unknown): string {
             <label class="guest-search">
               <span class="guest-field-title">ค้นหาเมนู</span>
               <input
+                id="guest-menu-search"
                 type="search"
                 autocomplete="off"
                 placeholder="ค้นหาอาหารหรือเครื่องดื่ม"
@@ -615,6 +622,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     "reconnect" | "unavailable" | "invalid" | "missing" | null
   >(null);
   readonly notice = signal("");
+  readonly recoveryNotice = signal("");
   readonly search = signal("");
   readonly category = signal("");
   readonly hasMore = signal(false);
@@ -644,6 +652,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   private readonly win = this.document.defaultView;
   readonly products = signal<GuestProduct[]>([]);
   private requestVersion = 0;
+  // Bounded automatic regrant for a permanent printed QR; no retry loop.
+  private printedReconnectAttempted = false;
   private searchTimer?: ReturnType<typeof setTimeout>;
   readonly cartQty = computed(() =>
     this.session.cart().reduce((sum, item) => sum + item.quantity, 0),
@@ -739,13 +749,39 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     if (this.cartDialog?.nativeElement.open) this.closeCart();
     this.session.invalidateVisit();
     this.scanToken = null;
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchTimer = undefined;
     this.products.set([]);
     this.nextCursor.set(null);
     this.hasMore.set(false);
     this.selected.set({});
+    this.search.set("");
+    this.category.set("");
+    this.orderedBy.set("");
+    this.deliverTo.set("");
     this.notice.set("");
+    this.recoveryNotice.set("");
     this.error.set("");
     this.qrIssue.set(this.staticTable() ? "reconnect" : "invalid");
+  }
+
+  private async recoverExpiredPrintedVisit(): Promise<void> {
+    const hadCart = this.cartQty() > 0;
+    // Never replay an old cart, order, token or pending idempotency key.
+    this.invalidateExpiredVisit();
+    if (!this.staticTable() || this.printedReconnectAttempted || !this.online())
+      return;
+    this.printedReconnectAttempted = true;
+    // The server validates the table and store switch before issuing a new grant.
+    // Failure or a second expired grant falls back to the explicit recovery UI.
+    await this.openStaticTable();
+    if (this.session.visit()) {
+      this.recoveryNotice.set(
+        hadCart
+          ? "เชื่อมต่อโต๊ะใหม่แล้ว ตะกร้าเดิมถูกล้างเพื่อความปลอดภัย กรุณาเลือกเมนูอีกครั้ง"
+          : "เชื่อมต่อโต๊ะใหม่แล้ว สามารถเลือกเมนูอาหารได้",
+      );
+    }
   }
 
   private async load(token: string): Promise<void> {
@@ -769,7 +805,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     } catch (error) {
       if (version !== this.requestVersion) return;
       if (error instanceof HttpErrorResponse && error.status === 404) {
-        this.invalidateExpiredVisit();
+        await this.recoverExpiredPrintedVisit();
       } else {
         this.error.set(guestError(error));
       }
@@ -899,7 +935,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     } catch (error) {
       if (version === this.requestVersion) {
         if (error instanceof HttpErrorResponse && error.status === 404) {
-          this.invalidateExpiredVisit();
+          await this.recoverExpiredPrintedVisit();
         } else {
           this.notice.set(guestError(error));
         }
