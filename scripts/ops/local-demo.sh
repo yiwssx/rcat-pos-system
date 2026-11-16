@@ -72,9 +72,9 @@ if [[ "$1" == reset ]]; then
        "$(stat -c %u "$state")" == "$EUID" ]] ||
       fail 'Unrecognized local secret directory'
     for path in "$state"/*; do
-      [[ ! -e "$path" ]] && continue
+      [[ ! -e "$path" && ! -L "$path" ]] && continue
       [[ -f "$path" && ! -L "$path" ]] || fail 'Unknown local secret path'
-      case "\${path##*/}" in
+      case "${path##*/}" in
         dba-password|auth-password|tenant-password|admin-password|merchant-password|owner-password|key.pem|cert.pem) ;;
         *) fail 'Local directory contains unknown files; preserving it' ;;
       esac
@@ -99,7 +99,7 @@ if [[ "$1" == reset ]]; then
   fi
   if [[ -d "$state" ]]; then
     for path in "$state"/*; do
-      [[ ! -e "$path" ]] && continue
+      [[ ! -e "$path" && ! -L "$path" ]] && continue
       rm -- "$path"
     done
     rmdir -- "$state"
