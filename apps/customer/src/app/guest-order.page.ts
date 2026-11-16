@@ -38,7 +38,7 @@ function guestError(error: unknown): string {
     if (error.status === 0)
       return "เชื่อมต่อไม่ได้ โปรดตรวจสอบอินเทอร์เน็ตแล้วลองใหม่";
     if (error.status === 404)
-      return "QR ของโต๊ะหมดอายุหรือถูกเปลี่ยนแล้ว โปรดขอ QR ล่าสุดจากร้าน";
+      return "ไม่พบข้อมูลที่ร้องขอ กรุณาตรวจสอบข้อมูลแล้วลองอีกครั้ง";
     if (error.status === 409) {
       if (
         (error.error as { message?: string } | null)?.message ===
@@ -61,7 +61,7 @@ function guestError(error: unknown): string {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
-  styleUrls: ["./guest-order.css"],
+  styleUrls: ["./guest-order.css", "./guest-order-ios.css"],
   template: `
     <section class="guest-shell v6-guest-shop" aria-labelledby="guest-title">
       <header class="guest-header">
@@ -125,6 +125,54 @@ function guestError(error: unknown): string {
 
       @if (loading()) {
         <div class="guest-status" role="status">กำลังโหลดเมนูอาหาร...</div>
+      } @else if (qrIssue(); as issue) {
+        <section
+          class="guest-qr-recovery"
+          role="alert"
+          aria-labelledby="guest-qr-recovery-title"
+        >
+          <span class="guest-qr-recovery-kicker">QR สำหรับสั่งอาหาร</span>
+          <h2 id="guest-qr-recovery-title">
+            @switch (issue) {
+              @case ("reconnect") {
+                รอบโต๊ะเดิมสิ้นสุดแล้ว
+              }
+              @case ("unavailable") {
+                ไม่พบโต๊ะนี้ในระบบ
+              }
+              @case ("missing") {
+                ยังไม่ได้สแกน QR โต๊ะ
+              }
+              @default {
+                QR นี้ใช้ไม่ได้แล้ว
+              }
+            }
+          </h2>
+          <p>
+            @if (issue === "reconnect") {
+              QR ที่ติดโต๊ะยังใช้ได้ กรุณาเชื่อมต่อโต๊ะใหม่เพื่อเริ่มตะกร้าใหม่
+              รายการเดิมจะไม่ถูกส่งอัตโนมัติ
+            } @else if (issue === "unavailable") {
+              ไม่สามารถเปิดโต๊ะจาก QR นี้ได้ กรุณาตรวจสอบกับร้านหรือขอ QR
+              โต๊ะที่ถูกต้อง
+            } @else {
+              กรุณาสแกน QR สำหรับสั่งอาหารจากร้านอีกครั้งเพื่อเริ่มรายการใหม่
+            }
+          </p>
+          <div class="guest-qr-recovery-actions">
+            @if (staticTable()) {
+              <button
+                type="button"
+                class="guest-qr-reconnect"
+                (click)="reload()"
+                [disabled]="loading() || !online()"
+              >
+                ตรวจสอบและเชื่อมต่อโต๊ะใหม่
+              </button>
+            }
+            <a routerLink="/" class="guest-qr-home">กลับหน้าแรก</a>
+          </div>
+        </section>
       } @else if (error()) {
         <div class="guest-error" role="alert">
           <p>{{ error() }}</p>
@@ -563,6 +611,9 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly loading = signal(true);
   readonly busy = signal(false);
   readonly error = signal("");
+  readonly qrIssue = signal<
+    "reconnect" | "unavailable" | "invalid" | "missing" | null
+  >(null);
   readonly notice = signal("");
   readonly search = signal("");
   readonly category = signal("");
@@ -620,7 +671,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       const token = sanitizedVisitToken(fragment);
       if (!token) {
         this.loading.set(false);
-        this.error.set("QR สำหรับสั่งอาหารไม่ถูกต้อง กรุณาสแกน QR ใหม่");
+        this.session.invalidateVisit();
+        this.qrIssue.set("invalid");
         return;
       }
       this.scanToken = token;
@@ -643,7 +695,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
         !uuid.test(storeId) ||
         !uuid.test(tableId)
       ) {
-        this.error.set("QR ติดโต๊ะไม่ถูกต้อง กรุณาสแกน QR ใหม่");
+        this.qrIssue.set("invalid");
         return;
       }
       this.staticTable.set({ tenantId, storeId, tableId });
@@ -653,7 +705,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       void this.load(this.session.visitToken()!);
     } else {
       this.loading.set(false);
-      this.error.set("ไม่พบ QR สำหรับสั่งอาหาร กรุณาสแกน QR ของโต๊ะเพื่อเริ่ม");
+      this.qrIssue.set("missing");
     }
   }
 
@@ -674,10 +726,26 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     }
     const token = this.session.visitToken() ?? this.scanToken;
     if (!token) {
-      this.error.set("กรุณาสแกน QR ของโต๊ะใหม่เพื่อเริ่มสั่งอาหาร");
+      this.qrIssue.set("missing");
       return;
     }
     await this.load(token);
+  }
+
+  private invalidateExpiredVisit(): void {
+    // Revoked/expired tokens must never leave an actionable old cart or sheet.
+    // The permanent printed QR may issue a *new* visit after explicit action.
+    if (this.detailDialog?.nativeElement.open) this.closeProduct();
+    if (this.cartDialog?.nativeElement.open) this.closeCart();
+    this.session.invalidateVisit();
+    this.scanToken = null;
+    this.products.set([]);
+    this.nextCursor.set(null);
+    this.hasMore.set(false);
+    this.selected.set({});
+    this.notice.set("");
+    this.error.set("");
+    this.qrIssue.set(this.staticTable() ? "reconnect" : "invalid");
   }
 
   private async load(token: string): Promise<void> {
@@ -685,6 +753,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     this.loading.set(true);
     this.loadingMore.set(false);
     this.error.set("");
+    this.qrIssue.set(null);
     try {
       const page = await this.api.page(
         token,
@@ -700,10 +769,10 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     } catch (error) {
       if (version !== this.requestVersion) return;
       if (error instanceof HttpErrorResponse && error.status === 404) {
-        this.session.invalidateVisit();
-        this.scanToken = null;
+        this.invalidateExpiredVisit();
+      } else {
+        this.error.set(guestError(error));
       }
-      this.error.set(guestError(error));
     } finally {
       if (version === this.requestVersion) this.loading.set(false);
     }
@@ -735,6 +804,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     const version = ++this.requestVersion;
     this.loading.set(true);
     this.error.set("");
+    this.qrIssue.set(null);
     this.closedStore.set(null);
     this.products.set([]);
     this.session.invalidateVisit();
@@ -756,7 +826,13 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       this.scanToken = state.visitToken;
       await this.load(state.visitToken);
     } catch (error) {
-      if (version === this.requestVersion) this.error.set(guestError(error));
+      if (version === this.requestVersion) {
+        if (error instanceof HttpErrorResponse && error.status === 404) {
+          this.qrIssue.set("unavailable");
+        } else {
+          this.error.set(guestError(error));
+        }
+      }
     } finally {
       if (version === this.requestVersion) this.loading.set(false);
     }
@@ -821,7 +897,13 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       this.nextCursor.set(page.nextCursor);
       this.hasMore.set(page.hasMore);
     } catch (error) {
-      if (version === this.requestVersion) this.notice.set(guestError(error));
+      if (version === this.requestVersion) {
+        if (error instanceof HttpErrorResponse && error.status === 404) {
+          this.invalidateExpiredVisit();
+        } else {
+          this.notice.set(guestError(error));
+        }
+      }
     } finally {
       if (version === this.requestVersion) this.loadingMore.set(false);
     }
@@ -1060,7 +1142,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       return;
     }
     if (Date.now() >= new Date(visit.expiresAt).getTime()) {
-      this.notice.set("QR โต๊ะหมดอายุแล้ว กรุณาสแกนใหม่");
+      this.closeCart();
+      this.invalidateExpiredVisit();
       return;
     }
     for (const line of lines) {
@@ -1108,9 +1191,9 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       await this.router.navigateByUrl("/order/track");
     } catch (error) {
       if (error instanceof HttpErrorResponse && error.status === 404) {
-        this.session.invalidateVisit();
-        this.error.set(guestError(error));
         this.closeCart();
+        this.invalidateExpiredVisit();
+        return;
       }
       if (
         error instanceof HttpErrorResponse &&

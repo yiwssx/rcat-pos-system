@@ -235,14 +235,33 @@ async function main() {
       'Guest ordering should not repeat the portal masthead');
     assert.equal(await staticPage.locator('header.guest-header').isVisible(), true);
     const guestPalette = await staticPage.evaluate(() => ({
-      active: getComputedStyle(document.querySelector('.guest-category-chip.is-active')).backgroundImage,
-      cta: getComputedStyle(document.querySelector('.guest-add')).backgroundImage,
+      active: getComputedStyle(document.querySelector('.guest-category-chip.is-active')).backgroundColor,
+      cta: getComputedStyle(document.querySelector('.guest-add')).backgroundColor,
     }));
-    assert.match(guestPalette.active, /linear-gradient/, 'Guest category selection must use vivid orange');
-    assert.match(guestPalette.cta, /linear-gradient/, 'Guest add-to-cart action must use vivid orange');
+    assert.equal(guestPalette.active, 'rgb(201, 65, 8)', 'Guest category selection uses accessible solid brand orange');
+    assert.equal(guestPalette.cta, 'rgb(201, 65, 8)', 'Guest add-to-cart uses accessible solid brand orange');
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-menu-phone.png', fullPage: true });
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' }).getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
     await staticPage.getByRole('dialog', { name: 'ข้าวผัด' }).getByRole('button', { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
+    await staticPage.locator('.guest-cart-shortcut').waitFor({ state: 'visible' });
+    const guestLight = await staticPage.evaluate(() => {
+      const host = document.querySelector('.guest-shell');
+      const bar = document.querySelector('.guest-cart-shortcut');
+      const action = document.querySelector('.guest-cart-shortcut-action');
+      return {
+        background: getComputedStyle(host).backgroundColor,
+        cart: getComputedStyle(bar).backgroundColor,
+        label: getComputedStyle(bar.querySelector('.guest-cart-shortcut-count')).color,
+        cta: getComputedStyle(action).backgroundColor,
+        ctaText: getComputedStyle(action).color,
+      };
+    });
+    assert.equal(guestLight.background, 'rgb(245, 245, 247)', 'Guest must use the light neutral canvas');
+    assert.match(guestLight.cart, /rgba?\(255, 255, 255/, 'Cart bar must be white, not an unreadable orange gradient');
+    assert.equal(guestLight.label, 'rgb(28, 28, 30)', 'Cart count must use readable dark text');
+    assert.equal(guestLight.cta, 'rgb(201, 65, 8)', 'Only cart action uses dark orange');
+    assert.equal(guestLight.ctaText, 'rgb(255, 255, 255)', 'Cart action must have readable white text');
+    await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-ios-cart-bar-phone.png', fullPage: true });
     await staticPage.getByRole('button', { name: 'ดูตะกร้า' }).click();
     await staticPage.getByRole('dialog', { name: 'ตะกร้าของฉัน' }).waitFor();
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-cart-phone.png', fullPage: true });
@@ -256,6 +275,40 @@ async function main() {
     assert.equal(await staticPage.locator('.guest-product').count(), 0, 'Merchant close blocks existing cart');
     await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).click();
     await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).waitFor();
+
+    // A printed QR is permanent even when a short-lived visit is revoked.
+    // Recreate a cart, simulate an expired page token, and require an explicit
+    // fresh visit; never retain or auto-submit the old cart.
+    await staticPage.getByRole('button', { name: 'ตรวจสอบอีกครั้ง' }).click();
+    await staticPage.locator('.guest-product').first().waitFor();
+    await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' })
+      .getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
+    await staticPage.getByRole('dialog', { name: 'ข้าวผัด' })
+      .getByRole('button', { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
+    await staticPage.locator('.guest-cart-shortcut').waitFor();
+    await staticPage.route('**/api/guest/ordering-visit/page', route =>
+      route.fulfill({ status: 404, contentType: 'application/json',
+        body: '{"message":"Ordering visit unavailable"}' }));
+    await staticPage.getByPlaceholder('ค้นหาอาหารหรือเครื่องดื่ม').fill('ข้าว');
+    await staticPage.getByRole('heading', { name: 'รอบโต๊ะเดิมสิ้นสุดแล้ว' }).waitFor();
+    assert.equal(await staticPage.locator('.guest-product').count(), 0,
+      'Revoked visit must not show old menu after page HTTP 404');
+    assert.equal(await staticPage.locator('.guest-cart-shortcut').count(), 0,
+      'Revoked visit must invalidate old cart and never offer stale checkout');
+    await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-qr-reconnect-phone.png', fullPage: true });
+    await staticPage.unroute('**/api/guest/ordering-visit/page');
+    await staticPage.getByRole('button', { name: 'ตรวจสอบและเชื่อมต่อโต๊ะใหม่' }).click();
+    await staticPage.locator('.guest-product').first().waitFor();
+    assert.equal(await staticPage.locator('.guest-cart-shortcut').count(), 0,
+      'Reconnected table must begin with an empty cart');
+    await staticPage.setViewportSize({ width: 320, height: 780 });
+    const guestWidth = await staticPage.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      content: document.documentElement.scrollWidth,
+    }));
+    assert.ok(guestWidth.content <= guestWidth.viewport + 1,
+      'iOS Light Guest must not overflow 320px viewport');
+    await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-ios-320.png', fullPage: true });
     await guest.close();
     await tableView.close();
 
