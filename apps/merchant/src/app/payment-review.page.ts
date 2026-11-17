@@ -25,11 +25,11 @@ function satangFromInput(text: string): number | null {
   template: `
     <section class="review-shell" aria-labelledby="review-title">
       <a [routerLink]="['/orders', tenantId, storeId]">← กลับกระดานออเดอร์</a>
-      <span class="eyebrow">MANUAL PAYMENT REVIEW</span>
+      <span class="eyebrow">ตรวจสอบการชำระเงิน</span>
       <h1 id="review-title">ตรวจสลิป PromptPay</h1>
       <p class="review-warning">
-        สลิปเป็นเพียงหลักฐานที่ลูกค้าส่ง ไม่ได้ยืนยันว่าเงินเข้าบัญชีแล้ว
-        ตรวจรายการรับเงินจริงในแอปธนาคารของร้านก่อนกดยืนยันเสมอ
+        ตรวจสอบยอดเงินเข้าจริงในบัญชีธนาคารของร้านทุกครั้งก่อนกดยืนยัน
+        รูปสลิปอย่างเดียวไม่ใช่หลักฐานว่าได้รับเงินแล้ว
       </p>
       @if (error()) {
         <p class="review-error" role="alert">{{ error() }}</p>
