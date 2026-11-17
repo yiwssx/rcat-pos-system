@@ -365,11 +365,11 @@ async function main() {
     await tableView.close();
 
     // Open the fixture's table through its existing staff API, not a demo UI button.
-    const csrf = (await context.cookies(merchant)).find(cookie => cookie.name === '__Host-rcat_csrf')?.value;
-    assert.ok(csrf, 'Authenticated CI fixture must receive a CSRF cookie');
+    const tableCsrf = (await context.cookies(merchant)).find(cookie => cookie.name === '__Host-rcat_csrf')?.value;
+    assert.ok(tableCsrf, 'Authenticated CI fixture must receive a CSRF cookie');
     const round = await context.request.post(merchant +
       '/api/tenants/70000000-0000-4000-8000-000000000001/stores/70000000-0000-4000-8000-000000000002/tables/70000000-0000-4000-8000-000000000005/rotate', {
-        headers: { Origin: merchant, 'X-CSRF-Token': csrf },
+        headers: { Origin: merchant, 'X-CSRF-Token': tableCsrf },
         data: {}
       });
     assert.ok(round.ok(), 'CI table round must be created using the normal staff API');
