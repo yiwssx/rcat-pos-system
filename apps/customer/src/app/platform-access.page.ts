@@ -45,10 +45,13 @@ function failure(error: unknown): string {
     <section class="platform-console" aria-labelledby="platform-heading">
       <header class="platform-heading">
         <div>
-          <span class="platform-eyebrow">RCAT POS / PLATFORM ADMINISTRATION</span>
+          <span class="platform-eyebrow"
+            >RCAT POS / PLATFORM ADMINISTRATION</span
+          >
           <h1 id="platform-heading">จัดการสิทธิ์เข้าใช้งาน</h1>
           <p>
-            อนุญาตเฉพาะบัญชี Google Workspace @rcat.ac.th ที่ผู้ดูแลเพิ่มเองเท่านั้น
+            อนุญาตเฉพาะบัญชี Google Workspace @rcat.ac.th
+            ที่ผู้ดูแลเพิ่มเองเท่านั้น
             การให้สิทธิ์ระดับแพลตฟอร์มไม่เปิดสิทธิ์ร้านอื่นอัตโนมัติ
           </p>
         </div>
@@ -69,7 +72,9 @@ function failure(error: unknown): string {
         <p class="platform-success" role="status">{{ notice() }}</p>
       }
       @if (loading()) {
-        <p role="status" class="platform-loading">กำลังโหลดรายการผู้ใช้ที่ได้รับอนุญาต…</p>
+        <p role="status" class="platform-loading">
+          กำลังโหลดรายการผู้ใช้ที่ได้รับอนุญาต…
+        </p>
       }
 
       <div class="platform-columns">
@@ -97,7 +102,9 @@ function failure(error: unknown): string {
                 [value]="role()"
                 (change)="setRole($event)"
               >
-                <option value="merchant">Merchant — ผู้ดูแลร้านตามที่ได้รับมอบหมาย</option>
+                <option value="merchant">
+                  Merchant — ผู้ดูแลร้านตามที่ได้รับมอบหมาย
+                </option>
                 @if (isSuper()) {
                   <option value="admin">Admin — จัดการบัญชี Merchant</option>
                 }
@@ -107,8 +114,8 @@ function failure(error: unknown): string {
               </button>
             </form>
             <p class="platform-hint">
-              Super Admin แต่งตั้ง Admin ได้ ส่วน Super Admin และ Admin เพิ่ม Merchant ได้
-              ไม่มีการสมัครบัญชีด้วยตนเอง
+              Super Admin แต่งตั้ง Admin ได้ ส่วน Super Admin และ Admin เพิ่ม
+              Merchant ได้ ไม่มีการสมัครบัญชีด้วยตนเอง
             </p>
           </div>
         </details>
@@ -123,22 +130,32 @@ function failure(error: unknown): string {
               <article class="platform-account">
                 <div class="platform-account-meta">
                   <strong>{{ account.email }}</strong>
-                  <span>{{ label(account.role) }} · {{ account.active ? "ใช้งานได้" : "ระงับ" }}</span>
+                  <span
+                    >{{ label(account.role) }} ·
+                    {{ account.active ? "ใช้งานได้" : "ระงับ" }}</span
+                  >
                 </div>
-                @if (account.role !== "super_admin" && (isSuper() || account.role === "merchant")) {
+                @if (
+                  account.role !== "super_admin" &&
+                  (isSuper() || account.role === "merchant")
+                ) {
                   <div class="platform-account-actions">
                     <button
                       type="button"
                       class="platform-subtle"
                       (click)="edit(account)"
                       [disabled]="pending()"
-                    >แก้ไข</button>
+                    >
+                      แก้ไข
+                    </button>
                     <button
                       type="button"
                       class="platform-subtle"
                       (click)="setActive(account, !account.active)"
                       [disabled]="pending()"
-                    >{{ account.active ? "ระงับ" : "เปิดใช้งาน" }}</button>
+                    >
+                      {{ account.active ? "ระงับ" : "เปิดใช้งาน" }}
+                    </button>
                   </div>
                 }
               </article>
@@ -184,7 +201,9 @@ function failure(error: unknown): string {
                 </option>
               }
             </select>
-            <button type="submit" [disabled]="pending()">มอบหมายสิทธิ์ Merchant</button>
+            <button type="submit" [disabled]="pending()">
+              มอบหมายสิทธิ์ Merchant
+            </button>
           </form>
           @if (tenants().length === 0) {
             <p class="platform-hint">
@@ -215,7 +234,9 @@ function failure(error: unknown): string {
                     class="platform-subtle"
                     (click)="enter(tenant)"
                     [disabled]="pending()"
-                  >เข้าจัดการ</button>
+                  >
+                    เข้าจัดการ
+                  </button>
                 </div>
               }
             </div>
@@ -231,7 +252,9 @@ export class PlatformAccessPage implements OnInit {
   private readonly router = inject(Router);
   readonly session = inject(PortalSession);
 
-  readonly isSuper = computed(() => this.session.platformRole() === "super_admin");
+  readonly isSuper = computed(
+    () => this.session.platformRole() === "super_admin",
+  );
   readonly accounts = signal<PlatformAccount[]>([]);
   readonly tenants = signal<PlatformTenant[]>([]);
   readonly loading = signal(true);
@@ -271,7 +294,9 @@ export class PlatformAccessPage implements OnInit {
     try {
       const [accounts, tenants] = await Promise.all([
         firstValueFrom(
-          this.http.get<{ accounts: PlatformAccount[] }>("/api/platform/accounts"),
+          this.http.get<{ accounts: PlatformAccount[] }>(
+            "/api/platform/accounts",
+          ),
         ),
         firstValueFrom(
           this.http.get<{ tenants: PlatformTenant[] }>("/api/platform/tenants"),
@@ -305,7 +330,9 @@ export class PlatformAccessPage implements OnInit {
 
   edit(account: PlatformAccount): void {
     this.email.set(account.email);
-    this.role.set(account.role === "admin" && this.isSuper() ? "admin" : "merchant");
+    this.role.set(
+      account.role === "admin" && this.isSuper() ? "admin" : "merchant",
+    );
     this.notice.set("เลือกบัญชีแล้ว กรุณาตรวจสอบบทบาทก่อนบันทึก");
   }
 
@@ -348,7 +375,9 @@ export class PlatformAccessPage implements OnInit {
       !this.document.defaultView?.confirm(
         active
           ? "ยืนยันเปิดใช้งานบัญชี " + account.email + "?"
-          : "ยืนยันระงับบัญชี " + account.email + " และยกเลิก Session ที่มีอยู่?",
+          : "ยืนยันระงับบัญชี " +
+              account.email +
+              " และยกเลิก Session ที่มีอยู่?",
       )
     ) {
       return;
@@ -365,7 +394,9 @@ export class PlatformAccessPage implements OnInit {
         ),
       );
       await this.load();
-      this.notice.set(active ? "เปิดใช้งานบัญชีแล้ว" : "ระงับบัญชีและเพิกถอน Session แล้ว");
+      this.notice.set(
+        active ? "เปิดใช้งานบัญชีแล้ว" : "ระงับบัญชีและเพิกถอน Session แล้ว",
+      );
     } catch (error) {
       this.error.set(failure(error));
     } finally {
@@ -385,7 +416,9 @@ export class PlatformAccessPage implements OnInit {
     try {
       await firstValueFrom(
         this.http.post(
-          "/api/platform/tenants/" + encodeURIComponent(this.selectedTenant()) + "/merchants",
+          "/api/platform/tenants/" +
+            encodeURIComponent(this.selectedTenant()) +
+            "/merchants",
           { email: this.merchantEmail() },
           { headers: this.headers() },
         ),
@@ -402,7 +435,9 @@ export class PlatformAccessPage implements OnInit {
     if (!this.isSuper() || this.pending()) return;
     if (
       !this.document.defaultView?.confirm(
-        "ยืนยันเปิดสิทธิ์ Owner สำหรับ " + tenant.tenantName + " และบันทึก Audit?",
+        "ยืนยันเปิดสิทธิ์ Owner สำหรับ " +
+          tenant.tenantName +
+          " และบันทึก Audit?",
       )
     ) {
       return;
@@ -412,7 +447,9 @@ export class PlatformAccessPage implements OnInit {
     try {
       await firstValueFrom(
         this.http.post(
-          "/api/platform/tenants/" + encodeURIComponent(tenant.tenantId) + "/enter",
+          "/api/platform/tenants/" +
+            encodeURIComponent(tenant.tenantId) +
+            "/enter",
           {},
           { headers: this.headers() },
         ),
