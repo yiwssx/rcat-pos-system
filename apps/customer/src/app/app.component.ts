@@ -376,8 +376,7 @@ export class AppComponent {
     return (
       this.session.platformRole() === "super_admin" ||
       this.session.platformRole() === "admin" ||
-      this.session.stores().some((store) => store.role === "owner") ||
-      false
+      this.session.stores().some((store) => store.role === "owner")
     );
   }
   toggleMobileNav(): void {
