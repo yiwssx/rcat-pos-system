@@ -23,7 +23,11 @@ import {
 } from "./request-security";
 
 type Account = { id: string; password_hash: string; is_active: boolean };
-type ActiveSession = { user_id: string; csrf_digest: Buffer; platform_role: "super_admin" | "admin" | "merchant" | null };
+type ActiveSession = {
+  user_id: string;
+  csrf_digest: Buffer;
+  platform_role: "super_admin" | "admin" | "merchant" | null;
+};
 const COOKIE_LIFETIME_SECONDS = 12 * 60 * 60;
 
 @Injectable()
@@ -125,7 +129,10 @@ export class AuthService {
       );
       return result.rows[0];
     });
-    if (!row || (process.env["ENABLE_DEVELOPMENT_AUTH"] !== "true" && !row.platform_role)) {
+    if (
+      !row ||
+      (process.env["ENABLE_DEVELOPMENT_AUTH"] !== "true" && !row.platform_role)
+    ) {
       throw new UnauthorizedException("Expired, revoked or unapproved session");
     }
     return {
