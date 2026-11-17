@@ -117,6 +117,7 @@ test("checked-in staging Compose never publishes API or PostgreSQL, and only mig
   assert.match(nginx, /proxy_buffering off;/);
   assert.match(nginx, /proxy_read_timeout 60s;/);
   assert.match(nginx, /access_log off;/);
+  assert.match(nginx, /^\s*root \/usr\/share\/nginx\/html;/m);
   assert.match(nginx, /location = \/sw\.js/);
   const dockerignore = readFileSync(join(root, ".dockerignore"), "utf8");
   assert.match(dockerignore, /^\.secrets$/m);
