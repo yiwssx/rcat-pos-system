@@ -23,7 +23,7 @@ import {
 } from "./request-security";
 
 type Account = { id: string; password_hash: string; is_active: boolean };
-type ActiveSession = { user_id: string; csrf_digest: Buffer };
+type ActiveSession = { user_id: string; csrf_digest: Buffer; platform_role: "super_admin" | "admin" | "merchant" | null };
 const COOKIE_LIFETIME_SECONDS = 12 * 60 * 60;
 
 @Injectable()
@@ -103,6 +103,7 @@ export class AuthService {
     userId: string;
     csrfDigest: Buffer;
     token: string;
+    platformRole: "super_admin" | "admin" | "merchant" | null;
   }> {
     const token = cookie(req, SESSION_COOKIE);
     if (!token) throw new UnauthorizedException("Session required");
@@ -114,7 +115,9 @@ export class AuthService {
     }
     const row = await this.database.auth(async (client) => {
       const result = await client.query<ActiveSession>(
-        `SELECT s.user_id,s.csrf_digest FROM rcat_private.auth_sessions s
+        `SELECT s.user_id,s.csrf_digest,
+                  rcat_private.platform_role_for_user(s.user_id) AS platform_role
+                  FROM rcat_private.auth_sessions s
            JOIN rcat.users u ON u.id=s.user_id
           WHERE s.token_digest=$1 AND s.revoked_at IS NULL
             AND s.expires_at>now() AND u.is_active=true LIMIT 1`,
@@ -122,8 +125,15 @@ export class AuthService {
       );
       return result.rows[0];
     });
-    if (!row) throw new UnauthorizedException("Expired or revoked session");
-    return { userId: row.user_id, csrfDigest: row.csrf_digest, token };
+    if (!row || (process.env["ENABLE_DEVELOPMENT_AUTH"] !== "true" && !row.platform_role)) {
+      throw new UnauthorizedException("Expired, revoked or unapproved session");
+    }
+    return {
+      userId: row.user_id,
+      csrfDigest: row.csrf_digest,
+      token,
+      platformRole: row.platform_role,
+    };
   }
 
   requireCsrf(req: ApiRequest, session: { csrfDigest: Buffer }): void {
