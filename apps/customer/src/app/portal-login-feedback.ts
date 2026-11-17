@@ -3,6 +3,6 @@ export function googleLoginFailureNotice(
   queryValue: string | null,
 ): string | null {
   return queryValue === "failed"
-    ? "เข้าสู่ระบบด้วย Google ไม่สำเร็จ โปรดใช้บัญชี @rcat.ac.th ที่ได้รับสิทธิ์ หากยังกลับมาหน้านี้ให้ผู้ดูแลตรวจสอบการตั้งค่า Google OAuth และบัญชีผู้ใช้ที่อนุมัติไว้"
+    ? "เข้าสู่ระบบด้วย Google ไม่สำเร็จ เฉพาะบัญชี @rcat.ac.th ที่ผู้ดูแลอนุญาตไว้เท่านั้น หากต้องการเข้าใช้งานโปรดติดต่อผู้ดูแลระบบ RCAT POS"
     : null;
 }
