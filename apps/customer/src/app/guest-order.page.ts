@@ -319,7 +319,7 @@ function guestError(error: unknown): string {
         }
 
         <p class="guest-payment-alert" role="note">
-          ยังไม่มีการชำระเงินผ่าน PromptPay · ราคาก่อนส่งออเดอร์เป็นยอดประมาณการ
+          หลังส่งออเดอร์ สามารถตรวจสอบวิธีชำระเงินที่ร้านเปิดให้ใช้ได้ในหน้าติดตามคำสั่งซื้อ
         </p>
         @if (notice() && !cartOpen()) {
           <p class="guest-notice" role="status">{{ notice() }}</p>
@@ -601,7 +601,7 @@ function guestError(error: unknown): string {
             {{
               busy()
                 ? "กำลังส่งออเดอร์ กรุณาอย่าปิดหน้า..."
-                : "ยืนยันส่งคำสั่งซื้อ (ยังไม่ชำระเงิน)"
+                : "ยืนยันส่งคำสั่งซื้อและดูวิธีชำระเงิน"
             }}
           </button>
         </footer>
