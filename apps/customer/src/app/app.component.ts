@@ -256,7 +256,10 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                   }
                 </div>
               }
-              @if (session.platformRole() === "super_admin" || session.platformRole() === "admin") {
+              @if (
+                session.platformRole() === "super_admin" ||
+                session.platformRole() === "admin"
+              ) {
                 <div class="portal-nav-group">
                   <span class="portal-nav-caption">PLATFORM</span>
                   <a routerLink="/platform" routerLinkActive="active">
@@ -264,7 +267,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                   </a>
                 </div>
               }
-          @if (canSetUp()) {
+              @if (canSetUp()) {
                 <div class="portal-nav-group">
                   <span class="portal-nav-caption">ตั้งค่า</span>
                   <a routerLink="/settings" routerLinkActive="active"
