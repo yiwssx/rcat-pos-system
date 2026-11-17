@@ -105,7 +105,9 @@ export class MerchantOnboardingService {
       session.platformRole !== "super_admin" &&
       session.platformRole !== "admin"
     ) {
-      throw new NotFoundException("Merchant setup requires platform administration");
+      throw new NotFoundException(
+        "Merchant setup requires platform administration",
+      );
     }
     const form = merchantForm(raw);
     try {
