@@ -56,7 +56,7 @@ export class AuthController {
   ) {
     const session = await this.auth.session(req);
     res.setHeader("Cache-Control", "no-store");
-    return { authenticated: true, userId: session.userId };
+    return { authenticated: true, userId: session.userId, platformRole: session.platformRole };
   }
 
   @Get("merchant-stores")
