@@ -105,6 +105,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/password-recovery.sql
       - name: Verify Google Workspace identity binding, anti-recycle and session isolation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/google-workspace-identity.sql
+      - name: Verify closed Google Workspace platform roles and Super Admin bootstrap
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/platform-access.sql
       - name: Verify catalog scope, satang integrity and RLS using PostgreSQL
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/catalog.sql
       - name: Verify merchant catalog versioned edit, soft archive, RLS and immutable old Order snapshots

@@ -8,6 +8,12 @@ VALUES
   'second@rcat.ac.th','INVALID_TEST_HASH',true),
  ('10000000-0000-4000-8000-000000000043',
   'disabled@rcat.ac.th','INVALID_TEST_HASH',false);
+-- Existing signed-in staff must also have a manually approved platform role.
+INSERT INTO rcat_private.platform_accounts(user_id,role)
+VALUES
+ ('10000000-0000-4000-8000-000000000041','merchant'),
+ ('10000000-0000-4000-8000-000000000042','merchant'),
+ ('10000000-0000-4000-8000-000000000043','merchant');
 SET LOCAL ROLE rcat_auth;
 DO $$
 DECLARE

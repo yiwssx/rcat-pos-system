@@ -47,7 +47,7 @@ import { RcatButtonDirective } from "@rcat/ui";
           </div>
         }
         @case ("guest") {
-          <div class="portal-landing">
+          <div class="portal-landing portal-closed-access">
             <div class="portal-landing-intro">
               <div class="portal-hero-brand">
                 <img
@@ -58,18 +58,24 @@ import { RcatButtonDirective } from "@rcat/ui";
                 />
                 <span>RCAT POS SYSTEM</span>
               </div>
-              <span class="portal-eyebrow">RCAT POS / QR ORDERING</span>
+              <span class="portal-eyebrow"
+                >RCAT POS / PRIVATE STAFF ACCESS</span
+              >
               <h1 id="portal-title">
-                สั่งอาหารง่าย <span>จัดการร้านในที่เดียว</span>
+                จัดการร้านอย่างมั่นใจ <span>สำหรับบุคลากรที่ได้รับสิทธิ์</span>
               </h1>
               <p class="portal-lead">
-                ลูกค้าสแกน QR ที่โต๊ะเพื่อเลือกเมนูและติดตามออเดอร์ได้ทันที
-                โดยไม่ต้องสมัครบัญชีหรือติดตั้งแอป
+                พื้นที่จัดการร้านนี้จำกัดเฉพาะผู้ดูแลและร้านค้าที่ได้รับอนุญาต
+                ผ่านบัญชี Google Workspace ของวิทยาลัยเท่านั้น
               </p>
-              <div class="portal-how-it-works">
-                <div><strong>01</strong><span>สแกน QR โต๊ะ</span></div>
-                <div><strong>02</strong><span>เลือกเมนู</span></div>
-                <div><strong>03</strong><span>ติดตามออเดอร์</span></div>
+              <div class="portal-how-it-works portal-access-steps">
+                <div><strong>01</strong><span>ผู้ดูแลเพิ่มอีเมล</span></div>
+                <div>
+                  <strong>02</strong><span>ยืนยันตัวตนผ่าน Google</span>
+                </div>
+                <div>
+                  <strong>03</strong><span>ใช้งานตามสิทธิ์ที่ได้รับ</span>
+                </div>
               </div>
               <a class="portal-guest-track" routerLink="/order/track"
                 >ติดตามออเดอร์ของฉัน <span aria-hidden="true">→</span></a
@@ -78,7 +84,7 @@ import { RcatButtonDirective } from "@rcat/ui";
                 QR สั่งอาหารและ QR ชำระเงินเป็นคนละรายการ โปรดตรวจสอบยอดก่อนโอน
               </p>
             </div>
-            <div class="portal-login-card">
+            <div class="portal-login-card portal-private-login">
               <img
                 class="portal-login-brand-image"
                 src="/rcat-pos-logo.webp"
@@ -86,9 +92,12 @@ import { RcatButtonDirective } from "@rcat/ui";
                 height="72"
                 alt=""
               />
-              <span class="portal-eyebrow">MERCHANT WORKSPACE</span>
-              <h2>เข้าสู่พื้นที่จัดการร้าน</h2>
-              <p>สำหรับเจ้าของร้านและพนักงานที่ได้รับสิทธิ์เท่านั้น</p>
+              <span class="portal-eyebrow">AUTHORIZED ACCESS ONLY</span>
+              <h2>เข้าสู่ระบบ RCAT POS</h2>
+              <p class="portal-private-access-note">
+                เฉพาะบัญชี
+                <strong>@rcat.ac.th</strong> ที่ได้รับอนุญาตจากผู้ดูแลระบบ
+              </p>
               @if (session.localLogin()) {
                 <form (submit)="login($event)">
                   <label for="portal-email"
@@ -121,9 +130,19 @@ import { RcatButtonDirective } from "@rcat/ui";
                 </form>
                 <small>ใช้บัญชีและรหัสผ่านจาก Terminal ของ Local Demo</small>
               } @else {
-                <a class="portal-button" rcatBtn href="/api/auth/google/start"
-                  >เข้าสู่ระบบด้วย Google @rcat.ac.th</a
+                <a
+                  class="portal-button portal-google-button"
+                  rcatBtn
+                  href="/api/auth/google/start"
+                  >เข้าสู่ระบบด้วย Google Workspace</a
                 >
+                <div class="portal-private-help" role="note">
+                  <strong>ยังไม่มีสิทธิ์เข้าใช้งาน?</strong>
+                  <span
+                    >โปรดติดต่อผู้ดูแลระบบ RCAT POS
+                    เพื่อขออนุญาตบัญชีและรับมอบหมายร้านค้า</span
+                  >
+                </div>
                 @if (googleLoginError) {
                   <p class="portal-login-error" role="alert">
                     {{ googleLoginError }}
@@ -140,9 +159,17 @@ import { RcatButtonDirective } from "@rcat/ui";
           <section class="v6-home" aria-label="พื้นที่ทำงานร้านค้า">
             <header class="v6-home-heading">
               <div>
-                <span class="v6-overline">RCAT POS · MERCHANT DESK</span>
+                <span class="v6-overline">RCAT POS · SECURE WORKSPACE</span>
                 <h1 id="portal-title">เริ่มงานที่ร้าน</h1>
-                <p>จัดการออเดอร์ เมนู และโต๊ะในพื้นที่ทำงานเดียว</p>
+                <p>จัดการออเดอร์ เมนู และโต๊ะตามสิทธิ์ที่ระบบกำหนด</p>
+                @if (
+                  session.platformRole() === "super_admin" ||
+                  session.platformRole() === "admin"
+                ) {
+                  <a class="portal-platform-admin-link" routerLink="/platform">
+                    จัดการบัญชีและสิทธิ์ผู้ใช้งาน
+                  </a>
+                }
               </div>
               <span class="v6-workspace-total">
                 <span aria-hidden="true" class="v6-total-mark"></span>
@@ -355,7 +382,9 @@ export class PortalHomePage {
   readonly error = signal("");
   canSetUp(): boolean {
     return (
-      this.session.stores().length === 0 ||
+      this.session.platformRole() === "super_admin" ||
+      this.session.platformRole() === "admin" ||
+      (this.session.localLogin() && this.session.stores().length === 0) ||
       this.session.stores().some((store) => store.role === "owner")
     );
   }

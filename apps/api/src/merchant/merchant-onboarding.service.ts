@@ -99,6 +99,16 @@ export class MerchantOnboardingService {
   async create(req: ApiRequest, raw: unknown) {
     const session = await this.auth.session(req);
     this.auth.requireCsrf(req, session);
+    // Only central administrators create new tenants outside Local/CI Demo.
+    if (
+      process.env["ENABLE_DEVELOPMENT_AUTH"] !== "true" &&
+      session.platformRole !== "super_admin" &&
+      session.platformRole !== "admin"
+    ) {
+      throw new NotFoundException(
+        "Merchant setup requires platform administration",
+      );
+    }
     const form = merchantForm(raw);
     try {
       const { rows } = await this.database.auth((client) =>

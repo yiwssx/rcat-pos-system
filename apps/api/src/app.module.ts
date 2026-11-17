@@ -5,6 +5,7 @@ import { AuthController, TenantStoreController } from "./auth/auth.controller";
 import { AuthService } from "./auth/auth.service";
 import { GoogleWorkspaceAuthController } from "./auth/google-workspace-auth.controller";
 import { GoogleWorkspaceAuthService } from "./auth/google-workspace-auth.service";
+import { PlatformAccessController } from "./auth/platform-access.controller";
 import { EmailDeliveryService } from "./auth/email-delivery.service";
 import { PasswordRecoveryService } from "./auth/password-recovery.service";
 import { PasswordRecoveryController } from "./auth/password-recovery.controller";
@@ -50,6 +51,7 @@ import { PaymentFinanceService } from "./payments/payment-finance.service";
     HealthController,
     AuthController,
     GoogleWorkspaceAuthController,
+    PlatformAccessController,
     EmailRegistrationController,
     PasswordRecoveryController,
     TenantStoreController,

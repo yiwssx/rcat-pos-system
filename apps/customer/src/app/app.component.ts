@@ -256,6 +256,17 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                   }
                 </div>
               }
+              @if (
+                session.platformRole() === "super_admin" ||
+                session.platformRole() === "admin"
+              ) {
+                <div class="portal-nav-group">
+                  <span class="portal-nav-caption">PLATFORM</span>
+                  <a routerLink="/platform" routerLinkActive="active">
+                    <span>บัญชีและสิทธิ์ผู้ใช้งาน</span>
+                  </a>
+                </div>
+              }
               @if (canSetUp()) {
                 <div class="portal-nav-group">
                   <span class="portal-nav-caption">ตั้งค่า</span>
@@ -347,8 +358,10 @@ export class AppComponent {
   }
   canSetUp(): boolean {
     return (
-      !this.session.stores().length ||
-      this.session.stores().some((store) => store.role === "owner")
+      this.session.platformRole() === "super_admin" ||
+      this.session.platformRole() === "admin" ||
+      this.session.stores().some((store) => store.role === "owner") ||
+      (this.session.localLogin() && !this.session.stores().length)
     );
   }
   toggleMobileNav(): void {

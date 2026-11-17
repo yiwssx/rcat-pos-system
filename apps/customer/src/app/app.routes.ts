@@ -115,6 +115,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "platform",
+    canActivate: [portalAccess],
+    data: { permission: "platform" },
+    loadComponent: () =>
+      import("./platform-access.page").then((m) => m.PlatformAccessPage),
+  },
+  {
     path: "settings",
     canActivate: [portalAccess],
     data: { permission: "settings", unified: true },
