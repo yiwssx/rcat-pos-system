@@ -46,12 +46,11 @@ function satang(text: string): number | null {
   template: `
     <main class="finance-shell">
       <a [routerLink]="['/orders', tenantId, storeId]">← กลับกระดานออเดอร์</a>
-      <span class="finance-kicker">MANUAL FINANCE</span>
+      <span class="finance-kicker">รายงานการชำระเงิน</span>
       <h1>กระทบยอดและคืนเงิน</h1>
       <p class="finance-warning">
-        ตัวเลขด้านล่างเป็นบันทึกที่พนักงานยืนยันเอง
-        ไม่ใช่ธุรกรรมที่ธนาคารตรวจสอบผ่าน API
-        การบันทึกคืนเงินไม่ได้สั่งโอนเงินออกจากบัญชี
+        ยอดรับเงินและคืนเงินในหน้านี้เป็นรายการที่พนักงานบันทึกหลังตรวจธนาคาร
+        การบันทึกคืนเงินไม่ได้โอนเงินให้อัตโนมัติ
       </p>
       <div class="finance-top">
         <label for="finance-days">ช่วงรายงาน</label>
@@ -94,7 +93,7 @@ function satang(text: string): number | null {
             <strong
               >{{ summaryMoney(data.summary.manualReceiptSatang) }} ฿</strong
             >
-            <small>บันทึกโดยพนักงาน ไม่ใช่ bank-verified</small>
+            <small>พนักงานตรวจสอบและบันทึก</small>
           </article>
           <article>
             <small>คืนเงินที่ร้านบันทึกในช่วง</small>
@@ -104,7 +103,7 @@ function satang(text: string): number | null {
               }}
               ฿</strong
             >
-            <small>สุทธิจากบันทึก Manual {{ manualNet() }} ฿</small>
+            <small>สุทธิจากรายการที่พนักงานบันทึก {{ manualNet() }} ฿</small>
           </article>
         </div>
         <p class="finance-subtle">
@@ -243,13 +242,13 @@ function satang(text: string): number | null {
               }
             </select>
             <label for="refund-order-manual">
-              หรือวาง Order UUID ที่เคยยืนยันรับเงินแล้ว (กรณีเกินช่วงรายงาน)
+              หรือระบุรหัสออเดอร์จากระบบ (กรณีไม่อยู่ในรายการ)
             </label>
             <input
               id="refund-order-manual"
               [value]="refundOrderId()"
               (input)="refundOrderId.set($any($event.target).value)"
-              placeholder="Order UUID"
+              placeholder="รหัสออเดอร์จากระบบ"
             />
             <label for="refund-amount">ยอดขอคืน (บาท)</label>
             <input
@@ -340,7 +339,7 @@ function satang(text: string): number | null {
                 <option [value]="entry[0]">{{ entry[1] }}</option>
               }
             </select>
-            <label for="exception-order">Order UUID (ไม่บังคับ)</label>
+            <label for="exception-order">รหัสออเดอร์จากระบบ (ไม่บังคับ)</label>
             <input
               id="exception-order"
               [value]="exceptionOrder()"
