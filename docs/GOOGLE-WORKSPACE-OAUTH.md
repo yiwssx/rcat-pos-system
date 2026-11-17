@@ -51,7 +51,9 @@ not be set in staging or Production.
    The Google `sub` is the stable identity binding, not email alone.
 4. PostgreSQL migration 020 implements narrow SECURITY DEFINER
    `issue_google_workspace_session`. It requires a **pre-existing,
-   active, pre-approved RCAT staff account** and binds the first verified
+   active, pre-approved RCAT staff account** for ordinary staff, except the
+   exact verified `admin@rcat.ac.th` identity which bootstraps as the sole
+   Super Admin under migration 042. See [Closed Workspace Access](CLOSED-WORKSPACE-ACCESS.md). and binds the first verified
    Google `sub` permanently to that user. A later different `sub` using
    the same email (e.g. Workspace account deletion/re-creation) is denied
    to prevent account takeover. A Google `sub` may never be reused by
