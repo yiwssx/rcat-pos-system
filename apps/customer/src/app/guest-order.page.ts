@@ -319,7 +319,8 @@ function guestError(error: unknown): string {
         }
 
         <p class="guest-payment-alert" role="note">
-          หลังส่งออเดอร์ สามารถตรวจสอบวิธีชำระเงินที่ร้านเปิดให้ใช้ได้ในหน้าติดตามคำสั่งซื้อ
+          หลังส่งออเดอร์
+          สามารถตรวจสอบวิธีชำระเงินที่ร้านเปิดให้ใช้ได้ในหน้าติดตามคำสั่งซื้อ
         </p>
         @if (notice() && !cartOpen()) {
           <p class="guest-notice" role="status">{{ notice() }}</p>

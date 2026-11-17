@@ -45,12 +45,11 @@ function failure(error: unknown): string {
     <section class="platform-console" aria-labelledby="platform-heading">
       <header class="platform-heading">
         <div>
-          <span class="platform-eyebrow"
-            >การจัดการผู้ใช้งาน</span
-          >
+          <span class="platform-eyebrow">การจัดการผู้ใช้งาน</span>
           <h1 id="platform-heading">จัดการผู้ใช้งาน</h1>
           <p>
-            เพิ่มบุคลากรด้วยอีเมล @rcat.ac.th แล้วกำหนดว่าใครเป็นผู้ดูแลระบบหรือผู้ดูแลร้าน
+            เพิ่มบุคลากรด้วยอีเมล @rcat.ac.th
+            แล้วกำหนดว่าใครเป็นผู้ดูแลระบบหรือผู้ดูแลร้าน
           </p>
         </div>
         <a routerLink="/" class="platform-back">กลับหน้าหลัก</a>
@@ -432,9 +431,7 @@ export class PlatformAccessPage implements OnInit {
     if (!this.isSuper() || this.pending()) return;
     if (
       !this.document.defaultView?.confirm(
-        "ยืนยันเข้าจัดการ " +
-          tenant.tenantName +
-          " และบันทึกประวัติ?",
+        "ยืนยันเข้าจัดการ " + tenant.tenantName + " และบันทึกประวัติ?",
       )
     ) {
       return;

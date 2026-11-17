@@ -62,9 +62,7 @@ const TRACK_INTERVAL_MS = 15_000;
               {{ statusLabel[status()!.status] }}
             </span>
             <h2 class="guest-amount">{{ money(status()!.amountSatang) }} ฿</h2>
-            <p class="guest-context">
-              ยอดรวมของออเดอร์
-            </p>
+            <p class="guest-context">ยอดรวมของออเดอร์</p>
             <p class="guest-track-time">
               อัปเดตล่าสุด {{ formatDate(status()!.updatedAt) }}
             </p>
@@ -148,7 +146,8 @@ const TRACK_INTERVAL_MS = 15_000;
             </p>
           } @else if (paymentChecked()) {
             <div class="guest-payment-alert" role="note">
-              ร้านยังไม่เปิดรับชำระเงินผ่านระบบนี้ กรุณาสอบถามวิธีชำระเงินจากร้าน
+              ร้านยังไม่เปิดรับชำระเงินผ่านระบบนี้
+              กรุณาสอบถามวิธีชำระเงินจากร้าน
               <button
                 type="button"
                 class="guest-subtle"

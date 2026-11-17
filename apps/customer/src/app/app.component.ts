@@ -259,17 +259,32 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                   <div class="portal-nav-group">
                     <span class="portal-nav-caption">รับชำระเงิน</span>
                     <a
-                      [routerLink]="['/payments/receiver', selected.tenantId, selected.storeId]"
+                      [routerLink]="[
+                        '/payments/receiver',
+                        selected.tenantId,
+                        selected.storeId,
+                      ]"
                       routerLinkActive="active"
-                    >บัญชีพร้อมเพย์ของร้าน</a>
+                      >บัญชีพร้อมเพย์ของร้าน</a
+                    >
                     <a
-                      [routerLink]="['/payments', selected.tenantId, selected.storeId]"
+                      [routerLink]="[
+                        '/payments',
+                        selected.tenantId,
+                        selected.storeId,
+                      ]"
                       routerLinkActive="active"
-                    >ตรวจสอบสลิป</a>
+                      >ตรวจสอบสลิป</a
+                    >
                     <a
-                      [routerLink]="['/payments/finance', selected.tenantId, selected.storeId]"
+                      [routerLink]="[
+                        '/payments/finance',
+                        selected.tenantId,
+                        selected.storeId,
+                      ]"
                       routerLinkActive="active"
-                    >รายงานรับเงินและคืนเงิน</a>
+                      >รายงานรับเงินและคืนเงิน</a
+                    >
                   </div>
                 }
               }

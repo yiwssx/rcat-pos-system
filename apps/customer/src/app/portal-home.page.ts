@@ -67,7 +67,8 @@ import { RcatButtonDirective } from "@rcat/ui";
                 >ติดตามออเดอร์ของฉัน <span aria-hidden="true">→</span></a
               >
               <p class="portal-guest-help">
-                ลูกค้าสามารถสแกน QR ของร้านเพื่อสั่งอาหารได้โดยไม่ต้องเข้าสู่ระบบ
+                ลูกค้าสามารถสแกน QR
+                ของร้านเพื่อสั่งอาหารได้โดยไม่ต้องเข้าสู่ระบบ
               </p>
             </div>
             <div class="portal-login-card portal-private-login">
@@ -84,27 +85,31 @@ import { RcatButtonDirective } from "@rcat/ui";
                 เฉพาะบัญชี
                 <strong>@rcat.ac.th</strong> ที่ได้รับอนุญาตจากผู้ดูแลระบบ
               </p>
-                <a
-                  class="portal-button portal-google-button"
-                  rcatBtn
-                  href="/api/auth/google/start"
-                  >
-                  <span aria-hidden="true" class="portal-login-action-icon">→</span>
-                  เข้าสู่ระบบด้วยบัญชี Google
-                </a>
-                <p class="portal-login-action-note">สำหรับผู้ดูแลและร้านค้าที่ได้รับอนุญาตเท่านั้น</p>
-                <div class="portal-private-help" role="note">
-                  <strong>ยังไม่มีสิทธิ์เข้าใช้งาน?</strong>
-                  <span
-                    >โปรดติดต่อผู้ดูแลระบบ RCAT POS
-                    เพื่อขออนุญาตบัญชีและรับมอบหมายร้านค้า</span
-                  >
-                </div>
-                @if (googleLoginError) {
-                  <p class="portal-login-error" role="alert">
-                    {{ googleLoginError }}
-                  </p>
-                }
+              <a
+                class="portal-button portal-google-button"
+                rcatBtn
+                href="/api/auth/google/start"
+              >
+                <span aria-hidden="true" class="portal-login-action-icon"
+                  >→</span
+                >
+                เข้าสู่ระบบด้วยบัญชี Google
+              </a>
+              <p class="portal-login-action-note">
+                สำหรับผู้ดูแลและร้านค้าที่ได้รับอนุญาตเท่านั้น
+              </p>
+              <div class="portal-private-help" role="note">
+                <strong>ยังไม่มีสิทธิ์เข้าใช้งาน?</strong>
+                <span
+                  >โปรดติดต่อผู้ดูแลระบบ RCAT POS
+                  เพื่อขออนุญาตบัญชีและรับมอบหมายร้านค้า</span
+                >
+              </div>
+              @if (googleLoginError) {
+                <p class="portal-login-error" role="alert">
+                  {{ googleLoginError }}
+                </p>
+              }
             </div>
           </div>
         }
@@ -249,7 +254,10 @@ import { RcatButtonDirective } from "@rcat/ui";
                       <h2>ยังไม่มีร้านในบัญชีนี้</h2>
                       @if (canSetUp()) {
                         <p>เริ่มต้นด้วยการสร้างกลุ่มร้านค้าและร้านแรกของคุณ</p>
-                        <a routerLink="/settings" class="portal-platform-admin-link">
+                        <a
+                          routerLink="/settings"
+                          class="portal-platform-admin-link"
+                        >
                           ตั้งค่าร้านค้าแรก
                         </a>
                       } @else {
