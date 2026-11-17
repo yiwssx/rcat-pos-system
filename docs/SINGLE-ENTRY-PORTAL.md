@@ -32,6 +32,15 @@ guard. They are **configuration and manual-review screens only**: saving a
 PromptPay recipient does not enable it, and the real-money release flags
 and #81 remain OFF/gated. No Bank API or real Payment authorization is added.
 
+**Central closed-access update (17 Nov 2026):** the authenticated single-entry portal
+now includes `/platform` for the actual `super_admin` / `admin` platform
+role hierarchy, manual approved `@rcat.ac.th` accounts and Merchant tenant
+assignment. This route is separate from tenant-owner `/settings`
+and never bypasses tenant RLS. Only signed, verified Google
+`admin@rcat.ac.th` can bootstrap Super Admin on first successful login.
+See [Closed Workspace Access](CLOSED-WORKSPACE-ACCESS.md). The original
+tenant-owner settings remain tenant-scoped.
+
 The canonical portal's Service Worker caches vetted public static assets only.
   Never cache API, authenticated HTML, mutations, guest/order data or logout.
 
