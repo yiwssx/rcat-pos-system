@@ -132,28 +132,28 @@ function failure(error: unknown): string {
           >
             <summary>
               <strong id="create-title">สร้างร้านใหม่</strong>
-              <span>สร้างร้านและหน่วยงานสำหรับบัญชีที่ได้รับสิทธิ์</span>
+              <span>สร้างกลุ่มร้านค้าและกำหนดร้านแรก</span>
             </summary>
             <div class="v6-owner-form-body">
               <p class="owner-muted">
-                เปิดเฉพาะบัญชีที่ได้รับอนุมัติแล้ว จำกัดจำนวนร้านตาม Backend
+                สร้างกลุ่มร้านค้าและร้านแรกสำหรับเริ่มใช้งาน
               </p>
               <form (submit)="create($event)" class="owner-form">
                 <label
-                  >รหัสหน่วยงาน (ภาษาอังกฤษ)
+                  >รหัสกลุ่มร้านค้า (ภาษาอังกฤษ)
                   <input
                     name="tenantSlug"
                     type="text"
                     autocomplete="off"
                     [value]="tenantSlug()"
                     (input)="field($event, 'tenantSlug')"
-                    placeholder="rcat-demo"
+                    placeholder="rcat-cafe"
                     maxlength="48"
                     required
                   />
                 </label>
                 <label
-                  >ชื่อหน่วยงาน
+                  >ชื่อกลุ่มร้านค้า
                   <input
                     name="tenantName"
                     type="text"
@@ -211,7 +211,7 @@ function failure(error: unknown): string {
               </p>
               <form (submit)="accept($event)" class="owner-form">
                 <label
-                  >รหัสคำเชิญ (43 อักขระ)
+                  >รหัสคำเชิญ
                   <input
                     type="password"
                     name="invitationToken"
