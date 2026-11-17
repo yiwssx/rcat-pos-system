@@ -10,7 +10,8 @@ import {
   HttpHeaders,
   HttpErrorResponse,
 } from "@angular/common/http";
-import { RouterLink } from "@angular/router";
+import { ActivatedRoute, RouterLink } from "@angular/router";
+import { googleLoginFailureNotice } from "./portal-login-feedback";
 import { firstValueFrom } from "rxjs";
 import { PortalSession } from "./portal-session.service";
 import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
@@ -123,6 +124,11 @@ import { RcatButtonDirective } from "@rcat/ui";
                 <a class="portal-button" rcatBtn href="/api/auth/google/start"
                   >เข้าสู่ระบบด้วย Google @rcat.ac.th</a
                 >
+                @if (googleLoginError) {
+                  <p class="portal-login-error" role="alert">
+                    {{ googleLoginError }}
+                  </p>
+                }
               }
               @if (error()) {
                 <p class="portal-login-error" role="alert">{{ error() }}</p>
@@ -338,6 +344,10 @@ export class PortalHomePage {
   readonly session = inject(PortalSession);
   private readonly http = inject(HttpClient);
   private readonly document = inject(DOCUMENT);
+  private readonly route = inject(ActivatedRoute);
+  readonly googleLoginError = googleLoginFailureNotice(
+    this.route.snapshot.queryParamMap.get("login"),
+  );
   readonly roles = ROLE_LABEL;
   readonly email = signal("admin_demo@demo.invalid");
   readonly password = signal("");
