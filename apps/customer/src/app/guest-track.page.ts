@@ -35,7 +35,7 @@ const TRACK_INTERVAL_MS = 15_000;
       <span class="eyebrow">ORDER TRACKING</span>
       <h1 id="tracking-title">ติดตามคำสั่งซื้อ</h1>
       <p class="guest-context">
-        แสดงสถานะจากร้านค้าโดยตรง · การส่งออเดอร์สำเร็จไม่ใช่การชำระเงินสำเร็จ
+        ติดตามความคืบหน้าของอาหารและตรวจสอบการชำระเงินได้ที่นี่
       </p>
       @if (!online()) {
         <p class="guest-warning" role="status">
@@ -62,9 +62,7 @@ const TRACK_INTERVAL_MS = 15_000;
               {{ statusLabel[status()!.status] }}
             </span>
             <h2 class="guest-amount">{{ money(status()!.amountSatang) }} ฿</h2>
-            <p class="guest-context">
-              ยอดที่ร้านบันทึกไว้ · ยังไม่ใช่ยอดชำระแล้ว
-            </p>
+            <p class="guest-context">ยอดรวมของออเดอร์</p>
             <p class="guest-track-time">
               อัปเดตล่าสุด {{ formatDate(status()!.updatedAt) }}
             </p>
@@ -80,7 +78,7 @@ const TRACK_INTERVAL_MS = 15_000;
             </p>
           } @else if (status()?.paymentState === "manual_confirmed") {
             <p class="guest-payment-alert" role="status">
-              ร้านยืนยันการรับเงินแล้ว (ตรวจโดยพนักงาน ไม่ใช่ธนาคารอัตโนมัติ)
+              ร้านยืนยันว่าได้รับเงินแล้ว โดยพนักงานตรวจสอบรายการเงินเข้าจริง
             </p>
           } @else if (status()?.paymentState === "slip_submitted") {
             <p class="guest-payment-alert" role="status">
@@ -88,7 +86,7 @@ const TRACK_INTERVAL_MS = 15_000;
             </p>
           } @else if (payment()) {
             <div class="guest-payment-card">
-              <h2>ชำระเงินด้วย PromptPay</h2>
+              <h2>ชำระเงินด้วยพร้อมเพย์</h2>
               <p class="guest-context">
                 ยอดชำระ {{ money(payment()!.amountSatang) }} ฿ ·
                 จ่ายตอนนี้หรือภายหลังได้
@@ -106,7 +104,7 @@ const TRACK_INTERVAL_MS = 15_000;
               </p>
               <div class="guest-track-actions">
                 <button type="button" (click)="savePaymentQr()">
-                  บันทึก QR
+                  บันทึกรูป QR เพื่อชำระเงิน
                 </button>
                 <button
                   type="button"
@@ -118,8 +116,8 @@ const TRACK_INTERVAL_MS = 15_000;
                 </button>
               </div>
               <p class="guest-payment-alert" role="note">
-                QR ไม่ใช่หลักฐานว่าเงินเข้าแล้ว โปรดส่งสลิปหลังโอน
-                และรอร้านตรวจสอบเงินเข้าจริง
+                หลังโอนเงิน โปรดแนบสลิปและรอร้านตรวจสอบยอดเงินเข้าจริง
+                การแนบสลิปไม่ใช่การยืนยันว่าร้านได้รับเงินแล้ว
               </p>
               <label for="payment-slip-file">แนบสลิปการโอน</label>
               <input
@@ -148,7 +146,8 @@ const TRACK_INTERVAL_MS = 15_000;
             </p>
           } @else if (paymentChecked()) {
             <div class="guest-payment-alert" role="note">
-              ยังไม่เปิดรับการชำระเงินในระบบนี้ (Payment: not_requested)
+              ร้านยังไม่เปิดรับชำระเงินผ่านระบบนี้
+              กรุณาสอบถามวิธีชำระเงินจากร้าน
               <button
                 type="button"
                 class="guest-subtle"

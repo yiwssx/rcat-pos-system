@@ -18,7 +18,6 @@ export class PortalSession {
     null,
   );
   readonly notice = signal("");
-  readonly localLogin = signal(false);
   private pending: Promise<void> | undefined;
   private generation = 0;
 
@@ -67,17 +66,6 @@ export class PortalSession {
     return this.pending;
   }
 
-  async configure(): Promise<void> {
-    try {
-      const config = await firstValueFrom(
-        this.http.get<{ developmentLogin?: boolean }>("/runtime-config.json"),
-      );
-      this.localLogin.set(config.developmentLogin === true);
-    } catch {
-      this.localLogin.set(false);
-    }
-  }
-
   expire(): void {
     ++this.generation;
     this.pending = undefined;
@@ -85,14 +73,6 @@ export class PortalSession {
     this.platformRole.set(null);
     this.phase.set("guest");
     this.notice.set("เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง");
-  }
-
-  async login(email: string, password: string): Promise<void> {
-    await firstValueFrom(
-      this.http.post("/api/auth/login", { email, password }),
-    );
-    this.phase.set("loading");
-    await this.refresh();
   }
 
   async logout(): Promise<void> {

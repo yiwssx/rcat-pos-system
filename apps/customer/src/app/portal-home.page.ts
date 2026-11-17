@@ -1,18 +1,6 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  signal,
-} from "@angular/core";
-import { DOCUMENT } from "@angular/common";
-import {
-  HttpClient,
-  HttpHeaders,
-  HttpErrorResponse,
-} from "@angular/common/http";
+import { ChangeDetectionStrategy, Component, inject } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { googleLoginFailureNotice } from "./portal-login-feedback";
-import { firstValueFrom } from "rxjs";
 import { PortalSession } from "./portal-session.service";
 import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
 import { RcatButtonDirective } from "@rcat/ui";
@@ -58,9 +46,7 @@ import { RcatButtonDirective } from "@rcat/ui";
                 />
                 <span>RCAT POS SYSTEM</span>
               </div>
-              <span class="portal-eyebrow"
-                >RCAT POS / PRIVATE STAFF ACCESS</span
-              >
+              <span class="portal-eyebrow">สำหรับผู้ดูแลระบบและร้านค้า</span>
               <h1 id="portal-title">
                 จัดการร้านอย่างมั่นใจ <span>สำหรับบุคลากรที่ได้รับสิทธิ์</span>
               </h1>
@@ -81,7 +67,8 @@ import { RcatButtonDirective } from "@rcat/ui";
                 >ติดตามออเดอร์ของฉัน <span aria-hidden="true">→</span></a
               >
               <p class="portal-guest-help">
-                QR สั่งอาหารและ QR ชำระเงินเป็นคนละรายการ โปรดตรวจสอบยอดก่อนโอน
+                ลูกค้าสามารถสแกน QR
+                ของร้านเพื่อสั่งอาหารได้โดยไม่ต้องเข้าสู่ระบบ
               </p>
             </div>
             <div class="portal-login-card portal-private-login">
@@ -92,65 +79,36 @@ import { RcatButtonDirective } from "@rcat/ui";
                 height="72"
                 alt=""
               />
-              <span class="portal-eyebrow">AUTHORIZED ACCESS ONLY</span>
-              <h2>เข้าสู่ระบบ RCAT POS</h2>
+              <span class="portal-eyebrow">บัญชีบุคลากรของวิทยาลัย</span>
+              <h2>เข้าสู่ระบบจัดการร้านค้า</h2>
               <p class="portal-private-access-note">
                 เฉพาะบัญชี
                 <strong>@rcat.ac.th</strong> ที่ได้รับอนุญาตจากผู้ดูแลระบบ
               </p>
-              @if (session.localLogin()) {
-                <form (submit)="login($event)">
-                  <label for="portal-email"
-                    >อีเมลบัญชี admin_demo / merchant_demo</label
-                  >
-                  <input
-                    id="portal-email"
-                    type="email"
-                    autocomplete="username"
-                    [value]="email()"
-                    (input)="email.set(value($event))"
-                    required
-                  />
-                  <label for="portal-password">รหัสผ่าน Demo</label>
-                  <input
-                    id="portal-password"
-                    type="password"
-                    autocomplete="current-password"
-                    [value]="password()"
-                    (input)="password.set(value($event))"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    class="portal-button"
-                    [disabled]="busy()"
-                  >
-                    {{ busy() ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ Demo" }}
-                  </button>
-                </form>
-                <small>ใช้บัญชีและรหัสผ่านจาก Terminal ของ Local Demo</small>
-              } @else {
-                <a
-                  class="portal-button portal-google-button"
-                  rcatBtn
-                  href="/api/auth/google/start"
-                  >เข้าสู่ระบบด้วย Google Workspace</a
+              <a
+                class="portal-button portal-google-button"
+                rcatBtn
+                href="/api/auth/google/start"
+              >
+                <span aria-hidden="true" class="portal-login-action-icon"
+                  >→</span
                 >
-                <div class="portal-private-help" role="note">
-                  <strong>ยังไม่มีสิทธิ์เข้าใช้งาน?</strong>
-                  <span
-                    >โปรดติดต่อผู้ดูแลระบบ RCAT POS
-                    เพื่อขออนุญาตบัญชีและรับมอบหมายร้านค้า</span
-                  >
-                </div>
-                @if (googleLoginError) {
-                  <p class="portal-login-error" role="alert">
-                    {{ googleLoginError }}
-                  </p>
-                }
-              }
-              @if (error()) {
-                <p class="portal-login-error" role="alert">{{ error() }}</p>
+                เข้าสู่ระบบด้วยบัญชี Google
+              </a>
+              <p class="portal-login-action-note">
+                สำหรับผู้ดูแลและร้านค้าที่ได้รับอนุญาตเท่านั้น
+              </p>
+              <div class="portal-private-help" role="note">
+                <strong>ยังไม่มีสิทธิ์เข้าใช้งาน?</strong>
+                <span
+                  >โปรดติดต่อผู้ดูแลระบบ RCAT POS
+                  เพื่อขออนุญาตบัญชีและรับมอบหมายร้านค้า</span
+                >
+              </div>
+              @if (googleLoginError) {
+                <p class="portal-login-error" role="alert">
+                  {{ googleLoginError }}
+                </p>
               }
             </div>
           </div>
@@ -159,7 +117,7 @@ import { RcatButtonDirective } from "@rcat/ui";
           <section class="v6-home" aria-label="พื้นที่ทำงานร้านค้า">
             <header class="v6-home-heading">
               <div>
-                <span class="v6-overline">RCAT POS · SECURE WORKSPACE</span>
+                <span class="v6-overline">พื้นที่จัดการร้านค้า</span>
                 <h1 id="portal-title">เริ่มงานที่ร้าน</h1>
                 <p>จัดการออเดอร์ เมนู และโต๊ะตามสิทธิ์ที่ระบบกำหนด</p>
                 @if (
@@ -255,7 +213,7 @@ import { RcatButtonDirective } from "@rcat/ui";
                             ]"
                           >
                             <span aria-hidden="true">฿</span>
-                            ตั้งค่าบัญชี PromptPay
+                            บัญชีรับเงินพร้อมเพย์
                           </a>
                           <a
                             class="v6-secondary-action"
@@ -290,34 +248,21 @@ import { RcatButtonDirective } from "@rcat/ui";
                           </a>
                         }
                       </div>
-                      @if (
-                        session.localLogin() &&
-                        store.storeId ===
-                          "70000000-0000-4000-8000-000000000002" &&
-                        store.role === "owner"
-                      ) {
-                        <div class="portal-local-fixture v6-local-demo">
-                          <button
-                            type="button"
-                            class="v6-local-launch"
-                            (click)="demoOrder()"
-                            [disabled]="busy()"
-                          >
-                            เปิดโต๊ะ Demo เพื่อสั่งอาหาร
-                          </button>
-                          <small
-                            >ข้อมูล Local Demo ·
-                            เปิดรอบใหม่และยกเลิกรอบเดิม</small
-                          >
-                        </div>
-                      }
                     </article>
                   } @empty {
                     <div class="v6-empty-workspace">
                       <h2>ยังไม่มีร้านในบัญชีนี้</h2>
-                      <p>
-                        ขอสิทธิ์จากเจ้าของร้าน หรือตั้งค่าร้านเพื่อเริ่มใช้งาน
-                      </p>
+                      @if (canSetUp()) {
+                        <p>เริ่มต้นด้วยการสร้างกลุ่มร้านค้าและร้านแรกของคุณ</p>
+                        <a
+                          routerLink="/settings"
+                          class="portal-platform-admin-link"
+                        >
+                          ตั้งค่าร้านค้าแรก
+                        </a>
+                      } @else {
+                        <p>ติดต่อผู้ดูแลร้านเพื่อขอสิทธิ์เข้าถึงร้านค้า</p>
+                      }
                     </div>
                   }
                 </div>
@@ -369,74 +314,16 @@ import { RcatButtonDirective } from "@rcat/ui";
 })
 export class PortalHomePage {
   readonly session = inject(PortalSession);
-  private readonly http = inject(HttpClient);
-  private readonly document = inject(DOCUMENT);
   private readonly route = inject(ActivatedRoute);
   readonly googleLoginError = googleLoginFailureNotice(
     this.route.snapshot.queryParamMap.get("login"),
   );
   readonly roles = ROLE_LABEL;
-  readonly email = signal("admin_demo@demo.invalid");
-  readonly password = signal("");
-  readonly busy = signal(false);
-  readonly error = signal("");
   canSetUp(): boolean {
     return (
       this.session.platformRole() === "super_admin" ||
       this.session.platformRole() === "admin" ||
-      (this.session.localLogin() && this.session.stores().length === 0) ||
       this.session.stores().some((store) => store.role === "owner")
     );
-  }
-  value(event: Event): string {
-    return (event.target as HTMLInputElement).value;
-  }
-  async demoOrder(): Promise<void> {
-    if (this.busy()) return;
-    this.busy.set(true);
-    this.session.notice.set("");
-    try {
-      const token =
-        this.document.cookie
-          .split("; ")
-          .find((value) => value.startsWith("__Host-rcat_csrf="))
-          ?.split("=")[1] ?? "";
-      const round = await firstValueFrom(
-        this.http.post<{ orderingUrl: string }>(
-          "/api/tenants/70000000-0000-4000-8000-000000000001/stores/70000000-0000-4000-8000-000000000002/tables/70000000-0000-4000-8000-000000000005/rotate",
-          {},
-          { headers: new HttpHeaders({ "X-CSRF-Token": token }) },
-        ),
-      );
-      const target = new URL(round.orderingUrl);
-      if (
-        target.origin !== this.document.location.origin ||
-        target.pathname !== "/order"
-      )
-        throw new Error("Invalid demo URL");
-      this.document.location.assign(target.href);
-    } catch {
-      this.session.notice.set("เปิดโต๊ะ Demo ไม่สำเร็จ กรุณาลองอีกครั้ง");
-    } finally {
-      this.busy.set(false);
-    }
-  }
-  async login(event: Event): Promise<void> {
-    event.preventDefault();
-    if (this.busy()) return;
-    this.busy.set(true);
-    this.error.set("");
-    try {
-      await this.session.login(this.email(), this.password());
-      this.password.set("");
-    } catch (error) {
-      this.error.set(
-        error instanceof HttpErrorResponse && error.status === 401
-          ? "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
-          : "เข้าสู่ระบบไม่สำเร็จ กรุณาลองอีกครั้ง",
-      );
-    } finally {
-      this.busy.set(false);
-    }
   }
 }

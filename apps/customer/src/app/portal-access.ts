@@ -18,8 +18,7 @@ export const portalAccess: CanActivateFn = (route) => {
         ? platformAdmin
         : permission === "settings"
           ? platformAdmin ||
-            session.stores().some((store) => store.role === "owner") ||
-            (session.localLogin() && session.stores().length === 0)
+            session.stores().some((store) => store.role === "owner")
           : permitsRoute(
               session.stores(),
               permission,

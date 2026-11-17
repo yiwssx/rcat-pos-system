@@ -45,14 +45,11 @@ function failure(error: unknown): string {
     <section class="platform-console" aria-labelledby="platform-heading">
       <header class="platform-heading">
         <div>
-          <span class="platform-eyebrow"
-            >RCAT POS / PLATFORM ADMINISTRATION</span
-          >
-          <h1 id="platform-heading">จัดการสิทธิ์เข้าใช้งาน</h1>
+          <span class="platform-eyebrow">การจัดการผู้ใช้งาน</span>
+          <h1 id="platform-heading">จัดการผู้ใช้งาน</h1>
           <p>
-            อนุญาตเฉพาะบัญชี Google Workspace @rcat.ac.th
-            ที่ผู้ดูแลเพิ่มเองเท่านั้น
-            การให้สิทธิ์ระดับแพลตฟอร์มไม่เปิดสิทธิ์ร้านอื่นอัตโนมัติ
+            เพิ่มบุคลากรด้วยอีเมล @rcat.ac.th
+            แล้วกำหนดว่าใครเป็นผู้ดูแลระบบหรือผู้ดูแลร้าน
           </p>
         </div>
         <a routerLink="/" class="platform-back">กลับหน้าหลัก</a>
@@ -62,7 +59,7 @@ function failure(error: unknown): string {
         <span class="platform-role-chip">
           {{ isSuper() ? "Super Admin" : "Admin" }}
         </span>
-        <span>การเพิ่ม แก้ไข และระงับบัญชีจะถูกบันทึกใน Audit Log</span>
+        <span>การเปลี่ยนแปลงสิทธิ์ทุกครั้งมีการบันทึกประวัติ</span>
       </div>
 
       @if (error()) {
@@ -168,8 +165,8 @@ function failure(error: unknown): string {
 
       <details class="platform-panel platform-tenant-panel" open>
         <summary>
-          <strong>มอบหมาย Merchant ให้ร้านค้า</strong>
-          <span>เลือกบัญชีที่อนุญาตแล้วและหน่วยงานที่ต้องการ</span>
+          <strong>มอบหมายผู้ดูแลร้านค้า</strong>
+          <span>เลือกผู้ดูแลร้านและกลุ่มร้านค้าที่ต้องการ</span>
         </summary>
         <div class="platform-panel-body">
           <form (submit)="assign($event)" class="platform-form platform-assign">
@@ -187,14 +184,14 @@ function failure(error: unknown): string {
                 }
               }
             </select>
-            <label for="platform-tenant">หน่วยงาน / ร้านค้า</label>
+            <label for="platform-tenant">กลุ่มร้านค้า</label>
             <select
               id="platform-tenant"
               [value]="selectedTenant()"
               (change)="setTenant($event)"
               required
             >
-              <option value="">เลือกหน่วยงาน</option>
+              <option value="">เลือกกลุ่มร้านค้า</option>
               @for (tenant of tenants(); track tenant.tenantId) {
                 <option [value]="tenant.tenantId">
                   {{ tenant.tenantName }} ({{ tenant.storeCount }} ร้าน)
@@ -202,12 +199,12 @@ function failure(error: unknown): string {
               }
             </select>
             <button type="submit" [disabled]="pending()">
-              มอบหมายสิทธิ์ Merchant
+              มอบหมายผู้ดูแลร้าน
             </button>
           </form>
           @if (tenants().length === 0) {
             <p class="platform-hint">
-              ยังไม่มีหน่วยงาน สร้างหน่วยงานและร้านใหม่จาก
+              ยังไม่มีกลุ่มร้านค้า สร้างกลุ่มร้านค้าและร้านแรกจาก
               <a routerLink="/settings">ตั้งค่าร้านค้า</a> ก่อนมอบหมายสิทธิ์
             </p>
           }
@@ -217,13 +214,12 @@ function failure(error: unknown): string {
       @if (isSuper()) {
         <details class="platform-panel platform-tenant-panel">
           <summary>
-            <strong>Super Admin — เข้าจัดการร้าน</strong>
-            <span>เปิดสิทธิ์ Owner ของร้านที่เลือกโดยบันทึก Audit</span>
+            <strong>เข้าจัดการร้านทุกแห่ง</strong>
+            <span>ระบบบันทึกประวัติการเข้าจัดการร้าน</span>
           </summary>
           <div class="platform-panel-body">
             <p class="platform-hint">
-              Super Admin สามารถจัดการร้านทุกแห่งได้โดยเปิดสิทธิ์เข้าร้าน
-              แบบตรวจสอบย้อนหลังได้ ไม่ปิดการแยกข้อมูลของร้านค้า
+              เลือกกลุ่มร้านค้าที่ต้องการจัดการ ระบบจะบันทึกประวัติการเข้าถึงไว้
             </p>
             <div class="platform-tenant-list">
               @for (tenant of tenants(); track tenant.tenantId) {
@@ -435,9 +431,7 @@ export class PlatformAccessPage implements OnInit {
     if (!this.isSuper() || this.pending()) return;
     if (
       !this.document.defaultView?.confirm(
-        "ยืนยันเปิดสิทธิ์ Owner สำหรับ " +
-          tenant.tenantName +
-          " และบันทึก Audit?",
+        "ยืนยันเข้าจัดการ " + tenant.tenantName + " และบันทึกประวัติ?",
       )
     ) {
       return;

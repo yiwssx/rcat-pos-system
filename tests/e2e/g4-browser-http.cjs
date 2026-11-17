@@ -200,7 +200,7 @@ async function browserFlow(fixture) {
     await guest.goto(customer + "/order#token=" + fixture.token);
     await guest.locator(".guest-product", { hasText: fixture.name }).waitFor();
     assert.equal(new URL(guest.url()).hash, "", "QR token leaked into URL after load");
-    assert.ok(await guest.getByText("ยังไม่มีการชำระเงินผ่าน PromptPay").count());
+    assert.ok(await guest.getByText("หลังส่งออเดอร์ สามารถตรวจสอบวิธีชำระเงินที่ร้านเปิดให้ใช้ได้ในหน้าติดตามคำสั่งซื้อ").count());
     // G2: a narrow 320px viewport must retain searchable menu and
     // checkout without a horizontal document scrollbar.
     await guest.setViewportSize({ width: 320, height: 700 });
@@ -255,7 +255,7 @@ async function browserFlow(fixture) {
     await guest.evaluate(() => window.dispatchEvent(new Event("online")));
     await checkout.click();
     await guest.waitForURL("**/order/track", { timeout: 20000 });
-    await guest.getByText("Payment: not_requested").waitFor();
+    await guest.getByText("ร้านยังไม่เปิดรับชำระเงินผ่านระบบนี้").waitFor();
     const orderLabel = (await guest.locator(".guest-track-id").innerText())
       .match(/#[0-9]{3,}/)?.[0];
     assert.ok(orderLabel, "Customer tracking page missing public Order number");
@@ -351,7 +351,7 @@ async function browserFlow(fixture) {
     // without claiming the Order has been paid or losing the tracking secret.
     await guest.getByRole("button", { name: "ตรวจสถานะล่าสุด" }).click();
     await guest.locator(".guest-order-state").getByText("รับออเดอร์แล้ว").waitFor({ timeout: 20000 });
-    assert.ok(await guest.getByText("Payment: not_requested").isVisible(),
+    assert.ok(await guest.getByText("ร้านยังไม่เปิดรับชำระเงินผ่านระบบนี้").isVisible(),
       "Customer tracking did not retain explicit unverified payment state");
 
     // Real mobile Merchant Catalog UX: CSRF owner creates a category and

@@ -255,15 +255,47 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                     >
                   }
                 </div>
+                @if (selected.role === "owner" || selected.role === "manager") {
+                  <div class="portal-nav-group">
+                    <span class="portal-nav-caption">รับชำระเงิน</span>
+                    <a
+                      [routerLink]="[
+                        '/payments/receiver',
+                        selected.tenantId,
+                        selected.storeId,
+                      ]"
+                      routerLinkActive="active"
+                      >บัญชีพร้อมเพย์ของร้าน</a
+                    >
+                    <a
+                      [routerLink]="[
+                        '/payments',
+                        selected.tenantId,
+                        selected.storeId,
+                      ]"
+                      routerLinkActive="active"
+                      >ตรวจสอบสลิป</a
+                    >
+                    <a
+                      [routerLink]="[
+                        '/payments/finance',
+                        selected.tenantId,
+                        selected.storeId,
+                      ]"
+                      routerLinkActive="active"
+                      >รายงานรับเงินและคืนเงิน</a
+                    >
+                  </div>
+                }
               }
               @if (
                 session.platformRole() === "super_admin" ||
                 session.platformRole() === "admin"
               ) {
                 <div class="portal-nav-group">
-                  <span class="portal-nav-caption">PLATFORM</span>
+                  <span class="portal-nav-caption">ผู้ดูแลระบบ</span>
                   <a routerLink="/platform" routerLinkActive="active">
-                    <span>บัญชีและสิทธิ์ผู้ใช้งาน</span>
+                    <span>จัดการผู้ใช้งาน</span>
                   </a>
                 </div>
               }
@@ -308,7 +340,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
         </main>
       </div>
       <footer class="portal-footer">
-        RCAT POS · ระบบสั่งอาหารและจัดการร้านค้า · ยังไม่มีการชำระเงินผ่านระบบ
+        RCAT POS · สั่งอาหารผ่าน QR · ชำระเงินกับร้านค้าที่เปิดรับพร้อมเพย์
       </footer>
     </div>
   `,
@@ -346,7 +378,6 @@ export class AppComponent {
         this.mobileNavOpen.set(false);
       }
     });
-    void this.session.configure();
     void this.session.ensure();
   }
   allowed(kind: string): boolean {
@@ -360,8 +391,7 @@ export class AppComponent {
     return (
       this.session.platformRole() === "super_admin" ||
       this.session.platformRole() === "admin" ||
-      this.session.stores().some((store) => store.role === "owner") ||
-      (this.session.localLogin() && !this.session.stores().length)
+      this.session.stores().some((store) => store.role === "owner")
     );
   }
   toggleMobileNav(): void {
