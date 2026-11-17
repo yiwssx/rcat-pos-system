@@ -21,6 +21,12 @@ describe("single-entry route permissions", () => {
     expect(permitsRoute([store], "settings")).toBe(false);
     expect(permitsRoute([store], "catalog", "tenant-a", "store-a")).toBe(false);
   });
+  it("guards central platform administration and does not rely on guessed URLs", () => {
+    const central = routes.find((route) => route.path === "platform");
+    expect(central?.canActivate).toContain(portalAccess);
+    expect(central?.data?.["permission"]).toBe("platform");
+    expect(permitsRoute([], "platform")).toBe(false);
+  });
   it("guards Payment pages in the customer portal", () => {
     const pages = routes.filter((route) => route.path?.startsWith("payments/"));
     expect(pages).toHaveLength(3);
