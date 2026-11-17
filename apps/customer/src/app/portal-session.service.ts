@@ -14,7 +14,9 @@ export class PortalSession {
   private readonly document = inject(DOCUMENT);
   readonly phase = signal<"loading" | "guest" | "staff" | "error">("loading");
   readonly stores = signal<MerchantStore[]>([]);
-  readonly platformRole = signal<"super_admin" | "admin" | "merchant" | null>(null);
+  readonly platformRole = signal<"super_admin" | "admin" | "merchant" | null>(
+    null,
+  );
   readonly notice = signal("");
   readonly localLogin = signal(false);
   private pending: Promise<void> | undefined;
@@ -35,9 +37,9 @@ export class PortalSession {
     this.pending = (async () => {
       try {
         const identity = await firstValueFrom(
-          this.http.get<{ platformRole?: "super_admin" | "admin" | "merchant" | null }>(
-            "/api/auth/me",
-          ),
+          this.http.get<{
+            platformRole?: "super_admin" | "admin" | "merchant" | null;
+          }>("/api/auth/me"),
         );
         const data = await firstValueFrom(
           this.http.get<{ stores: MerchantStore[] }>(
