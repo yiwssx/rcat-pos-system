@@ -21,7 +21,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function emailOf(body: Record<string, unknown>): string {
   const input = body["email"];
-  if (typeof input !== "string") throw new BadRequestException("Invalid address");
+  if (typeof input !== "string")
+    throw new BadRequestException("Invalid address");
   const email = input.trim().toLowerCase();
   if (!RCAT_EMAIL.test(email) || email.length > 254) {
     throw new BadRequestException("Only approved @rcat.ac.th accounts");
@@ -178,10 +179,10 @@ export class PlatformAccessController {
     this.auth.requireCsrf(req, session);
     try {
       await this.database.auth((client) =>
-        client.query(
-          "SELECT rcat_private.super_admin_enter_tenant($1,$2)",
-          [digestOpaqueSecret(session.token), tenantId],
-        ),
+        client.query("SELECT rcat_private.super_admin_enter_tenant($1,$2)", [
+          digestOpaqueSecret(session.token),
+          tenantId,
+        ]),
       );
       return { tenantId, role: "owner" };
     } catch (error) {
