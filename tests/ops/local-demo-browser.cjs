@@ -23,7 +23,7 @@ async function main() {
     assert.equal(alias.status,302);
     assert.equal(alias.headers.get('location'),'/');
     await page.goto(merchant + '/local');
-    await page.getByRole('button', {name:'เข้าสู่ระบบ Demo',exact:true}).waitFor();
+    await page.getByRole('link', {name:/เข้าสู่ระบบด้วยบัญชี Google/}).waitFor();
     // Guard the real bug: the inline QR eyebrow previously appeared beside
     // the logo as a displaced block rather than beneath the brand lockup.
     for (const viewport of [
@@ -59,12 +59,21 @@ async function main() {
       });
     }
     await page.setViewportSize({ width: 320, height: 780 });
-    assert.ok(await page.getByLabel('อีเมลบัญชี admin_demo / merchant_demo').isVisible());
-    await page.getByLabel('รหัสผ่าน Demo').fill('invalid-local-password');
-    await page.getByRole('button', { name: 'เข้าสู่ระบบ Demo', exact: true }).click();
-    await page.getByRole('alert').filter({hasText:'อีเมลหรือรหัสผ่านไม่ถูกต้อง'}).waitFor();
-    await page.getByLabel('รหัสผ่าน Demo').fill(password);
-    await page.getByRole('button', { name: 'เข้าสู่ระบบ Demo', exact: true }).click();
+    assert.equal(await page.getByRole('textbox', {name: /อีเมลบัญชี/}).count(), 0,
+      'Real portal must never display a demonstration password form');
+    // The existing synthetic CI-only account remains an API test fixture.
+    // The shipped staff portal always presents a real Google Workspace action.
+    const badLogin = await context.request.post(merchant + '/api/auth/login', {
+      headers: { Origin: merchant },
+      data: { email: 'admin_demo@demo.invalid', password: 'invalid-local-password' }
+    });
+    assert.equal(badLogin.status(), 401, 'Invalid fixture credentials must fail');
+    const fixtureLogin = await context.request.post(merchant + '/api/auth/login', {
+      headers: { Origin: merchant },
+      data: { email: 'admin_demo@demo.invalid', password }
+    });
+    assert.equal(fixtureLogin.status(), 200, 'CI fixture login must remain test-only');
+    await page.reload();
     await page.getByRole('heading',{name:'เริ่มงานที่ร้าน',exact:true}).waitFor();
     const thaiFontResponse = await context.request.get(merchant + '/fonts/IBMPlexSansThai-Regular.ttf');
     assert.equal(thaiFontResponse.status(), 200, 'Self-hosted Thai font must be served by the app');
@@ -355,8 +364,19 @@ async function main() {
     await guest.close();
     await tableView.close();
 
-    await page.getByRole('button', { name: 'เปิดโต๊ะ Demo เพื่อสั่งอาหาร', exact: true }).click();
-    await page.waitForURL(customer + '/order', { timeout: 30000 });
+    // Open the fixture's table through its existing staff API, not a demo UI button.
+    const csrf = (await context.cookies(merchant)).find(cookie => cookie.name === '__Host-rcat_csrf')?.value;
+    assert.ok(csrf, 'Authenticated CI fixture must receive a CSRF cookie');
+    const round = await context.request.post(merchant +
+      '/api/tenants/70000000-0000-4000-8000-000000000001/stores/70000000-0000-4000-8000-000000000002/tables/70000000-0000-4000-8000-000000000005/rotate', {
+        headers: { Origin: merchant, 'X-CSRF-Token': csrf },
+        data: {}
+      });
+    assert.ok(round.ok(), 'CI table round must be created using the normal staff API');
+    const { orderingUrl } = await round.json();
+    assert.equal(new URL(orderingUrl).origin, customer);
+    await page.goto(orderingUrl);
+    await page.waitForURL('**/order', { timeout: 30000 });
     const product = page.locator('.guest-product', { hasText: 'ข้าวกะเพรา' });
     await product.waitFor();
     assert.equal(new URL(page.url()).hash, '', 'Guest QR token must be scrubbed');
@@ -371,7 +391,7 @@ async function main() {
     await cart.getByRole('textbox', { name: /สถานที่รับ\/ส่ง/ }).fill('อาคาร ข');
     await cart.getByRole('button', { name: /ยืนยันส่งคำสั่งซื้อ/ }).click();
     await page.waitForURL('**/order/track', { timeout: 20000 });
-    await page.getByText('Payment: not_requested').waitFor();
+    await page.getByText('ร้านยังไม่เปิดรับชำระเงินผ่านระบบนี้').waitFor();
     const orderLabel = (await page.locator('.guest-track-id').innerText()).match(/#[0-9]{3,}/)?.[0];
     assert.ok(orderLabel, 'Customer tracking must show readable public Order number');
     const board = await context.newPage();
@@ -410,7 +430,7 @@ async function main() {
     assert.equal(readFileSync('.secrets/local-demo/admin-password', 'utf8').trim(), password);
     await page.getByRole('button', { name: 'ตรวจสถานะล่าสุด' }).click();
     await page.locator('.guest-order-state').getByText('รับออเดอร์แล้ว').waitFor();
-    await page.getByText('Payment: not_requested').waitFor();
+    await page.getByText('ร้านยังไม่เปิดรับชำระเงินผ่านระบบนี้').waitFor();
 
     const compose = ['--host=unix:///var/run/docker.sock', 'compose', '--env-file', '.env.local', '-p', 'rcat-pos-local', '-f', 'compose.local.yaml'];
     const output = execFileSync('docker', [...compose, 'exec', '-T', 'postgres', 'psql', '-XAt', '-v', 'ON_ERROR_STOP=1', '-U', 'rcat_local_dba', '-d', 'rcat_pos_local_demo', '-c',
@@ -420,7 +440,7 @@ async function main() {
     // Deep links survive reload without showing the login view while auth loads.
     await board.reload();
     await card.getByText('รับออเดอร์แล้ว', {exact:true}).waitFor();
-    assert.equal(await board.getByRole('button',{name:'เข้าสู่ระบบ Demo',exact:true}).count(),0);
+    assert.equal(await board.getByRole('link',{name:/เข้าสู่ระบบด้วยบัญชี Google/}).count(),0);
     // Server role data determines visible navigation and guards guessed owner URLs.
     const cashier = await browser.newContext({ignoreHTTPSErrors:true});
     await cashier.addCookies(await context.cookies());
@@ -436,19 +456,19 @@ async function main() {
     assert.equal(new URL(cashierPage.url()).pathname,'/');
     await cashier.close();
     await board.getByRole('button',{name:'ออกจากระบบ',exact:true}).click();
-    await board.getByRole('button',{name:'เข้าสู่ระบบ Demo',exact:true}).waitFor();
+    await board.getByRole('link',{name:/เข้าสู่ระบบด้วยบัญชี Google/}).waitFor();
     await board.goto(merchant + `/orders/${tenant}/${store}`);
-    await board.getByRole('button',{name:'เข้าสู่ระบบ Demo',exact:true}).waitFor();
+    await board.getByRole('link',{name:/เข้าสู่ระบบด้วยบัญชี Google/}).waitFor();
     await board.waitForURL(merchant + '/');
     assert.equal(new URL(board.url()).pathname,'/');
     // A failed auth service is an error/retry state, not a misleading login form.
     await board.route('**/api/auth/me', route => route.fulfill({status:503,json:{message:'unavailable'}}));
     await board.reload();
     await board.getByRole('heading',{name:'ยังเชื่อมต่อระบบไม่ได้'}).waitFor();
-    assert.equal(await board.getByRole('button',{name:'เข้าสู่ระบบ Demo',exact:true}).count(),0);
+    assert.equal(await board.getByRole('link',{name:/เข้าสู่ระบบด้วยบัญชี Google/}).count(),0);
     await board.unroute('**/api/auth/me');
     await board.getByRole('button',{name:'ลองเชื่อมต่ออีกครั้ง'}).click();
-    await board.getByRole('button',{name:'เข้าสู่ระบบ Demo',exact:true}).waitFor();
+    await board.getByRole('link',{name:/เข้าสู่ระบบด้วยบัญชี Google/}).waitFor();
     await context.close();
     console.log('PASS: single-origin portal, role menus/route denial, Secure login/logout, multi-viewport UI evidence, deep-link reload, auth failure/retry, Guest→Order→Merchant, CSRF denial and repeat launch');
   } finally { await browser.close(); }
