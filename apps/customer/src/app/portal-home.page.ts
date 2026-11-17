@@ -58,7 +58,9 @@ import { RcatButtonDirective } from "@rcat/ui";
                 />
                 <span>RCAT POS SYSTEM</span>
               </div>
-              <span class="portal-eyebrow">RCAT POS / PRIVATE STAFF ACCESS</span>
+              <span class="portal-eyebrow"
+                >RCAT POS / PRIVATE STAFF ACCESS</span
+              >
               <h1 id="portal-title">
                 จัดการร้านอย่างมั่นใจ <span>สำหรับบุคลากรที่ได้รับสิทธิ์</span>
               </h1>
@@ -68,8 +70,12 @@ import { RcatButtonDirective } from "@rcat/ui";
               </p>
               <div class="portal-how-it-works portal-access-steps">
                 <div><strong>01</strong><span>ผู้ดูแลเพิ่มอีเมล</span></div>
-                <div><strong>02</strong><span>ยืนยันตัวตนผ่าน Google</span></div>
-                <div><strong>03</strong><span>ใช้งานตามสิทธิ์ที่ได้รับ</span></div>
+                <div>
+                  <strong>02</strong><span>ยืนยันตัวตนผ่าน Google</span>
+                </div>
+                <div>
+                  <strong>03</strong><span>ใช้งานตามสิทธิ์ที่ได้รับ</span>
+                </div>
               </div>
               <a class="portal-guest-track" routerLink="/order/track"
                 >ติดตามออเดอร์ของฉัน <span aria-hidden="true">→</span></a
@@ -89,7 +95,8 @@ import { RcatButtonDirective } from "@rcat/ui";
               <span class="portal-eyebrow">AUTHORIZED ACCESS ONLY</span>
               <h2>เข้าสู่ระบบ RCAT POS</h2>
               <p class="portal-private-access-note">
-                เฉพาะบัญชี <strong>@rcat.ac.th</strong> ที่ได้รับอนุญาตจากผู้ดูแลระบบ
+                เฉพาะบัญชี
+                <strong>@rcat.ac.th</strong> ที่ได้รับอนุญาตจากผู้ดูแลระบบ
               </p>
               @if (session.localLogin()) {
                 <form (submit)="login($event)">
@@ -123,12 +130,18 @@ import { RcatButtonDirective } from "@rcat/ui";
                 </form>
                 <small>ใช้บัญชีและรหัสผ่านจาก Terminal ของ Local Demo</small>
               } @else {
-                <a class="portal-button portal-google-button" rcatBtn href="/api/auth/google/start"
+                <a
+                  class="portal-button portal-google-button"
+                  rcatBtn
+                  href="/api/auth/google/start"
                   >เข้าสู่ระบบด้วย Google Workspace</a
                 >
                 <div class="portal-private-help" role="note">
                   <strong>ยังไม่มีสิทธิ์เข้าใช้งาน?</strong>
-                  <span>โปรดติดต่อผู้ดูแลระบบ RCAT POS เพื่อขออนุญาตบัญชีและรับมอบหมายร้านค้า</span>
+                  <span
+                    >โปรดติดต่อผู้ดูแลระบบ RCAT POS
+                    เพื่อขออนุญาตบัญชีและรับมอบหมายร้านค้า</span
+                  >
                 </div>
                 @if (googleLoginError) {
                   <p class="portal-login-error" role="alert">
@@ -149,7 +162,10 @@ import { RcatButtonDirective } from "@rcat/ui";
                 <span class="v6-overline">RCAT POS · SECURE WORKSPACE</span>
                 <h1 id="portal-title">เริ่มงานที่ร้าน</h1>
                 <p>จัดการออเดอร์ เมนู และโต๊ะตามสิทธิ์ที่ระบบกำหนด</p>
-                @if (session.platformRole() === "super_admin" || session.platformRole() === "admin") {
+                @if (
+                  session.platformRole() === "super_admin" ||
+                  session.platformRole() === "admin"
+                ) {
                   <a class="portal-platform-admin-link" routerLink="/platform">
                     จัดการบัญชีและสิทธิ์ผู้ใช้งาน
                   </a>
