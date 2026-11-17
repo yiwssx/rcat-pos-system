@@ -14,6 +14,7 @@ export class PortalSession {
   private readonly document = inject(DOCUMENT);
   readonly phase = signal<"loading" | "guest" | "staff" | "error">("loading");
   readonly stores = signal<MerchantStore[]>([]);
+  readonly platformRole = signal<"super_admin" | "admin" | "merchant" | null>(null);
   readonly notice = signal("");
   readonly localLogin = signal(false);
   private pending: Promise<void> | undefined;
@@ -30,9 +31,14 @@ export class PortalSession {
     const generation = ++this.generation;
     this.phase.set("loading");
     this.stores.set([]);
+    this.platformRole.set(null);
     this.pending = (async () => {
       try {
-        await firstValueFrom(this.http.get("/api/auth/me"));
+        const identity = await firstValueFrom(
+          this.http.get<{ platformRole?: "super_admin" | "admin" | "merchant" | null }>(
+            "/api/auth/me",
+          ),
+        );
         const data = await firstValueFrom(
           this.http.get<{ stores: MerchantStore[] }>(
             "/api/auth/merchant-stores",
@@ -40,11 +46,13 @@ export class PortalSession {
         );
         if (generation !== this.generation) return;
         this.stores.set(data.stores);
+        this.platformRole.set(identity.platformRole ?? null);
         this.phase.set("staff");
         this.notice.set("");
       } catch (error) {
         if (generation !== this.generation) return;
         this.stores.set([]);
+        this.platformRole.set(null);
         this.phase.set(
           error instanceof HttpErrorResponse && error.status === 401
             ? "guest"
@@ -72,6 +80,7 @@ export class PortalSession {
     ++this.generation;
     this.pending = undefined;
     this.stores.set([]);
+    this.platformRole.set(null);
     this.phase.set("guest");
     this.notice.set("เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง");
   }
