@@ -483,7 +483,9 @@ function bahtInput(satang: number): string {
                         </button>
                       }
                     </div>
-                    <p class="max-w-prose text-sm leading-relaxed text-muted-foreground">
+                    <p
+                      class="max-w-prose text-sm leading-relaxed text-muted-foreground"
+                    >
                       JPG / PNG / WebP · แปลงเป็น WebP ก่อนส่ง · สูงสุด 192 KB
                     </p>
                   </div>
