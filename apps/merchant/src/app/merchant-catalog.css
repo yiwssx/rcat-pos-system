@@ -85,61 +85,6 @@
   font-size: 1.3rem;
   margin: 0 0 0.6rem;
 }
-.catalog-panel label {
-  color: #2e4059;
-  font-weight: 700;
-  margin-top: 0.35rem;
-}
-.catalog-panel input,
-.catalog-panel select,
-.catalog-edit input,
-.catalog-edit select {
-  min-height: 48px;
-  min-width: 0;
-  width: 100%;
-  padding: 0.7rem 0.9rem;
-  border: 1px solid #a7b7c9;
-  border-radius: 0.6rem;
-  background: #fff;
-  color: #15263e;
-  font: inherit;
-  font-size: 1rem;
-}
-.catalog-panel button {
-  min-height: 44px;
-  border: 0;
-  border-radius: 0.6rem;
-  padding: 0.65rem 0.95rem;
-  font: inherit;
-  font-weight: 750;
-  background: #153956;
-  color: #fff;
-  cursor: pointer;
-  transition: background 120ms ease;
-}
-.catalog-panel button:hover:not(:disabled) {
-  background: #066c88;
-}
-.catalog-panel button.subtle {
-  color: #1e4c62;
-  border: 1px solid #a8c2d4;
-  background: #f7fbfe;
-}
-.catalog-panel button.danger {
-  color: #87282e;
-  border: 1px solid #e5acb2;
-  background: #fff4f5;
-}
-.catalog-panel button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-.catalog-panel input:focus-visible,
-.catalog-panel select:focus-visible,
-.catalog-panel button:focus-visible {
-  outline: 3px solid #e0a13c;
-  outline-offset: 3px;
-}
 .catalog-message {
   margin: 1rem 0;
   padding: 0.9rem 1rem;
@@ -395,26 +340,6 @@
   font-weight: 800;
   color: #2e3c42;
 }
-.catalog-panel label {
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: #5b6970;
-}
-.catalog-panel input,
-.catalog-panel select,
-.catalog-edit input,
-.catalog-edit select {
-  border-color: #e0e6e5;
-  background: #fdfdfc;
-  border-radius: 11px;
-}
-.catalog-panel button:not(.danger):not(.subtle) {
-  background: #283e43;
-  border-radius: 11px;
-}
-.catalog-panel button:hover:not(:disabled) {
-  background: #b94d1b;
-}
 .catalog-product {
   border-color: #eceded;
 }
@@ -469,27 +394,6 @@
 }
 .catalog-create[open] .catalog-create-summary {
   background: #ffedcf;
-}
-.catalog-panel input,
-.catalog-panel select,
-.catalog-edit input,
-.catalog-edit select {
-  border-color: #e8cfb5;
-  background: #fffefa;
-}
-.catalog-panel button:not(.danger):not(.subtle) {
-  background: linear-gradient(110deg, #bf3e07, #d95208);
-  border-color: #bf3e07;
-  color: #fff;
-}
-.catalog-panel button:not(.danger):not(.subtle):hover {
-  background: #ab3505;
-}
-.catalog-panel button.subtle,
-.catalog-editor-toggle {
-  background: #e8faf3;
-  color: #075e55;
-  border-color: #adddcd;
 }
 .catalog-status {
   background: #ddf7ea;
