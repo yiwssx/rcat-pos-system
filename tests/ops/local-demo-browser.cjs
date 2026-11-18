@@ -122,7 +122,10 @@ async function main() {
         'Desktop sidebar visibility must follow responsive breakpoint');
     }
     await page.setViewportSize({ width: 320, height: 780 });
-    const menuToggle = page.getByRole('button', { name: 'เปิดเมนูจัดการร้าน' });
+    // CDK correctly hides background controls from the accessibility tree
+    // while the modal Sheet is open. Use a stable DOM locator for state checks.
+    await page.getByRole('button', { name: 'เปิดเมนูจัดการร้าน' }).waitFor();
+    const menuToggle = page.locator('button[aria-label="เปิดเมนูจัดการร้าน"]');
     assert.equal(await menuToggle.getAttribute('aria-expanded'), 'false');
     await menuToggle.click();
     const mobileSheet = page.locator('hlm-sheet-content[data-slot="sheet-content"]');
