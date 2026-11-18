@@ -406,6 +406,30 @@ async function browserFlow(fixture) {
     await revisedItem.getByRole("button", { name: "จัดการตัวเลือกสินค้า" }).click();
     const modifiers = revisedItem.locator(".catalog-modifier-panel");
     const createGroup = modifiers.locator("form").first();
+    const oneChoice = modifiers.getByRole("button", { name: "เลือกอย่างเดียว (บังคับ)" });
+    assert.equal(await oneChoice.getAttribute("data-slot"), "button",
+      "Actual generated Spartan Helm button must own the Additional choice");
+    await oneChoice.click();
+    await second.waitForFunction(
+      () => document.querySelector("#new-group-min")?.value === "1"
+        && document.querySelector("#new-group-max")?.value === "1",
+      null,
+      { timeout: 10000 },
+    );
+    assert.equal(await createGroup.getByLabel("เลือกขั้นต่ำ").inputValue(), "1");
+    assert.equal(await createGroup.getByLabel("เลือกสูงสุด").inputValue(), "1");
+    await modifiers.getByRole("button", { name: "เลือกได้หลายอย่าง (ไม่บังคับ)" }).click();
+    await second.waitForFunction(
+      () => document.querySelector("#new-group-min")?.value === "0"
+        && document.querySelector("#new-group-max")?.value === "3",
+      null,
+      { timeout: 10000 },
+    );
+    assert.equal(await createGroup.getByLabel("เลือกขั้นต่ำ").inputValue(), "0");
+    assert.equal(await createGroup.getByLabel("เลือกสูงสุด").inputValue(), "3");
+    assert.equal(await createGroup.getByLabel("ชื่อกลุ่ม").getAttribute("data-slot"), "input",
+      "Modifier input must use the actual Spartan Helm input");
+
     for (const group of [
       { name: "ความหวาน E2E", slug: "e2e-sweet" },
       { name: "เพิ่มท็อปปิ้ง E2E", slug: "e2e-toppings" },

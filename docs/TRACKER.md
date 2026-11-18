@@ -61,3 +61,38 @@ Never rerun complete Nx/Database/Browser CI on RCAT IOT. Use prior CI evidence o
 
 - [x] Added manual-only trusted-`main` four-component GHCR OCI publisher in the existing On-prem workflow; source policy and PR CI govern its admission. No new workflow file, Runner, SSH, cloud account, protected secret or Production change.
 - [ ] **Publication/Operational Acceptance PENDING**: no owner-triggered signed image candidate has run, no four actual published digests or consumer-side attestations have been independently verified, and no real RCAT IOT B1–B6 deployment is accepted. Never promote signed source configuration alone to G4 PASS.
+
+
+## Active owner-directed full UI replacement + per-menu Additional — 18 Nov 2026
+
+**Execution tracker:** [Unified UI/UX + Ordering Issue #102](https://github.com/yiwssx/rcat-pos-system/issues/102). This is an **in-progress implementation track**, not a claim that the complete rewrite or host release is done. Owner instruction supersedes earlier V6 decorative/color treatment: use **genuine Spartan UI Brain + generated Helm**, Apple/iOS-like neutral layouts, shared semantic tokens, clean Thai typography; **remove verified-obsolete legacy page CSS** instead of adding more local overrides. No separate issue/epic.
+
+| Gate | Scope / acceptance evidence | State as of 18 Nov 2026 |
+| --- | --- | --- |
+| U0 | Existing Angular/Nx, pinned Spartan 1.9; enforce no new ad hoc CSS, record design direction | **DONE** — PR #131 / SHA `351e4a0ee11c` |
+| U1 | **Create real official Spartan Helm** button/card/input/field/select/badge/dialog/sheet/separator components, check imports, license and pinned source | **DONE (source + CI)** — official CLI 1.9.0 generated 10 component groups under `libs/ui/src/spartan`; imports/build/typecheck pass in PR #132 |
+| U2 | Replace Auth/Login + Application Shell + Sidebar: no old CSS, accessible mobile navigation, consistent touch targets, font loaded | **OPEN** |
+| U3 | Merchant Catalog/Category/Product editor with Helm; separate product image/option editing; remove old catalog CSS after parity | **PARTIAL** — 28+ action buttons, text inputs/labels and native selects migrated to Helm; Additional editor controls/presets migrated, replaced CSS selectors removed; legacy Catalog layout CSS still remains |
+| U4 | Orders board, SSE/outbox, fulfilment actions and state/error/loading UI; preserve stock-on-accept and payment independence | **OPEN** |
+| U5 | Tables/QR, Inventory/Stocktake, Reports/Finance, Staff/Settings/Admin with feature-parity and minimal layout | **OPEN** |
+| U6 | Guest menu, product customization sheet, cart, checkout, tracking; 320/390/768/1365px; retain QR and server-authoritative amounts | **OPEN** |
+| U7 | Remove retired V1–V6 selectors, redundant style files/unused directive/decoration **only after exact route parity**; make remaining style imports theme + font where possible | **OPEN** |
+| U8 | All affected Nx checks, protected browser/HTTP ordering, Local Demo screenshots and Owner UI UAT at mobile/desktop | **OPEN** |
+| U9 | Explicitly authorized host staging/release and rollback evidence; never imply CI == live browser acceptance | **PENDING host gate #81** |
+
+### Additional options per menu: implementation already exists; reuse it
+
+Baseline evidence (not a new feature/database): `db/migrations/010_product_modifiers.sql` defines tenant/store/product-bound `menu_modifier_groups` and `menu_modifier_options` with FORCE RLS and integer satang deltas. Further `030_catalog_editor.sql` enables edits; Merchant Catalog exposes create/edit group, option add/edit, min/max, option availability; Guest product sheet shows radio/checkbox choices with prices; Order API validates and snapshots choices. Do **not** create replacement `product_option_*` tables, duplicate price engines or hard-code universal sweetness options.
+
+- [x] **M0 Domain and server foundation exists** — group tied to individual product, min/max rules, per-option signed delta, tenant/store authorization, immutable priced Order snapshot (verify any new changes against these existing contracts).
+- [x] **M1 Existing Merchant UI/API capabilities exist** — create/edit group, create/edit option, enable/disable, per-product grouping.
+- [x] **M2 Guest choice controls exist** — single-selection radio if max=1, multi-selection checkbox if max>1, optional item note; prices calculated/validated by server.
+- [x] **M3 Owner/Manager-friendly UX** — clear Thai labels, one-choice vs multi-choice helper, mandatory vs optional, per-menu configuration; **optional** editable starting examples only (e.g. sweetness: หวานน้อย / หวาน 100% / หวานมาก; topping +10 THB), never force global defaults or seed customer data.
+- [ ] **M4 Official Helm component migration (partial: Merchant done; Guest sheet pending)** — accessible product-specific group editor and customer customization dialog/sheet; remove legacy CSS as replaced.
+- [ ] **M5 Browser UAT (automated Editor/Order regression passed; Owner live visual acceptance pending)** — one menu with a required 1-of-3 sweetness group + optional topping +10 THB, and another menu with no extras; pricing exact in satang, permissions, unavailable options and snapshots; preserve old paid/not-paid distinction.
+
+**Permissions:** Product editor writes are authorized for an Owner/Manager of the corresponding Tenant + Store. Platform Admin cannot bypass tenant/store restrictions merely for convenience; separate delegated access must already be valid.
+
+**Code evidence for first implementation slice:** Draft PR [#132](https://github.com/yiwssx/rcat-pos-system/pull/132) with real generated Spartan Helm sources and Merchant Catalog/Additional migration. **CI at source commit `cec3ba8365bf310af62d913d34a2c0036826aefc`**: Foundation, Nx Workspace, PostgreSQL tenant-isolation and G4 Browser/HTTP E2E **PASS**; Local Demo Packaging **PASS** as well, giving 5/5 applicable workflows at the source commit. This CI evidence validates the bounded code change, **not** complete iOS redesign or Owner browser visual acceptance.
+
+**Safety boundary:** keep existing NestJS API, migrations and RBAC unchanged unless a genuine capability gap is demonstrated, with scoped regression tests. Do not invent a new payment milestone. Only mark gates complete after matching GitHub SHA/CI and real Owner acceptance. No automatic Production deployment.

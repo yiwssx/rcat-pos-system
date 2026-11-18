@@ -85,61 +85,6 @@
   font-size: 1.3rem;
   margin: 0 0 0.6rem;
 }
-.catalog-panel label {
-  color: #2e4059;
-  font-weight: 700;
-  margin-top: 0.35rem;
-}
-.catalog-panel input,
-.catalog-panel select,
-.catalog-edit input,
-.catalog-edit select {
-  min-height: 48px;
-  min-width: 0;
-  width: 100%;
-  padding: 0.7rem 0.9rem;
-  border: 1px solid #a7b7c9;
-  border-radius: 0.6rem;
-  background: #fff;
-  color: #15263e;
-  font: inherit;
-  font-size: 1rem;
-}
-.catalog-panel button {
-  min-height: 44px;
-  border: 0;
-  border-radius: 0.6rem;
-  padding: 0.65rem 0.95rem;
-  font: inherit;
-  font-weight: 750;
-  background: #153956;
-  color: #fff;
-  cursor: pointer;
-  transition: background 120ms ease;
-}
-.catalog-panel button:hover:not(:disabled) {
-  background: #066c88;
-}
-.catalog-panel button.subtle {
-  color: #1e4c62;
-  border: 1px solid #a8c2d4;
-  background: #f7fbfe;
-}
-.catalog-panel button.danger {
-  color: #87282e;
-  border: 1px solid #e5acb2;
-  background: #fff4f5;
-}
-.catalog-panel button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-.catalog-panel input:focus-visible,
-.catalog-panel select:focus-visible,
-.catalog-panel button:focus-visible {
-  outline: 3px solid #e0a13c;
-  outline-offset: 3px;
-}
 .catalog-message {
   margin: 1rem 0;
   padding: 0.9rem 1rem;
@@ -315,65 +260,6 @@
   }
 }
 
-.catalog-editor-item {
-  padding: 0.9rem 0;
-  border-top: 1px solid #dce4ed;
-  display: grid;
-  gap: 0.7rem;
-}
-.catalog-editor-toggle {
-  min-height: 44px;
-  margin: 0.5rem 0;
-  background: #f1f7fa;
-  border: 1px solid #bdd1dc;
-  border-radius: 0.6rem;
-  padding: 0.65rem 0.9rem;
-  font: inherit;
-  color: #124a63;
-  font-weight: 700;
-  cursor: pointer;
-}
-.catalog-modifier-panel {
-  max-width: none;
-  background: #f7f9fc;
-}
-.catalog-modifier-panel h4,
-.catalog-modifier-panel h5 {
-  margin: 0;
-  color: #203f5d;
-}
-.catalog-modifier-option {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-  border-top: 1px solid #d9e3ed;
-  padding: 0.75rem 0;
-}
-.catalog-modifier-option form {
-  flex-basis: 100%;
-}
-.catalog-edit input[type="checkbox"] {
-  min-height: 22px;
-  min-width: 22px;
-  width: 22px;
-  height: 22px;
-  accent-color: #153956;
-  margin-right: 0.45rem;
-  vertical-align: middle;
-}
-.catalog-modifier-option .subtle {
-  min-height: 44px;
-  border-radius: 0.6rem;
-  padding: 0.6rem 0.9rem;
-  font: inherit;
-  cursor: pointer;
-  color: #1e4c62;
-  border: 1px solid #a8c2d4;
-  background: #f7fbfe;
-}
-
 /* Compact management: prioritize item name/price/status, then editing controls. */
 .catalog-shell {
   max-width: var(--pos-content-compact, 1040px);
@@ -454,26 +340,6 @@
   font-weight: 800;
   color: #2e3c42;
 }
-.catalog-panel label {
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: #5b6970;
-}
-.catalog-panel input,
-.catalog-panel select,
-.catalog-edit input,
-.catalog-edit select {
-  border-color: #e0e6e5;
-  background: #fdfdfc;
-  border-radius: 11px;
-}
-.catalog-panel button:not(.danger):not(.subtle) {
-  background: #283e43;
-  border-radius: 11px;
-}
-.catalog-panel button:hover:not(:disabled) {
-  background: #b94d1b;
-}
 .catalog-product {
   border-color: #eceded;
 }
@@ -528,27 +394,6 @@
 }
 .catalog-create[open] .catalog-create-summary {
   background: #ffedcf;
-}
-.catalog-panel input,
-.catalog-panel select,
-.catalog-edit input,
-.catalog-edit select {
-  border-color: #e8cfb5;
-  background: #fffefa;
-}
-.catalog-panel button:not(.danger):not(.subtle) {
-  background: linear-gradient(110deg, #bf3e07, #d95208);
-  border-color: #bf3e07;
-  color: #fff;
-}
-.catalog-panel button:not(.danger):not(.subtle):hover {
-  background: #ab3505;
-}
-.catalog-panel button.subtle,
-.catalog-editor-toggle {
-  background: #e8faf3;
-  color: #075e55;
-  border-color: #adddcd;
 }
 .catalog-status {
   background: #ddf7ea;
@@ -712,16 +557,6 @@
   color: #617066;
   max-width: 52ch;
   line-height: 1.6;
-}
-.catalog-product .catalog-editor-toggle {
-  align-self: flex-start;
-  margin: 0;
-  border-radius: 10px;
-}
-.catalog-product .catalog-modifier-panel {
-  width: 100%;
-  min-width: 0;
-  margin-top: 0.2rem;
 }
 @media (max-width: 1100px) {
   .catalog-summary {
