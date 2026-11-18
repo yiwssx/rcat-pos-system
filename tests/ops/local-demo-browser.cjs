@@ -86,6 +86,17 @@ async function main() {
     const desktopNav = page.getByRole('complementary', { name: 'พื้นที่ทำงาน' });
     await desktopNav.waitFor({ state: 'visible' });
     await desktopNav.getByRole('navigation', { name: 'งานของร้าน' }).waitFor();
+    // The mobile Sheet host must not occupy the second desktop grid cell,
+    // pushing the work area into a long, narrow row beneath the sidebar.
+    const desktopLayout = await page.evaluate(() => {
+      const aside = document.querySelector('rcat-root aside[aria-label="พื้นที่ทำงาน"]').getBoundingClientRect();
+      const main = document.querySelector('rcat-root main').getBoundingClientRect();
+      return { asideRight: aside.right, mainLeft: main.left, mainTop: main.top };
+    });
+    assert.ok(desktopLayout.mainLeft >= desktopLayout.asideRight - 1,
+      'Desktop work area must be beside the sidebar');
+    assert.ok(desktopLayout.mainTop < 160,
+      'Desktop work area must start on the same row as the sidebar');
     assert.equal(await desktopNav.locator('hlm-native-select [data-slot="native-select"]').count(), 1,
       'Desktop store picker must be the official Spartan Helm NativeSelect');
     const shell = await desktopNav.evaluate(element => {
@@ -239,7 +250,17 @@ async function main() {
     assert.equal(guestLight.ctaText, 'rgb(255, 255, 255)', 'Cart action must have readable white text');
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-ios-cart-bar-phone.png', fullPage: true });
     await staticPage.getByRole('button', { name: 'ดูตะกร้า' }).click();
-    await staticPage.getByRole('dialog', { name: 'ตะกร้าของฉัน' }).waitFor();
+    // CDK dialog accessibility container is zero-sized by design.
+    // Verify its accessible title and the actual visible Spartan Sheet surface.
+    const cartDialogHost = staticPage.locator('cdk-dialog-container[role="dialog"]');
+    await cartDialogHost.waitFor({ state: 'attached' });
+    const cartTitleId = await cartDialogHost.getAttribute('aria-labelledby');
+    assert.ok(cartTitleId, 'Spartan cart must retain an accessible title relationship');
+    assert.equal((await staticPage.locator('[id="' + cartTitleId + '"]').textContent()).trim(),
+      'ตะกร้าของฉัน', 'CDK dialog must reference the real Thai cart title');
+    const cartSurface = staticPage.locator('hlm-sheet-content[data-slot="sheet-content"]')
+      .filter({ has: staticPage.getByText('ตะกร้าของฉัน', { exact: true }) });
+    await cartSurface.waitFor({ state: 'visible' });
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-cart-phone.png', fullPage: true });
     await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).click();
     await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).waitFor();

@@ -167,6 +167,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
             <rcat-portal-workspace-nav [url]="url()" />
           </aside>
           <hlm-sheet
+            class="lg:hidden"
             side="left"
             [state]="mobileNavOpen() ? 'open' : 'closed'"
             (stateChanged)="mobileNavOpen.set($event === 'open')"
