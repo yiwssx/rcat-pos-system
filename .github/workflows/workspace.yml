@@ -131,6 +131,12 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit -m "feat(ui): install official Spartan v1.9 Helm component sources"
+            GENERATED_COMMIT="$(git rev-parse HEAD)"
+            # PR actions/checkout checks out synthetic pull/merge, not the
+            # writable PR head; transplant only the generated commit onto head.
+            git fetch origin "refs/heads/$TARGET_BRANCH:refs/remotes/origin/$TARGET_BRANCH"
+            git checkout -B "$TARGET_BRANCH" "refs/remotes/origin/$TARGET_BRANCH"
+            git cherry-pick "$GENERATED_COMMIT"
             git push origin "HEAD:refs/heads/$TARGET_BRANCH"
           else
             echo "SPARTAN_SCAFFOLD=ALREADY_COMMITTED"
