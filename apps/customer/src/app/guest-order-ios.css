@@ -175,11 +175,6 @@
 .v6-guest-shop .guest-cart-shortcut:hover {
   border-color: #c6c6cb;
 }
-.guest-sheet {
-  background: #fff;
-  color: var(--guest-ios-text);
-  border-color: #dddde3;
-}
 .guest-sheet .guest-sheet-heading,
 .guest-sheet .guest-sheet-footer {
   background: #fff;

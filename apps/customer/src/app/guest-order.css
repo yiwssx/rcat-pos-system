@@ -1055,31 +1055,6 @@
 .guest-cart-shortcut:hover {
   border-color: #e5aa83;
 }
-.guest-sheet {
-  position: fixed;
-  inset: auto 0 0;
-  box-sizing: border-box;
-  width: min(100%, 560px);
-  max-width: 100%;
-  max-height: min(90dvh, 820px);
-  margin: 0 auto;
-  padding: 0;
-  border: none;
-  border-radius: 1.5rem 1.5rem 0 0;
-  color: #1d2938;
-  background: #fff;
-  box-shadow: 0 -20px 56px rgb(14 26 43 / 16%);
-  overflow: hidden;
-}
-.guest-sheet[open] {
-  display: flex;
-  flex-direction: column;
-}
-.guest-sheet::backdrop {
-  background: rgb(16 27 41 / 52%);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-}
 .guest-sheet-handle {
   flex: 0 0 auto;
   width: 38px;
@@ -1203,14 +1178,6 @@
   outline: 3px solid #ed913e;
   outline-offset: 3px;
 }
-@media (min-width: 720px) {
-  .guest-sheet {
-    inset: 0;
-    margin: auto;
-    max-height: min(85dvh, 820px);
-    border-radius: 1.5rem;
-  }
-}
 @media (max-width: 760px) {
   .guest-products {
     grid-template-columns: 1fr;
@@ -1304,21 +1271,6 @@
   }
   .guest-cart-shortcut-price {
     display: none;
-  }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .guest-sheet[open] {
-    animation: guest-sheet-in 170ms ease-out;
-  }
-  @keyframes guest-sheet-in {
-    from {
-      opacity: 0.6;
-      translate: 0 12px;
-    }
-    to {
-      opacity: 1;
-      translate: 0 0;
-    }
   }
 }
 
@@ -1579,9 +1531,6 @@
 .guest-cart-shortcut-action {
   border-radius: 10px;
 }
-.guest-sheet {
-  border-radius: 24px 24px 0 0;
-}
 .guest-closed {
   border-radius: 22px;
 }
@@ -1727,13 +1676,6 @@
 }
 .guest-price {
   color: #a9471a;
-}
-.guest-sheet {
-  border: 1px solid #eee5dc;
-  box-shadow: 0 -20px 58px rgb(32 28 24 / 18%);
-}
-.guest-sheet::backdrop {
-  background: rgb(32 28 24 / 46%);
 }
 .guest-order-context {
   border-color: #e8ded4;
@@ -1951,9 +1893,6 @@
   border-radius: 10px;
   background: #bd511f;
   box-shadow: 0 8px 28px rgb(144 69 31 / 25%);
-}
-.guest-sheet {
-  font-family: var(--pos-font);
 }
 .guest-sheet .guest-sheet-heading {
   background: #fff;
@@ -2201,10 +2140,6 @@
   background: linear-gradient(110deg, #bc3904, #e96008);
   border-color: #bd3c08;
   box-shadow: 0 13px 32px rgb(191 65 8 / 23%);
-}
-.guest-sheet {
-  background: #fffefa;
-  border-color: #f2d9b9;
 }
 .guest-sheet .guest-order-context,
 .guest-item-note {
