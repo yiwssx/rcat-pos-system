@@ -294,7 +294,10 @@ function bahtInput(satang: number): string {
                       loading="lazy"
                     />
                   } @else {
-                    <span class="catalog-product-placeholder" aria-hidden="true">
+                    <span
+                      class="catalog-product-placeholder"
+                      aria-hidden="true"
+                    >
                       ไม่มีรูป
                     </span>
                   }
