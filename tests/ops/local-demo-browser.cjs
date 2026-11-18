@@ -69,6 +69,25 @@ async function main() {
     assert.equal(fixtureLogin.status(), 200, 'CI fixture login must remain test-only');
     await page.reload();
     await page.getByRole('heading',{name:'เริ่มงานที่ร้าน',exact:true}).waitFor();
+    // Actual generated Spartan Card/Badge/Button, not the old V6 CSS widgets.
+    const staffHome = page.locator('section[aria-label="พื้นที่ทำงานร้านค้า"]');
+    const storeCard = staffHome.locator('[data-slot="card"]').filter({
+      has: page.getByRole('heading', { name: 'RCAT Cafe', exact: true })
+    });
+    assert.equal(await storeCard.count(), 1, 'Seeded store must use official Spartan Helm Card');
+    assert.equal(await storeCard.locator('[data-slot="badge"]').count(), 1,
+      'Store role must use official Spartan Helm Badge');
+    assert.equal(await storeCard.locator('a[data-slot="button"]', { hasText: 'เปิดกระดานออเดอร์' }).count(), 1,
+      'Merchant Order Board remains the primary action');
+    const managementDisclosure = storeCard.locator('details');
+    assert.equal(await managementDisclosure.evaluate(el => el.open), false,
+      'Less-frequent management actions must start collapsed on mobile');
+    await managementDisclosure.locator('summary').click();
+    assert.equal(await managementDisclosure.evaluate(el => el.open), true,
+      'Owner can reveal all prior management routes');
+    await storeCard.getByRole('link', { name: 'เมนูและราคา' }).waitFor();
+    await storeCard.getByRole('link', { name: 'พนักงานและสิทธิ์' }).waitFor();
+    await managementDisclosure.locator('summary').click();
     const thaiFontResponse = await context.request.get(merchant + '/fonts/IBMPlexSansThai-Regular.ttf');
     assert.equal(thaiFontResponse.status(), 200, 'Self-hosted Thai font must be served by the app');
     const fontReport = await page.evaluate(async () => {
