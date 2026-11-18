@@ -97,7 +97,8 @@
   font-size: 0.84rem;
   font-weight: 750;
 }
-.guest-category select  {
+.guest-search input,
+.guest-category select {
   width: 100%;
   min-width: 0;
   min-height: 46px;
@@ -149,7 +150,8 @@
   justify-content: flex-end;
   padding-top: 0.8rem;
 }
-.guest-add {
+.guest-add,
+.guest-checkout {
   background: #142f49;
   color: white;
   border: 0;
@@ -160,7 +162,8 @@
   font-weight: 750;
   cursor: pointer;
 }
-.guest-add:hover {
+.guest-add:hover,
+.guest-checkout:hover {
   background: #b97527;
 }
 .guest-shell button:disabled {
@@ -609,13 +612,15 @@
 }
 
 .guest-add,
-.guest-code-form button  {
+.guest-checkout,
+.guest-code-form button {
   background: var(--pos-orange, #bd541b);
   color: white;
 }
 
 .guest-add:hover,
-.guest-code-form button:hover:not(:disabled)  {
+.guest-checkout:hover,
+.guest-code-form button:hover:not(:disabled) {
   background: #933b15;
 }
 
@@ -1641,7 +1646,8 @@
 .guest-order-context label {
   font-weight: 750;
 }
-.guest-item-note textarea {
+.guest-item-note textarea,
+.guest-order-context input {
   width: 100%;
   min-width: 0;
   min-height: 46px;
@@ -1696,13 +1702,17 @@
 .guest-menu-toolbar {
   gap: 0.75rem;
 }
+.guest-search input,
 .guest-category select,
-.guest-item-note textarea {
+.guest-item-note textarea,
+.guest-order-context input {
   border-radius: 12px;
   border-color: #d6ccc2;
   background: #fffdfa;
 }
-.guest-category select:focus-visible {
+.guest-search input:focus-visible,
+.guest-category select:focus-visible,
+.guest-order-context input:focus-visible {
   outline: 3px solid #b94d1b;
   outline-offset: 2px;
 }
@@ -2127,8 +2137,9 @@
   border-radius: 15px;
   box-shadow: 0 9px 26px rgb(180 77 10 / 5%);
 }
+.v6-guest-filters .guest-search input:focus-visible,
 .v6-guest-filters .guest-category-chip:focus-visible,
-.v6-guest-product .guest-add:focus-visible  {
+.v6-guest-product .guest-add:focus-visible {
   outline: 3px solid #087c72;
   outline-offset: 2px;
 }
@@ -2202,7 +2213,8 @@
 .guest-sheet .guest-order-context {
   background: #fff8e9;
 }
-.guest-item-note textarea {
+.guest-item-note textarea,
+.guest-order-context input {
   background: #fffdfa;
   border-color: #ead2b5;
 }
