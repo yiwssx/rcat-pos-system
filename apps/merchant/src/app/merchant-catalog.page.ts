@@ -417,10 +417,33 @@ function bahtInput(satang: number): string {
                     </p>
                     <form class="grid min-w-0 gap-3 rounded-xl border border-border bg-card p-4" (ngSubmit)="addGroup(product)">
                       <h5 class="font-semibold text-foreground">เพิ่มกลุ่มตัวเลือก</h5>
+                      <div class="flex flex-wrap gap-2" role="group" aria-label="รูปแบบการเลือก">
+                        <button
+                          hlmBtn
+                          type="button"
+                          variant="outline"
+                          class="min-h-11"
+                          [disabled]="saving()"
+                          (click)="newGroup.minSelect = 1; newGroup.maxSelect = 1"
+                        >
+                          เลือกอย่างเดียว (บังคับ)
+                        </button>
+                        <button
+                          hlmBtn
+                          type="button"
+                          variant="outline"
+                          class="min-h-11"
+                          [disabled]="saving()"
+                          (click)="newGroup.minSelect = 0; newGroup.maxSelect = 3"
+                        >
+                          เลือกได้หลายอย่าง (ไม่บังคับ)
+                        </button>
+                      </div>
                       <label hlmLabel for="new-group-name">ชื่อกลุ่ม</label>
                       <input hlmInput
                         id="new-group-name"
                         name="newGroupName"
+                        placeholder="เช่น ระดับความหวาน หรือเพิ่มท็อปปิ้ง"
                         [(ngModel)]="newGroup.name"
                         required
                         maxlength="120"
@@ -636,6 +659,7 @@ function bahtInput(satang: number): string {
                               <input hlmInput
                                 id="new-option-name"
                                 name="newOptionName"
+                                placeholder="เช่น หวานน้อย หวาน 100% หวานมาก หรือไข่มุก"
                                 [(ngModel)]="draft.name"
                                 maxlength="120"
                                 required
@@ -647,6 +671,7 @@ function bahtInput(satang: number): string {
                               <input hlmInput
                                 id="new-option-price"
                                 name="newOptionPrice"
+                                placeholder="เช่น 10.00 (เพิ่ม 10 บาท) หรือ 0.00"
                                 [(ngModel)]="draft.priceDeltaBaht"
                                 required
                                 inputmode="decimal"
