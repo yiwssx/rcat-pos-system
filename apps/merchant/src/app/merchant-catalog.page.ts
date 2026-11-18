@@ -441,10 +441,17 @@ function bahtInput(satang: number): string {
                 }
               </div>
               @if (!product.archivedAt) {
-                <details class="catalog-media-disclosure">
-                  <summary>จัดการรูปสินค้า</summary>
-                  <div class="catalog-media" aria-label="รูปภาพสินค้า">
-                    <div class="catalog-media-actions">
+                <details class="min-w-0 border-t border-border pt-3">
+                  <summary
+                    class="min-h-11 w-fit cursor-pointer rounded-lg border border-border bg-card px-4 py-2.5 font-semibold text-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    จัดการรูปสินค้า
+                  </summary>
+                  <div
+                    class="mt-3 grid min-w-0 gap-3 rounded-xl border border-border bg-muted/30 p-4"
+                    aria-label="รูปภาพสินค้า"
+                  >
+                    <div class="grid min-w-0 max-w-sm gap-3">
                       <label
                         hlmLabel
                         [attr.for]="'catalog-media-' + product.id"
@@ -458,6 +465,7 @@ function bahtInput(satang: number): string {
                       <input
                         [id]="'catalog-media-' + product.id"
                         type="file"
+                        class="block w-full min-w-0 max-w-full text-sm text-foreground"
                         accept="image/jpeg,image/png,image/webp"
                         [disabled]="saving()"
                         (change)="uploadImage($event, product)"
@@ -475,7 +483,9 @@ function bahtInput(satang: number): string {
                         </button>
                       }
                     </div>
-                    <p>
+                    <p
+                      class="max-w-prose text-sm leading-relaxed text-muted-foreground"
+                    >
                       JPG / PNG / WebP · แปลงเป็น WebP ก่อนส่ง · สูงสุด 192 KB
                     </p>
                   </div>
