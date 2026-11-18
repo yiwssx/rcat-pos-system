@@ -285,24 +285,41 @@ function bahtInput(satang: number): string {
           @for (product of displayedProducts(); track product.id) {
             <article class="catalog-product">
               <div class="catalog-summary">
-                <div>
-                  <h3>{{ product.name }}</h3>
-                  <p>
-                    {{ categoryName(product.categoryId) }} ·
-                    {{ money(product.priceSatang) }} บาท
-                  </p>
-                  <span
-                    class="catalog-status"
-                    [class.inactive]="!product.available"
-                  >
-                    {{
-                      product.archivedAt
-                        ? "เก็บถาวร"
-                        : product.available
-                          ? "เปิดขาย"
-                          : "ปิดขายชั่วคราว"
-                    }}
-                  </span>
+                <div class="catalog-product-identity">
+                  @if (product.hasImage) {
+                    <img
+                      [src]="imageUrl(product)"
+                      [alt]="'รูปสินค้า ' + product.name"
+                      class="catalog-media-preview"
+                      loading="lazy"
+                    />
+                  } @else {
+                    <span
+                      class="catalog-product-placeholder"
+                      aria-hidden="true"
+                    >
+                      ไม่มีรูป
+                    </span>
+                  }
+                  <div class="catalog-product-copy">
+                    <h3>{{ product.name }}</h3>
+                    <p>
+                      {{ categoryName(product.categoryId) }} ·
+                      {{ money(product.priceSatang) }} บาท
+                    </p>
+                    <span
+                      class="catalog-status"
+                      [class.inactive]="!product.available"
+                    >
+                      {{
+                        product.archivedAt
+                          ? "เก็บถาวร"
+                          : product.available
+                            ? "เปิดขาย"
+                            : "ปิดขายชั่วคราว"
+                      }}
+                    </span>
+                  </div>
                 </div>
                 @if (!product.archivedAt) {
                   <div class="catalog-actions">
@@ -333,45 +350,42 @@ function bahtInput(satang: number): string {
                   </div>
                 }
               </div>
-              <div class="catalog-media" aria-label="รูปภาพสินค้า">
-                @if (product.hasImage) {
-                  <img
-                    [src]="imageUrl(product)"
-                    [alt]="'รูปสินค้า ' + product.name"
-                    class="catalog-media-preview"
-                    loading="lazy"
-                  />
-                }
-                @if (!product.archivedAt) {
-                  <div class="catalog-media-actions">
-                    <label [attr.for]="'catalog-media-' + product.id">
-                      {{
-                        product.hasImage ? "เปลี่ยนรูปสินค้า" : "เพิ่มรูปสินค้า"
-                      }}
-                    </label>
-                    <input
-                      [id]="'catalog-media-' + product.id"
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      [disabled]="saving()"
-                      (change)="uploadImage($event, product)"
-                    />
-                    @if (product.hasImage) {
-                      <button
-                        type="button"
-                        class="subtle"
+              @if (!product.archivedAt) {
+                <details class="catalog-media-disclosure">
+                  <summary>จัดการรูปสินค้า</summary>
+                  <div class="catalog-media" aria-label="รูปภาพสินค้า">
+                    <div class="catalog-media-actions">
+                      <label [attr.for]="'catalog-media-' + product.id">
+                        {{
+                          product.hasImage
+                            ? "เปลี่ยนรูปสินค้า"
+                            : "เพิ่มรูปสินค้า"
+                        }}
+                      </label>
+                      <input
+                        [id]="'catalog-media-' + product.id"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
                         [disabled]="saving()"
-                        (click)="removeImage(product)"
-                      >
-                        ลบรูปสินค้า
-                      </button>
-                    }
+                        (change)="uploadImage($event, product)"
+                      />
+                      @if (product.hasImage) {
+                        <button
+                          type="button"
+                          class="subtle"
+                          [disabled]="saving()"
+                          (click)="removeImage(product)"
+                        >
+                          ลบรูปสินค้า
+                        </button>
+                      }
+                    </div>
+                    <p>
+                      JPG / PNG / WebP · แปลงเป็น WebP ก่อนส่ง · สูงสุด 192 KB
+                    </p>
                   </div>
-                  <p>
-                    JPG / PNG / WebP · แปลงเป็น WebP ก่อนส่ง · สูงสุด 192 KB
-                  </p>
-                }
-              </div>
+                </details>
+              }
               @if (!product.archivedAt) {
                 <button
                   type="button"
