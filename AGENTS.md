@@ -34,6 +34,13 @@ Read the relevant SKILL.md under .agents/skills/:
 - ci-quality: affected CI, tests and secure releases.
 - pos-ux-design: QR ordering customer journeys, tablet operations, recovery and payment-status UX.
 
+## Spartan-first UI decision — Owner, 18 Nov 2026
+- **Canonical:** `docs/SPARTAN-IOS-MIGRATION.md`. Spartan UI 1.9 Brain + **generated official Helm**, one shared semantic theme and self-hosted Thai font are the only design component/style sources. Keep Angular + Nx and all business/security logic.
+- Do not add feature CSS, component `styles`/`styleUrls`, inline `style`/`ngStyle`, random hardcoded colors, second UI systems or handmade Spartan lookalikes. Use semantic Tailwind utilities for layout and generated Helm components for controls.
+- V1–V6 page styles are migration debt: replace the screen, then **delete** obsolete selectors (not overlay new overrides). `RcatButtonDirective` is transitional Brain-only and must be removed after official Helm migration.
+- Target a neutral, readable iOS-like application experience: white cards, light gray canvas, consistent typography, accessible touch spacing, restrained RCAT accent, no giant gradient sidebar. Keep owner visual UAT separate from passing CI.
+- The design rule is enforced for *new diff lines* by the lightweight existing Foundation CI; deleting verified-unused CSS remains allowed. Do not auto-deploy.
+
 ## Design guidelines
 - Read docs/DESIGN-SYSTEM.md before any UI/UX or component work.
 - frontend-design: distinct visual direction without copying ThaiQROrder visuals.

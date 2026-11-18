@@ -25,6 +25,12 @@ jobs:
         env:
           BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
         run: node scripts/ci/impact-policy.mjs "$BASE_SHA" "$GITHUB_SHA"
+      - name: Enforce Spartan-first UI styling policy (changed files only)
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          node scripts/ci/spartan-ios-policy.mjs "$BASE_SHA" "$GITHUB_SHA"
+          node --test tests/ci/spartan-ios-policy.test.mjs
       - name: Verify the evidence ledger and impact classification
         run: node --test tests/ci/impact-policy.test.mjs
       - name: Verify operator safety checks and bounded staging-read qualification harness
