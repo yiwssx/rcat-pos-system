@@ -953,38 +953,6 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       .map((id) => options.find((x) => x.id === id)?.name ?? "ตัวเลือก")
       .join(" · ");
   }
-  moneySigned(value: number): string {
-    return value < 0 ? "-" + formatSatang(-value) : formatSatang(value);
-  }
-  isSelected(productId: string, optionId: string): boolean {
-    return (this.selected()[productId] ?? []).includes(optionId);
-  }
-  optionDisabled(
-    productId: string,
-    group: GuestModifierGroup,
-    optionId: string,
-  ): boolean {
-    const ids = this.selected()[productId] ?? [];
-    if (group.maxSelect === 1) return false; // Radios must remain switchable.
-    return (
-      !ids.includes(optionId) &&
-      ids.filter((id) =>
-        this.options(group.id).some((option) => option.id === id),
-      ).length >= group.maxSelect
-    );
-  }
-  modifierGroupHint(group: GuestModifierGroup): string {
-    if (group.maxSelect === 1) {
-      return group.minSelect === 1
-        ? "จำเป็น · เลือก 1"
-        : "ไม่จำเป็น · เลือกได้ 1";
-    }
-    return `เลือก ${group.minSelect}–${group.maxSelect}`;
-  }
-  hasGroupSelection(productId: string, group: GuestModifierGroup): boolean {
-    const options = new Set(this.options(group.id).map((option) => option.id));
-    return (this.selected()[productId] ?? []).some((id) => options.has(id));
-  }
   private updateOptionGroup(
     productId: string,
     group: GuestModifierGroup,
