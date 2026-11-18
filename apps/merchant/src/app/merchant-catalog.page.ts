@@ -283,7 +283,7 @@ function bahtInput(satang: number): string {
           class="catalog-panel catalog-products"
           aria-labelledby="products-title"
         >
-          <div class="catalog-toolbar">
+          <div class="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-4">
             <div>
               <h2 id="products-title">สินค้าทั้งหมด</h2>
               <p>
@@ -367,33 +367,35 @@ function bahtInput(satang: number): string {
           </p>
 
           @for (product of displayedProducts(); track product.id) {
-            <article class="catalog-product">
-              <div class="catalog-summary">
-                <div class="catalog-product-identity">
+            <article hlmCard size="sm" class="catalog-product min-w-0 gap-3">
+              <div class="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div class="flex min-w-0 flex-1 items-start gap-3">
                   @if (product.hasImage) {
                     <img
                       [src]="imageUrl(product)"
                       [alt]="'รูปสินค้า ' + product.name"
-                      class="catalog-media-preview"
+                      class="catalog-media-preview size-16 shrink-0 rounded-xl border border-border bg-muted object-cover sm:size-20"
                       loading="lazy"
                     />
                   } @else {
                     <span
-                      class="catalog-product-placeholder"
+                      class="grid size-16 shrink-0 place-items-center rounded-xl border border-border bg-muted text-xs font-medium text-muted-foreground sm:size-20"
                       aria-hidden="true"
                     >
                       ไม่มีรูป
                     </span>
                   }
-                  <div class="catalog-product-copy">
-                    <h3>{{ product.name }}</h3>
-                    <p>
+                  <div class="min-w-0 flex-1">
+                    <h3 class="break-words text-base font-semibold leading-relaxed text-foreground">
+                      {{ product.name }}
+                    </h3>
+                    <p class="mt-1 text-sm leading-relaxed text-muted-foreground tabular-nums">
                       {{ categoryName(product.categoryId) }} ·
                       {{ money(product.priceSatang) }} บาท
                     </p>
                     <span
-                      class="catalog-status"
-                      [class.inactive]="!product.available"
+                      hlmBadge
+                      [variant]="product.available && !product.archivedAt ? 'secondary' : 'outline'"
                     >
                       {{
                         product.archivedAt
@@ -406,7 +408,7 @@ function bahtInput(satang: number): string {
                   </div>
                 </div>
                 @if (!product.archivedAt) {
-                  <div class="catalog-actions">
+                  <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
                     <button
                       hlmBtn
                       type="button"
@@ -883,8 +885,11 @@ function bahtInput(satang: number): string {
                 }
               }
               @if (editId() === product.id && !product.archivedAt) {
-                <form class="catalog-edit" (ngSubmit)="saveEdit()">
-                  <p>
+                <form
+                  class="catalog-edit mt-3 grid min-w-0 max-w-2xl gap-3 rounded-xl border border-border bg-muted/30 p-4"
+                  (ngSubmit)="saveEdit()"
+                >
+                  <p class="text-sm leading-6 text-muted-foreground">
                     แก้ไขข้อมูลสินค้า · ตรวจสอบ Revision {{ edit.revision }}
                   </p>
                   <label hlmLabel for="edit-product-name">ชื่อสินค้า</label>
