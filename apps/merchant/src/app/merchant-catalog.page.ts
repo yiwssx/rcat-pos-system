@@ -55,15 +55,17 @@ function bahtInput(satang: number): string {
   styleUrls: ["./merchant-catalog.css"],
   template: `
     <section class="catalog-shell" aria-labelledby="catalog-title">
-      <header class="catalog-head">
-        <a routerLink="/" class="catalog-back">← ร้านค้าของฉัน</a>
+      <header class="space-y-3">
+        <a hlmBtn routerLink="/" variant="link" size="lg">← ร้านค้าของฉัน</a>
         <p class="eyebrow">MERCHANT / MENU MANAGEMENT</p>
-        <h1 id="catalog-title">จัดการเมนูและสินค้า</h1>
-        <p class="catalog-intro">
+        <h1 id="catalog-title" class="text-3xl font-semibold">
+          จัดการเมนูและสินค้า
+        </h1>
+        <p class="text-base leading-relaxed text-muted-foreground">
           ปรับราคา ชื่อ หมวดหมู่ และสถานะการขาย
           โดยไม่เปลี่ยนราคาที่บันทึกในออเดอร์เก่า
         </p>
-        <p class="catalog-notice">
+        <p class="rounded-xl border bg-card p-4 text-sm leading-relaxed">
           การเก็บสินค้าเข้าคลัง (Archive) จะนำออกจากเมนูลูกค้าถาวร
           แต่ยังคงประวัติออเดอร์และสต็อก ไม่มีการรับชำระเงินจากหน้านี้
         </p>
