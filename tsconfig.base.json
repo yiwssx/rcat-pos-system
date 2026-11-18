@@ -23,6 +23,42 @@
       ],
       "@rcat/validation": [
         "./libs/validation/src/index.ts"
+      ],
+      "@spartan-ng/helm": [
+        "./libs/ui/src/spartan/src/index.ts"
+      ],
+      "@spartan-ng/helm/button": [
+        "./libs/ui/src/spartan/button/src/index.ts"
+      ],
+      "@spartan-ng/helm/utils": [
+        "./libs/ui/src/spartan/utils/src/index.ts"
+      ],
+      "@spartan-ng/helm/card": [
+        "./libs/ui/src/spartan/card/src/index.ts"
+      ],
+      "@spartan-ng/helm/badge": [
+        "./libs/ui/src/spartan/badge/src/index.ts"
+      ],
+      "@spartan-ng/helm/input": [
+        "./libs/ui/src/spartan/input/src/index.ts"
+      ],
+      "@spartan-ng/helm/label": [
+        "./libs/ui/src/spartan/label/src/index.ts"
+      ],
+      "@spartan-ng/helm/native-select": [
+        "./libs/ui/src/spartan/native-select/src/index.ts"
+      ],
+      "@spartan-ng/helm/separator": [
+        "./libs/ui/src/spartan/separator/src/index.ts"
+      ],
+      "@spartan-ng/helm/dialog": [
+        "./libs/ui/src/spartan/dialog/src/index.ts"
+      ],
+      "@spartan-ng/helm/sheet": [
+        "./libs/ui/src/spartan/sheet/src/index.ts"
+      ],
+      "@spartan-ng/helm/tabs": [
+        "./libs/ui/src/spartan/tabs/src/index.ts"
       ]
     }
   }
