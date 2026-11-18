@@ -1,22 +1,18 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  signal,
-} from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from "@angular/core";
 import { HttpInterceptorFn, HttpResponse } from "@angular/common/http";
-import {
-  Router,
-  RouterLink,
-  RouterLinkActive,
-  RouterOutlet,
-  NavigationEnd,
-} from "@angular/router";
+import { Router, RouterLink, RouterOutlet, NavigationEnd } from "@angular/router";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { catchError, tap, throwError } from "rxjs";
+import { HlmButton } from "@spartan-ng/helm/button";
+import {
+  HlmSheet,
+  HlmSheetContent,
+  HlmSheetHeader,
+  HlmSheetPortal,
+  HlmSheetTitle,
+} from "@spartan-ng/helm/sheet";
 import { PortalSession } from "./portal-session.service";
-import { permitsRoute } from "./portal-permissions";
+import { PortalWorkspaceNavComponent } from "./portal-workspace-nav.component";
 
 export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
   const session = inject(PortalSession);
@@ -45,301 +41,123 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
   );
 };
 
+
 @Component({
   selector: "rcat-root",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [
+    RouterLink,
+    RouterOutlet,
+    HlmButton,
+    HlmSheet,
+    HlmSheetContent,
+    HlmSheetHeader,
+    HlmSheetPortal,
+    HlmSheetTitle,
+    PortalWorkspaceNavComponent,
+  ],
   template: `
-    <div class="portal-layout">
-      <a class="portal-skip" href="#main">ข้ามไปเนื้อหาหลัก</a>
-      <header class="portal-header" [class.portal-header-hidden]="guestMenu()">
-        <a class="portal-brand" routerLink="/" aria-label="RCAT POS หน้าแรก">
-          <img
-            class="portal-brand-image"
-            src="/rcat-pos-logo.webp"
-            alt=""
-            width="48"
-            height="48"
-          />
-          <span class="portal-brand-title"
-            ><strong>RCAT <em>POS</em></strong
-            ><small>Ordering & Store Management</small></span
-          >
-        </a>
-        <div class="portal-header-actions">
-          @if (guestOrder()) {
-            <a class="portal-header-link" routerLink="/order/track"
-              >ติดตามออเดอร์</a
-            >
-          } @else if (session.phase() === "staff") {
-            <span class="portal-user-context">พื้นที่จัดการร้านค้า</span>
-            <button
-              type="button"
-              class="portal-logout"
-              (click)="logout()"
-              [disabled]="loggingOut()"
-            >
-              {{ loggingOut() ? "กำลังออกจากระบบ..." : "ออกจากระบบ" }}
-            </button>
-          } @else {
-            <span class="portal-user-context">ระบบสั่งอาหารผ่าน QR</span>
-          }
-        </div>
-      </header>
-      <div
-        class="portal-content"
-        [class.portal-with-nav]="session.phase() === 'staff' && !guestOrder()"
-      >
-        @if (session.phase() === "staff" && !guestOrder()) {
-          <aside
-            class="portal-sidebar"
-            [class.portal-nav-open]="mobileNavOpen()"
-            aria-label="พื้นที่ทำงาน"
-          >
-            <div class="portal-workspace-selector">
-              <span class="portal-nav-caption">WORKSPACE</span>
-              @if (store(); as selected) {
-                <label for="portal-store">ร้านที่กำลังทำงาน</label>
-                <select
-                  id="portal-store"
-                  [value]="selected.tenantId + '|' + selected.storeId"
-                  (change)="changeStore($event)"
-                >
-                  @for (
-                    item of session.stores();
-                    track item.tenantId + item.storeId
-                  ) {
-                    <option [value]="item.tenantId + '|' + item.storeId">
-                      {{ item.storeName }}
-                    </option>
-                  }
-                </select>
-                <p class="portal-workspace-meta">{{ selected.tenantName }}</p>
-              } @else {
-                <p class="portal-workspace-meta">
-                  ยังไม่มีร้านค้าที่เข้าถึงได้
-                </p>
-              }
-            </div>
-            <button
-              type="button"
-              class="portal-mobile-nav-toggle"
-              aria-controls="portal-main-nav"
-              [attr.aria-expanded]="mobileNavOpen()"
-              (click)="toggleMobileNav()"
-            >
-              <span>เมนูจัดการร้าน</span>
-              <span aria-hidden="true">{{ mobileNavOpen() ? "−" : "+" }}</span>
-            </button>
-            <nav
-              id="portal-main-nav"
-              class="portal-nav"
-              aria-label="งานของร้าน"
-            >
-              <div class="portal-nav-group">
-                <span class="portal-nav-caption">ภาพรวม</span>
-                <a
-                  routerLink="/"
-                  routerLinkActive="active"
-                  [routerLinkActiveOptions]="{ exact: true }"
-                  ><svg
-                    class="portal-nav-svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <rect x="3" y="3" width="7" height="8" rx="1.5" />
-                    <rect x="14" y="3" width="7" height="5" rx="1.5" />
-                    <rect x="14" y="12" width="7" height="9" rx="1.5" />
-                    <rect x="3" y="15" width="7" height="6" rx="1.5" /></svg
-                  ><span>พื้นที่ทำงาน</span></a
-                >
-              </div>
-              @if (store(); as selected) {
-                <div class="portal-nav-group">
-                  <span class="portal-nav-caption">งานประจำวัน</span>
-                  @for (item of dailyMenu; track item.path) {
-                    @if (allowed(item.path)) {
-                      <a
-                        [routerLink]="[
-                          '/',
-                          item.path,
-                          selected.tenantId,
-                          selected.storeId,
-                        ]"
-                        routerLinkActive="active"
-                        ><svg
-                          class="portal-nav-svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          aria-hidden="true"
-                        >
-                          <path d="M4 4h16v16H4z" />
-                          <path d="M8 9h8M8 13h8M8 17h5" /></svg
-                        ><span>{{ item.label }}</span></a
-                      >
-                    }
-                  }
-                </div>
-                <div class="portal-nav-group">
-                  <span class="portal-nav-caption">จัดการร้าน</span>
-                  @for (item of manageMenu; track item.path) {
-                    @if (allowed(item.path)) {
-                      <a
-                        [routerLink]="[
-                          '/',
-                          item.path,
-                          selected.tenantId,
-                          selected.storeId,
-                        ]"
-                        routerLinkActive="active"
-                        ><svg
-                          class="portal-nav-svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          aria-hidden="true"
-                        >
-                          @switch (item.path) {
-                            @case ("tables") {
-                              <rect x="3" y="4" width="18" height="16" rx="3" />
-                              <path d="M3 10h18M9 10v10" />
-                            }
-                            @case ("catalog") {
-                              <path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5" />
-                            }
-                            @case ("inventory") {
-                              <path d="m3 7 9-4 9 4v11l-9 4-9-4V7Z" />
-                              <path d="m3 7 9 4 9-4M12 11v11" />
-                            }
-                            @case ("reports") {
-                              <rect x="3" y="3" width="18" height="18" rx="3" />
-                              <path d="M8 16v-3m4 3V8m4 8v-5" />
-                            }
-                          }</svg
-                        ><span>{{ item.label }}</span></a
-                      >
-                    }
-                  }
-                  @if (selected.role === "owner") {
-                    <a
-                      [routerLink]="['/tenants', selected.tenantId, 'staff']"
-                      routerLinkActive="active"
-                      ><svg
-                        class="portal-nav-svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                      >
-                        <circle cx="9" cy="8" r="3" />
-                        <path
-                          d="M3 20v-2a6 6 0 0 1 12 0v2M17 11h5m-2.5-2.5v5"
-                        /></svg
-                      ><span>พนักงานและสิทธิ์</span></a
-                    >
-                  }
-                </div>
-                @if (selected.role === "owner" || selected.role === "manager") {
-                  <div class="portal-nav-group">
-                    <span class="portal-nav-caption">รับชำระเงิน</span>
-                    <a
-                      [routerLink]="[
-                        '/payments/receiver',
-                        selected.tenantId,
-                        selected.storeId,
-                      ]"
-                      routerLinkActive="active"
-                      >บัญชีพร้อมเพย์ของร้าน</a
-                    >
-                    <a
-                      [routerLink]="[
-                        '/payments',
-                        selected.tenantId,
-                        selected.storeId,
-                      ]"
-                      routerLinkActive="active"
-                      >ตรวจสอบสลิป</a
-                    >
-                    <a
-                      [routerLink]="[
-                        '/payments/finance',
-                        selected.tenantId,
-                        selected.storeId,
-                      ]"
-                      routerLinkActive="active"
-                      >รายงานรับเงินและคืนเงิน</a
-                    >
-                  </div>
-                }
-              }
-              @if (
-                session.platformRole() === "super_admin" ||
-                session.platformRole() === "admin"
-              ) {
-                <div class="portal-nav-group">
-                  <span class="portal-nav-caption">ผู้ดูแลระบบ</span>
-                  <a routerLink="/platform" routerLinkActive="active">
-                    <span>จัดการผู้ใช้งาน</span>
-                  </a>
-                </div>
-              }
-              @if (canSetUp()) {
-                <div class="portal-nav-group">
-                  <span class="portal-nav-caption">ตั้งค่า</span>
-                  <a routerLink="/settings" routerLinkActive="active"
-                    ><svg
-                      class="portal-nav-svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <circle cx="12" cy="12" r="3" />
-                      <path
-                        d="M12 2v3m0 14v3M2 12h3m14 0h3M4.9 4.9 7 7m10 10 2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"
-                      /></svg
-                    ><span>ตั้งค่าร้าน</span></a
-                  >
-                </div>
-              }
-            </nav>
-            <p class="portal-nav-hint">เมนูแสดงตามสิทธิ์ที่ได้รับจากระบบ</p>
+    <div class="flex min-h-dvh min-w-0 flex-col bg-background font-sans text-foreground">
+      <a
+        href="#main"
+        class="sr-only fixed left-4 top-4 z-50 rounded-lg bg-card px-4 py-3 text-foreground shadow-lg focus:not-sr-only"
+      >ข้ามไปเนื้อหาหลัก</a>
+
+      @if (!guestMenu()) {
+        <header class="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 sm:px-6 lg:px-8">
+          <div class="flex min-w-0 items-center gap-3">
+            @if (staffWorkspace()) {
+              <button
+                hlmBtn
+                type="button"
+                variant="outline"
+                size="icon-lg"
+                class="min-h-11 min-w-11 lg:hidden"
+                aria-label="เปิดเมนูจัดการร้าน"
+                aria-controls="portal-mobile-navigation"
+                [attr.aria-expanded]="mobileNavOpen()"
+                (click)="toggleMobileNav()"
+              >
+                <span aria-hidden="true" class="text-xl leading-none">☰</span>
+              </button>
+            }
+            <a routerLink="/" aria-label="RCAT POS หน้าแรก" class="flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+              <img src="/rcat-pos-logo.webp" alt="" width="44" height="44" class="size-11 shrink-0 rounded-xl object-contain" />
+              <span class="grid min-w-0 gap-0.5">
+                <strong class="text-base font-semibold tracking-tight sm:text-lg">RCAT POS</strong>
+                <span class="hidden text-xs leading-4 text-muted-foreground sm:block">Ordering & Store Management</span>
+              </span>
+            </a>
+          </div>
+          <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+            @if (guestOrder()) {
+              <a routerLink="/order/track" class="inline-flex min-h-11 items-center justify-center rounded-xl px-3 text-sm font-semibold text-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                ติดตามออเดอร์
+              </a>
+            } @else if (staffWorkspace()) {
+              <span class="hidden text-sm text-muted-foreground md:inline">พื้นที่จัดการร้านค้า</span>
+              <button
+                hlmBtn
+                type="button"
+                variant="outline"
+                class="min-h-11 rounded-xl"
+                [disabled]="loggingOut()"
+                (click)="logout()"
+              >{{ loggingOut() ? "กำลังออกจากระบบ..." : "ออกจากระบบ" }}</button>
+            } @else {
+              <span class="hidden text-sm text-muted-foreground sm:inline">ระบบสั่งอาหารผ่าน QR</span>
+            }
+          </div>
+        </header>
+      }
+
+      <div [class]="staffWorkspace() ? 'grid min-w-0 flex-1 lg:grid-cols-[260px_minmax(0,1fr)]' : 'min-w-0 flex-1'">
+        @if (staffWorkspace()) {
+          <aside class="hidden min-w-0 border-r border-border bg-card p-4 lg:block" aria-label="พื้นที่ทำงาน">
+            <rcat-portal-workspace-nav [url]="url()" />
           </aside>
+          <hlm-sheet
+            side="left"
+            [state]="mobileNavOpen() ? 'open' : 'closed'"
+            (stateChanged)="mobileNavOpen.set($event === 'open')"
+          >
+            <hlm-sheet-content
+              *hlmSheetPortal
+              id="portal-mobile-navigation"
+              class="flex h-dvh w-[min(90vw,360px)] flex-col overflow-hidden border-r border-border bg-card p-0 text-foreground shadow-xl lg:hidden"
+              [showCloseButton]="true"
+              closeLabel="ปิดเมนู"
+            >
+              <hlm-sheet-header class="border-b border-border px-5 py-5">
+                <h2 hlmSheetTitle>เมนูจัดการร้าน</h2>
+              </hlm-sheet-header>
+              <div class="min-h-0 flex-1 overflow-y-auto px-3 py-4">
+                <rcat-portal-workspace-nav [url]="url()" />
+              </div>
+            </hlm-sheet-content>
+          </hlm-sheet>
         }
-        <main id="main" tabindex="-1">
+        <main
+          id="main"
+          tabindex="-1"
+          [class]="staffWorkspace() ? 'min-w-0 w-full max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8' : 'min-w-0 w-full'"
+        >
           @if (session.notice()) {
-            <p class="portal-session-notice" role="status">
+            <p class="mb-4 rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground" role="status">
               {{ session.notice() }}
             </p>
           }
           @if (message()) {
-            <p class="portal-session-notice portal-session-error" role="alert">
+            <p class="mb-4 rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm text-destructive" role="alert">
               {{ message() }}
             </p>
           }
           <router-outlet />
         </main>
       </div>
-      <footer class="portal-footer">
+
+      <footer class="border-t border-border bg-card px-4 py-4 text-center text-xs leading-5 text-muted-foreground">
         RCAT POS · สั่งอาหารผ่าน QR · ชำระเงินกับร้านค้าที่เปิดรับพร้อมเพย์
       </footer>
     </div>
@@ -352,25 +170,10 @@ export class AppComponent {
   readonly loggingOut = signal(false);
   readonly mobileNavOpen = signal(false);
   readonly message = signal("");
-  readonly guestOrder = computed(() =>
-    /^\/order(?:\/|\?|#|$)/.test(this.url()),
-  );
-  readonly guestMenu = computed(() => /^\/order(?:\?|#|$)/.test(this.url()));
-  readonly store = computed(() => {
-    const segments = this.url().split(/[/?#]/);
-    return (
-      this.session.stores().find((item) => segments.includes(item.storeId)) ??
-      this.session.stores().find((item) => segments.includes(item.tenantId)) ??
-      this.session.stores()[0]
-    );
-  });
-  readonly dailyMenu = [{ path: "orders", label: "ออเดอร์" }];
-  readonly manageMenu = [
-    { path: "tables", label: "โต๊ะและ QR" },
-    { path: "catalog", label: "เมนูและราคา" },
-    { path: "inventory", label: "สต็อกและวัตถุดิบ" },
-    { path: "reports", label: "รายงาน" },
-  ];
+  readonly guestOrder = computed(() => /^\\/order(?:\\/|\\?|#|$)/.test(this.url()));
+  readonly guestMenu = computed(() => /^\\/order(?:\\?|#|$)/.test(this.url()));
+  readonly staffWorkspace = computed(() => this.session.phase() === "staff" && !this.guestOrder());
+
   constructor() {
     this.router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
       if (event instanceof NavigationEnd) {
@@ -380,40 +183,18 @@ export class AppComponent {
     });
     void this.session.ensure();
   }
-  allowed(kind: string): boolean {
-    const store = this.store();
-    return (
-      !!store &&
-      permitsRoute(this.session.stores(), kind, store.tenantId, store.storeId)
-    );
-  }
-  canSetUp(): boolean {
-    return (
-      this.session.platformRole() === "super_admin" ||
-      this.session.platformRole() === "admin" ||
-      this.session.stores().some((store) => store.role === "owner")
-    );
-  }
+
   toggleMobileNav(): void {
     this.mobileNavOpen.update((open) => !open);
   }
-  changeStore(event: Event): void {
-    const store = this.session
-      .stores()
-      .find(
-        (item) =>
-          item.tenantId + "|" + item.storeId ===
-          (event.target as HTMLSelectElement).value,
-      );
-    if (store)
-      void this.router.navigate(["/orders", store.tenantId, store.storeId]);
-  }
+
   async logout(): Promise<void> {
     if (this.loggingOut()) return;
     this.loggingOut.set(true);
     this.message.set("");
     try {
       await this.session.logout();
+      this.mobileNavOpen.set(false);
       await this.router.navigateByUrl("/");
     } catch {
       this.message.set("ออกจากระบบไม่สำเร็จ กรุณาลองอีกครั้ง");
