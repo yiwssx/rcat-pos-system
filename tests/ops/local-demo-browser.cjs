@@ -252,7 +252,12 @@ async function main() {
     await staticPage.getByRole('button', { name: 'ดูตะกร้า' }).click();
     // CDK dialog accessibility container is zero-sized by design.
     // Verify its accessible title and the actual visible Spartan Sheet surface.
-    assert.equal(await staticPage.getByRole('dialog', { name: 'ตะกร้าของฉัน' }).count(), 1);
+    const cartDialogHost = staticPage.locator('cdk-dialog-container[role="dialog"]');
+    await cartDialogHost.waitFor({ state: 'attached' });
+    const cartTitleId = await cartDialogHost.getAttribute('aria-labelledby');
+    assert.ok(cartTitleId, 'Spartan cart must retain an accessible title relationship');
+    assert.equal((await staticPage.locator('[id="' + cartTitleId + '"]').textContent()).trim(),
+      'ตะกร้าของฉัน', 'CDK dialog must reference the real Thai cart title');
     const cartSurface = staticPage.locator('hlm-sheet-content[data-slot="sheet-content"]')
       .filter({ has: staticPage.getByText('ตะกร้าของฉัน', { exact: true }) });
     await cartSurface.waitFor({ state: 'visible' });
