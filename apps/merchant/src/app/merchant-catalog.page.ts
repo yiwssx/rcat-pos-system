@@ -9,6 +9,10 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmInput } from "@spartan-ng/helm/input";
+import { HlmLabel } from "@spartan-ng/helm/label";
+import { HlmBadge } from "@spartan-ng/helm/badge";
 import { prepareProductWebp } from "./prepare-product-webp";
 import { MerchantOrderApi } from "./merchant-order.api";
 import { CATALOG_PAGE_SIZE, parseDeltaBaht } from "./catalog-list";
@@ -38,7 +42,7 @@ function bahtInput(satang: number): string {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, HlmButton, HlmInput, HlmLabel, HlmBadge],
   styleUrls: ["./merchant-catalog.css"],
   template: `
     <section class="catalog-shell" aria-labelledby="catalog-title">
@@ -389,7 +393,9 @@ function bahtInput(satang: number): string {
               @if (!product.archivedAt) {
                 <button
                   type="button"
-                  class="subtle catalog-editor-toggle"
+                  hlmBtn
+                  variant="outline"
+                  class="min-h-11 w-fit"
                   [disabled]="saving()"
                   (click)="toggleModifierEditor(product)"
                 >
@@ -400,12 +406,19 @@ function bahtInput(satang: number): string {
                   }}
                 </button>
                 @if (modifierProductId() === product.id) {
-                  <section class="catalog-edit catalog-modifier-panel">
-                    <h4>ตัวเลือกเพิ่มเติมของ {{ product.name }}</h4>
-                    <form class="catalog-edit" (ngSubmit)="addGroup(product)">
-                      <h5>เพิ่มกลุ่มตัวเลือก</h5>
-                      <label for="new-group-name">ชื่อกลุ่ม</label>
-                      <input
+                  <section class="catalog-modifier-panel grid gap-4 rounded-2xl border border-border bg-card p-4 md:p-6">
+                    <h4 class="text-lg font-semibold text-foreground">
+                      ตัวเลือกเพิ่มเติมของ {{ product.name }}
+                    </h4>
+                    <p class="text-sm leading-6 text-muted-foreground">
+                      กำหนดแยกเฉพาะเมนูนี้ เช่น ระดับความหวาน (เลือก 1 อย่าง)
+                      หรือเพิ่มท็อปปิ้งราคา +10 บาท (เลือกได้หลายอย่าง)
+                      โดยไม่กระทบตัวเลือกของเมนูอื่น
+                    </p>
+                    <form class="grid min-w-0 gap-3 rounded-xl border border-border bg-card p-4" (ngSubmit)="addGroup(product)">
+                      <h5 class="font-semibold text-foreground">เพิ่มกลุ่มตัวเลือก</h5>
+                      <label hlmLabel for="new-group-name">ชื่อกลุ่ม</label>
+                      <input hlmInput
                         id="new-group-name"
                         name="newGroupName"
                         [(ngModel)]="newGroup.name"
@@ -413,8 +426,8 @@ function bahtInput(satang: number): string {
                         maxlength="120"
                         [disabled]="saving()"
                       />
-                      <label for="new-group-slug">รหัสกลุ่ม</label>
-                      <input
+                      <label hlmLabel for="new-group-slug">รหัสกลุ่ม</label>
+                      <input hlmInput
                         id="new-group-slug"
                         name="newGroupSlug"
                         [(ngModel)]="newGroup.slug"
@@ -423,8 +436,8 @@ function bahtInput(satang: number): string {
                         maxlength="48"
                         [disabled]="saving()"
                       />
-                      <label for="new-group-min">เลือกขั้นต่ำ</label>
-                      <input
+                      <label hlmLabel for="new-group-min">เลือกขั้นต่ำ</label>
+                      <input hlmInput
                         id="new-group-min"
                         name="newGroupMin"
                         type="number"
@@ -433,8 +446,8 @@ function bahtInput(satang: number): string {
                         [(ngModel)]="newGroup.minSelect"
                         [disabled]="saving()"
                       />
-                      <label for="new-group-max">เลือกสูงสุด</label>
-                      <input
+                      <label hlmLabel for="new-group-max">เลือกสูงสุด</label>
+                      <input hlmInput
                         id="new-group-max"
                         name="newGroupMax"
                         type="number"
@@ -443,21 +456,26 @@ function bahtInput(satang: number): string {
                         [(ngModel)]="newGroup.maxSelect"
                         [disabled]="saving()"
                       />
-                      <button type="submit" [disabled]="saving()">
+                      <button hlmBtn type="submit" class="min-h-11" [disabled]="saving()">
                         เพิ่มกลุ่ม
                       </button>
                     </form>
                     @for (group of groupsFor(product.id); track group.id) {
-                      <div class="catalog-editor-item">
-                        <div class="catalog-toolbar">
-                          <h5>
-                            {{ group.name }} · เลือก {{ group.minSelect }}–{{
-                              group.maxSelect
-                            }}
+                      <div class="grid min-w-0 gap-3 border-t border-border pt-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                          <h5 class="font-semibold text-foreground">
+                            {{ group.name }}
+                            <span hlmBadge variant="secondary" class="ms-2">
+                              {{ group.maxSelect === 1 ? "เลือกอย่างเดียว" : "เลือกได้หลายอย่าง" }}
+                            </span>
+                            <span class="text-sm font-normal text-muted-foreground">
+                              {{ group.minSelect === 0 ? "ไม่บังคับ" : "ต้องเลือก" }}
+                              · จำนวน {{ group.minSelect }}–{{ group.maxSelect }}
+                            </span>
                           </h5>
                           <button
                             type="button"
-                            class="subtle"
+                            hlmBtn variant="outline" class="min-h-11"
                             [disabled]="saving()"
                             (click)="beginGroupEdit(group)"
                           >
@@ -466,11 +484,11 @@ function bahtInput(satang: number): string {
                         </div>
                         @if (groupEditId() === group.id) {
                           <form
-                            class="catalog-edit"
+                            class="grid min-w-0 gap-3 rounded-xl border border-border bg-card p-4"
                             (ngSubmit)="saveGroupEdit(product)"
                           >
-                            <label for="group-edit-name">ชื่อกลุ่ม</label>
-                            <input
+                            <label hlmLabel for="group-edit-name">ชื่อกลุ่ม</label>
+                            <input hlmInput
                               id="group-edit-name"
                               name="groupEditName"
                               [(ngModel)]="groupEdit.name"
@@ -478,8 +496,8 @@ function bahtInput(satang: number): string {
                               maxlength="120"
                               [disabled]="saving()"
                             />
-                            <label for="group-edit-slug">รหัสกลุ่ม</label>
-                            <input
+                            <label hlmLabel for="group-edit-slug">รหัสกลุ่ม</label>
+                            <input hlmInput
                               id="group-edit-slug"
                               name="groupEditSlug"
                               [(ngModel)]="groupEdit.slug"
@@ -488,8 +506,8 @@ function bahtInput(satang: number): string {
                               pattern="[a-z0-9]+(-[a-z0-9]+)*"
                               [disabled]="saving()"
                             />
-                            <label for="group-edit-min">เลือกขั้นต่ำ</label>
-                            <input
+                            <label hlmLabel for="group-edit-min">เลือกขั้นต่ำ</label>
+                            <input hlmInput
                               id="group-edit-min"
                               name="groupEditMin"
                               type="number"
@@ -498,8 +516,8 @@ function bahtInput(satang: number): string {
                               [(ngModel)]="groupEdit.minSelect"
                               [disabled]="saving()"
                             />
-                            <label for="group-edit-max">เลือกสูงสุด</label>
-                            <input
+                            <label hlmLabel for="group-edit-max">เลือกสูงสุด</label>
+                            <input hlmInput
                               id="group-edit-max"
                               name="groupEditMax"
                               type="number"
@@ -508,13 +526,13 @@ function bahtInput(satang: number): string {
                               [(ngModel)]="groupEdit.maxSelect"
                               [disabled]="saving()"
                             />
-                            <div class="catalog-actions">
-                              <button type="submit" [disabled]="saving()">
+                            <div class="flex flex-wrap gap-2">
+                              <button hlmBtn type="submit" class="min-h-11" [disabled]="saving()">
                                 บันทึกกลุ่ม
                               </button>
                               <button
                                 type="button"
-                                class="subtle"
+                                hlmBtn variant="outline" class="min-h-11"
                                 [disabled]="saving()"
                                 (click)="groupEditId.set(null)"
                               >
@@ -524,17 +542,15 @@ function bahtInput(satang: number): string {
                           </form>
                         }
                         @for (option of optionsFor(group.id); track option.id) {
-                          <div class="catalog-modifier-option">
-                            <span
-                              >{{ option.name }} ·
-                              {{ money(option.priceDeltaSatang) }} บาท ·
-                              {{
-                                option.available ? "เปิดขาย" : "ปิดขาย"
-                              }}</span
-                            >
+                          <div class="flex min-w-0 flex-wrap items-center justify-between gap-3 border-t border-border py-3">
+                            <span class="text-sm text-foreground">
+                              {{ option.name }} ·
+                              {{ option.priceDeltaSatang > 0 ? "+" : "" }}{{ money(option.priceDeltaSatang) }} บาท ·
+                              {{ option.available ? "เปิดให้เลือก" : "ปิดให้เลือก" }}
+                            </span>
                             <button
                               type="button"
-                              class="subtle"
+                              hlmBtn variant="outline" class="min-h-11"
                               [disabled]="saving()"
                               (click)="beginOptionEdit(option)"
                             >
@@ -542,13 +558,13 @@ function bahtInput(satang: number): string {
                             </button>
                             @if (optionEditId() === option.id) {
                               <form
-                                class="catalog-edit"
+                                class="grid min-w-0 gap-3 rounded-xl border border-border bg-card p-4"
                                 (ngSubmit)="saveOptionEdit(product)"
                               >
-                                <label for="option-edit-name"
+                                <label hlmLabel for="option-edit-name"
                                   >ชื่อตัวเลือก</label
                                 >
-                                <input
+                                <input hlmInput
                                   id="option-edit-name"
                                   name="optionEditName"
                                   [(ngModel)]="optionEdit.name"
@@ -556,10 +572,10 @@ function bahtInput(satang: number): string {
                                   required
                                   [disabled]="saving()"
                                 />
-                                <label for="option-edit-price"
+                                <label hlmLabel for="option-edit-price"
                                   >ราคาเพิ่ม/ลด (บาท)</label
                                 >
-                                <input
+                                <input hlmInput
                                   id="option-edit-price"
                                   name="optionEditPrice"
                                   [(ngModel)]="optionEdit.priceDeltaBaht"
@@ -567,8 +583,9 @@ function bahtInput(satang: number): string {
                                   inputmode="decimal"
                                   [disabled]="saving()"
                                 />
-                                <label>
+                                <label hlmLabel class="flex items-center gap-2">
                                   <input
+                                    class="size-5 accent-primary"
                                     type="checkbox"
                                     name="optionEditAvailable"
                                     [(ngModel)]="optionEdit.available"
@@ -576,13 +593,13 @@ function bahtInput(satang: number): string {
                                   />
                                   เปิดให้เลือก
                                 </label>
-                                <div class="catalog-actions">
-                                  <button type="submit" [disabled]="saving()">
+                                <div class="flex flex-wrap gap-2">
+                                  <button hlmBtn type="submit" class="min-h-11" [disabled]="saving()">
                                     บันทึกตัวเลือก
                                   </button>
                                   <button
                                     type="button"
-                                    class="subtle"
+                                    hlmBtn variant="outline" class="min-h-11"
                                     [disabled]="saving()"
                                     (click)="optionEditId.set(null)"
                                   >
@@ -595,7 +612,7 @@ function bahtInput(satang: number): string {
                         }
                         <button
                           type="button"
-                          class="subtle"
+                          hlmBtn variant="outline" class="min-h-11"
                           [disabled]="saving()"
                           [attr.aria-expanded]="newOptionGroupId() === group.id"
                           [attr.aria-controls]="'new-option-form-' + group.id"
@@ -610,13 +627,13 @@ function bahtInput(satang: number): string {
                         @if (newOptionGroupId() === group.id) {
                           @if (newOptionDrafts[group.id]; as draft) {
                             <form
-                              class="catalog-edit"
+                              class="grid min-w-0 gap-3 rounded-xl border border-border bg-card p-4"
                               [attr.id]="'new-option-form-' + group.id"
                               (ngSubmit)="addOption(product, group)"
                             >
-                              <h5>เพิ่มตัวเลือกใน {{ group.name }}</h5>
-                              <label for="new-option-name">ชื่อตัวเลือก</label>
-                              <input
+                              <h5 class="font-semibold text-foreground">เพิ่มตัวเลือกใน {{ group.name }}</h5>
+                              <label hlmLabel for="new-option-name">ชื่อตัวเลือก</label>
+                              <input hlmInput
                                 id="new-option-name"
                                 name="newOptionName"
                                 [(ngModel)]="draft.name"
@@ -624,10 +641,10 @@ function bahtInput(satang: number): string {
                                 required
                                 [disabled]="saving()"
                               />
-                              <label for="new-option-price"
+                              <label hlmLabel for="new-option-price"
                                 >ราคาเพิ่ม/ลด (บาท)</label
                               >
-                              <input
+                              <input hlmInput
                                 id="new-option-price"
                                 name="newOptionPrice"
                                 [(ngModel)]="draft.priceDeltaBaht"
@@ -635,7 +652,7 @@ function bahtInput(satang: number): string {
                                 inputmode="decimal"
                                 [disabled]="saving()"
                               />
-                              <button type="submit" [disabled]="saving()">
+                              <button hlmBtn type="submit" class="min-h-11" [disabled]="saving()">
                                 บันทึกตัวเลือกใหม่
                               </button>
                             </form>
@@ -643,7 +660,9 @@ function bahtInput(satang: number): string {
                         }
                       </div>
                     } @empty {
-                      <p>ยังไม่มีกลุ่มตัวเลือก</p>
+                      <p class="text-sm text-muted-foreground">
+                        เมนูนี้ยังไม่มี Additional ลูกค้าจะสั่งโดยไม่ต้องเลือกตัวเลือกเพิ่มเติม
+                      </p>
                     }
                   </section>
                 }
