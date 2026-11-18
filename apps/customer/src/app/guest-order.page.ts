@@ -32,6 +32,9 @@ import {
   selectedOptionError,
 } from "./guest-order.domain";
 import { GuestOrderApi, GuestOrderSession } from "./guest-order.api";
+import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmInput } from "@spartan-ng/helm/input";
+import { GuestModifierChoicesComponent } from "./guest-modifier-choices.component";
 
 function guestError(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
@@ -60,7 +63,7 @@ function guestError(error: unknown): string {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, HlmButton, HlmInput, GuestModifierChoicesComponent],
   styleUrls: ["./guest-order.css", "./guest-order-ios.css"],
   template: `
     <section class="guest-shell v6-guest-shop" aria-labelledby="guest-title">
@@ -202,6 +205,8 @@ function guestError(error: unknown): string {
             <label class="guest-search">
               <span class="guest-field-title">ค้นหาเมนู</span>
               <input
+                hlmInput
+                class="min-h-11"
                 id="guest-menu-search"
                 type="search"
                 autocomplete="off"
@@ -359,7 +364,10 @@ function guestError(error: unknown): string {
               <h2 id="guest-detail-title">{{ product.name }}</h2>
             </div>
             <button
-              class="guest-sheet-close"
+              hlmBtn
+              variant="ghost"
+              size="icon-lg"
+              class="min-h-11 min-w-11"
               type="button"
               aria-label="ปิดรายละเอียดสินค้า"
               (click)="closeProduct()"
@@ -386,48 +394,14 @@ function guestError(error: unknown): string {
               <strong>{{ money(product.priceSatang) }} ฿</strong>
             </div>
             @for (group of groups(product.id); track group.id) {
-              <fieldset class="guest-options">
-                <legend>
-                  {{ group.name }}
-                  <span>{{ modifierGroupHint(group) }}</span>
-                </legend>
-                @if (options(group.id).length < group.minSelect) {
-                  <p class="guest-warning">
-                    ตัวเลือกไม่เพียงพอ กรุณาแจ้งร้านค้า
-                  </p>
-                }
-                @if (group.maxSelect === 1 && group.minSelect === 0) {
-                  <label class="guest-option">
-                    <input
-                      type="radio"
-                      [name]="'modifier-' + group.id"
-                      [checked]="!hasGroupSelection(product.id, group)"
-                      [disabled]="busy()"
-                      (change)="clearOptionGroup(product.id, group)"
-                    />
-                    <span>ไม่เพิ่มตัวเลือก</span>
-                    <span class="guest-option-price">+0.00 ฿</span>
-                  </label>
-                }
-                @for (choice of options(group.id); track choice.id) {
-                  <label class="guest-option">
-                    <input
-                      [type]="group.maxSelect === 1 ? 'radio' : 'checkbox'"
-                      [name]="'modifier-' + group.id"
-                      [checked]="isSelected(product.id, choice.id)"
-                      [disabled]="
-                        busy() || optionDisabled(product.id, group, choice.id)
-                      "
-                      (change)="toggleOption(product.id, group, choice.id)"
-                    />
-                    <span>{{ choice.name }}</span>
-                    <span class="guest-option-price">
-                      {{ choice.priceDeltaSatang > 0 ? "+" : ""
-                      }}{{ moneySigned(choice.priceDeltaSatang) }} ฿
-                    </span>
-                  </label>
-                }
-              </fieldset>
+              <rcat-guest-modifier-choices
+                [group]="group"
+                [choices]="options(group.id)"
+                [selectedIds]="selected()[product.id] ?? []"
+                [busy]="busy()"
+                (clear)="clearOptionGroup(product.id, group)"
+                (optionToggle)="toggleOption(product.id, group, $event)"
+              />
             }
             <label class="guest-item-note">
               <span>หมายเหตุสำหรับเมนูนี้ (ไม่บังคับ)</span>
@@ -469,7 +443,8 @@ function guestError(error: unknown): string {
               </div>
             </div>
             <button
-              class="guest-sheet-primary"
+              hlmBtn
+              class="min-h-12 w-full text-base font-semibold"
               type="button"
               [disabled]="busy()"
               (click)="addDetailProduct(product)"
@@ -494,7 +469,10 @@ function guestError(error: unknown): string {
             <span class="guest-cart-subtitle">{{ cartQty() }} รายการ</span>
           </div>
           <button
-            class="guest-sheet-close"
+            hlmBtn
+            variant="ghost"
+            size="icon-lg"
+            class="min-h-11 min-w-11"
             type="button"
             aria-label="ปิดตะกร้า"
             (click)="closeCart()"
@@ -553,6 +531,8 @@ function guestError(error: unknown): string {
               ชื่อผู้สั่ง <span aria-hidden="true">*</span>
             </label>
             <input
+              hlmInput
+              class="min-h-11"
               id="guest-ordered-by"
               type="text"
               autocomplete="nickname"
@@ -567,6 +547,8 @@ function guestError(error: unknown): string {
               สถานที่รับ/ส่ง <span aria-hidden="true">*</span>
             </label>
             <input
+              hlmInput
+              class="min-h-11"
               id="guest-deliver-to"
               type="text"
               required
@@ -594,7 +576,8 @@ function guestError(error: unknown): string {
             <strong>{{ money(estimate()) }} ฿</strong>
           </div>
           <button
-            class="guest-checkout guest-sheet-primary"
+            hlmBtn
+            class="min-h-12 w-full text-base font-semibold"
             type="button"
             [disabled]="busy() || loading() || !online() || cartQty() === 0"
             (click)="checkout()"
@@ -977,38 +960,6 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     return optionIds
       .map((id) => options.find((x) => x.id === id)?.name ?? "ตัวเลือก")
       .join(" · ");
-  }
-  moneySigned(value: number): string {
-    return value < 0 ? "-" + formatSatang(-value) : formatSatang(value);
-  }
-  isSelected(productId: string, optionId: string): boolean {
-    return (this.selected()[productId] ?? []).includes(optionId);
-  }
-  optionDisabled(
-    productId: string,
-    group: GuestModifierGroup,
-    optionId: string,
-  ): boolean {
-    const ids = this.selected()[productId] ?? [];
-    if (group.maxSelect === 1) return false; // Radios must remain switchable.
-    return (
-      !ids.includes(optionId) &&
-      ids.filter((id) =>
-        this.options(group.id).some((option) => option.id === id),
-      ).length >= group.maxSelect
-    );
-  }
-  modifierGroupHint(group: GuestModifierGroup): string {
-    if (group.maxSelect === 1) {
-      return group.minSelect === 1
-        ? "จำเป็น · เลือก 1"
-        : "ไม่จำเป็น · เลือกได้ 1";
-    }
-    return `เลือก ${group.minSelect}–${group.maxSelect}`;
-  }
-  hasGroupSelection(productId: string, group: GuestModifierGroup): boolean {
-    const options = new Set(this.options(group.id).map((option) => option.id));
-    return (this.selected()[productId] ?? []).some((id) => options.has(id));
   }
   private updateOptionGroup(
     productId: string,

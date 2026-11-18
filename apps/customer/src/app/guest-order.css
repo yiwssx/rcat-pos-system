@@ -145,53 +145,6 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.guest-options {
-  margin: 0.7rem 0;
-  border: 0;
-  border-top: 1px solid #ecf0f6;
-  padding: 0.9rem 0 0;
-  min-width: 0;
-}
-.guest-options legend {
-  color: #304b64;
-  font-weight: 800;
-  padding-right: 0.5rem;
-  font-size: 0.92rem;
-}
-.guest-options legend span {
-  color: #68788e;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-.guest-option {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0.6rem 0.2rem;
-  min-height: 44px;
-  cursor: pointer;
-  line-height: 1.5;
-  font-size: 0.9rem;
-}
-.guest-option input {
-  flex: none;
-  width: 20px;
-  height: 20px;
-  accent-color: #bd7120;
-}
-.guest-option span:nth-of-type(1) {
-  overflow-wrap: anywhere;
-}
-.guest-option-price {
-  color: #526883;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  margin-left: auto;
-}
-.guest-option:has(input:disabled) {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 .guest-product-actions {
   display: flex;
   justify-content: flex-end;
@@ -306,10 +259,6 @@
 .guest-cart-summary strong {
   font-size: 1.55rem;
   font-variant-numeric: tabular-nums;
-}
-.guest-checkout {
-  width: 100%;
-  min-height: 52px;
 }
 .guest-privacy {
   color: #6b788d;
@@ -895,16 +844,6 @@
   font-size: 0.75rem;
   margin-bottom: 0.35rem;
 }
-.guest-search input {
-  background: #fff;
-  border: 1px solid #e5e8ed;
-  border-radius: 0.95rem;
-  min-height: 50px;
-  padding: 0.65rem 0.95rem 0.65rem 2.75rem;
-  font-size: 1rem;
-  font-weight: 500;
-  box-shadow: 0 3px 12px rgb(20 30 44 / 3%);
-}
 .guest-search::before {
   content: "⌕";
   position: absolute;
@@ -1164,18 +1103,6 @@
   font-weight: 850;
   line-height: 1.35;
 }
-.guest-sheet-close {
-  flex: 0 0 44px;
-  min-width: 44px;
-  min-height: 44px;
-  border: none;
-  border-radius: 50%;
-  background: #f1f3f6;
-  color: #465466;
-  font-size: 1.05rem;
-  font-weight: 800;
-  cursor: pointer;
-}
 .guest-sheet-scroll {
   flex: 1 1 auto;
   min-height: 0;
@@ -1214,28 +1141,6 @@
   font-size: 1.12rem;
   white-space: nowrap;
 }
-.guest-sheet .guest-options {
-  margin: 0.85rem 0 0;
-  padding: 0.9rem 0 0;
-}
-.guest-sheet .guest-options legend {
-  font-size: 0.96rem;
-  color: #253142;
-}
-.guest-sheet .guest-options legend span {
-  display: inline-block;
-  margin-left: 0.4rem;
-  font-weight: 500;
-  color: #708092;
-}
-.guest-sheet .guest-option {
-  border-bottom: 1px solid #f0f2f5;
-  min-height: 52px;
-  padding: 0.65rem 0.1rem;
-}
-.guest-sheet .guest-option-price {
-  font-size: 0.85rem;
-}
 .guest-sheet-footer {
   flex: 0 0 auto;
   padding: 0.85rem 1.4rem calc(0.95rem + env(safe-area-inset-bottom, 0px));
@@ -1264,27 +1169,6 @@
   background: #f3f5f7;
   border-color: #e5e8ed;
   color: #344255;
-}
-.guest-sheet-primary {
-  width: 100%;
-  min-height: 54px;
-  border: 0;
-  border-radius: 0.9rem;
-  background: #b7511e;
-  color: #fff;
-  padding: 0.75rem 1rem;
-  font: inherit;
-  font-size: 1rem;
-  font-weight: 800;
-  text-align: center;
-  cursor: pointer;
-}
-.guest-sheet-primary:hover:not(:disabled) {
-  background: #983f19;
-}
-.guest-sheet-primary:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 .guest-cart-subtitle {
   color: #788698;
@@ -1469,13 +1353,6 @@
   font-size: 0.85rem;
   line-height: 1.6;
 }
-.guest-sheet .guest-options legend span,
-.guest-sheet .guest-option-price {
-  font-size: 0.88rem;
-}
-.guest-sheet .guest-option {
-  line-height: 1.5;
-}
 @media (max-width: 460px) {
   .guest-product {
     min-height: 116px;
@@ -1612,18 +1489,6 @@
 .guest-search {
   gap: 0.35rem;
 }
-.guest-search input {
-  min-height: 52px;
-  background: #fff;
-  border: 1px solid #e1e6e6;
-  border-radius: 15px;
-  padding-inline: 1rem;
-  color: #213138;
-  box-shadow: 0 4px 12px rgb(24 37 42 / 3%);
-}
-.guest-search input::placeholder {
-  color: #8b989e;
-}
 .guest-categories {
   gap: 0.5rem;
   margin-bottom: 1.1rem;
@@ -1717,10 +1582,6 @@
 .guest-sheet {
   border-radius: 24px 24px 0 0;
 }
-.guest-sheet-primary {
-  border-radius: 13px;
-  background: #b94d1b;
-}
 .guest-closed {
   border-radius: 22px;
 }
@@ -1759,22 +1620,6 @@
     border-radius: 12px;
     box-shadow: none;
   }
-}
-
-/* Selected modifiers remain legible without relying on the radio/checkbox alone. */
-.guest-product-sheet .guest-option {
-  border: 1px solid transparent;
-  border-radius: 12px;
-  padding-inline: 0.65rem;
-}
-.guest-product-sheet .guest-option:has(input:checked) {
-  background: #fff4ec;
-  border-color: #ebc6b2;
-  color: #873c1b;
-}
-.guest-product-sheet .guest-option input:focus-visible {
-  outline: 3px solid #b94d1b;
-  outline-offset: 3px;
 }
 
 /* G2 Order context: keep instructions and identity inside the existing sheets. */
@@ -2004,13 +1849,6 @@
   font-size: 0.76rem;
   font-weight: 600;
 }
-.v6-guest-filters .guest-search input {
-  min-height: 44px;
-  border: 1px solid #dce3e7;
-  border-radius: 7px;
-  font-size: 0.87rem;
-  background: #f8fafb;
-}
 .v6-guest-filters .guest-categories {
   margin: 0;
   padding: 0;
@@ -2120,11 +1958,6 @@
 .guest-sheet .guest-sheet-heading {
   background: #fff;
   border-color: #e8ecee;
-}
-.guest-sheet .guest-sheet-primary {
-  background: #bb501e;
-  border-radius: 8px;
-  min-height: 48px;
 }
 .guest-sheet .guest-order-context {
   border: 1px solid #e4e9ed;
@@ -2304,12 +2137,6 @@
   border-radius: 15px;
   box-shadow: 0 9px 26px rgb(180 77 10 / 5%);
 }
-.v6-guest-filters .guest-search input {
-  background: #fffefa;
-  border-color: #e9d1b4;
-  border-radius: 10px;
-  color: #243640;
-}
 .v6-guest-filters .guest-search input:focus-visible,
 .v6-guest-filters .guest-category-chip:focus-visible,
 .v6-guest-product .guest-add:focus-visible {
@@ -2378,15 +2205,6 @@
 .guest-sheet {
   background: #fffefa;
   border-color: #f2d9b9;
-}
-.guest-sheet .guest-sheet-primary {
-  background: linear-gradient(110deg, #bd3f07, #dc5408);
-  border-color: #bd3f07;
-  color: #fff;
-  border-radius: 11px;
-}
-.guest-sheet .guest-sheet-primary:hover:not(:disabled) {
-  background: #a93505;
 }
 .guest-sheet .guest-order-context,
 .guest-item-note {
