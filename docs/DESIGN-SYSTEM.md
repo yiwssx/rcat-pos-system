@@ -1,3 +1,5 @@
+> **Current UI authority (18 Nov 2026):** [Spartan-first / iOS-inspired migration contract](SPARTAN-IOS-MIGRATION.md). Historical drafts below are retained for evidence only.
+
 # RCAT POS — Historical Design System Brief (V1–V5 superseded)
 
 > **CURRENT (14 Nov 2026):** Use [UI-V6-POS-WORKBENCH.md](UI-V6-POS-WORKBENCH.md) for all visual implementation. This document is archived for decisions/evidence only; it must not direct V6 component styling.
