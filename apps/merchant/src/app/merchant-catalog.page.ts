@@ -357,7 +357,9 @@ function bahtInput(satang: number): string {
                     <div class="catalog-media-actions">
                       <label [attr.for]="'catalog-media-' + product.id">
                         {{
-                          product.hasImage ? "เปลี่ยนรูปสินค้า" : "เพิ่มรูปสินค้า"
+                          product.hasImage
+                            ? "เปลี่ยนรูปสินค้า"
+                            : "เพิ่มรูปสินค้า"
                         }}
                       </label>
                       <input
