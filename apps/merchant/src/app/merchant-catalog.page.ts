@@ -395,7 +395,11 @@ function bahtInput(satang: number): string {
                     </p>
                     <span
                       hlmBadge
-                      [variant]="product.available && !product.archivedAt ? 'secondary' : 'outline'"
+                      [variant]="
+                        product.available && !product.archivedAt
+                          ? 'secondary'
+                          : 'outline'
+                      "
                     >
                       {{
                         product.archivedAt
