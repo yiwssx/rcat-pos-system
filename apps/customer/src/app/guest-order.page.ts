@@ -379,103 +379,109 @@ function guestError(error: unknown): string {
             class="guest-sheet guest-product-sheet mx-auto w-full max-w-2xl max-h-[min(92dvh,820px)] overflow-hidden rounded-t-3xl border border-border bg-card p-0 text-foreground shadow-xl md:max-h-[min(85dvh,820px)] md:rounded-3xl"
             [showCloseButton]="false"
           >
-        @if (activeProduct(); as product) {
-          <div class="guest-sheet-handle" aria-hidden="true"></div>
-          <header hlmSheetHeader class="guest-sheet-heading">
-            <div>
-              <span class="guest-menu-kicker">รายละเอียดอาหาร</span>
-              <h2 hlmSheetTitle id="guest-detail-title">{{ product.name }}</h2>
-            </div>
-            <button
-              hlmBtn
-              variant="ghost"
-              size="icon-lg"
-              class="min-h-11 min-w-11"
-              type="button"
-              aria-label="ปิดรายละเอียดสินค้า"
-              (click)="closeProduct()"
-            >
-              ✕
-            </button>
-          </header>
-          <div class="guest-sheet-scroll">
-            <div class="guest-detail-media">
-              @if (product.hasImage && session.visit(); as visit) {
-                <img
-                  loading="lazy"
-                  [src]="
-                    productImageUrl(visit.tenantId, visit.storeId, product.id)
-                  "
-                  [alt]="'รูปภาพเมนู ' + product.name"
-                />
-              } @else {
-                <span aria-hidden="true">🍽️</span>
-              }
-            </div>
-            <div class="guest-detail-subtitle">
-              <span>{{ categoryName(product.categoryId) }}</span>
-              <strong>{{ money(product.priceSatang) }} ฿</strong>
-            </div>
-            @for (group of groups(product.id); track group.id) {
-              <rcat-guest-modifier-choices
-                [group]="group"
-                [choices]="options(group.id)"
-                [selectedIds]="selected()[product.id] ?? []"
-                [busy]="busy()"
-                (clear)="clearOptionGroup(product.id, group)"
-                (optionToggle)="toggleOption(product.id, group, $event)"
-              />
-            }
-            <label class="guest-item-note">
-              <span>หมายเหตุสำหรับเมนูนี้ (ไม่บังคับ)</span>
-              <textarea
-                rows="2"
-                maxlength="240"
-                placeholder="เช่น ไม่ใส่ผัก แยกน้ำแข็ง"
-                [value]="detailNote()"
-                [disabled]="busy()"
-                (input)="onDetailNote($event)"
-              ></textarea>
-              <small>ส่งถึงร้านเฉพาะเมนูนี้ ไม่มีค่าใช้จ่ายเพิ่มเติม</small>
-            </label>
-            @if (detailError()) {
-              <p class="guest-warning" role="alert">{{ detailError() }}</p>
-            }
-          </div>
-          <footer hlmSheetFooter class="guest-sheet-footer">
-            <div class="guest-detail-quantity">
-              <span>จำนวน</span>
-              <div class="guest-qty">
+            @if (activeProduct(); as product) {
+              <div class="guest-sheet-handle" aria-hidden="true"></div>
+              <header hlmSheetHeader class="guest-sheet-heading">
+                <div>
+                  <span class="guest-menu-kicker">รายละเอียดอาหาร</span>
+                  <h2 hlmSheetTitle id="guest-detail-title">
+                    {{ product.name }}
+                  </h2>
+                </div>
                 <button
+                  hlmBtn
+                  variant="ghost"
+                  size="icon-lg"
+                  class="min-h-11 min-w-11"
                   type="button"
-                  aria-label="ลดจำนวน"
-                  [disabled]="detailQty() <= 1"
-                  (click)="changeDetailQty(-1)"
+                  aria-label="ปิดรายละเอียดสินค้า"
+                  (click)="closeProduct()"
                 >
-                  −
+                  ✕
                 </button>
-                <strong>{{ detailQty() }}</strong>
-                <button
-                  type="button"
-                  aria-label="เพิ่มจำนวน"
-                  [disabled]="detailQty() >= 20"
-                  (click)="changeDetailQty(1)"
-                >
-                  +
-                </button>
+              </header>
+              <div class="guest-sheet-scroll">
+                <div class="guest-detail-media">
+                  @if (product.hasImage && session.visit(); as visit) {
+                    <img
+                      loading="lazy"
+                      [src]="
+                        productImageUrl(
+                          visit.tenantId,
+                          visit.storeId,
+                          product.id
+                        )
+                      "
+                      [alt]="'รูปภาพเมนู ' + product.name"
+                    />
+                  } @else {
+                    <span aria-hidden="true">🍽️</span>
+                  }
+                </div>
+                <div class="guest-detail-subtitle">
+                  <span>{{ categoryName(product.categoryId) }}</span>
+                  <strong>{{ money(product.priceSatang) }} ฿</strong>
+                </div>
+                @for (group of groups(product.id); track group.id) {
+                  <rcat-guest-modifier-choices
+                    [group]="group"
+                    [choices]="options(group.id)"
+                    [selectedIds]="selected()[product.id] ?? []"
+                    [busy]="busy()"
+                    (clear)="clearOptionGroup(product.id, group)"
+                    (optionToggle)="toggleOption(product.id, group, $event)"
+                  />
+                }
+                <label class="guest-item-note">
+                  <span>หมายเหตุสำหรับเมนูนี้ (ไม่บังคับ)</span>
+                  <textarea
+                    rows="2"
+                    maxlength="240"
+                    placeholder="เช่น ไม่ใส่ผัก แยกน้ำแข็ง"
+                    [value]="detailNote()"
+                    [disabled]="busy()"
+                    (input)="onDetailNote($event)"
+                  ></textarea>
+                  <small>ส่งถึงร้านเฉพาะเมนูนี้ ไม่มีค่าใช้จ่ายเพิ่มเติม</small>
+                </label>
+                @if (detailError()) {
+                  <p class="guest-warning" role="alert">{{ detailError() }}</p>
+                }
               </div>
-            </div>
-            <button
-              hlmBtn
-              class="min-h-12 w-full text-base font-semibold"
-              type="button"
-              [disabled]="busy()"
-              (click)="addDetailProduct(product)"
-            >
-              เพิ่มลงตะกร้า · ประมาณ {{ money(detailEstimate(product)) }} ฿
-            </button>
-          </footer>
-        }
+              <footer hlmSheetFooter class="guest-sheet-footer">
+                <div class="guest-detail-quantity">
+                  <span>จำนวน</span>
+                  <div class="guest-qty">
+                    <button
+                      type="button"
+                      aria-label="ลดจำนวน"
+                      [disabled]="detailQty() <= 1"
+                      (click)="changeDetailQty(-1)"
+                    >
+                      −
+                    </button>
+                    <strong>{{ detailQty() }}</strong>
+                    <button
+                      type="button"
+                      aria-label="เพิ่มจำนวน"
+                      [disabled]="detailQty() >= 20"
+                      (click)="changeDetailQty(1)"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                <button
+                  hlmBtn
+                  class="min-h-12 w-full text-base font-semibold"
+                  type="button"
+                  [disabled]="busy()"
+                  (click)="addDetailProduct(product)"
+                >
+                  เพิ่มลงตะกร้า · ประมาณ {{ money(detailEstimate(product)) }} ฿
+                </button>
+              </footer>
+            }
           </hlm-sheet-content>
         </ng-template>
       </hlm-sheet>
@@ -491,134 +497,135 @@ function guestError(error: unknown): string {
             class="guest-sheet guest-cart-sheet mx-auto w-full max-w-2xl max-h-[min(92dvh,820px)] overflow-hidden rounded-t-3xl border border-border bg-card p-0 text-foreground shadow-xl md:max-h-[min(85dvh,820px)] md:rounded-3xl"
             [showCloseButton]="false"
           >
-        <div class="guest-sheet-handle" aria-hidden="true"></div>
-        <header hlmSheetHeader class="guest-sheet-heading">
-          <div>
-            <span class="guest-menu-kicker">ตรวจสอบก่อนส่ง</span>
-            <h2 hlmSheetTitle id="cart-title">ตะกร้าของฉัน</h2>
-            <span class="guest-cart-subtitle">{{ cartQty() }} รายการ</span>
-          </div>
-          <button
-            hlmBtn
-            variant="ghost"
-            size="icon-lg"
-            class="min-h-11 min-w-11"
-            type="button"
-            aria-label="ปิดตะกร้า"
-            (click)="closeCart()"
-          >
-            ✕
-          </button>
-        </header>
-        <div class="guest-sheet-scroll">
-          @if (session.cart().length === 0) {
-            <p class="guest-cart-empty">
-              ตะกร้ายังว่าง เลือกเมนูที่ชอบก่อนสั่งอาหาร
-            </p>
-          } @else {
-            <ol class="guest-cart-lines">
-              @for (line of session.cart(); track $index; let i = $index) {
-                <li>
-                  <div class="guest-cart-name">
-                    <strong>{{ productName(line.productId) }}</strong>
-                    <span>{{ selectionNames(line.optionIds) }}</span>
-                    @if (line.note) {
-                      <span class="guest-cart-note">
-                        หมายเหตุ: {{ line.note }}
-                      </span>
-                    }
-                  </div>
-                  <div class="guest-qty">
-                    <button
-                      type="button"
-                      [disabled]="busy()"
-                      [attr.aria-label]="
-                        'ลดจำนวน ' + productName(line.productId)
-                      "
-                      (click)="changeQuantity(i, -1)"
-                    >
-                      −
-                    </button>
-                    <span>{{ line.quantity }}</span>
-                    <button
-                      type="button"
-                      [disabled]="busy()"
-                      [attr.aria-label]="
-                        'เพิ่มจำนวน ' + productName(line.productId)
-                      "
-                      (click)="changeQuantity(i, 1)"
-                    >
-                      +
-                    </button>
-                  </div>
-                </li>
+            <div class="guest-sheet-handle" aria-hidden="true"></div>
+            <header hlmSheetHeader class="guest-sheet-heading">
+              <div>
+                <span class="guest-menu-kicker">ตรวจสอบก่อนส่ง</span>
+                <h2 hlmSheetTitle id="cart-title">ตะกร้าของฉัน</h2>
+                <span class="guest-cart-subtitle">{{ cartQty() }} รายการ</span>
+              </div>
+              <button
+                hlmBtn
+                variant="ghost"
+                size="icon-lg"
+                class="min-h-11 min-w-11"
+                type="button"
+                aria-label="ปิดตะกร้า"
+                (click)="closeCart()"
+              >
+                ✕
+              </button>
+            </header>
+            <div class="guest-sheet-scroll">
+              @if (session.cart().length === 0) {
+                <p class="guest-cart-empty">
+                  ตะกร้ายังว่าง เลือกเมนูที่ชอบก่อนสั่งอาหาร
+                </p>
+              } @else {
+                <ol class="guest-cart-lines">
+                  @for (line of session.cart(); track $index; let i = $index) {
+                    <li>
+                      <div class="guest-cart-name">
+                        <strong>{{ productName(line.productId) }}</strong>
+                        <span>{{ selectionNames(line.optionIds) }}</span>
+                        @if (line.note) {
+                          <span class="guest-cart-note">
+                            หมายเหตุ: {{ line.note }}
+                          </span>
+                        }
+                      </div>
+                      <div class="guest-qty">
+                        <button
+                          type="button"
+                          [disabled]="busy()"
+                          [attr.aria-label]="
+                            'ลดจำนวน ' + productName(line.productId)
+                          "
+                          (click)="changeQuantity(i, -1)"
+                        >
+                          −
+                        </button>
+                        <span>{{ line.quantity }}</span>
+                        <button
+                          type="button"
+                          [disabled]="busy()"
+                          [attr.aria-label]="
+                            'เพิ่มจำนวน ' + productName(line.productId)
+                          "
+                          (click)="changeQuantity(i, 1)"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </li>
+                  }
+                </ol>
               }
-            </ol>
-          }
-          <fieldset class="guest-order-context">
-            <legend>ข้อมูลผู้สั่งและจุดรับ/ส่ง</legend>
-            <label for="guest-ordered-by">
-              ชื่อผู้สั่ง <span aria-hidden="true">*</span>
-            </label>
-            <input
-              hlmInput
-              class="min-h-11"
-              id="guest-ordered-by"
-              type="text"
-              autocomplete="nickname"
-              required
-              maxlength="80"
-              placeholder="เช่น คุณ ก หรือชื่อเล่น"
-              [value]="orderedBy()"
-              [disabled]="busy()"
-              (input)="onOrderedBy($event)"
-            />
-            <label for="guest-deliver-to">
-              สถานที่รับ/ส่ง <span aria-hidden="true">*</span>
-            </label>
-            <input
-              hlmInput
-              class="min-h-11"
-              id="guest-deliver-to"
-              type="text"
-              required
-              maxlength="160"
-              placeholder="เช่น อาคาร ข ชั้น 2"
-              [value]="deliverTo()"
-              [disabled]="busy()"
-              (input)="onDeliverTo($event)"
-            />
-            <small>
-              ทั้งสองช่องจำเป็นต้องกรอกก่อนส่งออเดอร์ ไม่ใช่ข้อมูลชำระเงิน
-            </small>
-          </fieldset>
-          @if (notice() && cartOpen()) {
-            <p class="guest-warning" role="status">{{ notice() }}</p>
-          }
-          <p class="guest-privacy">
-            ยอดในตะกร้าเป็นประมาณการ
-            ระบบจะตรวจสอบราคาและตัวเลือกอีกครั้งก่อนส่งออเดอร์ ไม่ใช่การชำระเงิน
-          </p>
-        </div>
-        <footer hlmSheetFooter class="guest-sheet-footer">
-          <div class="guest-cart-summary">
-            <span>ยอดประมาณการ</span>
-            <strong>{{ money(estimate()) }} ฿</strong>
-          </div>
-          <button
-            hlmBtn
-            class="min-h-12 w-full text-base font-semibold"
-            type="button"
-            [disabled]="busy() || loading() || !online() || cartQty() === 0"
-            (click)="checkout()"
-          >
-            {{
-              busy()
-                ? "กำลังส่งออเดอร์ กรุณาอย่าปิดหน้า..."
-                : "ยืนยันส่งคำสั่งซื้อและดูวิธีชำระเงิน"
-            }}
-          </button>
-        </footer>
+              <fieldset class="guest-order-context">
+                <legend>ข้อมูลผู้สั่งและจุดรับ/ส่ง</legend>
+                <label for="guest-ordered-by">
+                  ชื่อผู้สั่ง <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  hlmInput
+                  class="min-h-11"
+                  id="guest-ordered-by"
+                  type="text"
+                  autocomplete="nickname"
+                  required
+                  maxlength="80"
+                  placeholder="เช่น คุณ ก หรือชื่อเล่น"
+                  [value]="orderedBy()"
+                  [disabled]="busy()"
+                  (input)="onOrderedBy($event)"
+                />
+                <label for="guest-deliver-to">
+                  สถานที่รับ/ส่ง <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  hlmInput
+                  class="min-h-11"
+                  id="guest-deliver-to"
+                  type="text"
+                  required
+                  maxlength="160"
+                  placeholder="เช่น อาคาร ข ชั้น 2"
+                  [value]="deliverTo()"
+                  [disabled]="busy()"
+                  (input)="onDeliverTo($event)"
+                />
+                <small>
+                  ทั้งสองช่องจำเป็นต้องกรอกก่อนส่งออเดอร์ ไม่ใช่ข้อมูลชำระเงิน
+                </small>
+              </fieldset>
+              @if (notice() && cartOpen()) {
+                <p class="guest-warning" role="status">{{ notice() }}</p>
+              }
+              <p class="guest-privacy">
+                ยอดในตะกร้าเป็นประมาณการ
+                ระบบจะตรวจสอบราคาและตัวเลือกอีกครั้งก่อนส่งออเดอร์
+                ไม่ใช่การชำระเงิน
+              </p>
+            </div>
+            <footer hlmSheetFooter class="guest-sheet-footer">
+              <div class="guest-cart-summary">
+                <span>ยอดประมาณการ</span>
+                <strong>{{ money(estimate()) }} ฿</strong>
+              </div>
+              <button
+                hlmBtn
+                class="min-h-12 w-full text-base font-semibold"
+                type="button"
+                [disabled]="busy() || loading() || !online() || cartQty() === 0"
+                (click)="checkout()"
+              >
+                {{
+                  busy()
+                    ? "กำลังส่งออเดอร์ กรุณาอย่าปิดหน้า..."
+                    : "ยืนยันส่งคำสั่งซื้อและดูวิธีชำระเงิน"
+                }}
+              </button>
+            </footer>
           </hlm-sheet-content>
         </ng-template>
       </hlm-sheet>
