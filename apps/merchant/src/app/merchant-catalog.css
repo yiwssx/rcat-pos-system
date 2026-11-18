@@ -238,11 +238,6 @@
   max-width: var(--pos-content-compact, 1040px);
   padding: clamp(1rem, 2.4vw, 2rem) clamp(0.75rem, 2vw, 1.5rem) 4rem;
 }
-.catalog-head h1 {
-  font-size: clamp(1.9rem, 3vw, 2.6rem);
-  line-height: 1.25;
-  letter-spacing: -0.025em;
-}
 .catalog-grid {
   gap: 0.85rem;
   margin-block: 1rem;
@@ -294,15 +289,6 @@
   padding: clamp(1.2rem, 3vw, 2.6rem) clamp(1rem, 3vw, 2.6rem) 4rem;
   color: #27363d;
 }
-.catalog-head h1 {
-  font-size: clamp(1.9rem, 2.75vw, 2.65rem);
-  font-weight: 850;
-  color: #25343b;
-}
-.catalog-intro {
-  color: #748088;
-  font-size: 0.94rem;
-}
 .catalog-panel {
   border-color: #e7eaea;
   border-radius: 17px;
@@ -341,13 +327,9 @@
   color: #1f303b;
   background: linear-gradient(180deg, #fffaf0, #fffefa);
 }
-.catalog-head h1,
 .catalog-panel h2,
 .catalog-summary h3 {
   color: #21313b;
-}
-.catalog-back {
-  color: #9e430e;
 }
 .catalog-panel,
 .catalog-product {
@@ -392,13 +374,6 @@
 .catalog-shell *::before,
 .catalog-shell *::after {
   box-sizing: border-box;
-}
-.catalog-head {
-  max-width: 76ch;
-  margin-bottom: 1.3rem;
-}
-.catalog-head h1 {
-  margin-bottom: 0.65rem;
 }
 .catalog-panel {
   padding: clamp(1.1rem, 2.5vw, 2rem);
