@@ -274,6 +274,10 @@ async function browserFlow(fixture) {
     await firstDish.getByRole("button", { name: "ดูรายละเอียด " + fixture.name }).click();
     const sheet = guest.getByRole("dialog", { name: fixture.name });
     await sheet.waitFor();
+    assert.equal(await sheet.locator('hlm-sheet-content[data-slot="sheet-content"]').count(), 1,
+      "Customer detail must render inside official Spartan Sheet, not native dialog");
+    assert.equal(await guest.locator("dialog.guest-product-sheet").count(), 0,
+      "Legacy native product dialog must be removed");
     assert.ok(await sheet.getByText("125.00 ฿").count() >= 1);
     const sweetness = sheet.locator("rcat-guest-modifier-choices", {
       hasText: "ระดับความหวาน",
@@ -316,6 +320,10 @@ async function browserFlow(fixture) {
     await guest.getByRole("button", { name: "ดูตะกร้า" }).click();
     const cartSheet = guest.getByRole("dialog", { name: "ตะกร้าของฉัน" });
     await cartSheet.waitFor();
+    assert.equal(await cartSheet.locator('hlm-sheet-content[data-slot="sheet-content"]').count(), 1,
+      "Checkout cart must be the official Spartan Sheet");
+    assert.equal(await guest.locator("dialog.guest-cart-sheet").count(), 0,
+      "Legacy native cart dialog must be removed");
     assert.equal(await cartSheet.locator("#guest-ordered-by").getAttribute("data-slot"), "input",
       "Guest checkout form must use the official Spartan Helm input");
     await cartSheet.getByRole("textbox", { name: /ชื่อผู้สั่ง/ })
