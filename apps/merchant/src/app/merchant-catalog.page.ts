@@ -367,7 +367,7 @@ function bahtInput(satang: number): string {
           </p>
 
           @for (product of displayedProducts(); track product.id) {
-            <article hlmCard size="sm" class="catalog-product min-w-0 gap-3">
+            <article hlmCard size="sm" class="catalog-product min-w-0 gap-3 p-4">
               <div class="flex min-w-0 flex-col gap-4 lg:flex-row">
                 <div class="flex min-w-0 flex-1 items-start gap-3">
                   @if (product.hasImage) {
