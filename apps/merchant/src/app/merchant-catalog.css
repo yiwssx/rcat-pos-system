@@ -3,33 +3,6 @@
   margin-inline: auto;
   padding: 2.5rem 1.5rem 6rem;
 }
-.catalog-back {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: #21576c;
-  font-weight: 700;
-}
-.catalog-head h1 {
-  max-width: none;
-  font-size: clamp(2rem, 4.3vw, 3.4rem);
-  margin: 0.7rem 0 0.9rem;
-}
-.catalog-intro {
-  color: #52627a;
-  font-size: 1.05rem;
-  line-height: 1.7;
-  max-width: 65ch;
-}
-.catalog-notice {
-  padding: 1rem 1.2rem;
-  background: #f0f6fb;
-  border-left: 4px solid #167e9f;
-  border-radius: 0.4rem;
-  color: #284563;
-  line-height: 1.6;
-  max-width: 68rem;
-}
 .catalog-create {
   margin: 1.35rem 0;
   border: 1px solid var(--pos-border, #d7e0eb);
