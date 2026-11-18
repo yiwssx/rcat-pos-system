@@ -456,7 +456,9 @@ async function browserFlow(fixture) {
     // product, edits its price, then archives the product without touching
     // the original Order fixture or its payment state.
     await second.goto(merchant + "/catalog/" + tenant + "/" + store);
-    const createDisclosure = second.locator("details.catalog-create");
+    const createDisclosure = second.locator("details").filter({
+      hasText: "เพิ่มหมวดหมู่หรือสินค้าใหม่",
+    });
     await createDisclosure.locator("summary").click();
     assert.ok(
       await createDisclosure.evaluate((element) => element.open),
