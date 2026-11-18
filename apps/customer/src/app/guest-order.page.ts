@@ -5,7 +5,6 @@ import {
   Component,
   OnInit,
   OnDestroy,
-  ElementRef,
   ViewChild,
   computed,
   inject,
@@ -34,6 +33,14 @@ import {
 import { GuestOrderApi, GuestOrderSession } from "./guest-order.api";
 import { HlmButton } from "@spartan-ng/helm/button";
 import { HlmInput } from "@spartan-ng/helm/input";
+import {
+  HlmSheet,
+  HlmSheetContent,
+  HlmSheetFooter,
+  HlmSheetHeader,
+  HlmSheetPortal,
+  HlmSheetTitle,
+} from "@spartan-ng/helm/sheet";
 import { GuestModifierChoicesComponent } from "./guest-modifier-choices.component";
 
 function guestError(error: unknown): string {
@@ -63,7 +70,18 @@ function guestError(error: unknown): string {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, HlmButton, HlmInput, GuestModifierChoicesComponent],
+  imports: [
+    RouterLink,
+    HlmButton,
+    HlmInput,
+    HlmSheet,
+    HlmSheetContent,
+    HlmSheetFooter,
+    HlmSheetHeader,
+    HlmSheetPortal,
+    HlmSheetTitle,
+    GuestModifierChoicesComponent,
+  ],
   styleUrls: ["./guest-order.css", "./guest-order-ios.css"],
   template: `
     <section class="guest-shell v6-guest-shop" aria-labelledby="guest-title">
@@ -350,18 +368,23 @@ function guestError(error: unknown): string {
         </button>
       }
 
-      <dialog
-        #detailDialog
-        class="guest-sheet guest-product-sheet"
+      <hlm-sheet
+        #detailSheet
+        side="bottom"
         aria-labelledby="guest-detail-title"
-        (close)="onDetailClose()"
+        (closed)="onDetailClose()"
       >
+        <ng-template hlmSheetPortal>
+          <hlm-sheet-content
+            class="guest-sheet guest-product-sheet mx-auto w-full max-w-2xl max-h-[min(92dvh,820px)] overflow-hidden rounded-t-3xl border border-border bg-card p-0 text-foreground shadow-xl md:max-h-[min(85dvh,820px)] md:rounded-3xl"
+            [showCloseButton]="false"
+          >
         @if (activeProduct(); as product) {
           <div class="guest-sheet-handle" aria-hidden="true"></div>
-          <header class="guest-sheet-heading">
+          <header hlmSheetHeader class="guest-sheet-heading">
             <div>
               <span class="guest-menu-kicker">รายละเอียดอาหาร</span>
-              <h2 id="guest-detail-title">{{ product.name }}</h2>
+              <h2 hlmSheetTitle id="guest-detail-title">{{ product.name }}</h2>
             </div>
             <button
               hlmBtn
@@ -419,7 +442,7 @@ function guestError(error: unknown): string {
               <p class="guest-warning" role="alert">{{ detailError() }}</p>
             }
           </div>
-          <footer class="guest-sheet-footer">
+          <footer hlmSheetFooter class="guest-sheet-footer">
             <div class="guest-detail-quantity">
               <span>จำนวน</span>
               <div class="guest-qty">
@@ -453,19 +476,26 @@ function guestError(error: unknown): string {
             </button>
           </footer>
         }
-      </dialog>
+          </hlm-sheet-content>
+        </ng-template>
+      </hlm-sheet>
 
-      <dialog
-        #cartDialog
-        class="guest-sheet guest-cart-sheet"
+      <hlm-sheet
+        #cartSheet
+        side="bottom"
         aria-labelledby="cart-title"
-        (close)="onCartClose()"
+        (closed)="onCartClose()"
       >
+        <ng-template hlmSheetPortal>
+          <hlm-sheet-content
+            class="guest-sheet guest-cart-sheet mx-auto w-full max-w-2xl max-h-[min(92dvh,820px)] overflow-hidden rounded-t-3xl border border-border bg-card p-0 text-foreground shadow-xl md:max-h-[min(85dvh,820px)] md:rounded-3xl"
+            [showCloseButton]="false"
+          >
         <div class="guest-sheet-handle" aria-hidden="true"></div>
-        <header class="guest-sheet-heading">
+        <header hlmSheetHeader class="guest-sheet-heading">
           <div>
             <span class="guest-menu-kicker">ตรวจสอบก่อนส่ง</span>
-            <h2 id="cart-title">ตะกร้าของฉัน</h2>
+            <h2 hlmSheetTitle id="cart-title">ตะกร้าของฉัน</h2>
             <span class="guest-cart-subtitle">{{ cartQty() }} รายการ</span>
           </div>
           <button
@@ -570,7 +600,7 @@ function guestError(error: unknown): string {
             ระบบจะตรวจสอบราคาและตัวเลือกอีกครั้งก่อนส่งออเดอร์ ไม่ใช่การชำระเงิน
           </p>
         </div>
-        <footer class="guest-sheet-footer">
+        <footer hlmSheetFooter class="guest-sheet-footer">
           <div class="guest-cart-summary">
             <span>ยอดประมาณการ</span>
             <strong>{{ money(estimate()) }} ฿</strong>
@@ -589,7 +619,9 @@ function guestError(error: unknown): string {
             }}
           </button>
         </footer>
-      </dialog>
+          </hlm-sheet-content>
+        </ng-template>
+      </hlm-sheet>
     </section>
   `,
 })
@@ -620,9 +652,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly deliverTo = signal("");
   readonly detailError = signal("");
   readonly cartOpen = signal(false);
-  @ViewChild("detailDialog")
-  private detailDialog?: ElementRef<HTMLDialogElement>;
-  @ViewChild("cartDialog") private cartDialog?: ElementRef<HTMLDialogElement>;
+  @ViewChild("detailSheet") private detailSheet?: HlmSheet;
+  @ViewChild("cartSheet") private cartSheet?: HlmSheet;
   readonly online = signal(true);
   readonly staticTable = signal<{
     tenantId: string;
@@ -729,8 +760,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   private invalidateExpiredVisit(): void {
     // Revoked/expired tokens must never leave an actionable old cart or sheet.
     // The permanent printed QR may issue a *new* visit after explicit action.
-    if (this.detailDialog?.nativeElement.open) this.closeProduct();
-    if (this.cartDialog?.nativeElement.open) this.closeCart();
+    if (this.detailSheet?.stateComputed() === "open") this.closeProduct();
+    if (this.cartSheet?.stateComputed() === "open") this.closeCart();
     this.session.invalidateVisit();
     this.scanToken = null;
     if (this.searchTimer) clearTimeout(this.searchTimer);
@@ -1024,10 +1055,10 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     // A fresh product sheet must not silently reuse the previous item's choices.
     this.selected.update((values) => ({ ...values, [product.id]: [] }));
     this.activeProduct.set(product);
-    this.detailDialog?.nativeElement.showModal();
+    this.detailSheet?.open();
   }
   closeProduct(): void {
-    this.detailDialog?.nativeElement.close();
+    this.detailSheet?.close();
   }
   onDetailClose(): void {
     this.activeProduct.set(null);
@@ -1067,12 +1098,12 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     }
   }
   openCart(): void {
-    if (this.cartDialog?.nativeElement.open) return;
+    if (this.cartSheet?.stateComputed() === "open") return;
     this.cartOpen.set(true);
-    this.cartDialog?.nativeElement.showModal();
+    this.cartSheet?.open();
   }
   closeCart(): void {
-    this.cartDialog?.nativeElement.close();
+    this.cartSheet?.close();
   }
   onCartClose(): void {
     this.cartOpen.set(false);
