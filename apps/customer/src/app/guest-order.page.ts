@@ -368,11 +368,7 @@ function guestError(error: unknown): string {
         </button>
       }
 
-      <hlm-sheet
-        #detailSheet
-        side="bottom"
-        (closed)="onDetailClose()"
-      >
+      <hlm-sheet #detailSheet side="bottom" (closed)="onDetailClose()">
         <ng-template hlmSheetPortal>
           <hlm-sheet-content
             class="guest-sheet guest-product-sheet mx-auto w-full max-w-2xl max-h-[min(92dvh,820px)] overflow-hidden rounded-t-3xl border border-border bg-card p-0 text-foreground shadow-xl md:max-h-[min(85dvh,820px)] md:rounded-3xl"
@@ -485,11 +481,7 @@ function guestError(error: unknown): string {
         </ng-template>
       </hlm-sheet>
 
-      <hlm-sheet
-        #cartSheet
-        side="bottom"
-        (closed)="onCartClose()"
-      >
+      <hlm-sheet #cartSheet side="bottom" (closed)="onCartClose()">
         <ng-template hlmSheetPortal>
           <hlm-sheet-content
             class="guest-sheet guest-cart-sheet mx-auto w-full max-w-2xl max-h-[min(92dvh,820px)] overflow-hidden rounded-t-3xl border border-border bg-card p-0 text-foreground shadow-xl md:max-h-[min(85dvh,820px)] md:rounded-3xl"
