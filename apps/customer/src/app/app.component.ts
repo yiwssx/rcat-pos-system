@@ -170,8 +170,8 @@ export class AppComponent {
   readonly loggingOut = signal(false);
   readonly mobileNavOpen = signal(false);
   readonly message = signal("");
-  readonly guestOrder = computed(() => /^\\/order(?:\\/|\\?|#|$)/.test(this.url()));
-  readonly guestMenu = computed(() => /^\\/order(?:\\?|#|$)/.test(this.url()));
+  readonly guestOrder = computed(() => /^\/order(?:\/|\?|#|$)/.test(this.url()));
+  readonly guestMenu = computed(() => /^\/order(?:\?|#|$)/.test(this.url()));
   readonly staffWorkspace = computed(() => this.session.phase() === "staff" && !this.guestOrder());
 
   constructor() {
