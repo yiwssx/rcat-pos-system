@@ -79,12 +79,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          persist-credentials: false
+          persist-credentials: true
       - name: pnpm
         uses: pnpm/action-setup@v6
         with:
@@ -101,6 +101,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [ -f libs/ui/src/spartan/button/src/index.ts ]; then
+            echo "SPARTAN_SCAFFOLD=ALREADY_COMMITTED"
+            exit 0
+          fi
           pnpm exec nx g @spartan-ng/cli:info --json
           for name in button card badge input label native-select separator dialog sheet tabs; do
             echo "=== SPARTAN GENERATE: $name ==="
@@ -113,10 +117,21 @@ jobs:
           sort -u /tmp/spartan-changed.txt > /tmp/spartan-files.txt
           test -s /tmp/spartan-files.txt
           tar czf spartan-scaffold.tar.gz -T /tmp/spartan-files.txt
-      - name: Upload official Helm preview for review, no push
-        uses: actions/upload-artifact@v4
-        with:
-          name: spartan-helm-official-preview
-          path: spartan-scaffold.tar.gz
-          retention-days: 1
-          if-no-files-found: error
+      - name: Commit reviewed official Helm components to this PR branch
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        env:
+          TARGET_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          if [ -f spartan-scaffold.tar.gz ]; then
+            # Generated Helm files only. Do NOT take generator-created .prettierrc
+            # or rewrite legacy CSS; preserve repo formatting and security policies.
+            git add libs/ui/src/spartan tsconfig.base.json package.json pnpm-lock.yaml
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "feat(ui): install official Spartan v1.9 Helm component sources"
+            git push origin "HEAD:refs/heads/$TARGET_BRANCH"
+          else
+            echo "SPARTAN_SCAFFOLD=ALREADY_COMMITTED"
+          fi
