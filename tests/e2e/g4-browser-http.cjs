@@ -381,6 +381,15 @@ async function browserFlow(fixture) {
     const newItem = second.locator(".catalog-product", {
       hasText: "เมนูทดสอบชั่วคราว",
     });
+    const cardInset = await newItem.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return [parseFloat(style.paddingLeft), parseFloat(style.paddingRight)];
+    });
+    assert.ok(cardInset.every((px) => px >= 12),
+      "Catalog item needs readable inset on both sides");
+    assert.equal(await newItem.locator("details.catalog-media-disclosure")
+      .evaluate((element) => element.open), false,
+    "Image uploader must start collapsed to keep each item compact");
     await newItem.getByRole("button", { name: "แก้ไข" }).click();
     const editForm = newItem.locator(".catalog-edit");
     await editForm.getByLabel("ชื่อสินค้า", { exact: true })
@@ -478,6 +487,7 @@ async function browserFlow(fixture) {
         mediaReplies.push({ status: response.status(), detail });
       }
     });
+    await revisedItem.locator("details.catalog-media-disclosure > summary").click();
     await revisedItem.locator('input[type="file"]').setInputFiles({
       name: "catalog-menu-test.png",
       mimeType: "image/png",
