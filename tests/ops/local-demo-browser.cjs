@@ -86,6 +86,17 @@ async function main() {
     const desktopNav = page.getByRole('complementary', { name: 'พื้นที่ทำงาน' });
     await desktopNav.waitFor({ state: 'visible' });
     await desktopNav.getByRole('navigation', { name: 'งานของร้าน' }).waitFor();
+    // The mobile Sheet host must not occupy the second desktop grid cell,
+    // pushing the work area into a long, narrow row beneath the sidebar.
+    const desktopLayout = await page.evaluate(() => {
+      const aside = document.querySelector('rcat-root aside[aria-label="พื้นที่ทำงาน"]').getBoundingClientRect();
+      const main = document.querySelector('rcat-root main').getBoundingClientRect();
+      return { asideRight: aside.right, mainLeft: main.left, mainTop: main.top };
+    });
+    assert.ok(desktopLayout.mainLeft >= desktopLayout.asideRight - 1,
+      'Desktop work area must be beside the sidebar');
+    assert.ok(desktopLayout.mainTop < 160,
+      'Desktop work area must start on the same row as the sidebar');
     assert.equal(await desktopNav.locator('hlm-native-select [data-slot="native-select"]').count(), 1,
       'Desktop store picker must be the official Spartan Helm NativeSelect');
     const shell = await desktopNav.evaluate(element => {
