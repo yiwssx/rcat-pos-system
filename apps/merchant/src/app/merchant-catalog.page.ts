@@ -283,7 +283,9 @@ function bahtInput(satang: number): string {
           class="catalog-panel catalog-products"
           aria-labelledby="products-title"
         >
-          <div class="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-4">
+          <div
+            class="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-4"
+          >
             <div>
               <h2 id="products-title">สินค้าทั้งหมด</h2>
               <p>
@@ -368,7 +370,9 @@ function bahtInput(satang: number): string {
 
           @for (product of displayedProducts(); track product.id) {
             <article hlmCard size="sm" class="catalog-product min-w-0 gap-3">
-              <div class="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div
+                class="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+              >
                 <div class="flex min-w-0 flex-1 items-start gap-3">
                   @if (product.hasImage) {
                     <img
@@ -386,10 +390,14 @@ function bahtInput(satang: number): string {
                     </span>
                   }
                   <div class="min-w-0 flex-1">
-                    <h3 class="break-words text-base font-semibold leading-relaxed text-foreground">
+                    <h3
+                      class="break-words text-base font-semibold leading-relaxed text-foreground"
+                    >
                       {{ product.name }}
                     </h3>
-                    <p class="mt-1 text-sm leading-relaxed text-muted-foreground tabular-nums">
+                    <p
+                      class="mt-1 text-sm leading-relaxed text-muted-foreground tabular-nums"
+                    >
                       {{ categoryName(product.categoryId) }} ·
                       {{ money(product.priceSatang) }} บาท
                     </p>
@@ -408,7 +416,9 @@ function bahtInput(satang: number): string {
                   </div>
                 </div>
                 @if (!product.archivedAt) {
-                  <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+                  <div
+                    class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end"
+                  >
                     <button
                       hlmBtn
                       type="button"
