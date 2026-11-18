@@ -194,12 +194,24 @@ function bahtInput(satang: number): string {
           </div>
         </details>
 
-        <section class="catalog-panel" aria-labelledby="category-editor-title">
-          <h2 id="category-editor-title">แก้ไขหมวดหมู่ที่มีอยู่</h2>
+        <section
+          hlmCard
+          class="grid min-w-0 gap-4 p-4 md:p-6"
+          aria-labelledby="category-editor-title"
+        >
+          <h2 id="category-editor-title" class="text-lg font-semibold">
+            แก้ไขหมวดหมู่ที่มีอยู่
+          </h2>
           @for (category of categories(); track category.id) {
-            <div class="catalog-editor-item">
-              <div class="catalog-toolbar">
-                <span>{{ category.name }} ({{ category.slug }})</span>
+            <div
+              class="grid gap-3 border-b border-border pb-4 last:border-0 last:pb-0"
+            >
+              <div
+                class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <span class="min-w-0 break-words font-medium text-foreground"
+                  >{{ category.name }} ({{ category.slug }})</span
+                >
                 <button
                   hlmBtn
                   type="button"
@@ -212,7 +224,10 @@ function bahtInput(satang: number): string {
                 </button>
               </div>
               @if (categoryEditId() === category.id) {
-                <form class="catalog-edit" (ngSubmit)="saveCategoryEdit()">
+                <form
+                  class="grid min-w-0 gap-3 rounded-xl border border-border bg-card p-4"
+                  (ngSubmit)="saveCategoryEdit()"
+                >
                   <label hlmLabel for="category-edit-name">ชื่อหมวดหมู่</label>
                   <input
                     hlmInput
@@ -236,7 +251,7 @@ function bahtInput(satang: number): string {
                     pattern="[a-z0-9]+(-[a-z0-9]+)*"
                     [disabled]="saving()"
                   />
-                  <div class="catalog-actions">
+                  <div class="flex flex-wrap gap-2">
                     <button
                       hlmBtn
                       type="submit"
@@ -300,8 +315,8 @@ function bahtInput(satang: number): string {
               </button>
             </div>
           </div>
-          <div class="catalog-filters">
-            <div>
+          <div class="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
+            <div class="grid min-w-0 gap-2">
               <label hlmLabel for="catalog-search">ค้นหาชื่อสินค้า</label>
               <input
                 hlmInput
@@ -314,7 +329,7 @@ function bahtInput(satang: number): string {
                 autocomplete="off"
               />
             </div>
-            <div>
+            <div class="grid min-w-0 gap-2">
               <label hlmLabel for="catalog-category-filter"
                 >กรองตามหมวดหมู่</label
               >
