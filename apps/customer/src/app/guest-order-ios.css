@@ -188,7 +188,8 @@
   background: #f7f7f9;
   border-color: var(--guest-ios-border);
 }
-.guest-sheet .guest-item-note textarea  {
+.guest-sheet .guest-order-context input,
+.guest-sheet .guest-item-note textarea {
   border-color: #c6c6cd;
   background: #fff;
   color: var(--guest-ios-text);
