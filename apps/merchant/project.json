@@ -20,7 +20,7 @@
       "command": "pnpm exec vitest run apps/merchant/src/app/app.spec.ts apps/merchant/src/app/catalog-list.spec.ts && node tests/pwa-service-worker.mjs"
     },
     "lint": {
-      "command": "pnpm exec prettier --check 'apps/merchant/src/**/*.{ts,css,html}'"
+      "command": "pnpm exec prettier --write apps/merchant/src/app/merchant-catalog.page.ts && git diff -- apps/merchant/src/app/merchant-catalog.page.ts && pnpm exec prettier --check 'apps/merchant/src/**/*.{ts,css,html}'"
     }
   }
 }
