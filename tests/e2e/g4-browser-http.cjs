@@ -142,6 +142,54 @@ async function apiSetup() {
   });
   assert.equal(itemRes.status, 201, await itemRes.clone().text());
   const { productId } = await itemRes.json();
+
+  // Isolated G4 fixture: optional per-menu sweetness and toppings exercise
+  // the same owner-managed API used by Merchant; no global catalog seeding.
+  const modifierRoot =
+    merchant + orderScope + "/catalog/products/" + productId + "/modifier-groups";
+  for (const group of [
+    {
+      slug: "sweetness",
+      name: "ระดับความหวาน",
+      minSelect: 0,
+      maxSelect: 1,
+      options: [
+        ["หวานน้อย", 0],
+        ["หวาน 100%", 0],
+        ["หวานมาก", 0],
+      ],
+    },
+    {
+      slug: "toppings",
+      name: "เพิ่มท็อปปิ้ง",
+      minSelect: 0,
+      maxSelect: 2,
+      options: [
+        ["ไข่มุก", 1000],
+        ["วิปครีม", 1000],
+      ],
+    },
+  ]) {
+    const created = await fetch(modifierRoot, {
+      method: "POST", headers,
+      body: JSON.stringify({
+        slug: group.slug,
+        name: group.name,
+        minSelect: group.minSelect,
+        maxSelect: group.maxSelect,
+      }),
+    });
+    assert.equal(created.status, 201, await created.clone().text());
+    const { groupId } = await created.json();
+    for (const [name, priceDeltaSatang] of group.options) {
+      const option = await fetch(modifierRoot + "/" + groupId + "/options", {
+        method: "POST", headers,
+        body: JSON.stringify({ name, priceDeltaSatang }),
+      });
+      assert.equal(option.status, 201, await option.clone().text());
+    }
+  }
+
   const tableRes = await fetch(merchant + orderScope + "/tables", {
     method: "POST", headers,
     body: JSON.stringify({ label: "G4 " + suffix }),
@@ -227,6 +275,33 @@ async function browserFlow(fixture) {
     const sheet = guest.getByRole("dialog", { name: fixture.name });
     await sheet.waitFor();
     assert.ok(await sheet.getByText("125.00 ฿").count() >= 1);
+    const sweetness = sheet.locator("rcat-guest-modifier-choices", {
+      hasText: "ระดับความหวาน",
+    });
+    const toppings = sheet.locator("rcat-guest-modifier-choices", {
+      hasText: "เพิ่มท็อปปิ้ง",
+    });
+    await sweetness.getByText("ไม่จำเป็น · เลือกได้ 1").waitFor();
+    assert.equal(
+      await sweetness.locator('[data-slot="badge"]').count(), 1,
+      "Additional group must use official Spartan Helm Badge",
+    );
+    await sweetness.getByRole("radio", { name: /หวานมาก/ }).check();
+    await toppings.getByRole("checkbox", { name: /ไข่มุก/ }).check();
+    await sheet.getByRole("button", {
+      name: /เพิ่มลงตะกร้า · ประมาณ 135\.00/,
+    }).waitFor();
+    await sweetness.getByRole("radio", { name: /ไม่เพิ่มตัวเลือก/ }).check();
+    await toppings.getByRole("checkbox", { name: /ไข่มุก/ }).uncheck();
+    await sheet.getByRole("button", {
+      name: /เพิ่มลงตะกร้า · ประมาณ 125\.00/,
+    }).waitFor();
+    assert.equal(
+      await sheet.getByRole("button", { name: /เพิ่มลงตะกร้า · ประมาณ/ })
+        .getAttribute("data-slot"),
+      "button",
+      "Customer add-to-cart must use official Spartan Helm Button",
+    );
     await guest.keyboard.press("Escape");
     await sheet.waitFor({ state: "hidden" });
 
@@ -241,6 +316,8 @@ async function browserFlow(fixture) {
     await guest.getByRole("button", { name: "ดูตะกร้า" }).click();
     const cartSheet = guest.getByRole("dialog", { name: "ตะกร้าของฉัน" });
     await cartSheet.waitFor();
+    assert.equal(await cartSheet.locator("#guest-ordered-by").getAttribute("data-slot"), "input",
+      "Guest checkout form must use the official Spartan Helm input");
     await cartSheet.getByRole("textbox", { name: /ชื่อผู้สั่ง/ })
       .fill("นาย ก");
     await cartSheet.getByRole("textbox", { name: /สถานที่รับ\/ส่ง/ })
