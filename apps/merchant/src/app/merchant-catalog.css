@@ -466,9 +466,6 @@
   .catalog-product .catalog-actions {
     align-items: stretch;
   }
-  .catalog-products > .catalog-toolbar {
-    gap: 0.75rem;
-  }
 }
 @media (max-width: 420px) {
   .catalog-shell {
