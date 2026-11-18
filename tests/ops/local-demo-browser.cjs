@@ -33,6 +33,30 @@ async function main() {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       const label = page.locator('.portal-landing-intro > .portal-eyebrow');
       await label.waitFor();
+      // The staff entry remains a native full-page OAuth navigation, not a fake
+      // client-side click. Validate the actual Google-branded appearance on
+      // both existing mobile and desktop viewport passes.
+      const googleSignIn = page.getByRole('link', { name: 'เข้าสู่ระบบด้วยบัญชี Google' });
+      assert.equal(await googleSignIn.getAttribute('href'), '/api/auth/google/start');
+      assert.equal(await googleSignIn.getAttribute('data-variant'), 'outline');
+      assert.equal(await googleSignIn.locator('svg.portal-google-mark path').count(), 4);
+      const loginAppearance = await googleSignIn.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          background: style.backgroundColor,
+          border: style.borderTopColor,
+          foreground: style.color,
+          height: element.getBoundingClientRect().height,
+        };
+      });
+      assert.equal(loginAppearance.background, 'rgb(255, 255, 255)',
+        'Google sign-in must be white, not the orange/green primary CTA');
+      assert.equal(loginAppearance.border, 'rgb(211, 217, 213)',
+        'Google sign-in must use a neutral outline, not the inherited orange border');
+      assert.equal(loginAppearance.foreground, 'rgb(31, 45, 38)',
+        'Google sign-in label must remain readable on white');
+      assert.ok(loginAppearance.height >= 56,
+        'Google sign-in touch target must remain at least 56px tall');
       const geometry = await page.evaluate(() => {
         const logo = document.querySelector('.portal-hero-brand').getBoundingClientRect();
         const tag = document.querySelector('.portal-landing-intro > .portal-eyebrow').getBoundingClientRect();
