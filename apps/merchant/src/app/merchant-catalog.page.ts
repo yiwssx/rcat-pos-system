@@ -503,9 +503,7 @@ function bahtInput(satang: number): string {
                           variant="outline"
                           class="min-h-11"
                           [disabled]="saving()"
-                          (click)="
-                            newGroup.minSelect = 1; newGroup.maxSelect = 1
-                          "
+                          (click)="setNewGroupSelectionMode('single')"
                         >
                           เลือกอย่างเดียว (บังคับ)
                         </button>
@@ -515,9 +513,7 @@ function bahtInput(satang: number): string {
                           variant="outline"
                           class="min-h-11"
                           [disabled]="saving()"
-                          (click)="
-                            newGroup.minSelect = 0; newGroup.maxSelect = 3
-                          "
+                          (click)="setNewGroupSelectionMode('multiple')"
                         >
                           เลือกได้หลายอย่าง (ไม่บังคับ)
                         </button>
@@ -1008,6 +1004,15 @@ export class MerchantCatalogPage implements OnInit {
 
   ngOnInit(): void {
     void this.initialize();
+  }
+
+  setNewGroupSelectionMode(mode: "single" | "multiple"): void {
+    // A new object identity makes Angular's model and form controls reconcile
+    // their values after the interactive Spartan button changes the preset.
+    this.newGroup =
+      mode === "single"
+        ? { ...this.newGroup, minSelect: 1, maxSelect: 1 }
+        : { ...this.newGroup, minSelect: 0, maxSelect: 3 };
   }
 
   async initialize(): Promise<void> {
