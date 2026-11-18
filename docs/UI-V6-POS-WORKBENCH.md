@@ -1,4 +1,7 @@
-# RCAT POS — V6 Restaurant Workbench (canonical UI contract)
+# RCAT POS — V6 Restaurant Workbench (historical visual contract)
+
+> **SUPERSEDED 18 Nov 2026 by Owner:** The active UI direction is [Spartan-first iOS-inspired migration](SPARTAN-IOS-MIGRATION.md). V6 vivid gradients, extra decorative waves and ad-hoc page CSS are retired for future implementation. Preserve V6 behavior and evidence; do not mechanically delete still-used CSS before migrating its screens.
+
 
 **Owner decision:** 14 Nov 2026. V1–V5 visual designs are retired. This is a **new app information architecture**, not another V5 CSS polish. V6 Spartan foundation PR #105 is retained; this implementation completely replaces the old merchant hero/store split and changes the Order Queue, Guest catalog and Admin interaction patterns. Historical screenshots/docs remain as evidence only.
 
