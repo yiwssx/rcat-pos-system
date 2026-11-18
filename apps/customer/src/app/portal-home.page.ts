@@ -117,7 +117,7 @@ import { RcatButtonDirective } from "@rcat/ui";
                     d="M12 5.97c1.47 0 2.79.5 3.83 1.5l2.87-2.88A9.6 9.6 0 0 0 12 2 10 10 0 0 0 3.09 7.5l3.32 2.59C7.2 7.73 9.4 5.97 12 5.97Z"
                   />
                 </svg>
-                <span>เข้าสู่ระบบด้วยบัญชี Google</span>
+                <span>Sign in with Google</span>
               </a>
               <p class="portal-login-action-note">
                 สำหรับผู้ดูแลและร้านค้าที่ได้รับอนุญาตเท่านั้น
