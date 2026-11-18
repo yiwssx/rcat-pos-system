@@ -1178,8 +1178,6 @@
   outline: 3px solid #ed913e;
   outline-offset: 3px;
 }
-@media (min-width: 720px) {
-  }
 @media (max-width: 760px) {
   .guest-products {
     grid-template-columns: 1fr;
