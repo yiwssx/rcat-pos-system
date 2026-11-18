@@ -79,6 +79,11 @@ async function main() {
       'Store role must use official Spartan Helm Badge');
     assert.equal(await storeCard.locator('a[data-slot="button"]', { hasText: 'เปิดกระดานออเดอร์' }).count(), 1,
       'Merchant Order Board remains the primary action');
+    const primaryOrderAction = storeCard.locator('a[data-slot="button"]', {
+      hasText: 'เปิดกระดานออเดอร์'
+    });
+    assert.equal(await primaryOrderAction.evaluate(el => getComputedStyle(el).textDecorationLine), 'none',
+      'Spartan Order action must not inherit underlined hyperlink styling');
     const managementDisclosure = storeCard.locator('details');
     assert.equal(await managementDisclosure.evaluate(el => el.open), false,
       'Less-frequent management actions must start collapsed on mobile');
@@ -105,6 +110,9 @@ async function main() {
     const desktopNav = page.getByRole('complementary', { name: 'พื้นที่ทำงาน' });
     await desktopNav.waitFor({ state: 'visible' });
     await desktopNav.getByRole('navigation', { name: 'งานของร้าน' }).waitFor();
+    assert.equal(await desktopNav.getByRole('link', { name: 'พื้นที่ทำงาน' })
+      .evaluate(el => getComputedStyle(el).textDecorationLine), 'none',
+      'Desktop navigation must not display browser-default link underlines');
     // The mobile Sheet host must not occupy the second desktop grid cell,
     // pushing the work area into a long, narrow row beneath the sidebar.
     const desktopLayout = await page.evaluate(() => {
@@ -144,6 +152,11 @@ async function main() {
       }));
       assert.ok(size.content <= size.width + 1,
         'Staff portal must not overflow ' + viewport.width + 'px');
+      if (viewport.width === 320) {
+        assert.equal(await page.locator('header a[aria-label="RCAT POS หน้าแรก"] strong')
+          .evaluate(el => getComputedStyle(el).display), 'none',
+          '320px header should use the accessible brand icon without wrapping');
+      }
       await page.screenshot({ path: '/tmp/rcat-portal-' + viewport.name + '.png', fullPage: true });
       const menuButton = page.getByRole('button', { name: 'เปิดเมนูจัดการร้าน' });
       assert.equal(await menuButton.isVisible(), viewport.width < 1024,

@@ -250,7 +250,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                   <a
                     hlmBtn
                     variant="outline"
-                    class="min-h-11 w-fit"
+                    class="min-h-11 w-fit no-underline"
                     routerLink="/platform"
                   >
                     จัดการบัญชีและสิทธิ์ผู้ใช้งาน
@@ -314,7 +314,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                       <div hlmCardContent class="grid gap-3">
                         <a
                           hlmBtn
-                          class="min-h-12 w-full justify-start rounded-xl text-base"
+                          class="min-h-12 w-full justify-start rounded-xl text-base no-underline"
                           [routerLink]="[
                             '/orders',
                             store.tenantId,
@@ -351,7 +351,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                               <a
                                 hlmBtn
                                 variant="outline"
-                                class="min-h-11 w-full justify-start"
+                                class="min-h-11 w-full justify-start no-underline"
                                 [routerLink]="[
                                   '/catalog',
                                   store.tenantId,
@@ -363,7 +363,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                               <a
                                 hlmBtn
                                 variant="outline"
-                                class="min-h-11 w-full justify-start"
+                                class="min-h-11 w-full justify-start no-underline"
                                 [routerLink]="[
                                   '/tables',
                                   store.tenantId,
@@ -375,7 +375,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                               <a
                                 hlmBtn
                                 variant="outline"
-                                class="min-h-11 w-full justify-start"
+                                class="min-h-11 w-full justify-start no-underline"
                                 [routerLink]="[
                                   '/payments/receiver',
                                   store.tenantId,
@@ -387,7 +387,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                               <a
                                 hlmBtn
                                 variant="outline"
-                                class="min-h-11 w-full justify-start"
+                                class="min-h-11 w-full justify-start no-underline"
                                 [routerLink]="[
                                   '/payments',
                                   store.tenantId,
@@ -399,7 +399,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                               <a
                                 hlmBtn
                                 variant="outline"
-                                class="min-h-11 w-full justify-start"
+                                class="min-h-11 w-full justify-start no-underline"
                                 [routerLink]="[
                                   '/payments/finance',
                                   store.tenantId,
@@ -412,7 +412,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                                 <a
                                   hlmBtn
                                   variant="outline"
-                                  class="min-h-11 w-full justify-start"
+                                  class="min-h-11 w-full justify-start no-underline"
                                   [routerLink]="[
                                     '/tenants',
                                     store.tenantId,
@@ -440,7 +440,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                           <a
                             hlmBtn
                             routerLink="/settings"
-                            class="min-h-11 w-fit"
+                            class="min-h-11 w-fit no-underline"
                           >
                             ตั้งค่าร้านค้าแรก
                           </a>
@@ -520,7 +520,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                     <a
                       hlmBtn
                       variant="outline"
-                      class="min-h-11 w-full justify-start"
+                      class="min-h-11 w-full justify-start no-underline"
                       routerLink="/settings"
                     >
                       ตั้งค่าร้านและบุคลากร
