@@ -371,7 +371,6 @@ function guestError(error: unknown): string {
       <hlm-sheet
         #detailSheet
         side="bottom"
-        aria-labelledby="guest-detail-title"
         (closed)="onDetailClose()"
       >
         <ng-template hlmSheetPortal>
@@ -384,7 +383,7 @@ function guestError(error: unknown): string {
               <header hlmSheetHeader class="guest-sheet-heading">
                 <div>
                   <span class="guest-menu-kicker">รายละเอียดอาหาร</span>
-                  <h2 hlmSheetTitle id="guest-detail-title">
+                  <h2 hlmSheetTitle>
                     {{ product.name }}
                   </h2>
                 </div>
@@ -489,7 +488,6 @@ function guestError(error: unknown): string {
       <hlm-sheet
         #cartSheet
         side="bottom"
-        aria-labelledby="cart-title"
         (closed)="onCartClose()"
       >
         <ng-template hlmSheetPortal>
@@ -501,7 +499,7 @@ function guestError(error: unknown): string {
             <header hlmSheetHeader class="guest-sheet-heading">
               <div>
                 <span class="guest-menu-kicker">ตรวจสอบก่อนส่ง</span>
-                <h2 hlmSheetTitle id="cart-title">ตะกร้าของฉัน</h2>
+                <h2 hlmSheetTitle>ตะกร้าของฉัน</h2>
                 <span class="guest-cart-subtitle">{{ cartQty() }} รายการ</span>
               </div>
               <button
