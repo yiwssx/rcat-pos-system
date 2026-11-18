@@ -23,7 +23,7 @@ async function main() {
     assert.equal(alias.status,302);
     assert.equal(alias.headers.get('location'),'/');
     await page.goto(merchant + '/local');
-    await page.getByRole('link', {name:/เข้าสู่ระบบด้วยบัญชี Google/}).waitFor();
+    await page.getByRole('link', {name:/Sign in with Google/}).waitFor();
     // Guard the real bug: the inline QR eyebrow previously appeared beside
     // the logo as a displaced block rather than beneath the brand lockup.
     for (const viewport of [
@@ -36,7 +36,7 @@ async function main() {
       // The staff entry remains a native full-page OAuth navigation, not a fake
       // client-side click. Validate the actual Google-branded appearance on
       // both existing mobile and desktop viewport passes.
-      const googleSignIn = page.getByRole('link', { name: 'เข้าสู่ระบบด้วยบัญชี Google' });
+      const googleSignIn = page.getByRole('link', { name: 'Sign in with Google' });
       assert.equal(await googleSignIn.getAttribute('href'), '/api/auth/google/start');
       assert.equal(await googleSignIn.getAttribute('data-variant'), 'outline');
       assert.equal(await googleSignIn.locator('svg.portal-google-mark path').count(), 4);
@@ -51,12 +51,12 @@ async function main() {
       });
       assert.equal(loginAppearance.background, 'rgb(255, 255, 255)',
         'Google sign-in must be white, not the orange/green primary CTA');
-      assert.equal(loginAppearance.border, 'rgb(211, 217, 213)',
+      assert.equal(loginAppearance.border, 'rgb(139, 139, 139)',
         'Google sign-in must use a neutral outline, not the inherited orange border');
-      assert.equal(loginAppearance.foreground, 'rgb(31, 45, 38)',
+      assert.equal(loginAppearance.foreground, 'rgb(38, 38, 38)',
         'Google sign-in label must remain readable on white');
-      assert.ok(loginAppearance.height >= 56,
-        'Google sign-in touch target must remain at least 56px tall');
+      assert.ok(loginAppearance.height >= 58,
+        'Google sign-in touch target must remain at least 58px tall');
       const geometry = await page.evaluate(() => {
         const logo = document.querySelector('.portal-hero-brand').getBoundingClientRect();
         const tag = document.querySelector('.portal-landing-intro > .portal-eyebrow').getBoundingClientRect();
@@ -464,7 +464,7 @@ async function main() {
     // Deep links survive reload without showing the login view while auth loads.
     await board.reload();
     await card.getByText('รับออเดอร์แล้ว', {exact:true}).waitFor();
-    assert.equal(await board.getByRole('link',{name:/เข้าสู่ระบบด้วยบัญชี Google/}).count(),0);
+    assert.equal(await board.getByRole('link',{name:/Sign in with Google/}).count(),0);
     // Server role data determines visible navigation and guards guessed owner URLs.
     const cashier = await browser.newContext({ignoreHTTPSErrors:true});
     await cashier.addCookies(await context.cookies());
@@ -480,19 +480,19 @@ async function main() {
     assert.equal(new URL(cashierPage.url()).pathname,'/');
     await cashier.close();
     await board.getByRole('button',{name:'ออกจากระบบ',exact:true}).click();
-    await board.getByRole('link',{name:/เข้าสู่ระบบด้วยบัญชี Google/}).waitFor();
+    await board.getByRole('link',{name:/Sign in with Google/}).waitFor();
     await board.goto(merchant + `/orders/${tenant}/${store}`);
-    await board.getByRole('link',{name:/เข้าสู่ระบบด้วยบัญชี Google/}).waitFor();
+    await board.getByRole('link',{name:/Sign in with Google/}).waitFor();
     await board.waitForURL(merchant + '/');
     assert.equal(new URL(board.url()).pathname,'/');
     // A failed auth service is an error/retry state, not a misleading login form.
     await board.route('**/api/auth/me', route => route.fulfill({status:503,json:{message:'unavailable'}}));
     await board.reload();
     await board.getByRole('heading',{name:'ยังเชื่อมต่อระบบไม่ได้'}).waitFor();
-    assert.equal(await board.getByRole('link',{name:/เข้าสู่ระบบด้วยบัญชี Google/}).count(),0);
+    assert.equal(await board.getByRole('link',{name:/Sign in with Google/}).count(),0);
     await board.unroute('**/api/auth/me');
     await board.getByRole('button',{name:'ลองเชื่อมต่ออีกครั้ง'}).click();
-    await board.getByRole('link',{name:/เข้าสู่ระบบด้วยบัญชี Google/}).waitFor();
+    await board.getByRole('link',{name:/Sign in with Google/}).waitFor();
     await context.close();
     console.log('PASS: single-origin portal, role menus/route denial, Secure login/logout, multi-viewport UI evidence, deep-link reload, auth failure/retry, Guest→Order→Merchant, CSRF denial and repeat launch');
   } finally { await browser.close(); }
