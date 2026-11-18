@@ -1,6 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+} from "@angular/core";
 import { HttpInterceptorFn, HttpResponse } from "@angular/common/http";
-import { Router, RouterLink, RouterOutlet, NavigationEnd } from "@angular/router";
+import {
+  Router,
+  RouterLink,
+  RouterOutlet,
+  NavigationEnd,
+} from "@angular/router";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { catchError, tap, throwError } from "rxjs";
 import { HlmButton } from "@spartan-ng/helm/button";
@@ -41,7 +52,6 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
   );
 };
 
-
 @Component({
   selector: "rcat-root",
   standalone: true,
@@ -58,14 +68,19 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
     PortalWorkspaceNavComponent,
   ],
   template: `
-    <div class="flex min-h-dvh min-w-0 flex-col bg-background font-sans text-foreground">
+    <div
+      class="flex min-h-dvh min-w-0 flex-col bg-background font-sans text-foreground"
+    >
       <a
         href="#main"
         class="sr-only fixed left-4 top-4 z-50 rounded-lg bg-card px-4 py-3 text-foreground shadow-lg focus:not-sr-only"
-      >ข้ามไปเนื้อหาหลัก</a>
+        >ข้ามไปเนื้อหาหลัก</a
+      >
 
       @if (!guestMenu()) {
-        <header class="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 sm:px-6 lg:px-8">
+        <header
+          class="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 sm:px-6 lg:px-8"
+        >
           <div class="flex min-w-0 items-center gap-3">
             @if (staffWorkspace()) {
               <button
@@ -82,21 +97,42 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                 <span aria-hidden="true" class="text-xl leading-none">☰</span>
               </button>
             }
-            <a routerLink="/" aria-label="RCAT POS หน้าแรก" class="flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-              <img src="/rcat-pos-logo.webp" alt="" width="44" height="44" class="size-11 shrink-0 rounded-xl object-contain" />
+            <a
+              routerLink="/"
+              aria-label="RCAT POS หน้าแรก"
+              class="flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              <img
+                src="/rcat-pos-logo.webp"
+                alt=""
+                width="44"
+                height="44"
+                class="size-11 shrink-0 rounded-xl object-contain"
+              />
               <span class="grid min-w-0 gap-0.5">
-                <strong class="text-base font-semibold tracking-tight sm:text-lg">RCAT POS</strong>
-                <span class="hidden text-xs leading-4 text-muted-foreground sm:block">Ordering & Store Management</span>
+                <strong
+                  class="text-base font-semibold tracking-tight sm:text-lg"
+                  >RCAT POS</strong
+                >
+                <span
+                  class="hidden text-xs leading-4 text-muted-foreground sm:block"
+                  >Ordering & Store Management</span
+                >
               </span>
             </a>
           </div>
           <div class="flex shrink-0 items-center gap-2 sm:gap-3">
             @if (guestOrder()) {
-              <a routerLink="/order/track" class="inline-flex min-h-11 items-center justify-center rounded-xl px-3 text-sm font-semibold text-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+              <a
+                routerLink="/order/track"
+                class="inline-flex min-h-11 items-center justify-center rounded-xl px-3 text-sm font-semibold text-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
                 ติดตามออเดอร์
               </a>
             } @else if (staffWorkspace()) {
-              <span class="hidden text-sm text-muted-foreground md:inline">พื้นที่จัดการร้านค้า</span>
+              <span class="hidden text-sm text-muted-foreground md:inline"
+                >พื้นที่จัดการร้านค้า</span
+              >
               <button
                 hlmBtn
                 type="button"
@@ -104,17 +140,30 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                 class="min-h-11 rounded-xl"
                 [disabled]="loggingOut()"
                 (click)="logout()"
-              >{{ loggingOut() ? "กำลังออกจากระบบ..." : "ออกจากระบบ" }}</button>
+              >
+                {{ loggingOut() ? "กำลังออกจากระบบ..." : "ออกจากระบบ" }}
+              </button>
             } @else {
-              <span class="hidden text-sm text-muted-foreground sm:inline">ระบบสั่งอาหารผ่าน QR</span>
+              <span class="hidden text-sm text-muted-foreground sm:inline"
+                >ระบบสั่งอาหารผ่าน QR</span
+              >
             }
           </div>
         </header>
       }
 
-      <div [class]="staffWorkspace() ? 'grid min-w-0 flex-1 lg:grid-cols-[260px_minmax(0,1fr)]' : 'min-w-0 flex-1'">
+      <div
+        [class]="
+          staffWorkspace()
+            ? 'grid min-w-0 flex-1 lg:grid-cols-[260px_minmax(0,1fr)]'
+            : 'min-w-0 flex-1'
+        "
+      >
         @if (staffWorkspace()) {
-          <aside class="hidden min-w-0 border-r border-border bg-card p-4 lg:block" aria-label="พื้นที่ทำงาน">
+          <aside
+            class="hidden min-w-0 border-r border-border bg-card p-4 lg:block"
+            aria-label="พื้นที่ทำงาน"
+          >
             <rcat-portal-workspace-nav [url]="url()" />
           </aside>
           <hlm-sheet
@@ -141,15 +190,25 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
         <main
           id="main"
           tabindex="-1"
-          [class]="staffWorkspace() ? 'min-w-0 w-full max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8' : 'min-w-0 w-full'"
+          [class]="
+            staffWorkspace()
+              ? 'min-w-0 w-full max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8'
+              : 'min-w-0 w-full'
+          "
         >
           @if (session.notice()) {
-            <p class="mb-4 rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground" role="status">
+            <p
+              class="mb-4 rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground"
+              role="status"
+            >
               {{ session.notice() }}
             </p>
           }
           @if (message()) {
-            <p class="mb-4 rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm text-destructive" role="alert">
+            <p
+              class="mb-4 rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm text-destructive"
+              role="alert"
+            >
               {{ message() }}
             </p>
           }
@@ -157,7 +216,9 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
         </main>
       </div>
 
-      <footer class="border-t border-border bg-card px-4 py-4 text-center text-xs leading-5 text-muted-foreground">
+      <footer
+        class="border-t border-border bg-card px-4 py-4 text-center text-xs leading-5 text-muted-foreground"
+      >
         RCAT POS · สั่งอาหารผ่าน QR · ชำระเงินกับร้านค้าที่เปิดรับพร้อมเพย์
       </footer>
     </div>
@@ -170,9 +231,13 @@ export class AppComponent {
   readonly loggingOut = signal(false);
   readonly mobileNavOpen = signal(false);
   readonly message = signal("");
-  readonly guestOrder = computed(() => /^\/order(?:\/|\?|#|$)/.test(this.url()));
+  readonly guestOrder = computed(() =>
+    /^\/order(?:\/|\?|#|$)/.test(this.url()),
+  );
   readonly guestMenu = computed(() => /^\/order(?:\?|#|$)/.test(this.url()));
-  readonly staffWorkspace = computed(() => this.session.phase() === "staff" && !this.guestOrder());
+  readonly staffWorkspace = computed(
+    () => this.session.phase() === "staff" && !this.guestOrder(),
+  );
 
   constructor() {
     this.router.events.pipe(takeUntilDestroyed()).subscribe((event) => {

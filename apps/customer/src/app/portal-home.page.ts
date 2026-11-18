@@ -13,58 +13,146 @@ import { HlmButton } from "@spartan-ng/helm/button";
     <section class="min-w-0" aria-labelledby="portal-title">
       @switch (session.phase()) {
         @case ("loading") {
-          <div class="mx-auto grid min-h-[50dvh] max-w-lg content-center gap-4 px-4 py-12 text-center">
-            <span class="text-xs font-semibold tracking-widest text-muted-foreground">RCAT POS</span>
-            <h1 id="portal-title" class="text-2xl font-semibold text-foreground">RCAT POS</h1>
-            <p role="status" class="text-sm leading-7 text-muted-foreground">กำลังเปิดพื้นที่ทำงานและตรวจสอบสิทธิ์...</p>
+          <div
+            class="mx-auto grid min-h-[50dvh] max-w-lg content-center gap-4 px-4 py-12 text-center"
+          >
+            <span
+              class="text-xs font-semibold tracking-widest text-muted-foreground"
+              >RCAT POS</span
+            >
+            <h1
+              id="portal-title"
+              class="text-2xl font-semibold text-foreground"
+            >
+              RCAT POS
+            </h1>
+            <p role="status" class="text-sm leading-7 text-muted-foreground">
+              กำลังเปิดพื้นที่ทำงานและตรวจสอบสิทธิ์...
+            </p>
           </div>
         }
         @case ("error") {
-          <div class="mx-auto grid min-h-[50dvh] max-w-lg content-center justify-items-center gap-4 px-4 py-12 text-center">
-            <span class="text-xs font-semibold tracking-widest text-muted-foreground">CONNECTION</span>
-            <h1 id="portal-title" class="text-2xl font-semibold text-foreground">ยังเชื่อมต่อระบบไม่ได้</h1>
-            <p class="text-sm leading-7 text-muted-foreground">ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง</p>
-            <button hlmBtn type="button" class="min-h-11 rounded-xl px-6" (click)="session.refresh()">
+          <div
+            class="mx-auto grid min-h-[50dvh] max-w-lg content-center justify-items-center gap-4 px-4 py-12 text-center"
+          >
+            <span
+              class="text-xs font-semibold tracking-widest text-muted-foreground"
+              >CONNECTION</span
+            >
+            <h1
+              id="portal-title"
+              class="text-2xl font-semibold text-foreground"
+            >
+              ยังเชื่อมต่อระบบไม่ได้
+            </h1>
+            <p class="text-sm leading-7 text-muted-foreground">
+              ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง
+            </p>
+            <button
+              hlmBtn
+              type="button"
+              class="min-h-11 rounded-xl px-6"
+              (click)="session.refresh()"
+            >
               ลองเชื่อมต่ออีกครั้ง
             </button>
           </div>
         }
         @case ("guest") {
-          <div class="mx-auto grid w-full max-w-5xl items-center gap-8 px-4 py-10 sm:px-6 md:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] md:gap-10 md:py-16">
+          <div
+            class="mx-auto grid w-full max-w-5xl items-center gap-8 px-4 py-10 sm:px-6 md:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] md:gap-10 md:py-16"
+          >
             <section class="grid min-w-0 gap-5" aria-labelledby="portal-title">
               <div class="flex items-center gap-3">
-                <img src="/rcat-pos-logo.webp" width="64" height="64" alt="RCAT POS System" class="size-14 rounded-2xl object-contain" />
-                <span class="text-sm font-semibold tracking-wide text-muted-foreground">RCAT POS SYSTEM</span>
+                <img
+                  src="/rcat-pos-logo.webp"
+                  width="64"
+                  height="64"
+                  alt="RCAT POS System"
+                  class="size-14 rounded-2xl object-contain"
+                />
+                <span
+                  class="text-sm font-semibold tracking-wide text-muted-foreground"
+                  >RCAT POS SYSTEM</span
+                >
               </div>
               <div class="grid gap-3">
-                <span class="text-sm font-medium text-primary">สำหรับผู้ดูแลระบบและร้านค้า</span>
-                <h1 id="portal-title" class="max-w-xl text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl">
+                <span class="text-sm font-medium text-primary"
+                  >สำหรับผู้ดูแลระบบและร้านค้า</span
+                >
+                <h1
+                  id="portal-title"
+                  class="max-w-xl text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl"
+                >
                   จัดการร้านอย่างเป็นระบบ
                 </h1>
-                <p class="max-w-prose text-base leading-8 text-muted-foreground">
-                  พื้นที่จัดการร้านสำหรับบุคลากรที่ได้รับสิทธิ์
-                  ผ่านบัญชี Google Workspace ของวิทยาลัย
+                <p
+                  class="max-w-prose text-base leading-8 text-muted-foreground"
+                >
+                  พื้นที่จัดการร้านสำหรับบุคลากรที่ได้รับสิทธิ์ ผ่านบัญชี Google
+                  Workspace ของวิทยาลัย
                 </p>
               </div>
-              <ol class="grid gap-2 text-sm leading-6 text-muted-foreground" aria-label="ขั้นตอนการเข้าใช้งาน">
-                <li class="flex items-center gap-3"><span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">1</span>ผู้ดูแลเพิ่มสิทธิ์บัญชี</li>
-                <li class="flex items-center gap-3"><span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">2</span>ยืนยันตัวตนผ่าน Google</li>
-                <li class="flex items-center gap-3"><span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">3</span>ใช้งานเมนูตามสิทธิ์ของร้าน</li>
+              <ol
+                class="grid gap-2 text-sm leading-6 text-muted-foreground"
+                aria-label="ขั้นตอนการเข้าใช้งาน"
+              >
+                <li class="flex items-center gap-3">
+                  <span
+                    class="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground"
+                    >1</span
+                  >ผู้ดูแลเพิ่มสิทธิ์บัญชี
+                </li>
+                <li class="flex items-center gap-3">
+                  <span
+                    class="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground"
+                    >2</span
+                  >ยืนยันตัวตนผ่าน Google
+                </li>
+                <li class="flex items-center gap-3">
+                  <span
+                    class="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground"
+                    >3</span
+                  >ใช้งานเมนูตามสิทธิ์ของร้าน
+                </li>
               </ol>
               <div class="grid gap-2 border-t border-border pt-4">
-                <a routerLink="/order/track" class="w-fit rounded-lg py-2 text-sm font-semibold text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">ติดตามออเดอร์ของฉัน</a>
+                <a
+                  routerLink="/order/track"
+                  class="w-fit rounded-lg py-2 text-sm font-semibold text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >ติดตามออเดอร์ของฉัน</a
+                >
                 <p class="text-sm leading-6 text-muted-foreground">
                   ลูกค้าสแกน QR ของร้านเพื่อสั่งอาหารได้โดยไม่ต้องเข้าสู่ระบบ
                 </p>
               </div>
             </section>
-            <section class="grid min-w-0 gap-5 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8" aria-labelledby="portal-login-title">
-              <img src="/rcat-pos-logo.webp" width="56" height="56" alt="" class="size-14 rounded-2xl object-contain" />
+            <section
+              class="grid min-w-0 gap-5 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8"
+              aria-labelledby="portal-login-title"
+            >
+              <img
+                src="/rcat-pos-logo.webp"
+                width="56"
+                height="56"
+                alt=""
+                class="size-14 rounded-2xl object-contain"
+              />
               <div class="grid gap-2">
-                <span class="text-sm font-medium text-muted-foreground">บัญชีบุคลากรของวิทยาลัย</span>
-                <h2 id="portal-login-title" class="text-xl font-semibold text-foreground">เข้าสู่ระบบจัดการร้านค้า</h2>
+                <span class="text-sm font-medium text-muted-foreground"
+                  >บัญชีบุคลากรของวิทยาลัย</span
+                >
+                <h2
+                  id="portal-login-title"
+                  class="text-xl font-semibold text-foreground"
+                >
+                  เข้าสู่ระบบจัดการร้านค้า
+                </h2>
                 <p class="text-sm leading-7 text-muted-foreground">
-                  เฉพาะบัญชี <strong class="font-semibold text-foreground">@rcat.ac.th</strong>
+                  เฉพาะบัญชี
+                  <strong class="font-semibold text-foreground"
+                    >@rcat.ac.th</strong
+                  >
                   ที่ได้รับอนุญาตจากผู้ดูแลระบบ
                 </p>
               </div>
@@ -102,13 +190,25 @@ import { HlmButton } from "@spartan-ng/helm/button";
                 </svg>
                 <span>Sign in with Google</span>
               </a>
-              <p class="text-center text-xs leading-6 text-muted-foreground">สำหรับผู้ดูแลและร้านค้าที่ได้รับอนุญาตเท่านั้น</p>
-              <div class="grid gap-2 rounded-2xl bg-secondary p-4 text-sm leading-6">
-                <strong class="font-semibold text-foreground">ยังไม่มีสิทธิ์เข้าใช้งาน?</strong>
-                <span class="text-muted-foreground">โปรดติดต่อผู้ดูแลระบบ RCAT POS เพื่อขอสิทธิ์บัญชีและร้านค้า</span>
+              <p class="text-center text-xs leading-6 text-muted-foreground">
+                สำหรับผู้ดูแลและร้านค้าที่ได้รับอนุญาตเท่านั้น
+              </p>
+              <div
+                class="grid gap-2 rounded-2xl bg-secondary p-4 text-sm leading-6"
+              >
+                <strong class="font-semibold text-foreground"
+                  >ยังไม่มีสิทธิ์เข้าใช้งาน?</strong
+                >
+                <span class="text-muted-foreground"
+                  >โปรดติดต่อผู้ดูแลระบบ RCAT POS
+                  เพื่อขอสิทธิ์บัญชีและร้านค้า</span
+                >
               </div>
               @if (googleLoginError) {
-                <p role="alert" class="rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm leading-6 text-destructive">
+                <p
+                  role="alert"
+                  class="rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm leading-6 text-destructive"
+                >
                   {{ googleLoginError }}
                 </p>
               }
