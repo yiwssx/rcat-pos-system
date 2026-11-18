@@ -364,7 +364,10 @@ function guestError(error: unknown): string {
               <h2 id="guest-detail-title">{{ product.name }}</h2>
             </div>
             <button
-              hlmBtn variant="ghost" size="icon-lg" class="min-h-11 min-w-11"
+              hlmBtn
+              variant="ghost"
+              size="icon-lg"
+              class="min-h-11 min-w-11"
               type="button"
               aria-label="ปิดรายละเอียดสินค้า"
               (click)="closeProduct()"
@@ -440,7 +443,8 @@ function guestError(error: unknown): string {
               </div>
             </div>
             <button
-              hlmBtn class="min-h-12 w-full text-base font-semibold"
+              hlmBtn
+              class="min-h-12 w-full text-base font-semibold"
               type="button"
               [disabled]="busy()"
               (click)="addDetailProduct(product)"
@@ -465,7 +469,10 @@ function guestError(error: unknown): string {
             <span class="guest-cart-subtitle">{{ cartQty() }} รายการ</span>
           </div>
           <button
-            hlmBtn variant="ghost" size="icon-lg" class="min-h-11 min-w-11"
+            hlmBtn
+            variant="ghost"
+            size="icon-lg"
+            class="min-h-11 min-w-11"
             type="button"
             aria-label="ปิดตะกร้า"
             (click)="closeCart()"
@@ -569,7 +576,8 @@ function guestError(error: unknown): string {
             <strong>{{ money(estimate()) }} ฿</strong>
           </div>
           <button
-            hlmBtn class="min-h-12 w-full text-base font-semibold"
+            hlmBtn
+            class="min-h-12 w-full text-base font-semibold"
             type="button"
             [disabled]="busy() || loading() || !online() || cartQty() === 0"
             (click)="checkout()"

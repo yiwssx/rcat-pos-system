@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+  output,
+} from "@angular/core";
 import { HlmBadge } from "@spartan-ng/helm/badge";
 import { HlmLabel } from "@spartan-ng/helm/label";
 import {
@@ -45,7 +51,9 @@ import {
             (change)="clear.emit()"
           />
           <span class="min-w-0 flex-1 text-sm">ไม่เพิ่มตัวเลือก</span>
-          <span class="whitespace-nowrap text-sm tabular-nums text-muted-foreground">
+          <span
+            class="whitespace-nowrap text-sm tabular-nums text-muted-foreground"
+          >
             +0.00 ฿
           </span>
         </label>
@@ -63,8 +71,12 @@ import {
             [disabled]="busy() || selectionDisabled(choice.id)"
             (change)="optionToggle.emit(choice.id)"
           />
-          <span class="min-w-0 flex-1 text-sm leading-6">{{ choice.name }}</span>
-          <span class="whitespace-nowrap text-sm tabular-nums text-muted-foreground">
+          <span class="min-w-0 flex-1 text-sm leading-6">{{
+            choice.name
+          }}</span>
+          <span
+            class="whitespace-nowrap text-sm tabular-nums text-muted-foreground"
+          >
             {{ priceLabel(choice.priceDeltaSatang) }}
           </span>
         </label>
