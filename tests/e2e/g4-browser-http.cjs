@@ -487,7 +487,7 @@ async function browserFlow(fixture) {
     });
     assert.ok(cardInset.every((px) => px >= 12),
       "Catalog item needs readable inset on both sides");
-    assert.equal(await newItem.locator("details.catalog-media-disclosure")
+    assert.equal(await newItem.locator("details").filter({ hasText: "จัดการรูปสินค้า" })
       .evaluate((element) => element.open), false,
     "Image uploader must start collapsed to keep each item compact");
     await newItem.getByRole("button", { name: "แก้ไข" }).click();
@@ -611,7 +611,7 @@ async function browserFlow(fixture) {
         mediaReplies.push({ status: response.status(), detail });
       }
     });
-    await revisedItem.locator("details.catalog-media-disclosure > summary").click();
+    await revisedItem.getByText("จัดการรูปสินค้า", { exact: true }).click();
     await revisedItem.locator('input[type="file"]').setInputFiles({
       name: "catalog-menu-test.png",
       mimeType: "image/png",
