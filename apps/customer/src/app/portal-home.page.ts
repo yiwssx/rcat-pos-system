@@ -4,11 +4,20 @@ import { googleLoginFailureNotice } from "./portal-login-feedback";
 import { PortalSession } from "./portal-session.service";
 import { ROLE_LABEL } from "../../../merchant/src/app/order-board.domain";
 import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmBadge } from "@spartan-ng/helm/badge";
+import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
 
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, HlmButton],
+  imports: [
+    RouterLink,
+    HlmButton,
+    HlmBadge,
+    HlmCard,
+    HlmCardContent,
+    HlmCardHeader,
+  ],
   template: `
     <section class="min-w-0" aria-labelledby="portal-title">
       @switch (session.phase()) {
@@ -215,197 +224,309 @@ import { HlmButton } from "@spartan-ng/helm/button";
             </section>
           </div>
         }
+
         @case ("staff") {
-          <section class="v6-home" aria-label="พื้นที่ทำงานร้านค้า">
-            <header class="v6-home-heading">
-              <div>
-                <span class="v6-overline">พื้นที่จัดการร้านค้า</span>
-                <h1 id="portal-title">เริ่มงานที่ร้าน</h1>
-                <p>จัดการออเดอร์ เมนู และโต๊ะตามสิทธิ์ที่ระบบกำหนด</p>
+          <section class="grid min-w-0 gap-6" aria-label="พื้นที่ทำงานร้านค้า">
+            <header
+              class="flex min-w-0 flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div class="grid min-w-0 gap-2">
+                <p class="text-sm font-medium text-muted-foreground">
+                  พื้นที่จัดการร้านค้า
+                </p>
+                <h1
+                  id="portal-title"
+                  class="text-2xl font-semibold leading-9 tracking-tight text-foreground"
+                >
+                  เริ่มงานที่ร้าน
+                </h1>
+                <p class="text-sm leading-6 text-muted-foreground">
+                  จัดการออเดอร์ เมนู และโต๊ะตามสิทธิ์ที่ระบบกำหนด
+                </p>
                 @if (
                   session.platformRole() === "super_admin" ||
                   session.platformRole() === "admin"
                 ) {
-                  <a class="portal-platform-admin-link" routerLink="/platform">
+                  <a
+                    hlmBtn
+                    variant="outline"
+                    class="min-h-11 w-fit no-underline"
+                    routerLink="/platform"
+                  >
                     จัดการบัญชีและสิทธิ์ผู้ใช้งาน
                   </a>
                 }
               </div>
-              <span class="v6-workspace-total">
-                <span aria-hidden="true" class="v6-total-mark"></span>
-                ร้านที่เข้าถึงได้
-                <strong>{{ session.stores().length }}</strong>
+              <span hlmBadge variant="secondary" class="w-fit text-sm">
+                ร้านที่เข้าถึงได้ {{ session.stores().length }}
               </span>
             </header>
-            <div class="v6-home-columns">
-              <div class="v6-home-primary">
-                <div class="v6-section-top">
-                  <div>
-                    <h2>ร้านค้าของคุณ</h2>
-                    <p>เลือกงานที่ต้องการเริ่มได้ทันที</p>
-                  </div>
+
+            <div
+              class="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_280px]"
+            >
+              <section
+                class="grid min-w-0 gap-4"
+                aria-labelledby="portal-store-list"
+              >
+                <div class="grid gap-1">
+                  <h2
+                    id="portal-store-list"
+                    class="text-lg font-semibold text-foreground"
+                  >
+                    ร้านค้าของคุณ
+                  </h2>
+                  <p class="text-sm text-muted-foreground">
+                    เลือกงานที่ต้องการเริ่มได้ทันที
+                  </p>
                 </div>
-                <div class="portal-stores v6-store-list">
+                <div class="grid min-w-0 gap-4">
                   @for (
                     store of session.stores();
                     track store.tenantId + store.storeId
                   ) {
-                    <article class="portal-store-card v6-store-card">
-                      <div class="v6-store-title-row">
-                        <span class="v6-store-icon" aria-hidden="true">
-                          {{ store.storeName.slice(0, 1) }}
-                        </span>
-                        <div class="v6-store-title">
-                          <h3>{{ store.storeName }}</h3>
-                          <p>{{ store.tenantName }}</p>
+                    <article hlmCard size="sm" class="min-w-0">
+                      <div hlmCardHeader>
+                        <div class="flex min-w-0 items-center gap-3">
+                          <span
+                            class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-secondary text-lg font-semibold text-secondary-foreground"
+                            aria-hidden="true"
+                          >
+                            {{ store.storeName.slice(0, 1) }}
+                          </span>
+                          <div class="min-w-0 flex-1">
+                            <h3
+                              class="break-words text-base font-semibold leading-6 text-card-foreground"
+                            >
+                              {{ store.storeName }}
+                            </h3>
+                            <p
+                              class="break-words text-sm text-muted-foreground"
+                            >
+                              {{ store.tenantName }}
+                            </p>
+                          </div>
+                          <span hlmBadge variant="secondary">{{
+                            roles[store.role]
+                          }}</span>
                         </div>
-                        <span class="v6-store-role">{{
-                          roles[store.role]
-                        }}</span>
                       </div>
-                      <div class="v6-store-action-grid">
+                      <div hlmCardContent class="grid gap-3">
                         <a
-                          class="v6-main-action"
+                          hlmBtn
+                          class="min-h-12 w-full justify-start rounded-xl text-base no-underline"
                           [routerLink]="[
                             '/orders',
                             store.tenantId,
                             store.storeId,
                           ]"
                         >
-                          <span class="v6-action-glyph" aria-hidden="true"
-                            >≡</span
-                          >
-                          <span>
-                            <strong>เปิดกระดานออเดอร์</strong>
-                            <small>รับรายการและติดตามงานครัว</small>
-                          </span>
-                          <span aria-hidden="true">›</span>
+                          เปิดกระดานออเดอร์
                         </a>
+                        <p class="text-sm leading-6 text-muted-foreground">
+                          รับรายการและติดตามงานครัว
+                        </p>
                         @if (
                           store.role === "owner" || store.role === "manager"
                         ) {
-                          <a
-                            class="v6-secondary-action"
-                            [routerLink]="[
-                              '/catalog',
-                              store.tenantId,
-                              store.storeId,
-                            ]"
+                          <details
+                            class="group rounded-xl border border-border bg-background"
                           >
-                            <span aria-hidden="true">☷</span>
-                            เมนูและราคา
-                          </a>
-                          <a
-                            class="v6-secondary-action"
-                            [routerLink]="[
-                              '/tables',
-                              store.tenantId,
-                              store.storeId,
-                            ]"
-                          >
-                            <span aria-hidden="true">▦</span>
-                            โต๊ะและ QR
-                          </a>
-                          <a
-                            class="v6-secondary-action"
-                            [routerLink]="[
-                              '/payments/receiver',
-                              store.tenantId,
-                              store.storeId,
-                            ]"
-                          >
-                            <span aria-hidden="true">฿</span>
-                            บัญชีรับเงินพร้อมเพย์
-                          </a>
-                          <a
-                            class="v6-secondary-action"
-                            [routerLink]="[
-                              '/payments',
-                              store.tenantId,
-                              store.storeId,
-                            ]"
-                          >
-                            <span aria-hidden="true">▤</span>
-                            ตรวจสลิป
-                          </a>
-                          <a
-                            class="v6-secondary-action"
-                            [routerLink]="[
-                              '/payments/finance',
-                              store.tenantId,
-                              store.storeId,
-                            ]"
-                          >
-                            <span aria-hidden="true">≋</span>
-                            กระทบยอดและคืนเงิน
-                          </a>
-                        }
-                        @if (store.role === "owner") {
-                          <a
-                            class="v6-secondary-action"
-                            [routerLink]="['/tenants', store.tenantId, 'staff']"
-                          >
-                            <span aria-hidden="true">♙</span>
-                            พนักงานและสิทธิ์
-                          </a>
+                            <summary
+                              class="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                            >
+                              <span>งานจัดการเพิ่มเติม</span>
+                              <span
+                                class="text-xs text-muted-foreground"
+                                aria-hidden="true"
+                                >เปิดเมนู</span
+                              >
+                            </summary>
+                            <nav
+                              class="grid gap-2 border-t border-border p-3"
+                              [attr.aria-label]="
+                                'งานจัดการของ ' + store.storeName
+                              "
+                            >
+                              <a
+                                hlmBtn
+                                variant="outline"
+                                class="min-h-11 w-full justify-start no-underline"
+                                [routerLink]="[
+                                  '/catalog',
+                                  store.tenantId,
+                                  store.storeId,
+                                ]"
+                              >
+                                เมนูและราคา
+                              </a>
+                              <a
+                                hlmBtn
+                                variant="outline"
+                                class="min-h-11 w-full justify-start no-underline"
+                                [routerLink]="[
+                                  '/tables',
+                                  store.tenantId,
+                                  store.storeId,
+                                ]"
+                              >
+                                โต๊ะและ QR
+                              </a>
+                              <a
+                                hlmBtn
+                                variant="outline"
+                                class="min-h-11 w-full justify-start no-underline"
+                                [routerLink]="[
+                                  '/payments/receiver',
+                                  store.tenantId,
+                                  store.storeId,
+                                ]"
+                              >
+                                บัญชีรับเงินพร้อมเพย์
+                              </a>
+                              <a
+                                hlmBtn
+                                variant="outline"
+                                class="min-h-11 w-full justify-start no-underline"
+                                [routerLink]="[
+                                  '/payments',
+                                  store.tenantId,
+                                  store.storeId,
+                                ]"
+                              >
+                                ตรวจสลิป
+                              </a>
+                              <a
+                                hlmBtn
+                                variant="outline"
+                                class="min-h-11 w-full justify-start no-underline"
+                                [routerLink]="[
+                                  '/payments/finance',
+                                  store.tenantId,
+                                  store.storeId,
+                                ]"
+                              >
+                                กระทบยอดและคืนเงิน
+                              </a>
+                              @if (store.role === "owner") {
+                                <a
+                                  hlmBtn
+                                  variant="outline"
+                                  class="min-h-11 w-full justify-start no-underline"
+                                  [routerLink]="[
+                                    '/tenants',
+                                    store.tenantId,
+                                    'staff',
+                                  ]"
+                                >
+                                  พนักงานและสิทธิ์
+                                </a>
+                              }
+                            </nav>
+                          </details>
                         }
                       </div>
                     </article>
                   } @empty {
-                    <div class="v6-empty-workspace">
-                      <h2>ยังไม่มีร้านในบัญชีนี้</h2>
-                      @if (canSetUp()) {
-                        <p>เริ่มต้นด้วยการสร้างกลุ่มร้านค้าและร้านแรกของคุณ</p>
-                        <a
-                          routerLink="/settings"
-                          class="portal-platform-admin-link"
-                        >
-                          ตั้งค่าร้านค้าแรก
-                        </a>
-                      } @else {
-                        <p>ติดต่อผู้ดูแลร้านเพื่อขอสิทธิ์เข้าถึงร้านค้า</p>
-                      }
+                    <div hlmCard size="sm">
+                      <div hlmCardContent class="grid gap-3">
+                        <h3 class="text-base font-semibold text-foreground">
+                          ยังไม่มีร้านในบัญชีนี้
+                        </h3>
+                        @if (canSetUp()) {
+                          <p class="text-sm text-muted-foreground">
+                            เริ่มต้นด้วยการสร้างกลุ่มร้านค้าและร้านแรกของคุณ
+                          </p>
+                          <a
+                            hlmBtn
+                            routerLink="/settings"
+                            class="min-h-11 w-fit no-underline"
+                          >
+                            ตั้งค่าร้านค้าแรก
+                          </a>
+                        } @else {
+                          <p class="text-sm text-muted-foreground">
+                            ติดต่อผู้ดูแลร้านเพื่อขอสิทธิ์เข้าถึงร้านค้า
+                          </p>
+                        }
+                      </div>
                     </div>
                   }
                 </div>
-              </div>
-              <aside class="v6-home-aside" aria-labelledby="v6-get-started">
-                <div class="v6-aside-top">
-                  <span class="v6-aside-dot" aria-hidden="true"></span>
-                  <h2 id="v6-get-started">ขั้นตอนการทำงาน</h2>
+              </section>
+
+              <aside
+                hlmCard
+                size="sm"
+                class="hidden min-w-0 self-start xl:flex"
+                aria-labelledby="portal-workflow-help"
+              >
+                <div hlmCardHeader>
+                  <h2
+                    id="portal-workflow-help"
+                    class="text-base font-semibold text-card-foreground"
+                  >
+                    ขั้นตอนการทำงาน
+                  </h2>
                 </div>
-                <ol class="v6-steps">
-                  <li>
-                    <span class="v6-step-number">01</span>
-                    <div>
-                      <strong>รับออเดอร์</strong>
-                      <p>ลูกค้าสแกน QR และส่งรายการเข้าร้านโดยตรง</p>
-                    </div>
-                  </li>
-                  <li>
-                    <span class="v6-step-number">02</span>
-                    <div>
-                      <strong>เตรียมและส่งอาหาร</strong>
-                      <p>ร้านรับรายการและอัปเดตสถานะได้ทันที</p>
-                    </div>
-                  </li>
-                  <li>
-                    <span class="v6-step-number">03</span>
-                    <div>
-                      <strong>จัดการร้าน</strong>
-                      <p>ตรวจสอบเมนู โต๊ะ และสต็อกตามสิทธิ์ของคุณ</p>
-                    </div>
-                  </li>
-                </ol>
-                <p class="v6-aside-notice">
-                  การรับออเดอร์ไม่ใช่การยืนยันชำระเงิน
-                </p>
-                @if (canSetUp()) {
-                  <a class="v6-manage-link" routerLink="/settings">
-                    ตั้งค่าร้านและบุคลากร
-                    <span aria-hidden="true">›</span>
-                  </a>
-                }
+                <div hlmCardContent class="grid gap-4">
+                  <ol class="grid gap-4 text-sm leading-6">
+                    <li class="grid grid-cols-[2rem_minmax(0,1fr)] gap-2">
+                      <span class="font-semibold tabular-nums text-primary"
+                        >01</span
+                      >
+                      <div>
+                        <strong class="font-semibold text-foreground"
+                          >รับออเดอร์</strong
+                        >
+                        <p class="text-muted-foreground">
+                          ลูกค้าสแกน QR และส่งรายการเข้าร้านโดยตรง
+                        </p>
+                      </div>
+                    </li>
+                    <li class="grid grid-cols-[2rem_minmax(0,1fr)] gap-2">
+                      <span class="font-semibold tabular-nums text-primary"
+                        >02</span
+                      >
+                      <div>
+                        <strong class="font-semibold text-foreground"
+                          >เตรียมและส่งอาหาร</strong
+                        >
+                        <p class="text-muted-foreground">
+                          ร้านรับรายการและอัปเดตสถานะได้ทันที
+                        </p>
+                      </div>
+                    </li>
+                    <li class="grid grid-cols-[2rem_minmax(0,1fr)] gap-2">
+                      <span class="font-semibold tabular-nums text-primary"
+                        >03</span
+                      >
+                      <div>
+                        <strong class="font-semibold text-foreground"
+                          >จัดการร้าน</strong
+                        >
+                        <p class="text-muted-foreground">
+                          ตรวจสอบเมนู โต๊ะ และสต็อกตามสิทธิ์ของคุณ
+                        </p>
+                      </div>
+                    </li>
+                  </ol>
+                  <p
+                    class="rounded-xl bg-secondary p-3 text-sm leading-6 text-secondary-foreground"
+                  >
+                    การรับออเดอร์ไม่ใช่การยืนยันชำระเงิน
+                  </p>
+                  @if (canSetUp()) {
+                    <a
+                      hlmBtn
+                      variant="outline"
+                      class="min-h-11 w-full justify-start no-underline"
+                      routerLink="/settings"
+                    >
+                      ตั้งค่าร้านและบุคลากร
+                    </a>
+                  }
+                </div>
               </aside>
             </div>
           </section>

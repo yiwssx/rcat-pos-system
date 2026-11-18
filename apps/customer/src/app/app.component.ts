@@ -100,7 +100,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
             <a
               routerLink="/"
               aria-label="RCAT POS หน้าแรก"
-              class="flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              class="flex min-w-0 items-center gap-3 rounded-xl no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <img
                 src="/rcat-pos-logo.webp"
@@ -111,7 +111,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
               />
               <span class="grid min-w-0 gap-0.5">
                 <strong
-                  class="text-base font-semibold tracking-tight sm:text-lg"
+                  class="hidden whitespace-nowrap text-sm font-semibold tracking-tight min-[360px]:block sm:text-lg"
                   >RCAT POS</strong
                 >
                 <span
