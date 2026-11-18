@@ -273,8 +273,16 @@ async function browserFlow(fixture) {
     const firstDish = guest.locator(".guest-product", { hasText: fixture.name });
     await firstDish.getByRole("button", { name: "ดูรายละเอียด " + fixture.name }).click();
     const sheet = guest.getByRole("dialog", { name: fixture.name });
-    await sheet.waitFor();
-    assert.equal(await sheet.locator('hlm-sheet-content[data-slot="sheet-content"]').count(), 1,
+    // CDK's dialog container has no layout box for a fixed-position bottom
+    // Sheet: the accessible role/name exists, but Playwright marks the
+    // container itself hidden. Verify the actual visible Sheet surface.
+    const detailSurface = sheet.locator('hlm-sheet-content[data-slot="sheet-content"]');
+    await detailSurface.waitFor({ state: "visible" });
+    const titleId = await sheet.getAttribute("aria-labelledby");
+    assert.match(titleId ?? "", /^brn-dialog-title-[0-9]+$/,
+      "Spartan must own the generated dialog title reference");
+    assert.equal(await sheet.locator('[id="' + titleId + '"]').innerText(), fixture.name);
+    assert.equal(await detailSurface.count(), 1,
       "Customer detail must render inside official Spartan Sheet, not native dialog");
     assert.equal(await guest.locator("dialog.guest-product-sheet").count(), 0,
       "Legacy native product dialog must be removed");
@@ -307,7 +315,7 @@ async function browserFlow(fixture) {
       "Customer add-to-cart must use official Spartan Helm Button",
     );
     await guest.keyboard.press("Escape");
-    await sheet.waitFor({ state: "hidden" });
+    await detailSurface.waitFor({ state: "hidden" });
 
     // iPhone offline: do not submit an Order or silently mutate cart;
     // reconnect and submit through the visible Angular button.
@@ -319,8 +327,13 @@ async function browserFlow(fixture) {
     await itemSheet.getByRole("button", { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
     await guest.getByRole("button", { name: "ดูตะกร้า" }).click();
     const cartSheet = guest.getByRole("dialog", { name: "ตะกร้าของฉัน" });
-    await cartSheet.waitFor();
-    assert.equal(await cartSheet.locator('hlm-sheet-content[data-slot="sheet-content"]').count(), 1,
+    const cartSurface = cartSheet.locator('hlm-sheet-content[data-slot="sheet-content"]');
+    await cartSurface.waitFor({ state: "visible" });
+    const cartTitleId = await cartSheet.getAttribute("aria-labelledby");
+    assert.match(cartTitleId ?? "", /^brn-dialog-title-[0-9]+$/,
+      "Cart must have a generated accessible Spartan title");
+    assert.equal(await cartSheet.locator('[id="' + cartTitleId + '"]').innerText(), "ตะกร้าของฉัน");
+    assert.equal(await cartSurface.count(), 1,
       "Checkout cart must be the official Spartan Sheet");
     assert.equal(await guest.locator("dialog.guest-cart-sheet").count(), 0,
       "Legacy native cart dialog must be removed");
