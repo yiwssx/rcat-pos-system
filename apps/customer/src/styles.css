@@ -1894,13 +1894,6 @@ body {
   font-size: 14px;
   line-height: 1.75;
 }
-.portal-private-login .portal-google-button {
-  background: #176b3b;
-  color: #fff;
-  font-weight: 800;
-  min-height: 50px;
-  border-radius: 14px;
-}
 .portal-private-help {
   display: grid;
   gap: 4px;
@@ -1943,29 +1936,49 @@ body {
   }
 }
 
-/* Clear sign-in action and accessible focus for the single real staff entry. */
-.portal-private-login .portal-google-button {
+/* Google identity uses the shared outline variant, not the orange generic CTA.
+   Keep this scoped to the real staff login; never override other POS actions. */
+.portal-private-login a.portal-google-button {
+  display: inline-flex;
   width: 100%;
-  gap: 0.65rem;
-  font-size: clamp(0.96rem, 2.5vw, 1.08rem);
-  padding: 0.86rem 1rem;
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.15rem;
+  background: #fff;
+  border: 1px solid #d3d9d5;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgb(28 43 34 / 8%);
+  color: #1f2d26;
+  font-size: clamp(0.94rem, 2.25vw, 1.02rem);
+  font-weight: 700;
+  line-height: 1.45;
   text-align: center;
-  line-height: 1.5;
+  text-decoration: none;
 }
-.portal-private-login .portal-google-button:hover,
-.portal-private-login .portal-google-button:focus-visible {
-  background: #104f2c;
-  color: #fff;
+.portal-private-login a.portal-google-button:hover {
+  background: #f5f9f7;
+  border-color: #abc3b2;
+  box-shadow: 0 4px 14px rgb(28 43 34 / 10%);
+  color: #1f2d26;
 }
-.portal-login-action-icon {
-  display: inline-grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  flex: none;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: 50%;
-  font-size: 1.05rem;
+.portal-private-login a.portal-google-button:focus-visible {
+  background: #fff;
+  border-color: #167347;
+  color: #1f2d26;
+  outline: 3px solid #167347;
+  outline-offset: 3px;
+}
+.portal-private-login a.portal-google-button:active {
+  background: #edf4ef;
+  box-shadow: 0 1px 3px rgb(28 43 34 / 7%);
+}
+.portal-google-mark {
+  display: block;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
 }
 .portal-login-action-note {
   margin: 0.75rem 0 0;
