@@ -13,6 +13,7 @@ import { HlmButton } from "@spartan-ng/helm/button";
 import { HlmInput } from "@spartan-ng/helm/input";
 import { HlmLabel } from "@spartan-ng/helm/label";
 import { HlmBadge } from "@spartan-ng/helm/badge";
+import { HlmCard } from "@spartan-ng/helm/card";
 import { HlmNativeSelect } from "@spartan-ng/helm/native-select";
 import { prepareProductWebp } from "./prepare-product-webp";
 import { MerchantOrderApi } from "./merchant-order.api";
@@ -50,6 +51,7 @@ function bahtInput(satang: number): string {
     HlmInput,
     HlmLabel,
     HlmBadge,
+    HlmCard,
     HlmNativeSelect,
   ],
   styleUrls: ["./merchant-catalog.css"],
@@ -91,14 +93,18 @@ function bahtInput(satang: number): string {
           </p>
         }
 
-        <details class="catalog-create">
-          <summary class="catalog-create-summary">
+        <details
+          class="my-5 overflow-hidden rounded-xl border border-border bg-card"
+        >
+          <summary
+            class="flex min-h-14 cursor-pointer flex-wrap items-center justify-between gap-2 p-4 font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+          >
             <span>เพิ่มหมวดหมู่หรือสินค้าใหม่</span>
-            <span class="catalog-create-hint">แตะเพื่อเปิดแบบฟอร์ม</span>
+            <span class="text-muted-foreground">แตะเพื่อเปิดแบบฟอร์ม</span>
           </summary>
-          <div class="catalog-grid">
-            <form class="catalog-panel" (ngSubmit)="addCategory()">
-              <h2>เพิ่มหมวดหมู่</h2>
+          <div class="grid gap-4 p-4 md:grid-cols-2">
+            <form hlmCard size="sm" class="min-w-0" (ngSubmit)="addCategory()">
+              <h2 class="text-lg font-semibold">เพิ่มหมวดหมู่</h2>
               <label hlmLabel for="category-name">ชื่อหมวดหมู่</label>
               <input
                 hlmInput
@@ -136,8 +142,8 @@ function bahtInput(satang: number): string {
               </button>
             </form>
 
-            <form class="catalog-panel" (ngSubmit)="addProduct()">
-              <h2>เพิ่มสินค้า</h2>
+            <form hlmCard size="sm" class="min-w-0" (ngSubmit)="addProduct()">
+              <h2 class="text-lg font-semibold">เพิ่มสินค้า</h2>
               <label hlmLabel for="new-product-name">ชื่อสินค้า</label>
               <input
                 hlmInput

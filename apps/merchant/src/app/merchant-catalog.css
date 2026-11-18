@@ -3,46 +3,6 @@
   margin-inline: auto;
   padding: 2.5rem 1.5rem 6rem;
 }
-.catalog-create {
-  margin: 1.35rem 0;
-  border: 1px solid var(--pos-border, #d7e0eb);
-  border-radius: 1rem;
-  background: #fff;
-}
-.catalog-create-summary {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  min-height: 56px;
-  padding: 0.9rem 1.2rem;
-  font-weight: 750;
-  color: #24383e;
-}
-.catalog-create-summary:focus-visible {
-  outline: 3px solid #d88a20;
-  outline-offset: 3px;
-}
-.catalog-create-hint {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #64737d;
-}
-.catalog-create[open] .catalog-create-summary {
-  border-bottom: 1px solid #e1e5e7;
-}
-.catalog-create .catalog-grid {
-  padding: 1rem;
-  margin: 0;
-}
-.catalog-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.15rem;
-  margin: 1.6rem 0;
-}
 .catalog-panel {
   min-width: 0;
   background: #fff;
@@ -143,9 +103,6 @@
   color: #5c6b81;
 }
 @media (max-width: 760px) {
-  .catalog-grid {
-    grid-template-columns: 1fr;
-  }
   .catalog-actions,
   .catalog-actions button {
     flex: 1 1 auto;
@@ -238,10 +195,6 @@
   max-width: var(--pos-content-compact, 1040px);
   padding: clamp(1rem, 2.4vw, 2rem) clamp(0.75rem, 2vw, 1.5rem) 4rem;
 }
-.catalog-grid {
-  gap: 0.85rem;
-  margin-block: 1rem;
-}
 .catalog-panel {
   border-radius: 0.95rem;
   box-shadow: 0 4px 16px rgb(23 40 59 / 5%);
@@ -275,9 +228,6 @@
   min-height: 44px;
 }
 @media (max-width: 760px) {
-  .catalog-grid {
-    gap: 0.75rem;
-  }
   .catalog-panel {
     padding: 1rem;
   }
@@ -337,18 +287,6 @@
   border: 1px solid #efd9c4;
   border-radius: 13px;
   box-shadow: 0 7px 20px rgb(177 65 11 / 5%);
-}
-.catalog-create {
-  border-color: #f0d4b4;
-  background: #fff;
-  border-radius: 13px;
-}
-.catalog-create-summary {
-  color: #8c3b0a;
-  background: #fff6e8;
-}
-.catalog-create[open] .catalog-create-summary {
-  background: #ffedcf;
 }
 .catalog-status {
   background: #ddf7ea;
