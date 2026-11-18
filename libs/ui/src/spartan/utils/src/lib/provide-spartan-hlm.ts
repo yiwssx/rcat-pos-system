@@ -1,5 +1,8 @@
-import { OVERLAY_DEFAULT_CONFIG } from '@angular/cdk/overlay';
-import { type EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
+import { OVERLAY_DEFAULT_CONFIG } from "@angular/cdk/overlay";
+import {
+  type EnvironmentProviders,
+  makeEnvironmentProviders,
+} from "@angular/core";
 
 /**
  * Provides default configuration for Spartan Helm components.
@@ -25,10 +28,10 @@ import { type EnvironmentProviders, makeEnvironmentProviders } from '@angular/co
  * ```
  */
 export function provideSpartanHlm(): EnvironmentProviders {
-	return makeEnvironmentProviders([
-		{
-			provide: OVERLAY_DEFAULT_CONFIG,
-			useValue: { usePopover: false },
-		},
-	]);
+  return makeEnvironmentProviders([
+    {
+      provide: OVERLAY_DEFAULT_CONFIG,
+      useValue: { usePopover: false },
+    },
+  ]);
 }
