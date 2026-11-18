@@ -24,63 +24,33 @@ async function main() {
     assert.equal(alias.headers.get('location'),'/');
     await page.goto(merchant + '/local');
     await page.getByRole('link', {name:/Sign in with Google/}).waitFor();
-    // Guard the real bug: the inline QR eyebrow previously appeared beside
-    // the logo as a displaced block rather than beneath the brand lockup.
+    // Login: genuine Helm CTA, original OAuth entry and Google trademark colors.
     for (const viewport of [
       { width: 320, height: 780, name: 'mobile' },
       { width: 1365, height: 900, name: 'desktop' },
     ]) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
-      const label = page.locator('.portal-landing-intro > .portal-eyebrow');
-      await label.waitFor();
-      // The staff entry remains a native full-page OAuth navigation, not a fake
-      // client-side click. Validate the actual Google-branded appearance on
-      // both existing mobile and desktop viewport passes.
-      const googleSignIn = page.getByRole('link', { name: 'Sign in with Google' });
-      assert.equal(await googleSignIn.getAttribute('href'), '/api/auth/google/start');
-      assert.equal(await googleSignIn.getAttribute('data-variant'), 'outline');
-      assert.equal(await googleSignIn.locator('svg.portal-google-mark path').count(), 4);
-      const loginAppearance = await googleSignIn.evaluate((element) => {
+      const login = page.getByRole('link', { name: 'Sign in with Google' });
+      assert.equal(await login.getAttribute('href'), '/api/auth/google/start');
+      assert.equal(await login.getAttribute('data-slot'), 'button',
+        'Google OAuth must use real Spartan Helm Button without custom styling');
+      assert.equal(await login.locator('svg path').count(), 4,
+        'Four-color Google G artwork must remain intact');
+      const appearance = await login.evaluate((element) => {
         const style = getComputedStyle(element);
         return {
-          background: style.backgroundColor,
-          border: style.borderTopColor,
-          foreground: style.color,
+          bg: style.backgroundColor,
+          fg: style.color,
           height: element.getBoundingClientRect().height,
+          width: document.documentElement.scrollWidth,
+          viewport: document.documentElement.clientWidth,
         };
       });
-      assert.equal(loginAppearance.background, 'rgb(255, 255, 255)',
-        'Google sign-in must be white, not the orange/green primary CTA');
-      assert.equal(loginAppearance.border, 'rgb(139, 139, 139)',
-        'Google sign-in must use a neutral outline, not the inherited orange border');
-      assert.equal(loginAppearance.foreground, 'rgb(38, 38, 38)',
-        'Google sign-in label must remain readable on white');
-      assert.ok(loginAppearance.height >= 58,
-        'Google sign-in touch target must remain at least 58px tall');
-      const geometry = await page.evaluate(() => {
-        const logo = document.querySelector('.portal-hero-brand').getBoundingClientRect();
-        const tag = document.querySelector('.portal-landing-intro > .portal-eyebrow').getBoundingClientRect();
-        return {
-          logoBottom: logo.bottom,
-          tagTop: tag.top,
-          tagRight: tag.right,
-          viewportWidth: document.documentElement.clientWidth,
-          documentWidth: document.documentElement.scrollWidth,
-          background: getComputedStyle(document.querySelector('.portal-landing-intro > .portal-eyebrow')).backgroundColor,
-        };
-      });
-      assert.ok(geometry.tagTop >= geometry.logoBottom,
-        'QR label must appear BELOW the logo at ' + viewport.width + 'px');
-      assert.ok(geometry.tagRight <= geometry.viewportWidth + 1,
-        'QR label overflows to the right at ' + viewport.width + 'px');
-      assert.ok(geometry.documentWidth <= geometry.viewportWidth + 1,
-        'QR landing screen has horizontal overflow at ' + viewport.width + 'px');
-      assert.equal(geometry.background, 'rgb(255, 240, 212)',
-        'QR label must use the RCAT warm-orange design token treatment');
-      await page.screenshot({
-        path: '/tmp/rcat-portal-login-' + viewport.name + '.png',
-        fullPage: true,
-      });
+      assert.equal(appearance.bg, 'rgb(255, 255, 255)', 'Google login remains white');
+      assert.ok(appearance.height >= 44, 'Accessible Login target must be >=44px');
+      assert.ok(appearance.width <= appearance.viewport + 1,
+        'Login must not overflow viewport ' + viewport.width);
+      await page.screenshot({ path: '/tmp/rcat-portal-login-' + viewport.name + '.png', fullPage: true });
     }
     await page.setViewportSize({ width: 320, height: 780 });
     assert.equal(await page.getByRole('textbox', {name: /อีเมลบัญชี/}).count(), 0,
@@ -105,69 +75,32 @@ async function main() {
       await document.fonts.load('400 16px "RCAT Plex Thai"');
       await document.fonts.load('700 20px "RCAT Plex Thai"');
       return {
-        actual: getComputedStyle(document.querySelector('.portal-layout')).fontFamily,
+        actual: getComputedStyle(document.body).fontFamily,
         loadedRegular: document.fonts.check('400 16px "RCAT Plex Thai"'),
         loadedBold: document.fonts.check('700 20px "RCAT Plex Thai"'),
       };
     });
     assert.ok(fontReport.actual.includes('RCAT Plex Thai') && fontReport.loadedRegular && fontReport.loadedBold,
-      'Thai/Latin interface must use genuinely loaded 400/700 IBM Plex Sans Thai');
-    // Owner-approved V6 color contract: actual computed styles, not AI mockup pixels.
-    for (const name of [
-      'v6-storefront.svg',
-      'v6-ribbon-top.svg',
-      'v6-bottom-waves.svg',
-      'v6-cta-flourish.svg',
-    ]) {
-      const asset = await context.request.get(merchant + '/' + name);
-      assert.equal(asset.status(), 200, 'Decorative Design System asset must ship: ' + name);
-      const svg = await asset.text();
-      assert.match(svg, /<svg\b/, 'Decorative file must be SVG, not a missing-page HTML fallback: ' + name);
-    }
+      'Self-hosted Thai/Latin typography must load at 400 and 700');
     await page.setViewportSize({ width: 1365, height: 900 });
-    const palette = await page.evaluate(() => {
-      const css = (selector) => getComputedStyle(document.querySelector(selector));
-      return {
-        orange: getComputedStyle(document.documentElement).getPropertyValue('--pos-orange').trim(),
-        sidebar: css('.portal-sidebar').backgroundImage,
-        orderAction: css('.v6-main-action').backgroundImage,
-        secondary: css('.v6-secondary-action').backgroundImage,
-      };
+    const desktopNav = page.getByRole('complementary', { name: 'พื้นที่ทำงาน' });
+    await desktopNav.waitFor({ state: 'visible' });
+    await desktopNav.getByRole('navigation', { name: 'งานของร้าน' }).waitFor();
+    assert.equal(await desktopNav.locator('hlm-native-select [data-slot="native-select"]').count(), 1,
+      'Desktop store picker must be the official Spartan Helm NativeSelect');
+    const shell = await desktopNav.evaluate(element => {
+      const style = getComputedStyle(element);
+      return { background: style.backgroundColor, image: style.backgroundImage };
     });
-    assert.equal(palette.orange, '#c94108', 'Production CSS must use the new readable vivid-orange token');
-    assert.match(palette.sidebar, /linear-gradient/, 'Desktop navigation must use the vivid orange treatment');
-    assert.match(palette.orderAction, /linear-gradient/, 'Order board entry must use the vivid brand CTA');
-    assert.match(palette.secondary, /linear-gradient/, 'Secondary actions must have a distinct mint gradient');
-    const ornament = await page.evaluate(() => {
-      const shell = document.querySelector('.portal-content');
-      const top = getComputedStyle(shell, '::before');
-      const bottom = getComputedStyle(shell, '::after');
-      const cta = getComputedStyle(document.querySelector('.v6-main-action'), '::after');
-      return {
-        top: top.backgroundImage,
-        bottom: bottom.backgroundImage,
-        bottomWidth: parseFloat(bottom.width),
-        pointerEvents: bottom.pointerEvents,
-        cta: cta.backgroundImage,
-        main: getComputedStyle(document.querySelector('.portal-home')).backgroundColor,
-        hintClearance: shell.getBoundingClientRect().bottom
-          - document.querySelector('.portal-nav-hint').getBoundingClientRect().bottom,
-      };
-    });
-    assert.match(ornament.top, /v6-ribbon-top\.svg/, 'Top gold ribbon must be mounted on the full application shell');
-    assert.match(ornament.bottom, /v6-bottom-waves\.svg/, 'Wave must be rendered at shell level across sidebar and workspace');
-    assert.ok(ornament.bottomWidth >= 1364, 'Shared bottom wave must span the full 1365px desktop shell');
-    assert.equal(ornament.pointerEvents, 'none', 'Decorative overlays must never intercept POS clicks');
-    assert.match(ornament.cta, /v6-cta-flourish\.svg/, 'Order CTA must use the shared basket flourish');
-    assert.equal(ornament.main, 'rgba(0, 0, 0, 0)', 'Workspace must be transparent so shell ornaments remain visible');
-    assert.ok(ornament.hintClearance > 54, 'Sidebar hint must remain readable above the golden wave crest');
+    assert.equal(shell.background, 'rgb(255, 255, 255)',
+      'Desktop sidebar must use the white neutral iOS surface');
+    assert.equal(shell.image, 'none',
+      'Legacy V6 orange gradient decoration must be removed from the sidebar');
     await page.setViewportSize({ width: 320, height: 780 });
-    const officialLogo = page.locator('img.portal-brand-image');
+    const officialLogo = page.getByRole('link', { name: 'RCAT POS หน้าแรก' }).locator('img');
     await officialLogo.waitFor();
     assert.equal(await officialLogo.evaluate(img => img.complete && img.naturalWidth === 96), true,
-      'Uploaded RCAT POS artwork must load as a real image in the portal');
-    // Verify the actual viewport being tested: the old check ran only after
-    // changing to desktop width but mistakenly claimed 320px coverage.
+      'RCAT POS logo must load as an actual image');
     for (const viewport of [
       { width: 320, height: 780, name: 'mobile' },
       { width: 390, height: 844, name: 'phone' },
@@ -179,36 +112,28 @@ async function main() {
         width: innerWidth,
         content: document.documentElement.scrollWidth,
       }));
-      assert.ok(size.content <= size.width + 1, 'Portal overflows at ' + viewport.width + 'px');
-      const decor = await page.evaluate(() => {
-        const wave = getComputedStyle(document.querySelector('.portal-content'), '::after');
-        const ribbon = getComputedStyle(document.querySelector('.portal-content'), '::before');
-        return { waveHeight: parseFloat(wave.height), waveURL: wave.backgroundImage, ribbonDisplay: ribbon.display };
-      });
-      assert.match(decor.waveURL, /v6-bottom-waves\.svg/, 'Branded wave must remain present at ' + viewport.width + 'px');
-      assert.ok(decor.waveHeight <= (viewport.width <= 540 ? 73 : viewport.width <= 980 ? 113 : 179),
-        'Wave must scale to avoid taking operational screen space at ' + viewport.width + 'px');
-      if (viewport.width <= 980)
-        assert.equal(decor.ribbonDisplay, 'none', 'Top ribbon must not compete with phone/tablet navigation');
+      assert.ok(size.content <= size.width + 1,
+        'Staff portal must not overflow ' + viewport.width + 'px');
       await page.screenshot({ path: '/tmp/rcat-portal-' + viewport.name + '.png', fullPage: true });
-      // Portrait tablet and phones use one collapsible nav, not a 252px sidebar.
-      if (viewport.width <= 980) {
-        assert.equal(await page.getByRole('button', { name: 'เมนูจัดการร้าน' }).isVisible(), true);
-        assert.equal(await page.getByRole('navigation', { name: 'งานของร้าน' }).isVisible(), false);
-      }
+      const menuButton = page.getByRole('button', { name: 'เปิดเมนูจัดการร้าน' });
+      assert.equal(await menuButton.isVisible(), viewport.width < 1024,
+        'Mobile Sheet toggle must replace the old horizontal scroll navigation');
+      assert.equal(await desktopNav.isVisible(), viewport.width >= 1024,
+        'Desktop sidebar visibility must follow responsive breakpoint');
     }
     await page.setViewportSize({ width: 320, height: 780 });
-    const menuToggle = page.getByRole('button', { name: 'เมนูจัดการร้าน' });
+    // CDK correctly hides background controls from the accessibility tree
+    // while the modal Sheet is open. Use a stable DOM locator for state checks.
+    await page.getByRole('button', { name: 'เปิดเมนูจัดการร้าน' }).waitFor();
+    const menuToggle = page.locator('button[aria-label="เปิดเมนูจัดการร้าน"]');
     assert.equal(await menuToggle.getAttribute('aria-expanded'), 'false');
     await menuToggle.click();
-    // Angular updates the signal-driven class after the click. Do not race
-    // browser change detection with an instantaneous isVisible() assertion.
-    await page.screenshot({ path: '/tmp/rcat-portal-mobile-navigation.png', fullPage: true });
-    await page.locator('.portal-sidebar.portal-nav-open').waitFor();
-    await page.getByRole('navigation', { name: 'งานของร้าน' }).waitFor({ state: 'visible' });
+    const mobileSheet = page.locator('hlm-sheet-content[data-slot="sheet-content"]');
+    await mobileSheet.waitFor({ state: 'visible' });
+    await mobileSheet.getByRole('navigation', { name: 'งานของร้าน' }).waitFor();
     assert.equal(await menuToggle.getAttribute('aria-expanded'), 'true');
-    await menuToggle.click();
-    await page.locator('.portal-sidebar:not(.portal-nav-open)').waitFor();
+    await mobileSheet.getByRole('button', { name: 'ปิดเมนู' }).click();
+    await mobileSheet.waitFor({ state: 'hidden' });
     assert.equal(await menuToggle.getAttribute('aria-expanded'), 'false');
     const cookies = await context.cookies(merchant);
     assert.ok(cookies.some(c => c.name === '__Host-rcat_session' && c.secure && c.httpOnly));
@@ -220,7 +145,7 @@ async function main() {
     await adminPage.goto(admin + '/settings');
     await adminPage.getByRole('heading', { name: 'RCAT Cafe', exact: true }).waitFor();
     const noDecoration = await adminPage.evaluate(() =>
-      getComputedStyle(document.querySelector('.portal-content'), '::after').content);
+      getComputedStyle(document.querySelector('rcat-root main'), '::after').content);
     assert.equal(noDecoration, 'none', 'Do not apply homepage ornaments to actual Admin tasks');
     await adminPage.locator('.owner-stores').getByRole('link', { name: 'จัดการบุคลากรและคำเชิญ' }).waitFor();
     const createDisclosure = adminPage.locator('details.v6-owner-disclosure').first();
