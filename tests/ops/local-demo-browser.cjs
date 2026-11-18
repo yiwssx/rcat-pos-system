@@ -250,7 +250,12 @@ async function main() {
     assert.equal(guestLight.ctaText, 'rgb(255, 255, 255)', 'Cart action must have readable white text');
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-ios-cart-bar-phone.png', fullPage: true });
     await staticPage.getByRole('button', { name: 'ดูตะกร้า' }).click();
-    await staticPage.getByRole('dialog', { name: 'ตะกร้าของฉัน' }).waitFor();
+    // CDK dialog accessibility container is zero-sized by design.
+    // Verify its accessible title and the actual visible Spartan Sheet surface.
+    assert.equal(await staticPage.getByRole('dialog', { name: 'ตะกร้าของฉัน' }).count(), 1);
+    const cartSurface = staticPage.locator('hlm-sheet-content[data-slot="sheet-content"]')
+      .filter({ has: staticPage.getByText('ตะกร้าของฉัน', { exact: true }) });
+    await cartSurface.waitFor({ state: 'visible' });
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-cart-phone.png', fullPage: true });
     await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).click();
     await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).waitFor();
