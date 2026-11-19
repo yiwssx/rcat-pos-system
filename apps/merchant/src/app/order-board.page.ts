@@ -79,9 +79,11 @@ function failureText(error: unknown): string {
     HlmLabel,
     HlmNativeSelect,
   ],
-  styleUrls: ["./order-board.css"],
   template: `
-    <section class="board" aria-labelledby="board-title">
+    <section
+      class="mx-auto box-border w-full max-w-7xl space-y-4 px-4 pb-12 pt-6 sm:px-6 lg:px-8"
+      aria-labelledby="board-title"
+    >
       <header
         class="mb-4 flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between"
       >
@@ -121,7 +123,7 @@ function failureText(error: unknown): string {
       </header>
 
       <div
-        class="board-connection my-3 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm leading-relaxed text-foreground"
+        class="my-3 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm leading-relaxed text-foreground"
         role="status"
         aria-live="polite"
       >
@@ -186,14 +188,14 @@ function failureText(error: unknown): string {
 
       @if (!store() && !error()) {
         <p
-          class="board-empty my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
+          class="my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
           role="status"
         >
           กำลังตรวจสอบข้อมูลร้านและสิทธิ์พนักงาน...
         </p>
       } @else if (store()) {
         <div
-          class="board-metrics my-4 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3"
+          class="my-4 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3"
           aria-label="กรองออเดอร์ตามสถานะ"
         >
           <button
@@ -259,7 +261,7 @@ function failureText(error: unknown): string {
           </button>
         </div>
 
-        <div class="board-controls my-4 flex flex-wrap items-center gap-3">
+        <div class="my-4 flex flex-wrap items-center gap-3">
           <h2 class="mr-auto text-lg font-semibold">รายการออเดอร์</h2>
           <label hlmLabel for="order-filter">กรองสถานะ</label>
           <hlm-native-select
@@ -279,7 +281,7 @@ function failureText(error: unknown): string {
           </hlm-native-select>
         </div>
         <p
-          class="board-connection my-3 text-sm leading-relaxed text-muted-foreground"
+          class="my-3 text-sm leading-relaxed text-muted-foreground"
           role="status"
         >
           กำลังแสดง {{ orders().length }} ออเดอร์ที่โหลด ·
@@ -287,7 +289,7 @@ function failureText(error: unknown): string {
         </p>
         @if (visibleOrders().length === 0) {
           <p
-            class="board-empty my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
+            class="my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
             role="status"
           >
             {{
@@ -494,8 +496,11 @@ function failureText(error: unknown): string {
         }
 
         @if (hasMoreOrders()) {
-          <div class="board-more">
+          <div class="my-5 grid justify-items-center gap-3 text-center">
             <button
+              hlmBtn
+              variant="outline"
+              class="min-h-11"
               type="button"
               (click)="loadOlderOrders()"
               [disabled]="
@@ -509,7 +514,10 @@ function failureText(error: unknown): string {
               }}
             </button>
             @if (loadedPages() >= maxInboxPages) {
-              <p role="status">
+              <p
+                class="text-sm leading-relaxed text-muted-foreground"
+                role="status"
+              >
                 ยังมีรายการเก่ากว่านี้
                 ต้องใช้การค้นหาและรายงานย้อนหลังในระยะถัดไป
               </p>
@@ -517,16 +525,21 @@ function failureText(error: unknown): string {
           </div>
         }
 
-        <details class="board-events v6-board-events">
-          <summary>
+        <details class="mt-5 overflow-hidden rounded-xl border border-border bg-card">
+          <summary
+            class="flex min-h-12 cursor-pointer flex-wrap items-center justify-between gap-3 p-4 font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
             <span>เหตุการณ์ล่าสุด</span>
-            <span class="v6-event-count"
+            <span class="text-sm font-normal text-muted-foreground"
               >{{ events().length }} เหตุการณ์ · ดูบันทึก</span
             >
           </summary>
-          <section class="board-events" aria-labelledby="events-title">
+          <section
+            class="border-t border-border p-4"
+            aria-labelledby="events-title"
+          >
             <div
-              class="board-controls my-4 flex flex-wrap items-center justify-between gap-2"
+              class="my-4 flex flex-wrap items-center justify-between gap-2"
             >
               <h2 id="events-title" class="text-lg font-semibold">
                 เหตุการณ์ล่าสุด
@@ -537,19 +550,19 @@ function failureText(error: unknown): string {
             </div>
             @if (events().length === 0) {
               <p
-                class="board-empty my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
+                class="my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
               >
                 ยังไม่มีเหตุการณ์ใหม่ที่รับจาก Outbox ในหน้าจอนี้
               </p>
             } @else {
-              <ol class="event-list">
+              <ol class="m-0 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card p-0">
                 @for (event of events(); track event.eventId) {
-                  <li>
-                    <span class="event-type">{{
+                  <li class="flex flex-wrap items-center gap-3 p-3 text-sm">
+                    <span class="font-semibold">{{
                       statusLabel[event.status]
                     }}</span>
                     <span>ออเดอร์ {{ eventNumber(event.orderId) }}</span>
-                    <time>{{ time(event.occurredAt) }}</time>
+                    <time class="ml-auto text-sm tabular-nums text-muted-foreground">{{ time(event.occurredAt) }}</time>
                   </li>
                 }
               </ol>
