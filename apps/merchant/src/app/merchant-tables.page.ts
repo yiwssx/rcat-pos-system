@@ -9,47 +9,78 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { HlmBadge } from "@spartan-ng/helm/badge";
+import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmCard } from "@spartan-ng/helm/card";
+import { HlmInput } from "@spartan-ng/helm/input";
+import { HlmLabel } from "@spartan-ng/helm/label";
 import { MerchantOrderApi } from "./merchant-order.api";
 import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
 
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, HlmBadge, HlmButton, HlmCard, HlmInput, HlmLabel],
   styleUrls: ["./merchant-tables.css"],
   template: `
-    <section class="tables-shell" aria-labelledby="tables-title">
-      <header class="tables-header">
-        <a routerLink="/">← กลับหน้าร้านค้า</a>
-        <span class="eyebrow">ORDERING / TABLE QR</span>
-        <h1 id="tables-title">QR สั่งอาหารติดโต๊ะ</h1>
-        <p>
+    <section
+      class="tables-shell mx-auto box-border w-full max-w-6xl space-y-5 px-4 pb-14 pt-6 sm:px-6 lg:px-8"
+      aria-labelledby="tables-title"
+    >
+      <header class="space-y-3 border-b border-border pb-5">
+        <a hlmBtn routerLink="/" variant="link" class="min-h-11 px-0">
+          ← กลับหน้าร้านค้า
+        </a>
+        <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          ORDERING / TABLE QR
+        </p>
+        <h1 id="tables-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">
+          QR สั่งอาหารติดโต๊ะ
+        </h1>
+        <p class="max-w-prose text-sm leading-relaxed text-muted-foreground">
           ใช้ QR ติดโต๊ะเดิมได้ตลอด ลูกค้าสแกนเพื่อเปิดเมนูและสั่งอาหารได้ทันที
           เมื่อร้านเปิดรับออเดอร์
         </p>
-        <p class="tables-warning">
-          <strong>ไม่ใช่ QR รับเงิน PromptPay</strong>
-          ร้านควบคุมการรับออเดอร์ผ่านสวิตช์ด้านล่าง ไม่ต้องออกรหัส 8 หลัก
+        <p class="max-w-prose rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed">
+          <strong class="font-semibold">ไม่ใช่ QR รับเงิน PromptPay</strong>
+          ร้านควบคุมการรับออเดอร์ผ่านปุ่มด้านล่าง ไม่ต้องออกรหัส 8 หลัก
         </p>
       </header>
+
       @if (loading()) {
-        <p role="status">กำลังตรวจสิทธิ์และรายการโต๊ะ...</p>
+        <p class="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground" role="status">
+          กำลังตรวจสิทธิ์และรายการโต๊ะ...
+        </p>
       } @else if (!authorized()) {
-        <p role="alert">{{ error() || "บัญชีนี้ไม่มีสิทธิ์จัดการโต๊ะ" }}</p>
+        <p class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
+          {{ error() || "บัญชีนี้ไม่มีสิทธิ์จัดการโต๊ะ" }}
+        </p>
       } @else {
         @if (error()) {
-          <p class="tables-error" role="alert">{{ error() }}</p>
+          <p class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
+            {{ error() }}
+          </p>
         }
         @if (notice()) {
-          <p class="tables-notice" role="status">{{ notice() }}</p>
+          <p class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed" role="status">
+            {{ notice() }}
+          </p>
         }
+
         <section
-          class="ordering-switch"
+          hlmCard
+          size="sm"
+          class="min-w-0 gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
           aria-labelledby="ordering-switch-title"
         >
-          <div>
-            <h2 id="ordering-switch-title">เปิดรับออเดอร์ผ่าน QR</h2>
-            <p>
+          <div class="min-w-0 space-y-2">
+            <h2 id="ordering-switch-title" class="text-lg font-semibold">
+              เปิดรับออเดอร์ผ่าน QR
+            </h2>
+            <span hlmBadge [variant]="orderingEnabled() ? 'secondary' : 'outline'">
+              {{ orderingEnabled() ? "เปิดรับออเดอร์" : "ปิดรับออเดอร์" }}
+            </span>
+            <p class="text-sm leading-relaxed text-muted-foreground">
               {{
                 orderingEnabled()
                   ? "เปิดอยู่ · ลูกค้าสแกน QR เพื่อสั่งได้ทันที"
@@ -58,8 +89,10 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
             </p>
           </div>
           <button
+            hlmBtn
             type="button"
-            [class.is-open]="orderingEnabled()"
+            class="min-h-11 w-full shrink-0 sm:w-auto"
+            [variant]="orderingEnabled() ? 'destructive' : 'default'"
             [disabled]="busy()"
             [attr.aria-pressed]="orderingEnabled()"
             (click)="toggleOrdering()"
@@ -73,63 +106,114 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
             }}
           </button>
         </section>
-        <form class="tables-add" (ngSubmit)="createTable()">
-          <h2>เพิ่มโต๊ะใหม่</h2>
-          <label for="table-label">ชื่อโต๊ะ</label>
-          <input
-            id="table-label"
-            name="tableLabel"
-            [(ngModel)]="newLabel"
-            maxlength="60"
-            required
-            placeholder="เช่น โต๊ะ 1"
-            [disabled]="busy()"
-          />
-          <button type="submit" [disabled]="busy()">เพิ่มโต๊ะ</button>
+
+        <form
+          hlmCard
+          size="sm"
+          class="min-w-0 gap-4 p-4 sm:p-5"
+          (ngSubmit)="createTable()"
+        >
+          <h2 class="text-lg font-semibold">เพิ่มโต๊ะใหม่</h2>
+          <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end">
+            <div class="grid min-w-0 flex-1 gap-2">
+              <label hlmLabel for="table-label">ชื่อโต๊ะ</label>
+              <input
+                hlmInput
+                id="table-label"
+                class="min-h-11 w-full"
+                name="tableLabel"
+                [(ngModel)]="newLabel"
+                maxlength="60"
+                required
+                placeholder="เช่น โต๊ะ 1"
+                [disabled]="busy()"
+              />
+            </div>
+            <button hlmBtn type="submit" class="min-h-11" [disabled]="busy()">
+              เพิ่มโต๊ะ
+            </button>
+          </div>
         </form>
-        <section class="tables-list" aria-labelledby="table-selection">
-          <h2 id="table-selection">เลือกโต๊ะเพื่อดูหรือพิมพ์ QR เดิม</h2>
-          <div class="tables-grid">
+
+        <section
+          hlmCard
+          size="sm"
+          class="min-w-0 gap-4 p-4 sm:p-5"
+          aria-labelledby="table-selection"
+        >
+          <h2 id="table-selection" class="text-lg font-semibold">
+            เลือกโต๊ะเพื่อดูหรือพิมพ์ QR เดิม
+          </h2>
+          <div class="tables-grid grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             @for (table of tables(); track table.tableId) {
               <article
-                class="table-card"
-                [class.selected]="selectedId() === table.tableId"
+                hlmCard
+                size="sm"
+                class="table-card min-w-0 gap-3 p-4"
+                [class.ring-2]="selectedId() === table.tableId"
+                [class.ring-primary]="selectedId() === table.tableId"
               >
-                <h3>{{ table.label }}</h3>
-                <p>{{ table.active ? "ใช้งานอยู่" : "ปิดใช้งาน" }}</p>
+                <h3 class="break-words font-semibold">{{ table.label }}</h3>
+                <span hlmBadge class="w-fit" [variant]="table.active ? 'secondary' : 'outline'">
+                  {{ table.active ? "ใช้งานอยู่" : "ปิดใช้งาน" }}
+                </span>
                 <button
+                  hlmBtn
                   type="button"
+                  variant="outline"
+                  class="min-h-11"
                   [disabled]="busy() || !table.active"
+                  [attr.aria-pressed]="selectedId() === table.tableId"
                   (click)="select(table)"
                 >
                   เลือกโต๊ะนี้
                 </button>
               </article>
             } @empty {
-              <p role="status">ยังไม่มีโต๊ะ กรุณาเพิ่มโต๊ะใหม่</p>
+              <p class="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground" role="status">
+                ยังไม่มีโต๊ะ กรุณาเพิ่มโต๊ะใหม่
+              </p>
             }
           </div>
         </section>
+
         @if (selected(); as table) {
-          <section class="table-work" aria-labelledby="table-work-title">
-            <div class="table-work-head">
-              <div>
-                <h2 id="table-work-title">{{ table.label }}</h2>
-                <p>QR ถาวร · สแกนเพื่อสั่งเมื่อร้านเปิดรับออเดอร์</p>
+          <section
+            hlmCard
+            size="sm"
+            class="table-work min-w-0 gap-4 p-4 sm:p-5"
+            aria-labelledby="table-work-title"
+          >
+            <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
+              <div class="min-w-0 space-y-1">
+                <h2 id="table-work-title" class="break-words text-lg font-semibold">
+                  {{ table.label }}
+                </h2>
+                <p class="text-sm leading-relaxed text-muted-foreground">
+                  QR ถาวร · สแกนเพื่อสั่งเมื่อร้านเปิดรับออเดอร์
+                </p>
               </div>
-              <div class="table-actions">
-                <button type="button" [disabled]="busy()" (click)="print()">
+              <div class="flex flex-wrap gap-2">
+                <button
+                  hlmBtn
+                  type="button"
+                  class="min-h-11"
+                  [disabled]="busy()"
+                  (click)="print()"
+                >
                   พิมพ์ QR ของโต๊ะนี้
                 </button>
               </div>
             </div>
             <img
-              class="table-qr"
+              class="table-qr mx-auto my-4 aspect-square w-full max-w-xs rounded-xl border border-border bg-white p-3 object-contain"
               [src]="qrSrc(table.tableId)"
               [alt]="'QR สำหรับสั่งอาหาร ' + table.label"
             />
-            <p class="table-url">{{ table.printedUrl }}</p>
-            <div class="print-sheet" aria-hidden="true">
+            <p class="break-all text-center text-sm leading-relaxed text-muted-foreground">
+              {{ table.printedUrl }}
+            </p>
+            <div class="print-sheet hidden" aria-hidden="true">
               <h2>RCAT POS · {{ table.label }}</h2>
               <img [src]="qrSrc(table.tableId)" alt="" />
               <p>สแกนเพื่อสั่งอาหาร เมื่อร้านเปิดรับออเดอร์</p>
