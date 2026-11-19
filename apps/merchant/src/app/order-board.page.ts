@@ -249,10 +249,11 @@ function failureText(error: unknown): string {
                   <div class="min-w-0">
                     <span
                       class="text-lg font-semibold tracking-tight tabular-nums"
-                      >{{
-                      number(order.displayNumber)
-                    }}</span>
-                    <p class="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      >{{ number(order.displayNumber) }}</span
+                    >
+                    <p
+                      class="mt-1 text-sm leading-relaxed text-muted-foreground"
+                    >
                       โต๊ะ {{ order.tableId.slice(0, 8) }} ·
                       {{ time(order.createdAt) }}
                     </p>
@@ -281,11 +282,9 @@ function failureText(error: unknown): string {
                     <span class="block text-xs text-muted-foreground"
                       >ผู้สั่ง</span
                     >
-                    <strong class="block break-words text-sm font-medium"
-                      >{{
+                    <strong class="block break-words text-sm font-medium">{{
                       order.orderedBy || "ไม่ระบุ (ออเดอร์เดิม)"
-                    }}</strong
-                    >
+                    }}</strong>
                   </div>
                   <div class="min-w-0 space-y-1">
                     <span class="block text-xs text-muted-foreground"
@@ -310,12 +309,15 @@ function failureText(error: unknown): string {
                           >
                           {{ item.productName }}</span
                         >
-                        <span class="shrink-0 whitespace-nowrap font-semibold tabular-nums"
+                        <span
+                          class="shrink-0 whitespace-nowrap font-semibold tabular-nums"
                           >{{ money(item.lineTotalSatang) }} ฿</span
                         >
                       </div>
                       @if (item.options.length) {
-                        <p class="mt-1 text-sm leading-relaxed text-muted-foreground">
+                        <p
+                          class="mt-1 text-sm leading-relaxed text-muted-foreground"
+                        >
                           @for (opt of item.options; track $index) {
                             {{ opt.name }}{{ !$last ? " · " : "" }}
                           }
@@ -338,7 +340,8 @@ function failureText(error: unknown): string {
                     ยอดออเดอร์ ·
                     {{ paymentStatusLabel[order.paymentState] }}
                   </span>
-                  <strong class="whitespace-nowrap text-lg font-semibold tabular-nums"
+                  <strong
+                    class="whitespace-nowrap text-lg font-semibold tabular-nums"
                     >{{ money(order.amountSatang) }} ฿</strong
                   >
                 </div>
@@ -408,12 +411,12 @@ function failureText(error: unknown): string {
                     >
                       @for (entry of history()!.events; track $index) {
                         <li>
-                          <strong class="font-semibold"
-                            >{{ statusLabel[entry.status] }}</strong
-                          >
-                          <span class="ml-2 text-muted-foreground"
-                            >{{ time(entry.occurredAt) }}</span
-                          >
+                          <strong class="font-semibold">{{
+                            statusLabel[entry.status]
+                          }}</strong>
+                          <span class="ml-2 text-muted-foreground">{{
+                            time(entry.occurredAt)
+                          }}</span>
                         </li>
                       }
                     </ol>
