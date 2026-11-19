@@ -54,12 +54,18 @@ function bahtInput(satang: number): string {
     HlmCard,
     HlmNativeSelect,
   ],
-  styleUrls: ["./merchant-catalog.css"],
   template: `
-    <section class="catalog-shell" aria-labelledby="catalog-title">
+    <section
+      class="mx-auto box-border w-full max-w-7xl space-y-5 px-4 pb-16 pt-6 sm:px-6 lg:px-8"
+      aria-labelledby="catalog-title"
+    >
       <header class="space-y-3">
         <a hlmBtn routerLink="/" variant="link" size="lg">← ร้านค้าของฉัน</a>
-        <p class="eyebrow">MERCHANT / MENU MANAGEMENT</p>
+        <p
+          class="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+        >
+          MERCHANT / MENU MANAGEMENT
+        </p>
         <h1 id="catalog-title" class="text-3xl font-semibold">
           จัดการเมนูและสินค้า
         </h1>
@@ -74,21 +80,33 @@ function bahtInput(satang: number): string {
       </header>
 
       @if (loading()) {
-        <p role="status" class="catalog-message">
+        <p
+          role="status"
+          class="rounded-xl border border-border bg-muted/30 p-4 text-sm leading-relaxed text-muted-foreground"
+        >
           กำลังตรวจสอบสิทธิ์และโหลดสินค้า...
         </p>
       } @else if (!canManage()) {
-        <p class="catalog-message" role="alert">
+        <p
+          class="rounded-xl border border-border bg-card p-4 text-sm leading-relaxed text-foreground"
+          role="alert"
+        >
           {{ error() || "เฉพาะเจ้าของร้านและผู้จัดการเท่านั้นที่แก้ไขเมนูได้" }}
         </p>
       } @else {
         @if (error()) {
-          <p class="catalog-message catalog-error" role="alert">
+          <p
+            class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive"
+            role="alert"
+          >
             {{ error() }}
           </p>
         }
         @if (success()) {
-          <p class="catalog-message catalog-success" role="status">
+          <p
+            class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed text-foreground"
+            role="status"
+          >
             {{ success() }}
           </p>
         }
@@ -280,7 +298,7 @@ function bahtInput(satang: number): string {
         </section>
 
         <section
-          class="catalog-panel catalog-products"
+          class="catalog-products mt-5 grid min-w-0 gap-4 rounded-xl border border-border bg-card p-4 shadow-sm md:p-6"
           aria-labelledby="products-title"
         >
           <div class="flex flex-wrap justify-between gap-4 border-b pb-4">
@@ -291,7 +309,7 @@ function bahtInput(satang: number): string {
                 ราคาที่แสดงเป็นบาท
               </p>
             </div>
-            <div class="catalog-actions">
+            <div class="flex flex-wrap items-center gap-2">
               <button
                 hlmBtn
                 type="button"
@@ -347,7 +365,7 @@ function bahtInput(satang: number): string {
               </hlm-native-select>
             </div>
           </div>
-          <div class="catalog-actions">
+          <div class="flex flex-wrap items-center gap-2">
             <button
               hlmBtn
               type="button"
@@ -359,7 +377,11 @@ function bahtInput(satang: number): string {
               ค้นหาสินค้า
             </button>
           </div>
-          <p class="catalog-page-status" role="status" aria-live="polite">
+          <p
+            class="my-2 text-sm tabular-nums text-muted-foreground"
+            role="status"
+            aria-live="polite"
+          >
             หน้า {{ page() }} · สูงสุด {{ pageSize }} รายการต่อหน้า
             @if (pageLoading()) {
               · กำลังโหลด...
@@ -937,7 +959,7 @@ function bahtInput(satang: number): string {
                     inputmode="decimal"
                     [disabled]="saving()"
                   />
-                  <div class="catalog-actions">
+                  <div class="flex flex-wrap items-center gap-2">
                     <button
                       hlmBtn
                       type="submit"
@@ -961,12 +983,18 @@ function bahtInput(satang: number): string {
               }
             </article>
           } @empty {
-            <p class="catalog-empty" role="status">
+            <p
+              class="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground"
+              role="status"
+            >
               ไม่พบสินค้าที่ตรงกับเงื่อนไข
             </p>
           }
           @if (page() > 1 || hasMore()) {
-            <nav class="catalog-pagination" aria-label="แบ่งหน้ารายการสินค้า">
+            <nav
+              class="flex flex-wrap items-center justify-center gap-3 border-t border-border pt-4"
+              aria-label="แบ่งหน้ารายการสินค้า"
+            >
               <button
                 hlmBtn
                 type="button"
@@ -977,7 +1005,11 @@ function bahtInput(satang: number): string {
               >
                 ← ก่อนหน้า
               </button>
-              <span aria-live="polite">หน้า {{ page() }}</span>
+              <span
+                class="font-semibold tabular-nums text-foreground"
+                aria-live="polite"
+                >หน้า {{ page() }}</span
+              >
               <button
                 hlmBtn
                 type="button"
