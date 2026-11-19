@@ -11,6 +11,8 @@ import { ActivatedRoute, RouterLink } from "@angular/router";
 import { HlmBadge } from "@spartan-ng/helm/badge";
 import { HlmButton } from "@spartan-ng/helm/button";
 import { HlmCard } from "@spartan-ng/helm/card";
+import { HlmInput } from "@spartan-ng/helm/input";
+import { HlmLabel } from "@spartan-ng/helm/label";
 import { MerchantOrderApi } from "./merchant-order.api";
 import { MerchantStore } from "./order-board.domain";
 import { InventoryApi } from "./inventory.api";
@@ -42,7 +44,7 @@ function inventoryError(error: unknown): string {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, HlmBadge, HlmButton, HlmCard],
+  imports: [RouterLink, HlmBadge, HlmButton, HlmCard, HlmInput, HlmLabel],
   styleUrls: ["./inventory.css"],
   template: `
     <section class="inventory-shell" aria-labelledby="inventory-heading">
@@ -156,12 +158,12 @@ function inventoryError(error: unknown): string {
               >
                 <h2 id="add-ingredient-heading">เพิ่มวัตถุดิบ</h2>
                 <form
-                  class="inventory-form"
+                  class="grid min-w-0 gap-4"
                   (submit)="createIngredient($event)"
                 >
-                  <label
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >ชื่อวัตถุดิบ
-                    <input
+                    <input hlmInput class="min-h-11 w-full"
                       type="text"
                       [value]="newName()"
                       (input)="setText($event, 'name')"
@@ -170,17 +172,17 @@ function inventoryError(error: unknown): string {
                       placeholder="เช่น ข้าวสาร"
                     />
                   </label>
-                  <label
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >หน่วย
-                    <select [value]="newUnit()" (change)="onUnit($event)">
+                    <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" [value]="newUnit()" (change)="onUnit($event)">
                       <option value="g">กรัม (g)</option>
                       <option value="ml">มิลลิลิตร (ml)</option>
                       <option value="unit">ชิ้น (unit)</option>
                     </select>
                   </label>
-                  <label
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >เกณฑ์แจ้งเตือนขั้นต่ำ
-                    <input
+                    <input hlmInput class="min-h-11 w-full"
                       type="text"
                       inputmode="decimal"
                       [value]="reorderAt()"
@@ -188,7 +190,7 @@ function inventoryError(error: unknown): string {
                       required
                     />
                   </label>
-                  <button type="submit" [disabled]="busy()">
+                  <button hlmBtn class="min-h-11" type="submit" [disabled]="busy()">
                     สร้างวัตถุดิบ
                   </button>
                 </form>
@@ -203,10 +205,10 @@ function inventoryError(error: unknown): string {
                   รับของเข้าต้องใช้จำนวนบวก หากปรับลด ให้เลือกปรับยอดและใส่ -
                   นำหน้า ระบบจะปฏิเสธรายการที่ทำให้ยอดติดลบ
                 </p>
-                <form class="inventory-form" (submit)="moveStock($event)">
-                  <label
+                <form class="grid min-w-0 gap-4" (submit)="moveStock($event)">
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >วัตถุดิบ
-                    <select
+                    <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                       [value]="moveItemId()"
                       (change)="onSelect($event, 'movement-item')"
                       required
@@ -219,16 +221,16 @@ function inventoryError(error: unknown): string {
                       }
                     </select>
                   </label>
-                  <label
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >ประเภท
-                    <select [value]="moveKind()" (change)="onMoveKind($event)">
+                    <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" [value]="moveKind()" (change)="onMoveKind($event)">
                       <option value="receipt">รับสินค้าเข้า (+)</option>
                       <option value="adjustment">ปรับยอด (+ หรือ -)</option>
                     </select>
                   </label>
-                  <label
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >จำนวน (ไม่เกิน 3 ตำแหน่งทศนิยม)
-                    <input
+                    <input hlmInput class="min-h-11 w-full"
                       type="text"
                       inputmode="decimal"
                       [value]="moveDelta()"
@@ -237,9 +239,9 @@ function inventoryError(error: unknown): string {
                       placeholder="50.500"
                     />
                   </label>
-                  <label
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >เหตุผลหรือเอกสารอ้างอิง
-                    <input
+                    <input hlmInput class="min-h-11 w-full"
                       type="text"
                       [value]="moveReason()"
                       (input)="setText($event, 'reason')"
@@ -248,7 +250,7 @@ function inventoryError(error: unknown): string {
                       placeholder="รับของจากผู้ขาย"
                     />
                   </label>
-                  <button
+                  <button hlmBtn class="min-h-11"
                     type="submit"
                     [disabled]="busy() || !data.items.length"
                   >
@@ -270,12 +272,12 @@ function inventoryError(error: unknown): string {
                 เพื่อลบส่วนประกอบ
               </p>
               <form
-                class="inventory-form inventory-recipe-form"
+                class="grid min-w-0 grid-cols-1 items-end gap-4 md:grid-cols-2 xl:grid-cols-4"
                 (submit)="setRecipe($event)"
               >
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >สินค้า
-                  <select
+                  <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     [value]="recipeProductId()"
                     (change)="onSelect($event, 'product')"
                     required
@@ -289,9 +291,9 @@ function inventoryError(error: unknown): string {
                     }
                   </select>
                 </label>
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >วัตถุดิบ
-                  <select
+                  <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     [value]="recipeItemId()"
                     (change)="onSelect($event, 'recipe-item')"
                     required
@@ -304,9 +306,9 @@ function inventoryError(error: unknown): string {
                     }
                   </select>
                 </label>
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >ปริมาณที่ใช้ต่อสินค้า 1 ชิ้น
-                  <input
+                  <input hlmInput class="min-h-11 w-full"
                     type="text"
                     inputmode="decimal"
                     [value]="recipeQuantity()"
@@ -314,7 +316,7 @@ function inventoryError(error: unknown): string {
                     required
                   />
                 </label>
-                <button
+                <button hlmBtn class="min-h-11"
                   type="submit"
                   [disabled]="
                     busy() || !data.items.length || !catalog()?.products?.length
@@ -354,7 +356,7 @@ function inventoryError(error: unknown): string {
                             : "ยังไม่เปิดติดตาม"
                         }}</small>
                       </span>
-                      <button
+                      <button hlmBtn class="min-h-11" variant="outline"
                         type="button"
                         [disabled]="busy()"
                         (click)="
@@ -382,12 +384,12 @@ function inventoryError(error: unknown): string {
                 เพื่อลบส่วนประกอบ
               </p>
               <form
-                class="inventory-form inventory-recipe-form"
+                class="grid min-w-0 grid-cols-1 items-end gap-4 md:grid-cols-2 xl:grid-cols-4"
                 (submit)="updateModifierRecipe($event)"
               >
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >ตัวเลือกเสริม
-                  <select
+                  <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     [value]="modifierOptionId()"
                     (change)="onSelect($event, 'modifier-option')"
                     required
@@ -403,9 +405,9 @@ function inventoryError(error: unknown): string {
                     }
                   </select>
                 </label>
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >วัตถุดิบเพิ่มเติม
-                  <select
+                  <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     [value]="modifierItemId()"
                     (change)="onSelect($event, 'modifier-item')"
                     required
@@ -418,9 +420,9 @@ function inventoryError(error: unknown): string {
                     }
                   </select>
                 </label>
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >ปริมาณที่ใช้ต่อสินค้า 1 รายการ
-                  <input
+                  <input hlmInput class="min-h-11 w-full"
                     type="text"
                     inputmode="decimal"
                     [value]="modifierQuantity()"
@@ -428,7 +430,7 @@ function inventoryError(error: unknown): string {
                     required
                   />
                 </label>
-                <button
+                <button hlmBtn class="min-h-11"
                   type="submit"
                   [disabled]="
                     busy() ||
