@@ -46,12 +46,7 @@ function inventoryError(error: unknown): string {
   styleUrls: ["./inventory.css"],
   template: `
     <section class="inventory-shell" aria-labelledby="inventory-heading">
-      <a
-        hlmBtn
-        variant="link"
-        class="min-h-11 px-0"
-        routerLink="/"
-      >
+      <a hlmBtn variant="link" class="min-h-11 px-0" routerLink="/">
         ← กลับไปหน้าร้านค้า
       </a>
       <span class="eyebrow">INVENTORY / EXPLICIT ORDER TRACKING</span>
@@ -138,7 +133,9 @@ function inventoryError(error: unknown): string {
                               >ต่ำกว่าหรือเท่ากับเกณฑ์</span
                             >
                           } @else {
-                            <span hlmBadge variant="secondary">เพียงพอตามเกณฑ์</span>
+                            <span hlmBadge variant="secondary"
+                              >เพียงพอตามเกณฑ์</span
+                            >
                           }
                         </td>
                       </tr>
