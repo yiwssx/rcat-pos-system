@@ -20,7 +20,15 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, HlmBadge, HlmButton, HlmCard, HlmInput, HlmLabel],
+  imports: [
+    FormsModule,
+    RouterLink,
+    HlmBadge,
+    HlmButton,
+    HlmCard,
+    HlmInput,
+    HlmLabel,
+  ],
   styleUrls: ["./merchant-tables.css"],
   template: `
     <section
@@ -31,38 +39,57 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
         <a hlmBtn routerLink="/" variant="link" class="min-h-11 px-0">
           ← กลับหน้าร้านค้า
         </a>
-        <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        <p
+          class="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+        >
           ORDERING / TABLE QR
         </p>
-        <h1 id="tables-title" class="text-2xl font-semibold tracking-tight sm:text-3xl">
+        <h1
+          id="tables-title"
+          class="text-2xl font-semibold tracking-tight sm:text-3xl"
+        >
           QR สั่งอาหารติดโต๊ะ
         </h1>
         <p class="max-w-prose text-sm leading-relaxed text-muted-foreground">
           ใช้ QR ติดโต๊ะเดิมได้ตลอด ลูกค้าสแกนเพื่อเปิดเมนูและสั่งอาหารได้ทันที
           เมื่อร้านเปิดรับออเดอร์
         </p>
-        <p class="max-w-prose rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed">
+        <p
+          class="max-w-prose rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+        >
           <strong class="font-semibold">ไม่ใช่ QR รับเงิน PromptPay</strong>
           ร้านควบคุมการรับออเดอร์ผ่านปุ่มด้านล่าง ไม่ต้องออกรหัส 8 หลัก
         </p>
       </header>
 
       @if (loading()) {
-        <p class="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground" role="status">
+        <p
+          class="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground"
+          role="status"
+        >
           กำลังตรวจสิทธิ์และรายการโต๊ะ...
         </p>
       } @else if (!authorized()) {
-        <p class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
+        <p
+          class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+          role="alert"
+        >
           {{ error() || "บัญชีนี้ไม่มีสิทธิ์จัดการโต๊ะ" }}
         </p>
       } @else {
         @if (error()) {
-          <p class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
+          <p
+            class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+            role="alert"
+          >
             {{ error() }}
           </p>
         }
         @if (notice()) {
-          <p class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed" role="status">
+          <p
+            class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+            role="status"
+          >
             {{ notice() }}
           </p>
         }
@@ -77,7 +104,10 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
             <h2 id="ordering-switch-title" class="text-lg font-semibold">
               เปิดรับออเดอร์ผ่าน QR
             </h2>
-            <span hlmBadge [variant]="orderingEnabled() ? 'secondary' : 'outline'">
+            <span
+              hlmBadge
+              [variant]="orderingEnabled() ? 'secondary' : 'outline'"
+            >
               {{ orderingEnabled() ? "เปิดรับออเดอร์" : "ปิดรับออเดอร์" }}
             </span>
             <p class="text-sm leading-relaxed text-muted-foreground">
@@ -144,7 +174,9 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
           <h2 id="table-selection" class="text-lg font-semibold">
             เลือกโต๊ะเพื่อดูหรือพิมพ์ QR เดิม
           </h2>
-          <div class="tables-grid grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            class="tables-grid grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          >
             @for (table of tables(); track table.tableId) {
               <article
                 hlmCard
@@ -154,7 +186,11 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
                 [class.ring-primary]="selectedId() === table.tableId"
               >
                 <h3 class="break-words font-semibold">{{ table.label }}</h3>
-                <span hlmBadge class="w-fit" [variant]="table.active ? 'secondary' : 'outline'">
+                <span
+                  hlmBadge
+                  class="w-fit"
+                  [variant]="table.active ? 'secondary' : 'outline'"
+                >
                   {{ table.active ? "ใช้งานอยู่" : "ปิดใช้งาน" }}
                 </span>
                 <button
@@ -170,7 +206,10 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
                 </button>
               </article>
             } @empty {
-              <p class="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground" role="status">
+              <p
+                class="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground"
+                role="status"
+              >
                 ยังไม่มีโต๊ะ กรุณาเพิ่มโต๊ะใหม่
               </p>
             }
@@ -184,9 +223,14 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
             class="table-work min-w-0 gap-4 p-4 sm:p-5"
             aria-labelledby="table-work-title"
           >
-            <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
+            <div
+              class="flex min-w-0 flex-wrap items-center justify-between gap-3"
+            >
               <div class="min-w-0 space-y-1">
-                <h2 id="table-work-title" class="break-words text-lg font-semibold">
+                <h2
+                  id="table-work-title"
+                  class="break-words text-lg font-semibold"
+                >
                   {{ table.label }}
                 </h2>
                 <p class="text-sm leading-relaxed text-muted-foreground">
@@ -210,7 +254,9 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
               [src]="qrSrc(table.tableId)"
               [alt]="'QR สำหรับสั่งอาหาร ' + table.label"
             />
-            <p class="break-all text-center text-sm leading-relaxed text-muted-foreground">
+            <p
+              class="break-all text-center text-sm leading-relaxed text-muted-foreground"
+            >
               {{ table.printedUrl }}
             </p>
             <div class="print-sheet hidden" aria-hidden="true">
