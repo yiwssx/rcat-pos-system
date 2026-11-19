@@ -9,6 +9,7 @@ import {
   signal,
 } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { HlmButton } from "@spartan-ng/helm/button";
 import { HttpErrorResponse } from "@angular/common/http";
 import {
   appendOrderPage,
@@ -66,16 +67,26 @@ function failureText(error: unknown): string {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, HlmButton],
   styleUrls: ["./order-board.css"],
   template: `
     <section class="board" aria-labelledby="board-title">
-      <header class="board-head v6-board-head">
-        <div class="v6-board-heading">
-          <a routerLink="/" class="board-back">← เปลี่ยนร้าน</a>
-          <span class="v6-board-kicker">ORDER MANAGEMENT</span>
-          <h1 id="board-title">กระดานออเดอร์</h1>
-          <p class="v6-board-store">
+      <header
+        class="mb-4 flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div class="min-w-0 space-y-2">
+          <a hlmBtn routerLink="/" variant="link" size="lg">← เปลี่ยนร้าน</a>
+          <span
+            class="block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+            >ORDER MANAGEMENT</span
+          >
+          <h1
+            id="board-title"
+            class="text-3xl font-semibold tracking-tight text-foreground"
+          >
+            กระดานออเดอร์
+          </h1>
+          <p class="text-sm leading-relaxed text-muted-foreground">
             {{ store()?.storeName || "กำลังตรวจสอบสิทธิ์ร้าน" }}
             @if (store()) {
               <span>· {{ roleLabel[store()!.role] }}</span>
@@ -83,8 +94,10 @@ function failureText(error: unknown): string {
           </p>
         </div>
         <button
+          hlmBtn
           type="button"
-          class="board-refresh"
+          variant="outline"
+          class="min-h-11 w-full shrink-0 gap-2 sm:w-auto"
           [attr.aria-label]="
             refreshing() ? 'กำลังซิงก์ออเดอร์' : 'รีเฟรชออเดอร์'
           "
@@ -92,9 +105,7 @@ function failureText(error: unknown): string {
           (click)="refresh()"
         >
           <span aria-hidden="true">↻</span>
-          <span class="v6-refresh-label">{{
-            refreshing() ? "กำลังซิงก์..." : "รีเฟรชออเดอร์"
-          }}</span>
+          <span>{{ refreshing() ? "กำลังซิงก์..." : "รีเฟรชออเดอร์" }}</span>
         </button>
       </header>
 
