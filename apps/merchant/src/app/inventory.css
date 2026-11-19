@@ -20,28 +20,6 @@
   font-size: 0.88rem;
   line-height: 1.7;
 }
-.inventory-back {
-  display: flex;
-  width: fit-content;
-  align-items: center;
-  color: #25516f;
-  min-height: 44px;
-  text-decoration: none;
-  font-weight: 700;
-}
-.inventory-warning {
-  border-left: 4px solid #c67d22;
-  background: #fff7e8;
-  border-radius: 0 0.8rem 0.8rem 0;
-  padding: 1rem 1.15rem;
-  color: #72511e;
-  line-height: 1.7;
-  margin: 1.5rem 0;
-}
-.inventory-warning strong {
-  display: block;
-  margin-bottom: 0.2rem;
-}
 .inventory-error,
 .inventory-notice {
   padding: 1rem;
@@ -161,10 +139,6 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.inventory-low {
-  color: #a24a1b;
-  font-size: 0.84rem;
-}
 .inventory-detail-list {
   list-style: none;
   margin: 0;
@@ -267,23 +241,6 @@
   }
 }
 
-.inventory-stocktake-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 46px;
-  padding: 0.6rem 0.95rem;
-  border: 1px solid #a9bdcd;
-  border-radius: 0.7rem;
-  color: #1b4e69;
-  font-weight: 750;
-  text-decoration: none;
-  background: #fff;
-}
-.inventory-stocktake-link:focus-visible {
-  outline: 3px solid #d68a24;
-  outline-offset: 3px;
-}
-
 /* Operational layout consistency: inventory stays legible when tools stack. */
 .inventory-shell {
   max-width: var(--pos-content-width, 1180px);
@@ -351,15 +308,6 @@
 .inventory-form button {
   background: #273e44;
 }
-.inventory-back {
-  color: #677b82;
-}
-.inventory-warning {
-  background: #fff9f2;
-  border: 1px solid #efe2d2;
-  border-left: 3px solid #d4ad80;
-  border-radius: 11px;
-}
 
 /* V6 inventory: warm operational workspace with color-safe stock warnings. */
 .inventory-shell {
@@ -384,13 +332,4 @@
   background: linear-gradient(110deg, #bd3b06, #d95408);
   border-color: #bd3b06;
   color: #fff;
-}
-.inventory-back {
-  color: #9b460f;
-}
-.inventory-warning {
-  border-color: #f3d5aa;
-  border-left-color: #d8860c;
-  background: #fff3df;
-  color: #775018;
 }

@@ -8,6 +8,9 @@ import {
   signal,
 } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { HlmBadge } from "@spartan-ng/helm/badge";
+import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmCard } from "@spartan-ng/helm/card";
 import { MerchantOrderApi } from "./merchant-order.api";
 import { MerchantStore } from "./order-board.domain";
 import { InventoryApi } from "./inventory.api";
@@ -39,11 +42,13 @@ function inventoryError(error: unknown): string {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, HlmBadge, HlmButton, HlmCard],
   styleUrls: ["./inventory.css"],
   template: `
     <section class="inventory-shell" aria-labelledby="inventory-heading">
-      <a routerLink="/" class="inventory-back">← กลับไปหน้าร้านค้า</a>
+      <a hlmBtn variant="link" class="min-h-11 px-0" routerLink="/">
+        ← กลับไปหน้าร้านค้า
+      </a>
       <span class="eyebrow">INVENTORY / EXPLICIT ORDER TRACKING</span>
       <h1 id="inventory-heading">สต็อกวัตถุดิบของร้าน</h1>
       <p class="inventory-muted">
@@ -51,12 +56,17 @@ function inventoryError(error: unknown): string {
         · ปริมาณใช้หน่วย g / ml / ชิ้น และจำนวนเต็มทศนิยมไม่เกิน 3 ตำแหน่ง
       </p>
       <a
-        class="inventory-stocktake-link"
+        hlmBtn
+        variant="outline"
+        class="min-h-11 w-fit"
         [routerLink]="['/inventory', tenantId, storeId, 'stocktakes']"
       >
         ตรวจนับสต็อก / Stocktake และอนุมัติปรับยอด
       </a>
-      <p class="inventory-warning" role="note">
+      <p
+        class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+        role="note"
+      >
         <strong>ตัดสต็อกเมื่อร้านรับออเดอร์ เฉพาะสินค้าที่เปิดติดตาม</strong>
         สินค้าทุกชนิดเริ่มในโหมดจัดการสต็อกด้วยตนเอง
         ตรวจสูตรหลักและตัวเลือกเสริมก่อนเปิดติดตามรายสินค้า
@@ -80,12 +90,23 @@ function inventoryError(error: unknown): string {
               >วัตถุดิบ {{ data.items.length }} รายการ · บันทึกล่าสุดสูงสุด 50
               รายการ</span
             >
-            <button type="button" [disabled]="busy()" (click)="reload()">
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              [disabled]="busy()"
+              (click)="reload()"
+            >
               โหลดข้อมูลล่าสุด
             </button>
           </div>
 
-          <section class="inventory-panel" aria-labelledby="stock-list-heading">
+          <section
+            hlmCard
+            size="sm"
+            class="inventory-panel min-w-0 gap-4 p-4 sm:p-5"
+            aria-labelledby="stock-list-heading"
+          >
             <h2 id="stock-list-heading">ยอดคงเหลือจาก Ledger</h2>
             @if (data.items.length === 0) {
               <p class="inventory-muted">ยังไม่มีวัตถุดิบในร้าน</p>
@@ -108,11 +129,13 @@ function inventoryError(error: unknown): string {
                         <td>{{ units(item.reorderAt) }} {{ item.unit }}</td>
                         <td>
                           @if (isLow(item)) {
-                            <strong class="inventory-low"
-                              >ต่ำกว่าหรือเท่ากับเกณฑ์</strong
+                            <span hlmBadge variant="destructive"
+                              >ต่ำกว่าหรือเท่ากับเกณฑ์</span
                             >
                           } @else {
-                            <span>เพียงพอตามเกณฑ์</span>
+                            <span hlmBadge variant="secondary"
+                              >เพียงพอตามเกณฑ์</span
+                            >
                           }
                         </td>
                       </tr>
