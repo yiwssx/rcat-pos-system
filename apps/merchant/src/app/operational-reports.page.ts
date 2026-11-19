@@ -133,7 +133,7 @@ const STATUS_LABEL: Record<string, string> = {
 
         @if (report(); as data) {
           <div
-            class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
+            class="report-kpis grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
             aria-label="จำนวนออเดอร์และมูลค่าที่ยังไม่ชำระ"
           >
             <article hlmCard size="sm" class="min-w-0 gap-2 p-4">
