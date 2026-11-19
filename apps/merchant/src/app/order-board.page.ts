@@ -71,7 +71,14 @@ function failureText(error: unknown): string {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, HlmBadge, HlmButton, HlmCard, HlmLabel, HlmNativeSelect],
+  imports: [
+    RouterLink,
+    HlmBadge,
+    HlmButton,
+    HlmCard,
+    HlmLabel,
+    HlmNativeSelect,
+  ],
   styleUrls: ["./order-board.css"],
   template: `
     <section class="board" aria-labelledby="board-title">
@@ -144,7 +151,9 @@ function failureText(error: unknown): string {
         }
       </div>
 
-      <p class="my-3 rounded-xl border border-border bg-muted/40 p-3 text-sm leading-relaxed text-foreground">
+      <p
+        class="my-3 rounded-xl border border-border bg-muted/40 p-3 text-sm leading-relaxed text-foreground"
+      >
         รับและเตรียมอาหารได้ทันที · สถานะชำระเงินแยกจากงานครัว
       </p>
 
@@ -167,11 +176,19 @@ function failureText(error: unknown): string {
         </div>
       }
       @if (warning()) {
-        <div class="my-3 rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed" role="status">{{ warning() }}</div>
+        <div
+          class="my-3 rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+          role="status"
+        >
+          {{ warning() }}
+        </div>
       }
 
       @if (!store() && !error()) {
-        <p class="board-empty my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground" role="status">
+        <p
+          class="board-empty my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
+          role="status"
+        >
           กำลังตรวจสอบข้อมูลร้านและสิทธิ์พนักงาน...
         </p>
       } @else if (store()) {
@@ -189,9 +206,16 @@ function failureText(error: unknown): string {
             [attr.aria-pressed]="filter() === 'submitted'"
             (click)="setQueueFilter('submitted')"
           >
-            <span class="text-sm font-medium text-foreground">รอรับออเดอร์</span>
-            <strong class="text-2xl font-semibold tabular-nums text-foreground">{{ pendingCount() }}</strong>
-            <small class="text-xs font-normal text-muted-foreground">แตะเพื่อดูรายการใหม่</small>
+            <span class="text-sm font-medium text-foreground"
+              >รอรับออเดอร์</span
+            >
+            <strong
+              class="text-2xl font-semibold tabular-nums text-foreground"
+              >{{ pendingCount() }}</strong
+            >
+            <small class="text-xs font-normal text-muted-foreground"
+              >แตะเพื่อดูรายการใหม่</small
+            >
           </button>
           <button
             hlmBtn
@@ -203,9 +227,16 @@ function failureText(error: unknown): string {
             [attr.aria-pressed]="filter() === 'in_progress'"
             (click)="setQueueFilter('in_progress')"
           >
-            <span class="text-sm font-medium text-foreground">กำลังดำเนินงาน</span>
-            <strong class="text-2xl font-semibold tabular-nums text-foreground">{{ preparingCount() }}</strong>
-            <small class="text-xs font-normal text-muted-foreground">รับแล้ว / กำลังเตรียม</small>
+            <span class="text-sm font-medium text-foreground"
+              >กำลังดำเนินงาน</span
+            >
+            <strong
+              class="text-2xl font-semibold tabular-nums text-foreground"
+              >{{ preparingCount() }}</strong
+            >
+            <small class="text-xs font-normal text-muted-foreground"
+              >รับแล้ว / กำลังเตรียม</small
+            >
           </button>
           <button
             hlmBtn
@@ -218,8 +249,13 @@ function failureText(error: unknown): string {
             (click)="setQueueFilter('served')"
           >
             <span class="text-sm font-medium text-foreground">เสิร์ฟแล้ว</span>
-            <strong class="text-2xl font-semibold tabular-nums text-foreground">{{ servedCount() }}</strong>
-            <small class="text-xs font-normal text-muted-foreground">รายการเสร็จสิ้น</small>
+            <strong
+              class="text-2xl font-semibold tabular-nums text-foreground"
+              >{{ servedCount() }}</strong
+            >
+            <small class="text-xs font-normal text-muted-foreground"
+              >รายการเสร็จสิ้น</small
+            >
           </button>
         </div>
 
@@ -242,12 +278,18 @@ function failureText(error: unknown): string {
             <option value="cancelled">ยกเลิก</option>
           </hlm-native-select>
         </div>
-        <p class="board-connection my-3 text-sm leading-relaxed text-muted-foreground" role="status">
+        <p
+          class="board-connection my-3 text-sm leading-relaxed text-muted-foreground"
+          role="status"
+        >
           กำลังแสดง {{ orders().length }} ออเดอร์ที่โหลด ·
           สรุปด้านบนคำนวณจากรายการที่โหลดเท่านั้น
         </p>
         @if (visibleOrders().length === 0) {
-          <p class="board-empty my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground" role="status">
+          <p
+            class="board-empty my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
+            role="status"
+          >
             {{
               refreshing()
                 ? "กำลังเรียกข้อมูลออเดอร์..."
@@ -483,12 +525,20 @@ function failureText(error: unknown): string {
             >
           </summary>
           <section class="board-events" aria-labelledby="events-title">
-            <div class="board-controls my-4 flex flex-wrap items-center justify-between gap-2">
-              <h2 id="events-title" class="text-lg font-semibold">เหตุการณ์ล่าสุด</h2>
-              <span class="text-sm text-muted-foreground">มาจาก Outbox ที่บันทึกในฐานข้อมูล</span>
+            <div
+              class="board-controls my-4 flex flex-wrap items-center justify-between gap-2"
+            >
+              <h2 id="events-title" class="text-lg font-semibold">
+                เหตุการณ์ล่าสุด
+              </h2>
+              <span class="text-sm text-muted-foreground"
+                >มาจาก Outbox ที่บันทึกในฐานข้อมูล</span
+              >
             </div>
             @if (events().length === 0) {
-              <p class="board-empty my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground">
+              <p
+                class="board-empty my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
+              >
                 ยังไม่มีเหตุการณ์ใหม่ที่รับจาก Outbox ในหน้าจอนี้
               </p>
             } @else {
