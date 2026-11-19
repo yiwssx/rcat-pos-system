@@ -12,6 +12,8 @@ import { ActivatedRoute, RouterLink } from "@angular/router";
 import { HlmBadge } from "@spartan-ng/helm/badge";
 import { HlmButton } from "@spartan-ng/helm/button";
 import { HlmCard } from "@spartan-ng/helm/card";
+import { HlmLabel } from "@spartan-ng/helm/label";
+import { HlmNativeSelect } from "@spartan-ng/helm/native-select";
 import { HttpErrorResponse } from "@angular/common/http";
 import {
   appendOrderPage,
@@ -69,7 +71,14 @@ function failureText(error: unknown): string {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, HlmBadge, HlmButton, HlmCard],
+  imports: [
+    RouterLink,
+    HlmBadge,
+    HlmButton,
+    HlmCard,
+    HlmLabel,
+    HlmNativeSelect,
+  ],
   styleUrls: ["./order-board.css"],
   template: `
     <section class="board" aria-labelledby="board-title">
@@ -112,13 +121,15 @@ function failureText(error: unknown): string {
       </header>
 
       <div
-        class="board-connection v6-board-connect"
+        class="board-connection my-3 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm leading-relaxed text-foreground"
         role="status"
         aria-live="polite"
       >
         <span
-          class="connection-indicator"
-          [class.is-offline]="!connected()"
+          aria-hidden="true"
+          class="size-2.5 shrink-0 rounded-full"
+          [class.bg-primary]="connected()"
+          [class.bg-destructive]="!connected()"
         ></span>
         {{
           !connected()
@@ -140,73 +151,122 @@ function failureText(error: unknown): string {
         }
       </div>
 
-      <p class="board-notice v6-board-notice">
+      <p
+        class="my-3 rounded-xl border border-border bg-muted/40 p-3 text-sm leading-relaxed text-foreground"
+      >
         รับและเตรียมอาหารได้ทันที · สถานะชำระเงินแยกจากงานครัว
       </p>
 
       @if (error()) {
-        <div class="board-alert" role="alert">
-          {{ error() }}
-          <button type="button" (click)="refresh()" [disabled]="refreshing()">
+        <div
+          class="my-3 flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive"
+          role="alert"
+        >
+          <span class="min-w-0 flex-1">{{ error() }}</span>
+          <button
+            hlmBtn
+            type="button"
+            variant="outline"
+            class="min-h-11"
+            (click)="refresh()"
+            [disabled]="refreshing()"
+          >
             ลองอีกครั้ง
           </button>
         </div>
       }
       @if (warning()) {
-        <div class="board-warning" role="status">{{ warning() }}</div>
+        <div
+          class="my-3 rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+          role="status"
+        >
+          {{ warning() }}
+        </div>
       }
 
       @if (!store() && !error()) {
-        <p class="board-empty" role="status">
+        <p
+          class="board-empty my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
+          role="status"
+        >
           กำลังตรวจสอบข้อมูลร้านและสิทธิ์พนักงาน...
         </p>
       } @else if (store()) {
         <div
-          class="board-metrics v6-board-metrics"
+          class="board-metrics my-4 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3"
           aria-label="กรองออเดอร์ตามสถานะ"
         >
           <button
+            hlmBtn
             type="button"
-            class="v6-order-metric focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            [class.v6-selected]="filter() === 'submitted'"
+            variant="outline"
+            class="grid min-h-24 min-w-0 justify-items-start gap-1 rounded-xl px-4 py-3 text-left"
+            [class.border-primary]="filter() === 'submitted'"
+            [class.bg-accent]="filter() === 'submitted'"
             [attr.aria-pressed]="filter() === 'submitted'"
             (click)="setQueueFilter('submitted')"
           >
-            <span>รอรับออเดอร์</span>
-            <strong>{{ pendingCount() }}</strong>
-            <small>แตะเพื่อดูรายการใหม่</small>
+            <span class="text-sm font-medium text-foreground"
+              >รอรับออเดอร์</span
+            >
+            <strong
+              class="text-2xl font-semibold tabular-nums text-foreground"
+              >{{ pendingCount() }}</strong
+            >
+            <small class="text-xs font-normal text-muted-foreground"
+              >แตะเพื่อดูรายการใหม่</small
+            >
           </button>
           <button
+            hlmBtn
             type="button"
-            class="v6-order-metric focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            [class.v6-selected]="filter() === 'in_progress'"
+            variant="outline"
+            class="grid min-h-24 min-w-0 justify-items-start gap-1 rounded-xl px-4 py-3 text-left"
+            [class.border-primary]="filter() === 'in_progress'"
+            [class.bg-accent]="filter() === 'in_progress'"
             [attr.aria-pressed]="filter() === 'in_progress'"
             (click)="setQueueFilter('in_progress')"
           >
-            <span>กำลังดำเนินงาน</span>
-            <strong>{{ preparingCount() }}</strong>
-            <small>รับแล้ว / กำลังเตรียม</small>
+            <span class="text-sm font-medium text-foreground"
+              >กำลังดำเนินงาน</span
+            >
+            <strong
+              class="text-2xl font-semibold tabular-nums text-foreground"
+              >{{ preparingCount() }}</strong
+            >
+            <small class="text-xs font-normal text-muted-foreground"
+              >รับแล้ว / กำลังเตรียม</small
+            >
           </button>
           <button
+            hlmBtn
             type="button"
-            class="v6-order-metric focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            [class.v6-selected]="filter() === 'served'"
+            variant="outline"
+            class="grid min-h-24 min-w-0 justify-items-start gap-1 rounded-xl px-4 py-3 text-left"
+            [class.border-primary]="filter() === 'served'"
+            [class.bg-accent]="filter() === 'served'"
             [attr.aria-pressed]="filter() === 'served'"
             (click)="setQueueFilter('served')"
           >
-            <span>เสิร์ฟแล้ว</span>
-            <strong>{{ servedCount() }}</strong>
-            <small>รายการเสร็จสิ้น</small>
+            <span class="text-sm font-medium text-foreground">เสิร์ฟแล้ว</span>
+            <strong
+              class="text-2xl font-semibold tabular-nums text-foreground"
+              >{{ servedCount() }}</strong
+            >
+            <small class="text-xs font-normal text-muted-foreground"
+              >รายการเสร็จสิ้น</small
+            >
           </button>
         </div>
 
-        <div class="board-controls">
-          <h2>รายการออเดอร์</h2>
-          <label for="order-filter">กรองสถานะ</label>
-          <select
-            id="order-filter"
+        <div class="board-controls my-4 flex flex-wrap items-center gap-3">
+          <h2 class="mr-auto text-lg font-semibold">รายการออเดอร์</h2>
+          <label hlmLabel for="order-filter">กรองสถานะ</label>
+          <hlm-native-select
+            class="block w-full sm:w-64"
+            selectId="order-filter"
             [value]="filter()"
-            (change)="changeFilter($event)"
+            (valueChange)="setQueueFilter($event ?? 'active')"
           >
             <option value="active">ออเดอร์ที่ยังไม่เสร็จ</option>
             <option value="in_progress">รับแล้ว / กำลังเตรียม</option>
@@ -216,14 +276,20 @@ function failureText(error: unknown): string {
             <option value="preparing">กำลังเตรียม</option>
             <option value="served">เสิร์ฟแล้ว</option>
             <option value="cancelled">ยกเลิก</option>
-          </select>
+          </hlm-native-select>
         </div>
-        <p class="board-connection" role="status">
+        <p
+          class="board-connection my-3 text-sm leading-relaxed text-muted-foreground"
+          role="status"
+        >
           กำลังแสดง {{ orders().length }} ออเดอร์ที่โหลด ·
           สรุปด้านบนคำนวณจากรายการที่โหลดเท่านั้น
         </p>
         @if (visibleOrders().length === 0) {
-          <p class="board-empty" role="status">
+          <p
+            class="board-empty my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
+            role="status"
+          >
             {{
               refreshing()
                 ? "กำลังเรียกข้อมูลออเดอร์..."
@@ -459,12 +525,20 @@ function failureText(error: unknown): string {
             >
           </summary>
           <section class="board-events" aria-labelledby="events-title">
-            <div class="board-controls">
-              <h2 id="events-title">เหตุการณ์ล่าสุด</h2>
-              <span>มาจาก Outbox ที่บันทึกในฐานข้อมูล</span>
+            <div
+              class="board-controls my-4 flex flex-wrap items-center justify-between gap-2"
+            >
+              <h2 id="events-title" class="text-lg font-semibold">
+                เหตุการณ์ล่าสุด
+              </h2>
+              <span class="text-sm text-muted-foreground"
+                >มาจาก Outbox ที่บันทึกในฐานข้อมูล</span
+              >
             </div>
             @if (events().length === 0) {
-              <p class="board-empty">
+              <p
+                class="board-empty my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
+              >
                 ยังไม่มีเหตุการณ์ใหม่ที่รับจาก Outbox ในหน้าจอนี้
               </p>
             } @else {
@@ -712,11 +786,6 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     } catch (error) {
       if (!this.disposed) this.error.set(failureText(error));
     }
-  }
-
-  changeFilter(event: Event): void {
-    const target = event.target;
-    if (target instanceof HTMLSelectElement) this.filter.set(target.value);
   }
 
   actions(status: OrderStatus): readonly OrderAction[] {
