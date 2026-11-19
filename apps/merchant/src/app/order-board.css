@@ -205,9 +205,6 @@ a:focus-visible {
   margin: 1.2rem 0 1.4rem;
   gap: 0.75rem;
 }
-.board-metrics > div {
-  box-shadow: 0 4px 16px rgb(23 40 59 / 5%);
-}
 .board-metrics span,
 .board-connection {
   font-size: 0.86rem;
@@ -560,10 +557,6 @@ a:focus-visible {
   border-color: #087c72;
   background: #def8ee;
   box-shadow: inset 3px 0 0 #087c72;
-}
-.v6-order-metric:focus-visible {
-  outline: 3px solid #087c72;
-  outline-offset: 3px;
 }
 .board-controls select {
   background: #fff;

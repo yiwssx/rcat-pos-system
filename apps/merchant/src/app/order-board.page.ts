@@ -167,7 +167,7 @@ function failureText(error: unknown): string {
         >
           <button
             type="button"
-            class="v6-order-metric"
+            class="v6-order-metric focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             [class.v6-selected]="filter() === 'submitted'"
             [attr.aria-pressed]="filter() === 'submitted'"
             (click)="setQueueFilter('submitted')"
@@ -178,7 +178,7 @@ function failureText(error: unknown): string {
           </button>
           <button
             type="button"
-            class="v6-order-metric"
+            class="v6-order-metric focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             [class.v6-selected]="filter() === 'in_progress'"
             [attr.aria-pressed]="filter() === 'in_progress'"
             (click)="setQueueFilter('in_progress')"
@@ -189,7 +189,7 @@ function failureText(error: unknown): string {
           </button>
           <button
             type="button"
-            class="v6-order-metric"
+            class="v6-order-metric focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             [class.v6-selected]="filter() === 'served'"
             [attr.aria-pressed]="filter() === 'served'"
             (click)="setQueueFilter('served')"
@@ -231,7 +231,9 @@ function failureText(error: unknown): string {
             }}
           </p>
         } @else {
-          <div class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+          <div
+            class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3"
+          >
             @for (order of visibleOrders(); track order.orderId) {
               <article
                 hlmCard
@@ -241,9 +243,13 @@ function failureText(error: unknown): string {
                 [class.ring-primary]="order.status === 'submitted'"
                 [attr.aria-label]="'ออเดอร์ ' + number(order.displayNumber)"
               >
-                <div class="flex min-w-0 flex-wrap items-start justify-between gap-3">
+                <div
+                  class="flex min-w-0 flex-wrap items-start justify-between gap-3"
+                >
                   <div class="min-w-0">
-                    <span class="text-lg font-semibold tracking-tight tabular-nums">{{
+                    <span
+                      class="text-lg font-semibold tracking-tight tabular-nums"
+                      >{{
                       number(order.displayNumber)
                     }}</span>
                     <p class="mt-1 text-sm leading-relaxed text-muted-foreground">
@@ -272,24 +278,36 @@ function failureText(error: unknown): string {
                   aria-label="ข้อมูลผู้สั่งและสถานที่ส่ง"
                 >
                   <div class="min-w-0 space-y-1">
-                    <span class="block text-xs text-muted-foreground">ผู้สั่ง</span>
-                    <strong class="block break-words text-sm font-medium">{{
+                    <span class="block text-xs text-muted-foreground"
+                      >ผู้สั่ง</span
+                    >
+                    <strong class="block break-words text-sm font-medium"
+                      >{{
                       order.orderedBy || "ไม่ระบุ (ออเดอร์เดิม)"
-                    }}</strong>
+                    }}</strong
+                    >
                   </div>
                   <div class="min-w-0 space-y-1">
-                    <span class="block text-xs text-muted-foreground">ส่งที่</span>
+                    <span class="block text-xs text-muted-foreground"
+                      >ส่งที่</span
+                    >
                     <strong class="block break-words text-sm font-medium">{{
                       order.deliverTo || "ไม่ระบุ (ออเดอร์เดิม)"
                     }}</strong>
                   </div>
                 </div>
-                <ul class="m-0 list-none divide-y divide-border border-y border-border p-0">
+                <ul
+                  class="m-0 list-none divide-y divide-border border-y border-border p-0"
+                >
                   @for (item of order.items; track $index) {
                     <li class="py-3">
-                      <div class="flex min-w-0 flex-wrap items-start justify-between gap-3 text-sm leading-relaxed">
+                      <div
+                        class="flex min-w-0 flex-wrap items-start justify-between gap-3 text-sm leading-relaxed"
+                      >
                         <span class="min-w-0 flex-1 break-words text-foreground"
-                          ><strong class="mr-1 font-semibold">{{ item.quantity }}×</strong>
+                          ><strong class="mr-1 font-semibold"
+                            >{{ item.quantity }}×</strong
+                          >
                           {{ item.productName }}</span
                         >
                         <span class="shrink-0 whitespace-nowrap font-semibold tabular-nums"
@@ -304,14 +322,18 @@ function failureText(error: unknown): string {
                         </p>
                       }
                       @if (item.note) {
-                        <p class="mt-2 rounded-lg bg-muted/50 p-2 text-sm leading-relaxed text-foreground">
+                        <p
+                          class="mt-2 rounded-lg bg-muted/50 p-2 text-sm leading-relaxed text-foreground"
+                        >
                           <strong>หมายเหตุ:</strong> {{ item.note }}
                         </p>
                       }
                     </li>
                   }
                 </ul>
-                <div class="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+                <div
+                  class="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3"
+                >
                   <span class="text-sm text-muted-foreground">
                     ยอดออเดอร์ ·
                     {{ paymentStatusLabel[order.paymentState] }}
@@ -381,11 +403,17 @@ function failureText(error: unknown): string {
                     aria-label="ประวัติการเปลี่ยนสถานะ"
                   >
                     <h3 class="font-semibold">ประวัติออเดอร์</h3>
-                    <ol class="mt-2 list-decimal space-y-2 pl-5 text-sm leading-relaxed">
+                    <ol
+                      class="mt-2 list-decimal space-y-2 pl-5 text-sm leading-relaxed"
+                    >
                       @for (entry of history()!.events; track $index) {
                         <li>
-                          <strong class="font-semibold">{{ statusLabel[entry.status] }}</strong>
-                          <span class="ml-2 text-muted-foreground">{{ time(entry.occurredAt) }}</span>
+                          <strong class="font-semibold"
+                            >{{ statusLabel[entry.status] }}</strong
+                          >
+                          <span class="ml-2 text-muted-foreground"
+                            >{{ time(entry.occurredAt) }}</span
+                          >
                         </li>
                       }
                     </ol>
