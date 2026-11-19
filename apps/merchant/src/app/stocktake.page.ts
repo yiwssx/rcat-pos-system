@@ -8,6 +8,11 @@ import {
   signal,
 } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { HlmBadge } from "@spartan-ng/helm/badge";
+import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmCard } from "@spartan-ng/helm/card";
+import { HlmInput } from "@spartan-ng/helm/input";
+import { HlmLabel } from "@spartan-ng/helm/label";
 import { InventoryApi } from "./inventory.api";
 import {
   InventoryItem,
@@ -43,41 +48,42 @@ function message(error: unknown): string {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
-  styleUrls: ["./stocktake.css"],
+  imports: [RouterLink, HlmBadge, HlmButton, HlmCard, HlmInput, HlmLabel],
   template: `
-    <main class="stocktake-shell">
+    <main class="mx-auto box-border w-full max-w-6xl space-y-5 px-4 pb-14 pt-6 sm:px-6 lg:px-8">
       <a
         [routerLink]="['/inventory', tenantId, storeId]"
-        class="stocktake-back"
+        hlmBtn variant="link" class="min-h-11 px-0"
       >
         ← กลับไปสต็อกวัตถุดิบ
       </a>
-      <span class="eyebrow">RCAT POS / STOCKTAKE CONTROL</span>
-      <h1>ตรวจนับและกระทบยอดสต็อก</h1>
-      <p class="stocktake-muted">
+      <span class="block text-xs font-semibold uppercase tracking-widest text-muted-foreground">RCAT POS / STOCKTAKE CONTROL</span>
+      <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">ตรวจนับและกระทบยอดสต็อก</h1>
+      <p class="text-sm leading-relaxed text-muted-foreground">
         {{ store()?.storeName || "กำลังตรวจสิทธิ์" }}
         · ตรวจนับแยกจากการปรับยอดด้วยมือ และไม่ใช่ข้อมูลรับชำระเงิน
       </p>
-      <p class="stocktake-caution" role="note">
-        <strong>ต้องใช้บุคลากรสองคน</strong>
+      <p class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed" role="note">
+        <strong class="block font-semibold">ต้องใช้บุคลากรสองคน</strong>
         ผู้ส่งยอดตรวจนับไม่สามารถอนุมัติเองได้ เมื่อสต็อกเปลี่ยนระหว่างตรวจนับ
         ระบบจะปฏิเสธการอนุมัติ ต้องปฏิเสธรอบเก่าแล้วเริ่มรอบใหม่
       </p>
       @if (error()) {
-        <div class="stocktake-error" role="alert">{{ error() }}</div>
+        <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive" role="alert">{{ error() }}</div>
       }
       @if (notice()) {
-        <div class="stocktake-success" role="status">{{ notice() }}</div>
+        <div class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed" role="status">{{ notice() }}</div>
       }
       @if (loading()) {
-        <p class="stocktake-muted" role="status">
+        <p class="text-sm leading-relaxed text-muted-foreground" role="status">
           กำลังอ่านข้อมูลล่าสุดจาก Server...
         </p>
       }
       @if (store(); as currentStore) {
-        <div class="stocktake-actions">
+        <div class="flex flex-wrap justify-end gap-3">
           <button
+            hlmBtn
+            class="min-h-11"
             type="button"
             [disabled]="busy() || loading()"
             (click)="reload()"
@@ -85,23 +91,24 @@ function message(error: unknown): string {
             โหลดข้อมูลล่าสุด
           </button>
         </div>
-        <div class="stocktake-grid">
+        <div class="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-2">
           @if (
             currentStore.role === "owner" || currentStore.role === "manager"
           ) {
             <section
-              class="stocktake-panel"
+              hlmCard size="sm" class="min-w-0 gap-4 p-4 sm:p-5"
               aria-labelledby="stocktake-open-title"
             >
-              <h2 id="stocktake-open-title">1. เปิดรอบตรวจนับ</h2>
-              <p class="stocktake-muted">
+              <h2 id="stocktake-open-title" class="text-lg font-semibold">1. เปิดรอบตรวจนับ</h2>
+              <p class="text-sm leading-relaxed text-muted-foreground">
                 ระบบบันทึกยอดตั้งต้นและ Stock Version ก่อนเริ่มนับ
                 วัตถุดิบหนึ่งรายการเปิดรอบค้างอยู่ได้เพียงหนึ่งรอบ
               </p>
-              <form (submit)="open($event)" class="stocktake-form">
-                <label
+              <form (submit)="open($event)" class="grid min-w-0 gap-4">
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >วัตถุดิบที่ต้องตรวจนับ
                   <select
+                    class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     [value]="openItemId()"
                     (change)="setSelected($event, 'open')"
                     required
@@ -116,6 +123,8 @@ function message(error: unknown): string {
                   </select>
                 </label>
                 <button
+            hlmBtn
+            class="min-h-11"
                   type="submit"
                   [disabled]="busy() || !ingredients().length"
                 >
@@ -126,18 +135,19 @@ function message(error: unknown): string {
           }
 
           <section
-            class="stocktake-panel"
+            hlmCard size="sm" class="min-w-0 gap-4 p-4 sm:p-5"
             aria-labelledby="stocktake-count-title"
           >
-            <h2 id="stocktake-count-title">2. ส่งยอดที่ตรวจนับจริง</h2>
-            <p class="stocktake-muted">
+            <h2 id="stocktake-count-title" class="text-lg font-semibold">2. ส่งยอดที่ตรวจนับจริง</h2>
+            <p class="text-sm leading-relaxed text-muted-foreground">
               เจ้าของร้าน ผู้จัดการ หรือพนักงานครัวที่ได้รับสิทธิ์ส่งผลการนับได้
               แต่บุคคลเดียวกันจะอนุมัติผลนั้นไม่ได้
             </p>
-            <form (submit)="submitCount($event)" class="stocktake-form">
-              <label
+            <form (submit)="submitCount($event)" class="grid min-w-0 gap-4">
+              <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                 >รอบที่เปิดอยู่
                 <select
+                    class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   [value]="countTakeId()"
                   (change)="setSelected($event, 'count')"
                   required
@@ -151,9 +161,11 @@ function message(error: unknown): string {
                   }
                 </select>
               </label>
-              <label
+              <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                 >ยอดตรวจนับจริง (g / ml / ชิ้น)
                 <input
+                  hlmInput
+                  class="min-h-11 w-full"
                   type="text"
                   inputmode="decimal"
                   required
@@ -162,9 +174,11 @@ function message(error: unknown): string {
                   placeholder="เช่น 1250.500"
                 />
               </label>
-              <label
+              <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                 >เหตุผล/หลักฐานการตรวจนับ
                 <input
+                  hlmInput
+                  class="min-h-11 w-full"
                   type="text"
                   maxlength="200"
                   required
@@ -174,6 +188,8 @@ function message(error: unknown): string {
                 />
               </label>
               <button
+            hlmBtn
+            class="min-h-11"
                 type="submit"
                 [disabled]="busy() || !openStocktakes().length"
               >
@@ -184,34 +200,34 @@ function message(error: unknown): string {
         </div>
 
         <section
-          class="stocktake-panel"
+          hlmCard size="sm" class="min-w-0 gap-4 p-4 sm:p-5"
           aria-labelledby="stocktake-review-title"
         >
-          <h2 id="stocktake-review-title">
+          <h2 id="stocktake-review-title" class="text-lg font-semibold">
             3. ตรวจสอบความคลาดเคลื่อนและตัดสินใจ
           </h2>
-          <p class="stocktake-muted">
+          <p class="text-sm leading-relaxed text-muted-foreground">
             แสดง 40 รอบล่าสุดของร้าน ผู้อนุมัติต้องเป็น Owner/Manager
             และไม่ใช่ผู้ส่งยอดนับ ระบบบันทึก Audit ทุกการตัดสินใจ
           </p>
           @if (stocktakes().length === 0) {
-            <p class="stocktake-muted">ยังไม่มีรอบตรวจนับ</p>
+            <p class="text-sm leading-relaxed text-muted-foreground">ยังไม่มีรอบตรวจนับ</p>
           } @else {
-            <div class="stocktake-records">
+            <div class="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
               @for (take of stocktakes(); track take.stocktakeId) {
-                <article class="stocktake-record">
-                  <div class="stocktake-record-heading">
-                    <h3>{{ itemLabel(take.itemId) }}</h3>
-                    <span>{{ statusLabel(take.state) }}</span>
+                <article hlmCard size="sm" class="min-w-0 gap-3 p-4">
+                  <div class="flex min-w-0 flex-wrap items-start justify-between gap-3">
+                    <h3 class="break-words font-semibold">{{ itemLabel(take.itemId) }}</h3>
+                    <span hlmBadge variant="outline">{{ statusLabel(take.state) }}</span>
                   </div>
-                  <dl>
+                  <dl class="my-3 grid grid-cols-2 gap-3">
                     <div>
-                      <dt>ยอดตั้งต้น</dt>
-                      <dd>{{ formatQuantity(take.baselineOnHand) }}</dd>
+                      <dt class="text-xs leading-relaxed text-muted-foreground">ยอดตั้งต้น</dt>
+                      <dd class="m-0 break-words font-semibold tabular-nums">{{ formatQuantity(take.baselineOnHand) }}</dd>
                     </div>
                     <div>
-                      <dt>ยอดที่นับ</dt>
-                      <dd>
+                      <dt class="text-xs leading-relaxed text-muted-foreground">ยอดที่นับ</dt>
+                      <dd class="m-0 break-words font-semibold tabular-nums">
                         {{
                           take.countedOnHand === null
                             ? "—"
@@ -220,36 +236,38 @@ function message(error: unknown): string {
                       </dd>
                     </div>
                     <div>
-                      <dt>ส่วนต่าง</dt>
-                      <dd>
+                      <dt class="text-xs leading-relaxed text-muted-foreground">ส่วนต่าง</dt>
+                      <dd class="m-0 break-words font-semibold tabular-nums">
                         {{
                           difference(take.countedOnHand, take.baselineOnHand)
                         }}
                       </dd>
                     </div>
                     <div>
-                      <dt>เวอร์ชันตั้งต้น</dt>
-                      <dd>{{ take.baselineVersion }}</dd>
+                      <dt class="text-xs leading-relaxed text-muted-foreground">เวอร์ชันตั้งต้น</dt>
+                      <dd class="m-0 break-words font-semibold tabular-nums">{{ take.baselineVersion }}</dd>
                     </div>
                     <div>
-                      <dt>ผู้ส่งยอด</dt>
-                      <dd>{{ shortId(take.submittedBy) }}</dd>
+                      <dt class="text-xs leading-relaxed text-muted-foreground">ผู้ส่งยอด</dt>
+                      <dd class="m-0 break-words font-semibold tabular-nums">{{ shortId(take.submittedBy) }}</dd>
                     </div>
                     <div>
-                      <dt>ผู้อนุมัติ/ปฏิเสธ</dt>
-                      <dd>{{ shortId(take.reviewedBy) }}</dd>
+                      <dt class="text-xs leading-relaxed text-muted-foreground">ผู้อนุมัติ/ปฏิเสธ</dt>
+                      <dd class="m-0 break-words font-semibold tabular-nums">{{ shortId(take.reviewedBy) }}</dd>
                     </div>
                   </dl>
                   @if (take.reason) {
-                    <p class="stocktake-muted">{{ take.reason }}</p>
+                    <p class="text-sm leading-relaxed text-muted-foreground">{{ take.reason }}</p>
                   }
                   @if (
                     take.state === "submitted" &&
                     (currentStore.role === "owner" ||
                       currentStore.role === "manager")
                   ) {
-                    <div class="stocktake-buttons">
+                    <div class="flex flex-wrap gap-3">
                       <button
+            hlmBtn
+            class="min-h-11"
                         type="button"
                         [disabled]="busy()"
                         (click)="review(take, true)"
@@ -257,8 +275,10 @@ function message(error: unknown): string {
                         อนุมัติปรับยอด
                       </button>
                       <button
+            hlmBtn
+            variant="outline"
+                        class="min-h-11"
                         type="button"
-                        class="stocktake-reject"
                         [disabled]="busy()"
                         (click)="review(take, false)"
                       >
