@@ -7,6 +7,10 @@ import {
   signal,
 } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmCard } from "@spartan-ng/helm/card";
+import { HlmInput } from "@spartan-ng/helm/input";
+import { HlmLabel } from "@spartan-ng/helm/label";
 import { MerchantStore } from "./order-board.domain";
 import { MerchantOrderApi } from "./merchant-order.api";
 import { OperationalReportsApi } from "./operational-reports.api";
@@ -28,57 +32,100 @@ const STATUS_LABEL: Record<string, string> = {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
-  styleUrls: ["./operational-reports.css"],
+  imports: [RouterLink, HlmButton, HlmCard, HlmInput, HlmLabel],
   template: `
-    <section class="report-shell" aria-labelledby="report-title">
-      <header class="report-head">
+    <section
+      class="mx-auto box-border w-full max-w-7xl space-y-5 px-4 pb-14 pt-6 sm:px-6 lg:px-8"
+      aria-labelledby="report-title"
+    >
+      <header class="space-y-3 border-b border-border pb-5">
         <div>
-          <a class="report-back" routerLink="/">← กลับไปหน้าร้านค้า</a>
-          <span class="eyebrow">OPERATIONS / NOT PAYMENTS</span>
-          <h1 id="report-title">รายงานออเดอร์ประจำวัน</h1>
-          <p class="report-lede">
+          <a hlmBtn variant="link" class="min-h-11 px-0" routerLink="/"
+            >← กลับไปหน้าร้านค้า</a
+          >
+          <span
+            class="block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+            >OPERATIONS / NOT PAYMENTS</span
+          >
+          <h1
+            id="report-title"
+            class="text-2xl font-semibold tracking-tight sm:text-3xl"
+          >
+            รายงานออเดอร์ประจำวัน
+          </h1>
+          <p class="text-sm leading-relaxed text-muted-foreground">
             {{ store()?.storeName || "กำลังตรวจสอบสิทธิ์ร้าน" }}
             · วันทางธุรกิจ Asia/Bangkok
           </p>
         </div>
       </header>
-      <p class="report-warning" role="note">
-        <strong>รายงานการสั่งซื้อ ไม่ใช่รายรับ</strong>
+      <p
+        class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+        role="note"
+      >
+        <strong class="block font-semibold"
+          >รายงานการสั่งซื้อ ไม่ใช่รายรับ</strong
+        >
         ตัวเลขด้านล่างคือมูลค่าออเดอร์ที่บันทึกในระบบเท่านั้น
         ยังไม่มีข้อมูลการรับเงิน การชำระเงินผ่าน PromptPay หรือยอดสุทธิ
       </p>
       @if (error()) {
-        <div class="report-error" role="alert">
-          {{ error() }}
+        <div
+          class="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive"
+          role="alert"
+        >
+          <span class="min-w-0 flex-1">{{ error() }}</span>
           @if (store()) {
-            <button type="button" (click)="refresh()" [disabled]="loading()">
+            <button
+              hlmBtn
+              variant="outline"
+              class="min-h-11"
+              type="button"
+              (click)="refresh()"
+              [disabled]="loading()"
+            >
               ลองใหม่
             </button>
           }
         </div>
       }
       @if (!store() && !error()) {
-        <p class="report-empty" role="status">
+        <p
+          class="rounded-xl border border-dashed border-border bg-card p-5 text-sm leading-relaxed text-muted-foreground"
+          role="status"
+        >
           กำลังตรวจสอบบัญชีและสิทธิ์เจ้าของร้าน...
         </p>
       }
       @if (store()) {
-        <div class="report-controls">
-          <label for="report-day">เลือกวันที่ (ประเทศไทย)</label>
+        <div class="flex flex-wrap items-end gap-3">
+          <label hlmLabel for="report-day">เลือกวันที่ (ประเทศไทย)</label>
           <input
+            hlmInput
             id="report-day"
+            class="min-h-11 w-full tabular-nums"
             type="date"
             min="2020-01-01"
             [max]="maxDay"
             [value]="day()"
             (change)="changeDay($event)"
           />
-          <button type="button" [disabled]="loading()" (click)="refresh()">
+          <button
+            hlmBtn
+            class="min-h-11"
+            type="button"
+            [disabled]="loading()"
+            (click)="refresh()"
+          >
             {{ loading() ? "กำลังโหลด..." : "แสดงรายงาน" }}
           </button>
           @if (report()) {
-            <a class="report-export" [href]="exportUrl()" download
+            <a
+              hlmBtn
+              variant="outline"
+              class="min-h-11"
+              [href]="exportUrl()"
+              download
               >ส่งออก CSV</a
             >
           }
@@ -86,76 +133,146 @@ const STATUS_LABEL: Record<string, string> = {
 
         @if (report(); as data) {
           <div
-            class="report-kpis"
+            class="report-kpis grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
             aria-label="จำนวนออเดอร์และมูลค่าที่ยังไม่ชำระ"
           >
-            <article>
+            <article hlmCard size="sm" class="min-w-0 gap-2 p-4">
               <span>จำนวนออเดอร์</span>
-              <strong>{{ data.orderCount }}</strong>
-              <small>รวมทั้งที่ยกเลิก</small>
+              <strong class="break-words text-2xl font-semibold tabular-nums">{{
+                data.orderCount
+              }}</strong>
+              <small class="text-xs leading-relaxed text-muted-foreground"
+                >รวมทั้งที่ยกเลิก</small
+              >
             </article>
-            <article>
+            <article hlmCard size="sm" class="min-w-0 gap-2 p-4">
               <span>มูลค่าออเดอร์ทั้งหมด</span>
-              <strong>{{ money(data.orderedAmountSatang) }} ฿</strong>
-              <small>ยอดสั่ง ไม่ใช่เงินรับแล้ว</small>
+              <strong class="break-words text-2xl font-semibold tabular-nums"
+                >{{ money(data.orderedAmountSatang) }} ฿</strong
+              >
+              <small class="text-xs leading-relaxed text-muted-foreground"
+                >ยอดสั่ง ไม่ใช่เงินรับแล้ว</small
+              >
             </article>
-            <article>
+            <article hlmCard size="sm" class="min-w-0 gap-2 p-4">
               <span>มูลค่าออเดอร์ที่ไม่ยกเลิก</span>
-              <strong>{{ money(data.activeOrderedAmountSatang) }} ฿</strong>
-              <small>ยังไม่มีการยืนยันชำระเงิน</small>
+              <strong class="break-words text-2xl font-semibold tabular-nums"
+                >{{ money(data.activeOrderedAmountSatang) }} ฿</strong
+              >
+              <small class="text-xs leading-relaxed text-muted-foreground"
+                >ยังไม่มีการยืนยันชำระเงิน</small
+              >
             </article>
-            <article>
+            <article hlmCard size="sm" class="min-w-0 gap-2 p-4">
               <span>มูลค่าออเดอร์ที่ยกเลิก</span>
-              <strong>{{ money(data.cancelledOrderedAmountSatang) }} ฿</strong>
-              <small>การยกเลิกไม่ใช่การคืนเงิน</small>
+              <strong class="break-words text-2xl font-semibold tabular-nums"
+                >{{ money(data.cancelledOrderedAmountSatang) }} ฿</strong
+              >
+              <small class="text-xs leading-relaxed text-muted-foreground"
+                >การยกเลิกไม่ใช่การคืนเงิน</small
+              >
             </article>
           </div>
 
-          <div class="report-sections">
-            <section class="report-card" aria-labelledby="statuses-title">
-              <h2 id="statuses-title">สถานะคำสั่งซื้อ</h2>
-              <dl class="report-stat-list">
+          <div class="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
+            <section
+              hlmCard
+              size="sm"
+              class="min-w-0 gap-4 p-4 sm:p-5"
+              aria-labelledby="statuses-title"
+            >
+              <h2 id="statuses-title" class="text-lg font-semibold">
+                สถานะคำสั่งซื้อ
+              </h2>
+              <dl class="m-0 divide-y divide-border">
                 @for (entry of statuses; track entry) {
                   <div>
-                    <dt>{{ statusLabel[entry] }}</dt>
-                    <dd>{{ data.statusCounts[entry] }}</dd>
+                    <dt class="text-sm leading-relaxed text-muted-foreground">
+                      {{ statusLabel[entry] }}
+                    </dt>
+                    <dd class="m-0 shrink-0 font-semibold tabular-nums">
+                      {{ data.statusCounts[entry] }}
+                    </dd>
                   </div>
                 }
               </dl>
             </section>
-            <section class="report-card" aria-labelledby="performance-title">
-              <h2 id="performance-title">ระยะเวลาการให้บริการ</h2>
-              <dl class="report-stat-list">
+            <section
+              hlmCard
+              size="sm"
+              class="min-w-0 gap-4 p-4 sm:p-5"
+              aria-labelledby="performance-title"
+            >
+              <h2 id="performance-title" class="text-lg font-semibold">
+                ระยะเวลาการให้บริการ
+              </h2>
+              <dl class="m-0 divide-y divide-border">
                 <div>
-                  <dt>เวลาเฉลี่ยจนร้านรับออเดอร์</dt>
-                  <dd>{{ seconds(data.avgSecondsToAccept) }}</dd>
+                  <dt class="text-sm leading-relaxed text-muted-foreground">
+                    เวลาเฉลี่ยจนร้านรับออเดอร์
+                  </dt>
+                  <dd class="m-0 shrink-0 font-semibold tabular-nums">
+                    {{ seconds(data.avgSecondsToAccept) }}
+                  </dd>
                 </div>
                 <div>
-                  <dt>เวลาเฉลี่ยจนเสิร์ฟ</dt>
-                  <dd>{{ seconds(data.avgSecondsToServe) }}</dd>
+                  <dt class="text-sm leading-relaxed text-muted-foreground">
+                    เวลาเฉลี่ยจนเสิร์ฟ
+                  </dt>
+                  <dd class="m-0 shrink-0 font-semibold tabular-nums">
+                    {{ seconds(data.avgSecondsToServe) }}
+                  </dd>
                 </div>
               </dl>
-              <p class="report-hint">
+              <p class="text-sm leading-relaxed text-muted-foreground">
                 คำนวณจากเวลาเริ่มออเดอร์ถึงเหตุการณ์ที่บันทึกใน Audit Log
                 เฉพาะออเดอร์ที่มีเหตุการณ์นั้น
               </p>
             </section>
           </div>
 
-          <section class="report-card" aria-labelledby="popular-title">
-            <h2 id="popular-title">
+          <section
+            hlmCard
+            size="sm"
+            class="min-w-0 gap-4 p-4 sm:p-5"
+            aria-labelledby="popular-title"
+          >
+            <h2 id="popular-title" class="text-lg font-semibold">
               สินค้าที่ถูกสั่งมากที่สุด (ไม่รวมออเดอร์ยกเลิก)
             </h2>
             @if (data.topProducts.length === 0) {
-              <p class="report-empty">ยังไม่มีข้อมูลการสั่งซื้อในวันที่เลือก</p>
+              <p
+                class="rounded-xl border border-dashed border-border bg-card p-5 text-sm leading-relaxed text-muted-foreground"
+              >
+                ยังไม่มีข้อมูลการสั่งซื้อในวันที่เลือก
+              </p>
             } @else {
-              <div class="report-table-wrap">
-                <table>
-                  <thead>
+              <div
+                class="max-w-full overflow-x-auto rounded-xl border border-border"
+              >
+                <table
+                  class="w-full min-w-[32rem] border-collapse text-left text-sm"
+                >
+                  <thead class="bg-muted/40">
                     <tr>
-                      <th scope="col">สินค้า</th>
-                      <th scope="col">จำนวนที่สั่ง</th>
-                      <th scope="col">มูลค่าที่สั่ง (ยังไม่รับเงิน)</th>
+                      <th
+                        scope="col"
+                        class="border-b border-border p-3 font-semibold"
+                      >
+                        สินค้า
+                      </th>
+                      <th
+                        scope="col"
+                        class="border-b border-border p-3 font-semibold"
+                      >
+                        จำนวนที่สั่ง
+                      </th>
+                      <th
+                        scope="col"
+                        class="border-b border-border p-3 font-semibold"
+                      >
+                        มูลค่าที่สั่ง (ยังไม่รับเงิน)
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -164,9 +281,18 @@ const STATUS_LABEL: Record<string, string> = {
                       track product.productId + product.productName
                     ) {
                       <tr>
-                        <th scope="row">{{ product.productName }}</th>
-                        <td>{{ product.unitsOrdered }}</td>
-                        <td>{{ money(product.orderedAmountSatang) }} ฿</td>
+                        <th
+                          scope="row"
+                          class="border-b border-border p-3 font-medium"
+                        >
+                          {{ product.productName }}
+                        </th>
+                        <td class="border-b border-border p-3 tabular-nums">
+                          {{ product.unitsOrdered }}
+                        </td>
+                        <td class="border-b border-border p-3 tabular-nums">
+                          {{ money(product.orderedAmountSatang) }} ฿
+                        </td>
                       </tr>
                     }
                   </tbody>
@@ -174,12 +300,15 @@ const STATUS_LABEL: Record<string, string> = {
               </div>
             }
           </section>
-          <p class="report-hint">
+          <p class="text-sm leading-relaxed text-muted-foreground">
             วัน {{ data.day }} · โซนเวลา {{ data.timezone }} · ประเภทข้อมูล
             {{ data.snapshotType }} · ไม่ใช่รายงาน Payment
           </p>
         } @else if (loading()) {
-          <p class="report-empty" role="status">
+          <p
+            class="rounded-xl border border-dashed border-border bg-card p-5 text-sm leading-relaxed text-muted-foreground"
+            role="status"
+          >
             กำลังดึงรายงานจากฐานข้อมูล...
           </p>
         }
