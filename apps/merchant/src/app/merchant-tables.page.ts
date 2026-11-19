@@ -255,7 +255,7 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
               [alt]="'QR สำหรับสั่งอาหาร ' + table.label"
             />
             <p
-              class="break-all text-center text-sm leading-relaxed text-muted-foreground"
+              class="table-url break-all text-center text-sm leading-relaxed text-muted-foreground"
             >
               {{ table.printedUrl }}
             </p>
