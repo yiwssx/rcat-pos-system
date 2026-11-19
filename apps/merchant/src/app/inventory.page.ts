@@ -8,6 +8,10 @@ import {
   signal,
 } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmCard } from "@spartan-ng/helm/card";
+import { HlmInput } from "@spartan-ng/helm/input";
+import { HlmLabel } from "@spartan-ng/helm/label";
 import { MerchantOrderApi } from "./merchant-order.api";
 import { MerchantStore } from "./order-board.domain";
 import { InventoryApi } from "./inventory.api";
@@ -39,25 +43,24 @@ function inventoryError(error: unknown): string {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
-  styleUrls: ["./inventory.css"],
+  imports: [RouterLink, HlmButton, HlmCard, HlmInput, HlmLabel],
   template: `
-    <section class="inventory-shell" aria-labelledby="inventory-heading">
-      <a routerLink="/" class="inventory-back">← กลับไปหน้าร้านค้า</a>
-      <span class="eyebrow">INVENTORY / EXPLICIT ORDER TRACKING</span>
-      <h1 id="inventory-heading">สต็อกวัตถุดิบของร้าน</h1>
-      <p class="inventory-muted">
+    <section class="mx-auto box-border w-full max-w-6xl space-y-5 px-4 pb-14 pt-6 sm:px-6 lg:px-8" aria-labelledby="inventory-heading">
+      <a hlmBtn variant="link" class="min-h-11 px-0" routerLink="/">← กลับไปหน้าร้านค้า</a>
+      <span class="block text-xs font-semibold uppercase tracking-widest text-muted-foreground">INVENTORY / EXPLICIT ORDER TRACKING</span>
+      <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl" id="inventory-heading">สต็อกวัตถุดิบของร้าน</h1>
+      <p class="text-sm leading-relaxed text-muted-foreground">
         {{ store()?.storeName || "กำลังตรวจสอบสิทธิ์..." }}
         · ปริมาณใช้หน่วย g / ml / ชิ้น และจำนวนเต็มทศนิยมไม่เกิน 3 ตำแหน่ง
       </p>
       <a
-        class="inventory-stocktake-link"
+        hlmBtn variant="outline" class="min-h-11 w-fit"
         [routerLink]="['/inventory', tenantId, storeId, 'stocktakes']"
       >
         ตรวจนับสต็อก / Stocktake และอนุมัติปรับยอด
       </a>
-      <p class="inventory-warning" role="note">
-        <strong>ตัดสต็อกเมื่อร้านรับออเดอร์ เฉพาะสินค้าที่เปิดติดตาม</strong>
+      <p class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed" role="note">
+        <strong class="font-semibold">ตัดสต็อกเมื่อร้านรับออเดอร์ เฉพาะสินค้าที่เปิดติดตาม</strong>
         สินค้าทุกชนิดเริ่มในโหมดจัดการสต็อกด้วยตนเอง
         ตรวจสูตรหลักและตัวเลือกเสริมก่อนเปิดติดตามรายสินค้า
         ระบบคืนปริมาณที่ตัดจริงเมื่อยกเลิกออเดอร์ที่รับแล้ว
@@ -65,54 +68,54 @@ function inventoryError(error: unknown): string {
       </p>
 
       @if (error()) {
-        <div class="inventory-error" role="alert">{{ error() }}</div>
+        <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive" role="alert">{{ error() }}</div>
       }
       @if (notice()) {
-        <p class="inventory-notice" role="status">{{ notice() }}</p>
+        <p class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed" role="status">{{ notice() }}</p>
       }
       @if (loading()) {
-        <p class="inventory-muted" role="status">กำลังโหลดสต็อกจาก Server...</p>
+        <p class="text-sm leading-relaxed text-muted-foreground" role="status">กำลังโหลดสต็อกจาก Server...</p>
       }
       @if (store(); as currentStore) {
         @if (snapshot(); as data) {
-          <div class="inventory-toolbar">
+          <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
             <span
               >วัตถุดิบ {{ data.items.length }} รายการ · บันทึกล่าสุดสูงสุด 50
               รายการ</span
             >
-            <button type="button" [disabled]="busy()" (click)="reload()">
+            <button hlmBtn class="min-h-11" type="button" [disabled]="busy()" (click)="reload()">
               โหลดข้อมูลล่าสุด
             </button>
           </div>
 
-          <section class="inventory-panel" aria-labelledby="stock-list-heading">
-            <h2 id="stock-list-heading">ยอดคงเหลือจาก Ledger</h2>
+          <section hlmCard size="sm" class="inventory-panel min-w-0 gap-4 p-4 sm:p-5" aria-labelledby="stock-list-heading">
+            <h2 class="text-lg font-semibold" id="stock-list-heading">ยอดคงเหลือจาก Ledger</h2>
             @if (data.items.length === 0) {
-              <p class="inventory-muted">ยังไม่มีวัตถุดิบในร้าน</p>
+              <p class="text-sm leading-relaxed text-muted-foreground">ยังไม่มีวัตถุดิบในร้าน</p>
             } @else {
-              <div class="inventory-table-wrap">
-                <table>
+              <div class="w-full min-w-0 overflow-x-auto">
+                <table class="w-full min-w-[600px] border-collapse text-sm">
                   <thead>
                     <tr>
-                      <th scope="col">วัตถุดิบ</th>
-                      <th scope="col">คงเหลือ</th>
-                      <th scope="col">เกณฑ์แจ้งเตือน</th>
-                      <th scope="col">สถานะ</th>
+                      <th class="border-b border-border px-3 py-3 text-left" scope="col">วัตถุดิบ</th>
+                      <th class="border-b border-border px-3 py-3 text-left" scope="col">คงเหลือ</th>
+                      <th class="border-b border-border px-3 py-3 text-left" scope="col">เกณฑ์แจ้งเตือน</th>
+                      <th class="border-b border-border px-3 py-3 text-left" scope="col">สถานะ</th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (item of data.items; track item.itemId) {
                       <tr>
-                        <th scope="row">{{ item.name }}</th>
-                        <td>{{ units(item.onHand) }} {{ item.unit }}</td>
-                        <td>{{ units(item.reorderAt) }} {{ item.unit }}</td>
-                        <td>
+                        <th class="border-b border-border px-3 py-3 text-left" scope="row">{{ item.name }}</th>
+                        <td class="border-b border-border px-3 py-3 text-left tabular-nums">{{ units(item.onHand) }} {{ item.unit }}</td>
+                        <td class="border-b border-border px-3 py-3 text-left tabular-nums">{{ units(item.reorderAt) }} {{ item.unit }}</td>
+                        <td class="border-b border-border px-3 py-3 text-left tabular-nums">
                           @if (isLow(item)) {
-                            <strong class="inventory-low"
+                            <strong class="text-sm font-semibold text-destructive"
                               >ต่ำกว่าหรือเท่ากับเกณฑ์</strong
                             >
                           } @else {
-                            <span>เพียงพอตามเกณฑ์</span>
+                            <span class="min-w-0 break-words">เพียงพอตามเกณฑ์</span>
                           }
                         </td>
                       </tr>
@@ -126,19 +129,19 @@ function inventoryError(error: unknown): string {
           @if (
             currentStore.role === "owner" || currentStore.role === "manager"
           ) {
-            <div class="inventory-grid">
+            <div class="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-2">
               <section
-                class="inventory-panel"
+                hlmCard size="sm" class="inventory-panel min-w-0 gap-4 p-4 sm:p-5"
                 aria-labelledby="add-ingredient-heading"
               >
-                <h2 id="add-ingredient-heading">เพิ่มวัตถุดิบ</h2>
+                <h2 class="text-lg font-semibold" id="add-ingredient-heading">เพิ่มวัตถุดิบ</h2>
                 <form
-                  class="inventory-form"
+                  class="grid min-w-0 gap-4"
                   (submit)="createIngredient($event)"
                 >
-                  <label
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >ชื่อวัตถุดิบ
-                    <input
+                    <input hlmInput class="min-h-11 w-full"
                       type="text"
                       [value]="newName()"
                       (input)="setText($event, 'name')"
@@ -147,17 +150,17 @@ function inventoryError(error: unknown): string {
                       placeholder="เช่น ข้าวสาร"
                     />
                   </label>
-                  <label
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >หน่วย
-                    <select [value]="newUnit()" (change)="onUnit($event)">
+                    <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" [value]="newUnit()" (change)="onUnit($event)">
                       <option value="g">กรัม (g)</option>
                       <option value="ml">มิลลิลิตร (ml)</option>
                       <option value="unit">ชิ้น (unit)</option>
                     </select>
                   </label>
-                  <label
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >เกณฑ์แจ้งเตือนขั้นต่ำ
-                    <input
+                    <input hlmInput class="min-h-11 w-full"
                       type="text"
                       inputmode="decimal"
                       [value]="reorderAt()"
@@ -165,25 +168,25 @@ function inventoryError(error: unknown): string {
                       required
                     />
                   </label>
-                  <button type="submit" [disabled]="busy()">
+                  <button hlmBtn class="min-h-11" type="submit" [disabled]="busy()">
                     สร้างวัตถุดิบ
                   </button>
                 </form>
               </section>
 
               <section
-                class="inventory-panel"
+                hlmCard size="sm" class="inventory-panel min-w-0 gap-4 p-4 sm:p-5"
                 aria-labelledby="movement-heading"
               >
-                <h2 id="movement-heading">บันทึกการเคลื่อนไหว</h2>
-                <p class="inventory-muted">
+                <h2 class="text-lg font-semibold" id="movement-heading">บันทึกการเคลื่อนไหว</h2>
+                <p class="text-sm leading-relaxed text-muted-foreground">
                   รับของเข้าต้องใช้จำนวนบวก หากปรับลด ให้เลือกปรับยอดและใส่ -
                   นำหน้า ระบบจะปฏิเสธรายการที่ทำให้ยอดติดลบ
                 </p>
-                <form class="inventory-form" (submit)="moveStock($event)">
-                  <label
+                <form class="grid min-w-0 gap-4" (submit)="moveStock($event)">
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >วัตถุดิบ
-                    <select
+                    <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                       [value]="moveItemId()"
                       (change)="onSelect($event, 'movement-item')"
                       required
@@ -196,16 +199,16 @@ function inventoryError(error: unknown): string {
                       }
                     </select>
                   </label>
-                  <label
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >ประเภท
-                    <select [value]="moveKind()" (change)="onMoveKind($event)">
+                    <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" [value]="moveKind()" (change)="onMoveKind($event)">
                       <option value="receipt">รับสินค้าเข้า (+)</option>
                       <option value="adjustment">ปรับยอด (+ หรือ -)</option>
                     </select>
                   </label>
-                  <label
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >จำนวน (ไม่เกิน 3 ตำแหน่งทศนิยม)
-                    <input
+                    <input hlmInput class="min-h-11 w-full"
                       type="text"
                       inputmode="decimal"
                       [value]="moveDelta()"
@@ -214,9 +217,9 @@ function inventoryError(error: unknown): string {
                       placeholder="50.500"
                     />
                   </label>
-                  <label
+                  <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                     >เหตุผลหรือเอกสารอ้างอิง
-                    <input
+                    <input hlmInput class="min-h-11 w-full"
                       type="text"
                       [value]="moveReason()"
                       (input)="setText($event, 'reason')"
@@ -225,13 +228,13 @@ function inventoryError(error: unknown): string {
                       placeholder="รับของจากผู้ขาย"
                     />
                   </label>
-                  <button
+                  <button hlmBtn class="min-h-11"
                     type="submit"
                     [disabled]="busy() || !data.items.length"
                   >
                     {{ busy() ? "กำลังตรวจสอบ..." : "ยืนยันบันทึกสต็อก" }}
                   </button>
-                  <p class="inventory-muted">
+                  <p class="text-sm leading-relaxed text-muted-foreground">
                     หากเครือข่ายขัดข้อง กดลองอีกครั้งโดยไม่เปลี่ยนข้อมูล
                     เพื่อส่งรหัส Idempotency เดิม
                   </p>
@@ -239,20 +242,20 @@ function inventoryError(error: unknown): string {
               </section>
             </div>
 
-            <section class="inventory-panel" aria-labelledby="recipe-heading">
-              <h2 id="recipe-heading">สูตรการใช้วัตถุดิบต่อสินค้า 1 รายการ</h2>
-              <p class="inventory-muted">
+            <section hlmCard size="sm" class="inventory-panel min-w-0 gap-4 p-4 sm:p-5" aria-labelledby="recipe-heading">
+              <h2 class="text-lg font-semibold" id="recipe-heading">สูตรการใช้วัตถุดิบต่อสินค้า 1 รายการ</h2>
+              <p class="text-sm leading-relaxed text-muted-foreground">
                 สูตรนี้เป็นข้อมูลวางแผนจนกว่าจะเปิดติดตามสต็อกรายสินค้า
                 หลังเปิดแล้วจะตัดวัตถุดิบเมื่อร้านรับออเดอร์ ใส่ 0
                 เพื่อลบส่วนประกอบ
               </p>
               <form
-                class="inventory-form inventory-recipe-form"
+                class="grid min-w-0 grid-cols-1 items-end gap-4 md:grid-cols-2 xl:grid-cols-4"
                 (submit)="setRecipe($event)"
               >
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >สินค้า
-                  <select
+                  <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     [value]="recipeProductId()"
                     (change)="onSelect($event, 'product')"
                     required
@@ -266,9 +269,9 @@ function inventoryError(error: unknown): string {
                     }
                   </select>
                 </label>
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >วัตถุดิบ
-                  <select
+                  <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     [value]="recipeItemId()"
                     (change)="onSelect($event, 'recipe-item')"
                     required
@@ -281,9 +284,9 @@ function inventoryError(error: unknown): string {
                     }
                   </select>
                 </label>
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >ปริมาณที่ใช้ต่อสินค้า 1 ชิ้น
-                  <input
+                  <input hlmInput class="min-h-11 w-full"
                     type="text"
                     inputmode="decimal"
                     [value]="recipeQuantity()"
@@ -291,7 +294,7 @@ function inventoryError(error: unknown): string {
                     required
                   />
                 </label>
-                <button
+                <button hlmBtn class="min-h-11"
                   type="submit"
                   [disabled]="
                     busy() || !data.items.length || !catalog()?.products?.length
@@ -302,36 +305,36 @@ function inventoryError(error: unknown): string {
               </form>
             </section>
             <section
-              class="inventory-panel"
+              hlmCard size="sm" class="inventory-panel min-w-0 gap-4 p-4 sm:p-5"
               aria-labelledby="tracked-products-heading"
             >
-              <h2 id="tracked-products-heading">
+              <h2 class="text-lg font-semibold" id="tracked-products-heading">
                 เปิดตัดสต็อกตามออเดอร์เป็นรายสินค้า
               </h2>
-              <p class="inventory-muted">
+              <p class="text-sm leading-relaxed text-muted-foreground">
                 เปิดได้หลังบันทึกสูตรวัตถุดิบหลักเท่านั้น
                 ตัวเลือกเสริมที่ไม่มีสูตรจะใช้วัตถุดิบเพิ่ม 0
                 ตรวจสอบสูตรตัวเลือกเสริมทุกตัวก่อนเปิดติดตาม
                 การเปิดนี้ไม่ตัดสต็อกจากออเดอร์เก่า
               </p>
               @if ((catalog()?.products?.length || 0) === 0) {
-                <p class="inventory-muted">ยังไม่มีสินค้าในเมนู</p>
+                <p class="text-sm leading-relaxed text-muted-foreground">ยังไม่มีสินค้าในเมนู</p>
               } @else {
-                <ul class="inventory-tracking-list">
+                <ul class="m-0 list-none divide-y divide-border p-0">
                   @for (
                     product of catalog()?.products || [];
                     track product.id
                   ) {
-                    <li>
-                      <span>
-                        <strong>{{ product.name }}</strong>
-                        <small>{{
+                    <li class="flex min-w-0 flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                      <span class="min-w-0 break-words">
+                        <strong class="font-semibold">{{ product.name }}</strong>
+                        <small class="text-xs leading-relaxed text-muted-foreground">{{
                           isTracked(product.id)
                             ? "เปิดตัดสต็อกเมื่อรับออเดอร์"
                             : "ยังไม่เปิดติดตาม"
                         }}</small>
                       </span>
-                      <button
+                      <button hlmBtn class="min-h-11"
                         type="button"
                         [disabled]="busy()"
                         (click)="
@@ -347,24 +350,24 @@ function inventoryError(error: unknown): string {
             </section>
 
             <section
-              class="inventory-panel"
+              hlmCard size="sm" class="inventory-panel min-w-0 gap-4 p-4 sm:p-5"
               aria-labelledby="modifier-recipe-heading"
             >
-              <h2 id="modifier-recipe-heading">
+              <h2 class="text-lg font-semibold" id="modifier-recipe-heading">
                 สูตรวัตถุดิบของตัวเลือกเสริม (Modifier)
               </h2>
-              <p class="inventory-muted">
+              <p class="text-sm leading-relaxed text-muted-foreground">
                 เพิ่มปริมาณวัตถุดิบเฉพาะเมื่อเลือกรายการเสริมนี้
                 สูตรจะถูกรวมกับสูตรหลักตามจำนวนสินค้าที่สั่ง ใส่ 0
                 เพื่อลบส่วนประกอบ
               </p>
               <form
-                class="inventory-form inventory-recipe-form"
+                class="grid min-w-0 grid-cols-1 items-end gap-4 md:grid-cols-2 xl:grid-cols-4"
                 (submit)="updateModifierRecipe($event)"
               >
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >ตัวเลือกเสริม
-                  <select
+                  <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     [value]="modifierOptionId()"
                     (change)="onSelect($event, 'modifier-option')"
                     required
@@ -380,9 +383,9 @@ function inventoryError(error: unknown): string {
                     }
                   </select>
                 </label>
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >วัตถุดิบเพิ่มเติม
-                  <select
+                  <select class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     [value]="modifierItemId()"
                     (change)="onSelect($event, 'modifier-item')"
                     required
@@ -395,9 +398,9 @@ function inventoryError(error: unknown): string {
                     }
                   </select>
                 </label>
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >ปริมาณที่ใช้ต่อสินค้า 1 รายการ
-                  <input
+                  <input hlmInput class="min-h-11 w-full"
                     type="text"
                     inputmode="decimal"
                     [value]="modifierQuantity()"
@@ -405,7 +408,7 @@ function inventoryError(error: unknown): string {
                     required
                   />
                 </label>
-                <button
+                <button hlmBtn class="min-h-11"
                   type="submit"
                   [disabled]="
                     busy() ||
@@ -417,13 +420,13 @@ function inventoryError(error: unknown): string {
                 </button>
               </form>
               @if (data.modifierRecipes.length > 0) {
-                <ul class="inventory-detail-list">
+                <ul class="m-0 list-none divide-y divide-border p-0">
                   @for (
                     recipe of data.modifierRecipes;
                     track recipe.optionId + recipe.itemId
                   ) {
-                    <li>
-                      <strong>{{ modifierName(recipe.optionId) }}</strong>
+                    <li class="grid min-w-0 gap-1 py-3">
+                      <strong class="font-semibold">{{ modifierName(recipe.optionId) }}</strong>
                       <span
                         >{{ ingredientName(recipe.itemId) }}
                         {{ units(recipe.quantityPerProduct) }}
@@ -436,23 +439,23 @@ function inventoryError(error: unknown): string {
             </section>
           }
 
-          <div class="inventory-grid">
+          <div class="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-2">
             <section
-              class="inventory-panel"
+              hlmCard size="sm" class="inventory-panel min-w-0 gap-4 p-4 sm:p-5"
               aria-labelledby="recipe-list-heading"
             >
-              <h2 id="recipe-list-heading">สูตรที่บันทึกแล้ว</h2>
+              <h2 class="text-lg font-semibold" id="recipe-list-heading">สูตรที่บันทึกแล้ว</h2>
               @if (data.recipes.length === 0) {
-                <p class="inventory-muted">ยังไม่มีข้อมูลสูตรวัตถุดิบ</p>
+                <p class="text-sm leading-relaxed text-muted-foreground">ยังไม่มีข้อมูลสูตรวัตถุดิบ</p>
               } @else {
-                <ul class="inventory-detail-list">
+                <ul class="m-0 list-none divide-y divide-border p-0">
                   @for (
                     recipe of data.recipes;
                     track recipe.productId + recipe.itemId
                   ) {
-                    <li>
-                      <strong>{{ recipe.productName }}</strong>
-                      <span>
+                    <li class="grid min-w-0 gap-1 py-3">
+                      <strong class="font-semibold">{{ recipe.productName }}</strong>
+                      <span class="min-w-0 break-words">
                         {{ ingredientName(recipe.itemId) }}
                         {{ units(recipe.quantityPerProduct) }}
                         {{ ingredientUnit(recipe.itemId) }} / สินค้า 1 รายการ
@@ -463,27 +466,27 @@ function inventoryError(error: unknown): string {
               }
             </section>
             <section
-              class="inventory-panel"
+              hlmCard size="sm" class="inventory-panel min-w-0 gap-4 p-4 sm:p-5"
               aria-labelledby="movement-list-heading"
             >
-              <h2 id="movement-list-heading">ประวัติการเคลื่อนไหวล่าสุด</h2>
+              <h2 class="text-lg font-semibold" id="movement-list-heading">ประวัติการเคลื่อนไหวล่าสุด</h2>
               @if (data.recentMovements.length === 0) {
-                <p class="inventory-muted">ยังไม่มีการบันทึกการเคลื่อนไหว</p>
+                <p class="text-sm leading-relaxed text-muted-foreground">ยังไม่มีการบันทึกการเคลื่อนไหว</p>
               } @else {
-                <ul class="inventory-detail-list">
+                <ul class="m-0 list-none divide-y divide-border p-0">
                   @for (
                     movement of data.recentMovements;
                     track movement.movementId
                   ) {
-                    <li>
-                      <strong>{{ ingredientName(movement.itemId) }}</strong>
+                    <li class="grid min-w-0 gap-1 py-3">
+                      <strong class="font-semibold">{{ ingredientName(movement.itemId) }}</strong>
                       <span
                         >{{ movementLabel(movement.kind) }}
                         {{ units(movement.delta) }}
                         {{ ingredientUnit(movement.itemId) }}
                         · คงเหลือ {{ units(movement.quantityAfter) }}
                       </span>
-                      <small>{{ movement.reason }}</small>
+                      <small class="text-xs leading-relaxed text-muted-foreground">{{ movement.reason }}</small>
                     </li>
                   }
                 </ul>
