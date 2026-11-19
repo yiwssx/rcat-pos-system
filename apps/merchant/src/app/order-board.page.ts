@@ -525,7 +525,9 @@ function failureText(error: unknown): string {
           </div>
         }
 
-        <details class="mt-5 overflow-hidden rounded-xl border border-border bg-card">
+        <details
+          class="mt-5 overflow-hidden rounded-xl border border-border bg-card"
+        >
           <summary
             class="flex min-h-12 cursor-pointer flex-wrap items-center justify-between gap-3 p-4 font-semibold text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
@@ -538,9 +540,7 @@ function failureText(error: unknown): string {
             class="border-t border-border p-4"
             aria-labelledby="events-title"
           >
-            <div
-              class="my-4 flex flex-wrap items-center justify-between gap-2"
-            >
+            <div class="my-4 flex flex-wrap items-center justify-between gap-2">
               <h2 id="events-title" class="text-lg font-semibold">
                 เหตุการณ์ล่าสุด
               </h2>
@@ -555,14 +555,19 @@ function failureText(error: unknown): string {
                 ยังไม่มีเหตุการณ์ใหม่ที่รับจาก Outbox ในหน้าจอนี้
               </p>
             } @else {
-              <ol class="m-0 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card p-0">
+              <ol
+                class="m-0 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card p-0"
+              >
                 @for (event of events(); track event.eventId) {
                   <li class="flex flex-wrap items-center gap-3 p-3 text-sm">
                     <span class="font-semibold">{{
                       statusLabel[event.status]
                     }}</span>
                     <span>ออเดอร์ {{ eventNumber(event.orderId) }}</span>
-                    <time class="ml-auto text-sm tabular-nums text-muted-foreground">{{ time(event.occurredAt) }}</time>
+                    <time
+                      class="ml-auto text-sm tabular-nums text-muted-foreground"
+                      >{{ time(event.occurredAt) }}</time
+                    >
                   </li>
                 }
               </ol>
