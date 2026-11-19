@@ -9,7 +9,9 @@ import {
   signal,
 } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { HlmBadge } from "@spartan-ng/helm/badge";
 import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmCard } from "@spartan-ng/helm/card";
 import { HttpErrorResponse } from "@angular/common/http";
 import {
   appendOrderPage,
@@ -67,7 +69,7 @@ function failureText(error: unknown): string {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, HlmButton],
+  imports: [RouterLink, HlmBadge, HlmButton, HlmCard],
   styleUrls: ["./order-board.css"],
   template: `
     <section class="board" aria-labelledby="board-title">
@@ -165,7 +167,7 @@ function failureText(error: unknown): string {
         >
           <button
             type="button"
-            class="v6-order-metric"
+            class="v6-order-metric focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             [class.v6-selected]="filter() === 'submitted'"
             [attr.aria-pressed]="filter() === 'submitted'"
             (click)="setQueueFilter('submitted')"
@@ -176,7 +178,7 @@ function failureText(error: unknown): string {
           </button>
           <button
             type="button"
-            class="v6-order-metric"
+            class="v6-order-metric focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             [class.v6-selected]="filter() === 'in_progress'"
             [attr.aria-pressed]="filter() === 'in_progress'"
             (click)="setQueueFilter('in_progress')"
@@ -187,7 +189,7 @@ function failureText(error: unknown): string {
           </button>
           <button
             type="button"
-            class="v6-order-metric"
+            class="v6-order-metric focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             [class.v6-selected]="filter() === 'served'"
             [attr.aria-pressed]="filter() === 'served'"
             (click)="setQueueFilter('served')"
@@ -229,91 +231,130 @@ function failureText(error: unknown): string {
             }}
           </p>
         } @else {
-          <div class="order-grid">
+          <div
+            class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3"
+          >
             @for (order of visibleOrders(); track order.orderId) {
               <article
-                class="order-card"
-                [class.is-submitted]="order.status === 'submitted'"
+                hlmCard
+                size="sm"
+                class="order-card min-w-0 gap-4 p-4"
+                [class.ring-2]="order.status === 'submitted'"
+                [class.ring-primary]="order.status === 'submitted'"
                 [attr.aria-label]="'ออเดอร์ ' + number(order.displayNumber)"
               >
-                <div class="order-card-head">
-                  <div>
-                    <span class="order-number">{{
-                      number(order.displayNumber)
-                    }}</span>
-                    <p class="order-meta">
+                <div
+                  class="flex min-w-0 flex-wrap items-start justify-between gap-3"
+                >
+                  <div class="min-w-0">
+                    <span
+                      class="text-lg font-semibold tracking-tight tabular-nums"
+                      >{{ number(order.displayNumber) }}</span
+                    >
+                    <p
+                      class="mt-1 text-sm leading-relaxed text-muted-foreground"
+                    >
                       โต๊ะ {{ order.tableId.slice(0, 8) }} ·
                       {{ time(order.createdAt) }}
                     </p>
                   </div>
                   <span
-                    class="order-state"
-                    [class]="'order-state state-' + order.status"
+                    hlmBadge
+                    class="shrink-0 self-start"
+                    [variant]="
+                      order.status === 'cancelled'
+                        ? 'destructive'
+                        : order.status === 'submitted'
+                          ? 'default'
+                          : order.status === 'served'
+                            ? 'secondary'
+                            : 'outline'
+                    "
                   >
                     {{ statusLabel[order.status] }}
                   </span>
                 </div>
                 <div
-                  class="order-delivery"
+                  class="grid min-w-0 gap-2 rounded-xl bg-muted/40 p-3 sm:grid-cols-2"
                   aria-label="ข้อมูลผู้สั่งและสถานที่ส่ง"
                 >
-                  <div>
-                    <span>ผู้สั่ง</span>
-                    <strong>{{
+                  <div class="min-w-0 space-y-1">
+                    <span class="block text-xs text-muted-foreground"
+                      >ผู้สั่ง</span
+                    >
+                    <strong class="block break-words text-sm font-medium">{{
                       order.orderedBy || "ไม่ระบุ (ออเดอร์เดิม)"
                     }}</strong>
                   </div>
-                  <div>
-                    <span>ส่งที่</span>
-                    <strong>{{
+                  <div class="min-w-0 space-y-1">
+                    <span class="block text-xs text-muted-foreground"
+                      >ส่งที่</span
+                    >
+                    <strong class="block break-words text-sm font-medium">{{
                       order.deliverTo || "ไม่ระบุ (ออเดอร์เดิม)"
                     }}</strong>
                   </div>
                 </div>
-                <ul class="order-items">
+                <ul
+                  class="m-0 list-none divide-y divide-border border-y border-border p-0"
+                >
                   @for (item of order.items; track $index) {
-                    <li>
-                      <div class="item-top">
-                        <span
-                          ><strong>{{ item.quantity }}×</strong>
+                    <li class="py-3">
+                      <div
+                        class="flex min-w-0 flex-wrap items-start justify-between gap-3 text-sm leading-relaxed"
+                      >
+                        <span class="min-w-0 flex-1 break-words text-foreground"
+                          ><strong class="mr-1 font-semibold"
+                            >{{ item.quantity }}×</strong
+                          >
                           {{ item.productName }}</span
                         >
-                        <span class="money"
+                        <span
+                          class="shrink-0 whitespace-nowrap font-semibold tabular-nums"
                           >{{ money(item.lineTotalSatang) }} ฿</span
                         >
                       </div>
                       @if (item.options.length) {
-                        <p class="order-options">
+                        <p
+                          class="mt-1 text-sm leading-relaxed text-muted-foreground"
+                        >
                           @for (opt of item.options; track $index) {
                             {{ opt.name }}{{ !$last ? " · " : "" }}
                           }
                         </p>
                       }
                       @if (item.note) {
-                        <p class="order-instructions">
+                        <p
+                          class="mt-2 rounded-lg bg-muted/50 p-2 text-sm leading-relaxed text-foreground"
+                        >
                           <strong>หมายเหตุ:</strong> {{ item.note }}
                         </p>
                       }
                     </li>
                   }
                 </ul>
-                <div class="order-total">
-                  <span>
+                <div
+                  class="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3"
+                >
+                  <span class="text-sm text-muted-foreground">
                     ยอดออเดอร์ ·
                     {{ paymentStatusLabel[order.paymentState] }}
                   </span>
-                  <strong class="money"
+                  <strong
+                    class="whitespace-nowrap text-lg font-semibold tabular-nums"
                     >{{ money(order.amountSatang) }} ฿</strong
                   >
                 </div>
-                <div class="order-actions">
+                <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                   @for (
                     action of actions(order.status);
                     track action.nextStatus
                   ) {
                     <button
+                      hlmBtn
                       type="button"
-                      [class.danger]="action.destructive"
+                      [variant]="action.destructive ? 'destructive' : 'default'"
+                      class="min-h-11"
                       [disabled]="busyId() !== null || !connected()"
                       (click)="transition(order, action)"
                     >
@@ -330,7 +371,9 @@ function failureText(error: unknown): string {
                     (order.status === "preparing" || order.status === "served")
                   ) {
                     <a
-                      class="exception-link"
+                      hlmBtn
+                      variant="outline"
+                      class="min-h-11"
                       [routerLink]="[
                         '/inventory',
                         store()!.tenantId,
@@ -343,8 +386,10 @@ function failureText(error: unknown): string {
                     </a>
                   }
                   <button
+                    hlmBtn
                     type="button"
-                    class="subtle"
+                    variant="outline"
+                    class="min-h-11"
                     [disabled]="historyLoadingId() === order.orderId"
                     (click)="showHistory(order)"
                   >
@@ -357,15 +402,21 @@ function failureText(error: unknown): string {
                 </div>
                 @if (selectedHistoryId() === order.orderId && history()) {
                   <section
-                    class="order-history"
+                    class="mt-3 border-t border-border pt-3"
                     aria-label="ประวัติการเปลี่ยนสถานะ"
                   >
-                    <h3>ประวัติออเดอร์</h3>
-                    <ol>
+                    <h3 class="font-semibold">ประวัติออเดอร์</h3>
+                    <ol
+                      class="mt-2 list-decimal space-y-2 pl-5 text-sm leading-relaxed"
+                    >
                       @for (entry of history()!.events; track $index) {
                         <li>
-                          <strong>{{ statusLabel[entry.status] }}</strong>
-                          <span>{{ time(entry.occurredAt) }}</span>
+                          <strong class="font-semibold">{{
+                            statusLabel[entry.status]
+                          }}</strong>
+                          <span class="ml-2 text-muted-foreground">{{
+                            time(entry.occurredAt)
+                          }}</span>
                         </li>
                       }
                     </ol>
