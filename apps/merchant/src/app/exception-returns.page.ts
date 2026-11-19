@@ -8,6 +8,11 @@ import {
   signal,
 } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { HlmBadge } from "@spartan-ng/helm/badge";
+import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmCard } from "@spartan-ng/helm/card";
+import { HlmInput } from "@spartan-ng/helm/input";
+import { HlmLabel } from "@spartan-ng/helm/label";
 import { InventoryApi } from "./inventory.api";
 import {
   ExceptionReturnAllocation,
@@ -38,20 +43,34 @@ function failureMessage(error: unknown): string {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
-  styleUrls: ["./stocktake.css"],
+  imports: [RouterLink, HlmBadge, HlmButton, HlmCard, HlmInput, HlmLabel],
   template: `
-    <main class="stocktake-shell">
-      <a class="stocktake-back" [routerLink]="['/orders', tenantId, storeId]">
+    <main
+      class="mx-auto box-border w-full max-w-6xl space-y-5 px-4 pb-14 pt-6 sm:px-6 lg:px-8"
+    >
+      <a
+        hlmBtn
+        variant="link"
+        class="min-h-11 px-0"
+        [routerLink]="['/orders', tenantId, storeId]"
+      >
         ← กลับไปกระดานออเดอร์
       </a>
-      <span class="eyebrow">RCAT POS / CONTROLLED INVENTORY RETURN</span>
-      <h1>คำขอคืนสต็อกหลังเริ่มปรุง</h1>
-      <p class="stocktake-muted">
+      <span
+        class="block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+        >RCAT POS / CONTROLLED INVENTORY RETURN</span
+      >
+      <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
+        คำขอคืนสต็อกหลังเริ่มปรุง
+      </h1>
+      <p class="text-sm leading-relaxed text-muted-foreground">
         {{ store()?.storeName || "กำลังตรวจสอบสิทธิ์ร้าน" }}
         · ออเดอร์ #{{ orderId.slice(0, 8) }}
       </p>
-      <p class="stocktake-caution" role="note">
+      <p
+        class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+        role="note"
+      >
         <strong
           >คืนได้เฉพาะวัตถุดิบที่ยังไม่ถูกใช้และยังนำเข้าคลังได้จริง</strong
         >
@@ -61,45 +80,70 @@ function failureMessage(error: unknown): string {
       </p>
 
       @if (error()) {
-        <div class="stocktake-error" role="alert">{{ error() }}</div>
+        <div
+          class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive"
+          role="alert"
+        >
+          {{ error() }}
+        </div>
       }
       @if (notice()) {
-        <div class="stocktake-success" role="status">{{ notice() }}</div>
+        <div
+          class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+          role="status"
+        >
+          {{ notice() }}
+        </div>
       }
       @if (loading()) {
-        <p class="stocktake-muted" role="status">กำลังอ่านยอดสต็อกจริง...</p>
+        <p class="text-sm leading-relaxed text-muted-foreground" role="status">
+          กำลังอ่านยอดสต็อกจริง...
+        </p>
       }
       @if (store() && view(); as data) {
-        <div class="stocktake-actions">
-          <button type="button" [disabled]="busy()" (click)="reload()">
+        <div class="flex flex-wrap justify-end gap-3">
+          <button
+            hlmBtn
+            class="min-h-11"
+            type="button"
+            [disabled]="busy()"
+            (click)="reload()"
+          >
             โหลดข้อมูลล่าสุด
           </button>
         </div>
-        <p class="stocktake-muted">
+        <p class="text-sm leading-relaxed text-muted-foreground">
           สถานะออเดอร์: {{ data.orderStatus }}
           · จำนวนที่คืนได้คำนวณจาก Allocation เดิม ไม่ใช่สูตรที่แก้ไขภายหลัง
         </p>
         @if (!data.eligible) {
-          <p class="stocktake-caution" role="status">
+          <p
+            class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+            role="status"
+          >
             ออเดอร์นี้ยังไม่อยู่ในขั้นตอนกำลังเตรียมหรือเสิร์ฟแล้ว
             จึงไม่สามารถขอคืนสต็อกกรณีพิเศษได้
           </p>
         }
-        <div class="stocktake-grid">
+        <div class="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-2">
           <section
-            class="stocktake-panel"
+            hlmCard
+            size="sm"
+            class="min-w-0 gap-4 p-4 sm:p-5"
             aria-labelledby="exception-allocation-title"
           >
-            <h2 id="exception-allocation-title">วัตถุดิบที่ตัดตามออเดอร์</h2>
+            <h2 id="exception-allocation-title" class="text-lg font-semibold">
+              วัตถุดิบที่ตัดตามออเดอร์
+            </h2>
             @if (data.allocations.length === 0) {
-              <p class="stocktake-muted">
+              <p class="text-sm leading-relaxed text-muted-foreground">
                 ออเดอร์นี้ไม่ได้ตัดสต็อกที่ติดตามไว้ จึงไม่มีวัตถุดิบให้คืน
               </p>
             }
             @for (item of data.allocations; track item.itemId) {
-              <article class="stocktake-record">
-                <h3>{{ item.itemName }}</h3>
-                <p class="stocktake-muted">
+              <article hlmCard size="sm" class="min-w-0 gap-3 p-4">
+                <h3 class="break-words font-semibold">{{ item.itemName }}</h3>
+                <p class="text-sm leading-relaxed text-muted-foreground">
                   ตัด {{ formatQuantity(item.allocated) }} {{ item.unit }} ·
                   คืนแล้ว {{ formatQuantity(item.alreadyReturned) }} ·
                   คืนเพิ่มได้สูงสุด {{ formatQuantity(item.remaining) }}
@@ -110,16 +154,19 @@ function failureMessage(error: unknown): string {
 
           @if (data.eligible && mayManage()) {
             <section
-              class="stocktake-panel"
+              hlmCard
+              size="sm"
+              class="min-w-0 gap-4 p-4 sm:p-5"
               aria-labelledby="exception-request-title"
             >
-              <h2 id="exception-request-title">
+              <h2 id="exception-request-title" class="text-lg font-semibold">
                 ยื่นคำขอคืนวัตถุดิบที่ยังไม่ใช้
               </h2>
-              <form class="stocktake-form" (submit)="submit($event)">
-                <label
+              <form class="grid min-w-0 gap-4" (submit)="submit($event)">
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >วัตถุดิบ
                   <select
+                    class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     [value]="itemId()"
                     (change)="selectItem($event)"
                     required
@@ -133,9 +180,11 @@ function failureMessage(error: unknown): string {
                     }
                   </select>
                 </label>
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >ปริมาณที่ยังไม่ใช้ (g / ml / ชิ้น)
                   <input
+                    hlmInput
+                    class="min-h-11 w-full"
                     type="text"
                     inputmode="decimal"
                     required
@@ -144,9 +193,10 @@ function failureMessage(error: unknown): string {
                     (input)="setValue($event, 'quantity')"
                   />
                 </label>
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >เหตุผลที่นำกลับเข้าคลังได้
                   <select
+                    class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     [value]="category()"
                     (change)="selectCategory($event)"
                   >
@@ -158,9 +208,11 @@ function failureMessage(error: unknown): string {
                     </option>
                   </select>
                 </label>
-                <label
+                <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                   >รายละเอียดหลักฐานการตรวจสอบ (10–200 ตัวอักษร)
                   <input
+                    hlmInput
+                    class="min-h-11 w-full"
                     type="text"
                     minlength="10"
                     maxlength="200"
@@ -171,6 +223,8 @@ function failureMessage(error: unknown): string {
                   />
                 </label>
                 <button
+                  hlmBtn
+                  class="min-h-11"
                   type="submit"
                   [disabled]="busy() || !available().length"
                 >
@@ -182,30 +236,44 @@ function failureMessage(error: unknown): string {
         </div>
 
         <section
-          class="stocktake-panel"
+          hlmCard
+          size="sm"
+          class="min-w-0 gap-4 p-4 sm:p-5"
           aria-labelledby="exception-history-title"
         >
-          <h2 id="exception-history-title">ประวัติคำขอและการตรวจสอบ</h2>
+          <h2 id="exception-history-title" class="text-lg font-semibold">
+            ประวัติคำขอและการตรวจสอบ
+          </h2>
           @if (!data.requests.length) {
-            <p class="stocktake-muted">ยังไม่มีคำขอคืนสต็อกกรณีพิเศษ</p>
+            <p class="text-sm leading-relaxed text-muted-foreground">
+              ยังไม่มีคำขอคืนสต็อกกรณีพิเศษ
+            </p>
           }
-          <div class="stocktake-records">
+          <div class="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
             @for (entry of data.requests; track entry.requestId) {
-              <article class="stocktake-record">
-                <div class="stocktake-record-heading">
-                  <h3>{{ itemName(entry.itemId) }}</h3>
-                  <span>{{ statusLabel(entry.state) }}</span>
+              <article hlmCard size="sm" class="min-w-0 gap-3 p-4">
+                <div
+                  class="flex min-w-0 flex-wrap items-start justify-between gap-3"
+                >
+                  <h3 class="break-words font-semibold">
+                    {{ itemName(entry.itemId) }}
+                  </h3>
+                  <span hlmBadge variant="outline">{{
+                    statusLabel(entry.state)
+                  }}</span>
                 </div>
-                <p class="stocktake-muted">
+                <p class="text-sm leading-relaxed text-muted-foreground">
                   {{ formatQuantity(entry.quantity) }} · {{ entry.reason }}
                 </p>
-                <p class="stocktake-muted">
+                <p class="text-sm leading-relaxed text-muted-foreground">
                   ผู้ขอ: {{ entry.createdBy.slice(0, 8) }} · ผู้ตัดสิน:
                   {{ entry.reviewedBy?.slice(0, 8) || "—" }}
                 </p>
                 @if (entry.state === "pending" && mayManage()) {
-                  <div class="stocktake-buttons">
+                  <div class="flex flex-wrap gap-3">
                     <button
+                      hlmBtn
+                      class="min-h-11"
                       type="button"
                       [disabled]="busy()"
                       (click)="review(entry, true)"
@@ -213,8 +281,10 @@ function failureMessage(error: unknown): string {
                       อนุมัติคืนเข้าสต็อก
                     </button>
                     <button
+                      hlmBtn
+                      class="min-h-11"
                       type="button"
-                      class="stocktake-reject"
+                      variant="outline"
                       [disabled]="busy()"
                       (click)="review(entry, false)"
                     >
