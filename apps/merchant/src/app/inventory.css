@@ -117,7 +117,6 @@
   .inventory-grid {
     grid-template-columns: 1fr;
   }
-
 }
 @media (max-width: 540px) {
   .inventory-shell {
@@ -229,4 +228,3 @@
   border-color: #f0d9c1;
   box-shadow: 0 8px 24px rgb(173 72 13 / 6%);
 }
-
