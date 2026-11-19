@@ -50,29 +50,51 @@ function message(error: unknown): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, HlmBadge, HlmButton, HlmCard, HlmInput, HlmLabel],
   template: `
-    <main class="mx-auto box-border w-full max-w-6xl space-y-5 px-4 pb-14 pt-6 sm:px-6 lg:px-8">
+    <main
+      class="mx-auto box-border w-full max-w-6xl space-y-5 px-4 pb-14 pt-6 sm:px-6 lg:px-8"
+    >
       <a
         [routerLink]="['/inventory', tenantId, storeId]"
-        hlmBtn variant="link" class="min-h-11 px-0"
+        hlmBtn
+        variant="link"
+        class="min-h-11 px-0"
       >
         ← กลับไปสต็อกวัตถุดิบ
       </a>
-      <span class="block text-xs font-semibold uppercase tracking-widest text-muted-foreground">RCAT POS / STOCKTAKE CONTROL</span>
-      <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">ตรวจนับและกระทบยอดสต็อก</h1>
+      <span
+        class="block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+        >RCAT POS / STOCKTAKE CONTROL</span
+      >
+      <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
+        ตรวจนับและกระทบยอดสต็อก
+      </h1>
       <p class="text-sm leading-relaxed text-muted-foreground">
         {{ store()?.storeName || "กำลังตรวจสิทธิ์" }}
         · ตรวจนับแยกจากการปรับยอดด้วยมือ และไม่ใช่ข้อมูลรับชำระเงิน
       </p>
-      <p class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed" role="note">
+      <p
+        class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+        role="note"
+      >
         <strong class="block font-semibold">ต้องใช้บุคลากรสองคน</strong>
         ผู้ส่งยอดตรวจนับไม่สามารถอนุมัติเองได้ เมื่อสต็อกเปลี่ยนระหว่างตรวจนับ
         ระบบจะปฏิเสธการอนุมัติ ต้องปฏิเสธรอบเก่าแล้วเริ่มรอบใหม่
       </p>
       @if (error()) {
-        <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive" role="alert">{{ error() }}</div>
+        <div
+          class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive"
+          role="alert"
+        >
+          {{ error() }}
+        </div>
       }
       @if (notice()) {
-        <div class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed" role="status">{{ notice() }}</div>
+        <div
+          class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+          role="status"
+        >
+          {{ notice() }}
+        </div>
       }
       @if (loading()) {
         <p class="text-sm leading-relaxed text-muted-foreground" role="status">
@@ -96,10 +118,14 @@ function message(error: unknown): string {
             currentStore.role === "owner" || currentStore.role === "manager"
           ) {
             <section
-              hlmCard size="sm" class="min-w-0 gap-4 p-4 sm:p-5"
+              hlmCard
+              size="sm"
+              class="min-w-0 gap-4 p-4 sm:p-5"
               aria-labelledby="stocktake-open-title"
             >
-              <h2 id="stocktake-open-title" class="text-lg font-semibold">1. เปิดรอบตรวจนับ</h2>
+              <h2 id="stocktake-open-title" class="text-lg font-semibold">
+                1. เปิดรอบตรวจนับ
+              </h2>
               <p class="text-sm leading-relaxed text-muted-foreground">
                 ระบบบันทึกยอดตั้งต้นและ Stock Version ก่อนเริ่มนับ
                 วัตถุดิบหนึ่งรายการเปิดรอบค้างอยู่ได้เพียงหนึ่งรอบ
@@ -123,8 +149,8 @@ function message(error: unknown): string {
                   </select>
                 </label>
                 <button
-            hlmBtn
-            class="min-h-11"
+                  hlmBtn
+                  class="min-h-11"
                   type="submit"
                   [disabled]="busy() || !ingredients().length"
                 >
@@ -135,10 +161,14 @@ function message(error: unknown): string {
           }
 
           <section
-            hlmCard size="sm" class="min-w-0 gap-4 p-4 sm:p-5"
+            hlmCard
+            size="sm"
+            class="min-w-0 gap-4 p-4 sm:p-5"
             aria-labelledby="stocktake-count-title"
           >
-            <h2 id="stocktake-count-title" class="text-lg font-semibold">2. ส่งยอดที่ตรวจนับจริง</h2>
+            <h2 id="stocktake-count-title" class="text-lg font-semibold">
+              2. ส่งยอดที่ตรวจนับจริง
+            </h2>
             <p class="text-sm leading-relaxed text-muted-foreground">
               เจ้าของร้าน ผู้จัดการ หรือพนักงานครัวที่ได้รับสิทธิ์ส่งผลการนับได้
               แต่บุคคลเดียวกันจะอนุมัติผลนั้นไม่ได้
@@ -147,7 +177,7 @@ function message(error: unknown): string {
               <label hlmLabel class="grid min-w-0 gap-2 text-sm font-medium"
                 >รอบที่เปิดอยู่
                 <select
-                    class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  class="min-h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   [value]="countTakeId()"
                   (change)="setSelected($event, 'count')"
                   required
@@ -188,8 +218,8 @@ function message(error: unknown): string {
                 />
               </label>
               <button
-            hlmBtn
-            class="min-h-11"
+                hlmBtn
+                class="min-h-11"
                 type="submit"
                 [disabled]="busy() || !openStocktakes().length"
               >
@@ -200,7 +230,9 @@ function message(error: unknown): string {
         </div>
 
         <section
-          hlmCard size="sm" class="min-w-0 gap-4 p-4 sm:p-5"
+          hlmCard
+          size="sm"
+          class="min-w-0 gap-4 p-4 sm:p-5"
           aria-labelledby="stocktake-review-title"
         >
           <h2 id="stocktake-review-title" class="text-lg font-semibold">
@@ -211,22 +243,36 @@ function message(error: unknown): string {
             และไม่ใช่ผู้ส่งยอดนับ ระบบบันทึก Audit ทุกการตัดสินใจ
           </p>
           @if (stocktakes().length === 0) {
-            <p class="text-sm leading-relaxed text-muted-foreground">ยังไม่มีรอบตรวจนับ</p>
+            <p class="text-sm leading-relaxed text-muted-foreground">
+              ยังไม่มีรอบตรวจนับ
+            </p>
           } @else {
             <div class="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
               @for (take of stocktakes(); track take.stocktakeId) {
                 <article hlmCard size="sm" class="min-w-0 gap-3 p-4">
-                  <div class="flex min-w-0 flex-wrap items-start justify-between gap-3">
-                    <h3 class="break-words font-semibold">{{ itemLabel(take.itemId) }}</h3>
-                    <span hlmBadge variant="outline">{{ statusLabel(take.state) }}</span>
+                  <div
+                    class="flex min-w-0 flex-wrap items-start justify-between gap-3"
+                  >
+                    <h3 class="break-words font-semibold">
+                      {{ itemLabel(take.itemId) }}
+                    </h3>
+                    <span hlmBadge variant="outline">{{
+                      statusLabel(take.state)
+                    }}</span>
                   </div>
                   <dl class="my-3 grid grid-cols-2 gap-3">
                     <div>
-                      <dt class="text-xs leading-relaxed text-muted-foreground">ยอดตั้งต้น</dt>
-                      <dd class="m-0 break-words font-semibold tabular-nums">{{ formatQuantity(take.baselineOnHand) }}</dd>
+                      <dt class="text-xs leading-relaxed text-muted-foreground">
+                        ยอดตั้งต้น
+                      </dt>
+                      <dd class="m-0 break-words font-semibold tabular-nums">
+                        {{ formatQuantity(take.baselineOnHand) }}
+                      </dd>
                     </div>
                     <div>
-                      <dt class="text-xs leading-relaxed text-muted-foreground">ยอดที่นับ</dt>
+                      <dt class="text-xs leading-relaxed text-muted-foreground">
+                        ยอดที่นับ
+                      </dt>
                       <dd class="m-0 break-words font-semibold tabular-nums">
                         {{
                           take.countedOnHand === null
@@ -236,7 +282,9 @@ function message(error: unknown): string {
                       </dd>
                     </div>
                     <div>
-                      <dt class="text-xs leading-relaxed text-muted-foreground">ส่วนต่าง</dt>
+                      <dt class="text-xs leading-relaxed text-muted-foreground">
+                        ส่วนต่าง
+                      </dt>
                       <dd class="m-0 break-words font-semibold tabular-nums">
                         {{
                           difference(take.countedOnHand, take.baselineOnHand)
@@ -244,20 +292,34 @@ function message(error: unknown): string {
                       </dd>
                     </div>
                     <div>
-                      <dt class="text-xs leading-relaxed text-muted-foreground">เวอร์ชันตั้งต้น</dt>
-                      <dd class="m-0 break-words font-semibold tabular-nums">{{ take.baselineVersion }}</dd>
+                      <dt class="text-xs leading-relaxed text-muted-foreground">
+                        เวอร์ชันตั้งต้น
+                      </dt>
+                      <dd class="m-0 break-words font-semibold tabular-nums">
+                        {{ take.baselineVersion }}
+                      </dd>
                     </div>
                     <div>
-                      <dt class="text-xs leading-relaxed text-muted-foreground">ผู้ส่งยอด</dt>
-                      <dd class="m-0 break-words font-semibold tabular-nums">{{ shortId(take.submittedBy) }}</dd>
+                      <dt class="text-xs leading-relaxed text-muted-foreground">
+                        ผู้ส่งยอด
+                      </dt>
+                      <dd class="m-0 break-words font-semibold tabular-nums">
+                        {{ shortId(take.submittedBy) }}
+                      </dd>
                     </div>
                     <div>
-                      <dt class="text-xs leading-relaxed text-muted-foreground">ผู้อนุมัติ/ปฏิเสธ</dt>
-                      <dd class="m-0 break-words font-semibold tabular-nums">{{ shortId(take.reviewedBy) }}</dd>
+                      <dt class="text-xs leading-relaxed text-muted-foreground">
+                        ผู้อนุมัติ/ปฏิเสธ
+                      </dt>
+                      <dd class="m-0 break-words font-semibold tabular-nums">
+                        {{ shortId(take.reviewedBy) }}
+                      </dd>
                     </div>
                   </dl>
                   @if (take.reason) {
-                    <p class="text-sm leading-relaxed text-muted-foreground">{{ take.reason }}</p>
+                    <p class="text-sm leading-relaxed text-muted-foreground">
+                      {{ take.reason }}
+                    </p>
                   }
                   @if (
                     take.state === "submitted" &&
@@ -266,8 +328,8 @@ function message(error: unknown): string {
                   ) {
                     <div class="flex flex-wrap gap-3">
                       <button
-            hlmBtn
-            class="min-h-11"
+                        hlmBtn
+                        class="min-h-11"
                         type="button"
                         [disabled]="busy()"
                         (click)="review(take, true)"
@@ -275,8 +337,8 @@ function message(error: unknown): string {
                         อนุมัติปรับยอด
                       </button>
                       <button
-            hlmBtn
-            variant="outline"
+                        hlmBtn
+                        variant="outline"
                         class="min-h-11"
                         type="button"
                         [disabled]="busy()"

@@ -45,17 +45,32 @@ function failureMessage(error: unknown): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, HlmBadge, HlmButton, HlmCard, HlmInput, HlmLabel],
   template: `
-    <main class="mx-auto box-border w-full max-w-6xl space-y-5 px-4 pb-14 pt-6 sm:px-6 lg:px-8">
-      <a hlmBtn variant="link" class="min-h-11 px-0" [routerLink]="['/orders', tenantId, storeId]">
+    <main
+      class="mx-auto box-border w-full max-w-6xl space-y-5 px-4 pb-14 pt-6 sm:px-6 lg:px-8"
+    >
+      <a
+        hlmBtn
+        variant="link"
+        class="min-h-11 px-0"
+        [routerLink]="['/orders', tenantId, storeId]"
+      >
         ← กลับไปกระดานออเดอร์
       </a>
-      <span class="block text-xs font-semibold uppercase tracking-widest text-muted-foreground">RCAT POS / CONTROLLED INVENTORY RETURN</span>
-      <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">คำขอคืนสต็อกหลังเริ่มปรุง</h1>
+      <span
+        class="block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+        >RCAT POS / CONTROLLED INVENTORY RETURN</span
+      >
+      <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
+        คำขอคืนสต็อกหลังเริ่มปรุง
+      </h1>
       <p class="text-sm leading-relaxed text-muted-foreground">
         {{ store()?.storeName || "กำลังตรวจสอบสิทธิ์ร้าน" }}
         · ออเดอร์ #{{ orderId.slice(0, 8) }}
       </p>
-      <p class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed" role="note">
+      <p
+        class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+        role="note"
+      >
         <strong
           >คืนได้เฉพาะวัตถุดิบที่ยังไม่ถูกใช้และยังนำเข้าคลังได้จริง</strong
         >
@@ -65,17 +80,35 @@ function failureMessage(error: unknown): string {
       </p>
 
       @if (error()) {
-        <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive" role="alert">{{ error() }}</div>
+        <div
+          class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive"
+          role="alert"
+        >
+          {{ error() }}
+        </div>
       }
       @if (notice()) {
-        <div class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed" role="status">{{ notice() }}</div>
+        <div
+          class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+          role="status"
+        >
+          {{ notice() }}
+        </div>
       }
       @if (loading()) {
-        <p class="text-sm leading-relaxed text-muted-foreground" role="status">กำลังอ่านยอดสต็อกจริง...</p>
+        <p class="text-sm leading-relaxed text-muted-foreground" role="status">
+          กำลังอ่านยอดสต็อกจริง...
+        </p>
       }
       @if (store() && view(); as data) {
         <div class="flex flex-wrap justify-end gap-3">
-          <button hlmBtn class="min-h-11" type="button" [disabled]="busy()" (click)="reload()">
+          <button
+            hlmBtn
+            class="min-h-11"
+            type="button"
+            [disabled]="busy()"
+            (click)="reload()"
+          >
             โหลดข้อมูลล่าสุด
           </button>
         </div>
@@ -84,17 +117,24 @@ function failureMessage(error: unknown): string {
           · จำนวนที่คืนได้คำนวณจาก Allocation เดิม ไม่ใช่สูตรที่แก้ไขภายหลัง
         </p>
         @if (!data.eligible) {
-          <p class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed" role="status">
+          <p
+            class="rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed"
+            role="status"
+          >
             ออเดอร์นี้ยังไม่อยู่ในขั้นตอนกำลังเตรียมหรือเสิร์ฟแล้ว
             จึงไม่สามารถขอคืนสต็อกกรณีพิเศษได้
           </p>
         }
         <div class="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-2">
           <section
-            hlmCard size="sm" class="min-w-0 gap-4 p-4 sm:p-5"
+            hlmCard
+            size="sm"
+            class="min-w-0 gap-4 p-4 sm:p-5"
             aria-labelledby="exception-allocation-title"
           >
-            <h2 id="exception-allocation-title" class="text-lg font-semibold">วัตถุดิบที่ตัดตามออเดอร์</h2>
+            <h2 id="exception-allocation-title" class="text-lg font-semibold">
+              วัตถุดิบที่ตัดตามออเดอร์
+            </h2>
             @if (data.allocations.length === 0) {
               <p class="text-sm leading-relaxed text-muted-foreground">
                 ออเดอร์นี้ไม่ได้ตัดสต็อกที่ติดตามไว้ จึงไม่มีวัตถุดิบให้คืน
@@ -114,7 +154,9 @@ function failureMessage(error: unknown): string {
 
           @if (data.eligible && mayManage()) {
             <section
-              hlmCard size="sm" class="min-w-0 gap-4 p-4 sm:p-5"
+              hlmCard
+              size="sm"
+              class="min-w-0 gap-4 p-4 sm:p-5"
               aria-labelledby="exception-request-title"
             >
               <h2 id="exception-request-title" class="text-lg font-semibold">
@@ -180,7 +222,9 @@ function failureMessage(error: unknown): string {
                     (input)="setValue($event, 'reason')"
                   />
                 </label>
-                <button hlmBtn class="min-h-11"
+                <button
+                  hlmBtn
+                  class="min-h-11"
                   type="submit"
                   [disabled]="busy() || !available().length"
                 >
@@ -192,19 +236,31 @@ function failureMessage(error: unknown): string {
         </div>
 
         <section
-          hlmCard size="sm" class="min-w-0 gap-4 p-4 sm:p-5"
+          hlmCard
+          size="sm"
+          class="min-w-0 gap-4 p-4 sm:p-5"
           aria-labelledby="exception-history-title"
         >
-          <h2 id="exception-history-title" class="text-lg font-semibold">ประวัติคำขอและการตรวจสอบ</h2>
+          <h2 id="exception-history-title" class="text-lg font-semibold">
+            ประวัติคำขอและการตรวจสอบ
+          </h2>
           @if (!data.requests.length) {
-            <p class="text-sm leading-relaxed text-muted-foreground">ยังไม่มีคำขอคืนสต็อกกรณีพิเศษ</p>
+            <p class="text-sm leading-relaxed text-muted-foreground">
+              ยังไม่มีคำขอคืนสต็อกกรณีพิเศษ
+            </p>
           }
           <div class="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
             @for (entry of data.requests; track entry.requestId) {
               <article hlmCard size="sm" class="min-w-0 gap-3 p-4">
-                <div class="flex min-w-0 flex-wrap items-start justify-between gap-3">
-                  <h3 class="break-words font-semibold">{{ itemName(entry.itemId) }}</h3>
-                  <span hlmBadge variant="outline">{{ statusLabel(entry.state) }}</span>
+                <div
+                  class="flex min-w-0 flex-wrap items-start justify-between gap-3"
+                >
+                  <h3 class="break-words font-semibold">
+                    {{ itemName(entry.itemId) }}
+                  </h3>
+                  <span hlmBadge variant="outline">{{
+                    statusLabel(entry.state)
+                  }}</span>
                 </div>
                 <p class="text-sm leading-relaxed text-muted-foreground">
                   {{ formatQuantity(entry.quantity) }} · {{ entry.reason }}
@@ -215,14 +271,18 @@ function failureMessage(error: unknown): string {
                 </p>
                 @if (entry.state === "pending" && mayManage()) {
                   <div class="flex flex-wrap gap-3">
-                    <button hlmBtn class="min-h-11"
+                    <button
+                      hlmBtn
+                      class="min-h-11"
                       type="button"
                       [disabled]="busy()"
                       (click)="review(entry, true)"
                     >
                       อนุมัติคืนเข้าสต็อก
                     </button>
-                    <button hlmBtn class="min-h-11"
+                    <button
+                      hlmBtn
+                      class="min-h-11"
                       type="button"
                       variant="outline"
                       [disabled]="busy()"
