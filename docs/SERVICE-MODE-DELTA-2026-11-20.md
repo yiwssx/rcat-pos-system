@@ -65,6 +65,15 @@ A private, tenant-and-store-keyed **dormant** preference is added with `table | 
 
 **Boundary for stage D:** Angular Guest/Merchant UI still needs Store QR entry, actual customer Add-on controls, Counter/Hybrid labels and a visible Merchant `เริ่มเตรียม` action. CI verifies API/SQL rather than Owner's physical QR acceptance, actual RCAT IOT host or Production.
 
+## Stage D — Guest and Merchant UI integration
+
+- Existing Guest storefront, Spartan sheets, cart and review mechanisms are reused with a distinct Store Guest credential. Migration 047 adds bounded menu paging and selected-cart review scoped by that private credential.
+- Tab-scoped sessionStorage holds the entry capability against its printed QR scope, never in a URL. A revoked session requires explicit re-entry and clears its stale cart; reload alone does not silently mint a new grant. Browser storage access is best effort.
+- Counter guests view their own Orders, refresh status and choose an Order to add items. The authoritative response determines append or new Order after Preparing. Totals remain operational, not paid revenue.
+- Owners/managers configure Table / Quick / Hybrid via revision-guarded API, generate and view a permanent Store QR, open its SVG for printing, and explicitly rotate it. Existing table A5 print is preserved. Migration 048 rejects fresh static Table entry and Table checkout in Quick-only mode.
+- Merchant board supports nullable Table/Visit identities, channel filters, Preparing and item-addition events. Scoped read-only Bill lookup via immutable Visit ID allows viewing and closing the proper Bill, including expired visits. Closure never certifies payment.
+- Existing SQL fixtures and Browser/HTTP E2E are extended for the changed contracts, two independent Guest contexts, Hybrid settings, append, Preparing, Bill close, and explicit re-entry. Acceptance remains pending exact-head CI and Owner UAT. No host or live Payment changes; Store QR physical printing, visual Owner acceptance and staging are separate.
+
 ## Remaining dependency order
 
 1. **B2 — QR capabilities (server admission delivered, Owner/UI UAT pending):** public Store QR route and independent per-scan grants implemented. Guest UI possession and Store-scoped browsing/ordering are deferred to C/D; do not treat B2 as end-user deployment.
