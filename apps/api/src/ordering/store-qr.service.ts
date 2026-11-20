@@ -79,9 +79,11 @@ function printedStoreUrl(
     url.search ||
     url.hash ||
     (url.protocol !== "https:" &&
-      !(process.env["CI"] === "true" &&
+      !(
+        process.env["CI"] === "true" &&
         url.protocol === "http:" &&
-        (url.hostname === "127.0.0.1" || url.hostname === "localhost")))
+        (url.hostname === "127.0.0.1" || url.hostname === "localhost")
+      ))
   ) {
     throw new ServiceUnavailableException("Ordering URL not configured");
   }
@@ -266,9 +268,7 @@ export class StoreQrService {
       );
       const state = result.rows[0]?.data;
       if (!state) throw new NotFoundException("Store QR unavailable");
-      return state.open
-        ? { ...state, guestToken }
-        : state;
+      return state.open ? { ...state, guestToken } : state;
     } catch (error) {
       failure(error);
     }
