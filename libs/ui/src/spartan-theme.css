@@ -1,26 +1,34 @@
-/* RCAT POS Spartan semantic theme. 18 Nov 2026 owner directive:
-   one neutral iOS-inspired theme, kept distinct from historical per-screen CSS.
-   Reuse official Spartan Helm components instead of extending the legacy
-   .rcat-btn bridge (retained only until its callers are migrated). */
+/* V7 Warm Modern: one semantic theme for Customer, Merchant and Admin. */
 :root {
-  --background: #f5f5f7;
-  --foreground: #1c1c1e;
-  --card: #ffffff;
-  --card-foreground: #1c1c1e;
-  --popover: #ffffff;
-  --popover-foreground: #1c1c1e;
-  --primary: #c94108;
+  --background: #fff5e9;
+  --foreground: #382921;
+  --card: #fffdfa;
+  --card-foreground: #382921;
+  --popover: #fffdfa;
+  --popover-foreground: #382921;
+  --primary: #186b60;
   --primary-foreground: #ffffff;
-  --secondary: #f2f2f7;
-  --secondary-foreground: #3a3a3c;
-  --muted: #f2f2f7;
-  --muted-foreground: #6e6e73;
-  --accent: #f2f2f7;
-  --accent-foreground: #1c1c1e;
+  --secondary: #ddf2e9;
+  --secondary-foreground: #186b60;
+  --muted: #f4e9da;
+  --muted-foreground: #765b4c;
+  --accent: #ddf2e9;
+  --accent-foreground: #186b60;
   --destructive: #a33135;
-  --border: #e5e5ea;
-  --input: #d1d1d6;
-  --ring: #b84b13;
+  --border: #e9d7c4;
+  --input: #a88d76;
+  --ring: #186b60;
+  --brand: #c04c2b;
+  --brand-soft: #fce0cb;
+  --brand-foreground: #923d21;
+  --incoming: #e3ecfc;
+  --incoming-foreground: #315fa6;
+  --accepted: #f0e7ff;
+  --accepted-foreground: #654391;
+  --preparing: #ffeac5;
+  --preparing-foreground: #80520c;
+  --served: #ddf2e9;
+  --served-foreground: #186b60;
   --radius: 1rem;
 }
 @theme inline {
@@ -39,5 +47,16 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-incoming: var(--incoming);
+  --color-incoming-foreground: var(--incoming-foreground);
+  --color-accepted: var(--accepted);
+  --color-accepted-foreground: var(--accepted-foreground);
+  --color-preparing: var(--preparing);
+  --color-preparing-foreground: var(--preparing-foreground);
+  --color-served: var(--served);
+  --color-served-foreground: var(--served-foreground);
   --radius-lg: var(--radius);
 }
