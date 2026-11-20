@@ -173,10 +173,10 @@ function guestError(error: unknown): string {
                 รอบการสั่งเดิมสิ้นสุดแล้ว
               }
               @case ("unavailable") {
-                ไม่พบโต๊ะนี้ในระบบ
+                ไม่สามารถเปิด QR สั่งอาหารนี้ได้
               }
               @case ("missing") {
-                ยังไม่ได้สแกน QR โต๊ะ
+                ยังไม่ได้สแกน QR สั่งอาหาร
               }
               @default {
                 QR นี้ใช้ไม่ได้แล้ว
@@ -188,8 +188,7 @@ function guestError(error: unknown): string {
               กรุณาตรวจสอบ QR กับร้าน แล้วกดเริ่มรอบใหม่ด้วยตนเอง
               รายการเดิมจะไม่ถูกส่งอัตโนมัติ
             } @else if (issue === "unavailable") {
-              ไม่สามารถเปิดโต๊ะจาก QR นี้ได้ กรุณาตรวจสอบกับร้านหรือขอ QR
-              โต๊ะที่ถูกต้อง
+              กรุณาตรวจสอบรูปแบบบริการของร้านหรือขอ QR ที่ถูกต้อง
             } @else {
               กรุณาสแกน QR สำหรับสั่งอาหารจากร้านอีกครั้งเพื่อเริ่มรายการใหม่
             }
@@ -379,8 +378,12 @@ function guestError(error: unknown): string {
         }
 
         <p class="guest-payment-alert" role="note">
-          หลังส่งออเดอร์
-          สามารถตรวจสอบวิธีชำระเงินที่ร้านเปิดให้ใช้ได้ในหน้าติดตามคำสั่งซื้อ
+          @if (staticCounter()) {
+            ยอดออเดอร์ไม่ใช่ยอดชำระเงิน กรุณาตรวจสอบสถานะในออเดอร์ของฉัน
+          } @else {
+            หลังส่งออเดอร์
+            สามารถตรวจสอบวิธีชำระเงินที่ร้านเปิดให้ใช้ได้ในหน้าติดตามคำสั่งซื้อ
+          }
         </p>
         @if (notice() && !cartOpen()) {
           <p class="guest-notice" role="status">{{ notice() }}</p>
@@ -791,10 +794,11 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       } catch {
         this.qrIssue.set("reconnect");
       }
-    } else if (this.session.visitToken()) {
+    } else if (this.session.visitToken() && this.session.visit()?.entryMode !== "counter") {
       this.scanToken = this.session.visitToken();
       void this.load(this.session.visitToken()!);
     } else {
+      this.session.invalidateVisit();
       this.loading.set(false);
       this.qrIssue.set("missing");
     }
