@@ -219,6 +219,15 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
         </main>
       </div>
 
+      @if (staffWorkspace()) {
+        <div class="sticky bottom-0 z-20 lg:hidden">
+          <rcat-portal-workspace-nav
+            [url]="url()"
+            [compact]="true"
+            (more)="mobileNavOpen.set(true)"
+          />
+        </div>
+      }
       <footer
         class="border-t border-border bg-card px-4 py-4 text-center text-xs leading-5 text-muted-foreground"
       >
