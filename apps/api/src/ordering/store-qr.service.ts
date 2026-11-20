@@ -41,10 +41,15 @@ function failure(error: unknown): never {
     throw new NotFoundException("Store QR unavailable");
   }
   if (code === "P0041") {
-    throw new HttpException("Too many Store QR sessions", HttpStatus.TOO_MANY_REQUESTS);
+    throw new HttpException(
+      "Too many Store QR sessions",
+      HttpStatus.TOO_MANY_REQUESTS,
+    );
   }
   if (code === "P0042" || code === "23505") {
-    throw new ConflictException("Store QR settings changed or session already exists");
+    throw new ConflictException(
+      "Store QR settings changed or session already exists",
+    );
   }
   if (code === "22023" || code === "23514" || code === "22P02") {
     throw new BadRequestException("Invalid Store QR request");
@@ -53,7 +58,11 @@ function failure(error: unknown): never {
 }
 
 /** Permanent public locator. Never include a guest capability in the URL. */
-function printedStoreUrl(tenantId: string, storeId: string, publicId: string): string {
+function printedStoreUrl(
+  tenantId: string,
+  storeId: string,
+  publicId: string,
+): string {
   const raw = process.env["GUEST_ORDER_BASE_URL"];
   if (!raw) {
     throw new ServiceUnavailableException("Ordering URL not configured");
@@ -148,7 +157,13 @@ export class StoreQrService {
       const result = await this.database.auth((client) =>
         client.query<{ data: Record<string, unknown> }>(
           "SELECT rcat_private.set_store_service_mode($1,$2,$3,$4,$5) AS data",
-          [digestOpaqueSecret(session.token), tenantId, storeId, mode, revision],
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            mode,
+            revision,
+          ],
         ),
       );
       if (!result.rows[0]?.data) {
@@ -236,7 +251,11 @@ export class StoreQrService {
     ) {
       throw new NotFoundException("Store QR unavailable");
     }
-    await this.guestBudget.consume(req, "redeem", tenant + ":" + store + ":" + publicId);
+    await this.guestBudget.consume(
+      req,
+      "redeem",
+      tenant + ":" + store + ":" + publicId,
+    );
     const guestToken = newOpaqueSecret();
     try {
       const result = await this.database.auth((client) =>
