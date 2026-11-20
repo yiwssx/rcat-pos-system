@@ -113,6 +113,7 @@ AS $$
 DECLARE
   v_open boolean;v_name text;v_mode text;v_mode_revision bigint;
   v_generation bigint;v_count integer;v_session uuid;v_expires timestamptz;
+  v_issued timestamptz;
 BEGIN
   IF p_tenant IS NULL OR p_store IS NULL OR p_public_id IS NULL
     OR p_token_digest IS NULL OR octet_length(p_token_digest)<>32 THEN
@@ -152,11 +153,13 @@ BEGIN
     RAISE EXCEPTION 'Too many Store QR sessions' USING ERRCODE='P0041';
   END IF;
 
+  v_issued:=clock_timestamp();
   INSERT INTO rcat_private.store_guest_sessions(
-    tenant_id,store_id,qr_generation,mode_revision,token_digest,expires_at
+    tenant_id,store_id,qr_generation,mode_revision,
+    token_digest,issued_at,expires_at
   ) VALUES(
-    p_tenant,p_store,v_generation,v_mode_revision,p_token_digest,
-    clock_timestamp()+interval '6 hours'
+    p_tenant,p_store,v_generation,v_mode_revision,
+    p_token_digest,v_issued,v_issued+interval '6 hours'
   ) RETURNING id,expires_at INTO v_session,v_expires;
   RETURN jsonb_build_object(
     'open',true,'storeName',v_name,
