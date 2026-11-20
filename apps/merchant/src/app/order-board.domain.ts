@@ -29,8 +29,8 @@ export interface OrderItem {
 export interface MerchantOrder {
   orderId: string;
   displayNumber: string;
-  tableId: string;
-  visitId: string;
+  tableId: string | null;
+  visitId: string | null;
   amountSatang: number;
   currency: "THB";
   orderedBy?: string | null;
@@ -64,9 +64,9 @@ export function appendOrderPage(
 
 export interface OrderEvent {
   eventId: string;
-  eventType: "order.submitted" | "order.status.changed";
+  eventType: "order.submitted" | "order.status.changed" | "order.items.added";
   orderId: string;
-  tableId: string;
+  tableId: string | null;
   status: OrderStatus;
   previousStatus: OrderStatus | null;
   occurredAt: string;
