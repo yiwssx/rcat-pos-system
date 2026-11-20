@@ -43,8 +43,8 @@ function failure(error: unknown): never {
   if (code === "P0041") {
     throw new HttpException("Too many Store QR sessions", HttpStatus.TOO_MANY_REQUESTS);
   }
-  if (code === "23505") {
-    throw new ConflictException("Store QR session already exists");
+  if (code === "P0042" || code === "23505") {
+    throw new ConflictException("Store QR settings changed or session already exists");
   }
   if (code === "22023" || code === "23514" || code === "22P02") {
     throw new BadRequestException("Invalid Store QR request");
@@ -103,6 +103,62 @@ export class StoreQrService {
     private readonly auth: AuthService,
     private readonly guestBudget: GuestRequestBudgetService,
   ) {}
+
+  async mode(req: ApiRequest, tenantId: string, storeId: string) {
+    identifiers(tenantId, storeId);
+    const session = await this.auth.session(req);
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: { serviceMode: string; revision: number } }>(
+          "SELECT rcat_private.store_service_mode_snapshot($1,$2,$3) AS data",
+          [digestOpaqueSecret(session.token), tenantId, storeId],
+        ),
+      );
+      if (!result.rows[0]?.data) {
+        throw new NotFoundException("Store QR unavailable");
+      }
+      return result.rows[0].data;
+    } catch (error) {
+      failure(error);
+    }
+  }
+
+  async changeMode(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    raw: unknown,
+  ) {
+    identifiers(tenantId, storeId);
+    const input = objectValue(raw);
+    const mode = input["serviceMode"];
+    const revision = input["expectedRevision"];
+    if (
+      Object.keys(input).length !== 2 ||
+      !["table", "quick", "hybrid"].includes(mode as string) ||
+      typeof revision !== "number" ||
+      !Number.isSafeInteger(revision) ||
+      revision < 0
+    ) {
+      throw new BadRequestException("Invalid service mode request");
+    }
+    const session = await this.auth.session(req);
+    this.auth.requireCsrf(req, session);
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.set_store_service_mode($1,$2,$3,$4,$5) AS data",
+          [digestOpaqueSecret(session.token), tenantId, storeId, mode, revision],
+        ),
+      );
+      if (!result.rows[0]?.data) {
+        throw new NotFoundException("Store QR unavailable");
+      }
+      return result.rows[0].data;
+    } catch (error) {
+      failure(error);
+    }
+  }
 
   async snapshot(req: ApiRequest, tenantId: string, storeId: string) {
     identifiers(tenantId, storeId);
