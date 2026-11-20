@@ -10,6 +10,36 @@
 - Define `RESTIC_REPOSITORY` and **absolute** `RESTIC_PASSWORD_FILE` (mode 600, no symlink) in the protected `.env.staging`. Remote credentials may require additional provider-specific protected environment variables. The tool will never initialize or delete a repository.
 - Owner approves G4 snapshot frequency/encryption/offsite location, backup retention and restore RPO/RTO under **#82** before setting `RCAT_POS_BACKUP_POLICY_APPROVED=yes`. Approve expired Guest HMAC retention separately before `RCAT_POS_GUEST_RETENTION_APPROVED=yes`. Both default to **no**.
 
+## Canonical single-origin portal (20 November 2026)
+
+The current single-site deployment uses `compose.portal.yaml`, its protected
+`.env.portal` and the existing `rcat-pos-staging` project. Do not run the
+legacy three-origin operations against this portal. The existing operations
+CLI supports an explicit topology selector; legacy is still the default.
+
+```bash
+# Read-only against an already-running, authorized non-payment portal.
+# Run as the trusted owner of the protected env file.
+sudo env RCAT_POS_TOPOLOGY=portal bash scripts/ops/onprem-operations.sh readiness
+
+# ONLY after the existing #81 offsite destination/policy is explicitly approved
+# and the operator has protected credentials in .env.portal:
+sudo env RCAT_POS_TOPOLOGY=portal bash scripts/ops/onprem-operations.sh backup --apply
+sudo env RCAT_POS_TOPOLOGY=portal bash scripts/ops/onprem-operations.sh backup-check
+```
+
+Portal mode selects the local Docker socket, explicit project and single
+portal manifest; does not start, reset, migrate or redeploy containers. It
+validates protected file permissions/ownership and refuses non-staging or
+payment-enabled configuration. The backup approval must be in the protected
+portal environment, not inherited from the caller. The actual backup streams
+from the existing PostgreSQL service and is tagged `rcat-pos-staging`,
+`rcat-pos-portal` and `postgres16`. Freshness accepts only those portal
+snapshots and never exceeds the approved 24-hour RPO; freshness is NOT restore.
+Existing encrypted repository, credentials, offsite policy, and a real isolated
+restore are still required. No service/timer installation or backup/payment
+activation by this change. No separate Owner Local Demo round: see #81.
+
 ## A2: secure maintenance commands (operator only)
 
 ```bash
