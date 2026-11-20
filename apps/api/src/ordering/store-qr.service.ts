@@ -302,4 +302,132 @@ export class StoreQrService {
       failure(error);
     }
   }
+
+  async reviewCart(req: ApiRequest, raw: unknown) {
+    const data = objectValue(raw);
+    const token = data["guestToken"];
+    const items = data["items"];
+    if (
+      typeof token !== "string" ||
+      !Array.isArray(items) ||
+      items.length < 1 ||
+      items.length > 20
+    ) {
+      throw new BadRequestException("Invalid Guest cart review");
+    }
+    const products = new Set<string>();
+    const options = new Set<string>();
+    let quantity = 0;
+    for (const rawItem of items) {
+      if (!rawItem || typeof rawItem !== "object" || Array.isArray(rawItem)) {
+        throw new BadRequestException("Invalid Guest cart review");
+      }
+      const line = rawItem as Record<string, unknown>;
+      if (
+        typeof line["productId"] !== "string" ||
+        !UUID.test(line["productId"]) ||
+        !Array.isArray(line["optionIds"]) ||
+        line["optionIds"].length > 32 ||
+        line["optionIds"].some(
+          (id: unknown) => typeof id !== "string" || !UUID.test(id),
+        ) ||
+        typeof line["quantity"] !== "number" ||
+        !Number.isInteger(line["quantity"]) ||
+        line["quantity"] < 1 ||
+        line["quantity"] > 20
+      ) {
+        throw new BadRequestException("Invalid Guest cart review");
+      }
+      const ids = (line["optionIds"] as string[]).map((id) => id.toLowerCase());
+      if (new Set(ids).size !== ids.length) {
+        throw new BadRequestException("Duplicate modifiers");
+      }
+      products.add(line["productId"].toLowerCase());
+      ids.forEach((id) => options.add(id));
+      quantity += line["quantity"];
+    }
+    if (quantity > 100) {
+      throw new BadRequestException("Too many items");
+    }
+    await this.guestBudget.consume(req, "resolve", token);
+    let digest: Buffer;
+    try {
+      digest = digestOpaqueSecret(token);
+    } catch {
+      throw new NotFoundException("Store session unavailable");
+    }
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.quick_guest_cart_review($1,$2::uuid[],$3::uuid[]) AS data",
+          [digest, [...products], [...options]],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      failure(error);
+    }
+  }
+
+  async page(req: ApiRequest, raw: unknown) {
+    const data = objectValue(raw);
+    const token = data["guestToken"];
+    if (typeof token !== "string") {
+      throw new NotFoundException("Store session unavailable");
+    }
+    const search = data["search"] ?? "";
+    const categoryId = data["categoryId"] ?? null;
+    const limit = data["limit"] ?? 24;
+    const cursor = data["cursor"] ?? null;
+    if (
+      typeof search !== "string" ||
+      search.trim().length > 80 ||
+      (categoryId !== null &&
+        (typeof categoryId !== "string" || !UUID.test(categoryId))) ||
+      typeof limit !== "number" ||
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > 50 ||
+      (cursor !== null &&
+        (typeof cursor !== "object" ||
+          Array.isArray(cursor) ||
+          typeof (cursor as Record<string, unknown>)["createdAt"] !==
+            "string" ||
+          typeof (cursor as Record<string, unknown>)["id"] !== "string" ||
+          !UUID.test((cursor as { id: string }).id) ||
+          !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(
+            (cursor as { createdAt: string }).createdAt,
+          ) ||
+          !Number.isFinite(
+            Date.parse((cursor as { createdAt: string }).createdAt),
+          )))
+    ) {
+      throw new BadRequestException("Invalid guest catalog page request");
+    }
+    await this.guestBudget.consume(req, "page", token);
+    let digest: Buffer;
+    try {
+      digest = digestOpaqueSecret(token);
+    } catch {
+      throw new NotFoundException("Store session unavailable");
+    }
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.quick_guest_catalog_page($1,$2,$3,$4,$5,$6) AS data",
+          [
+            digest,
+            search.trim(),
+            categoryId,
+            cursor ? (cursor as { createdAt: string }).createdAt : null,
+            cursor ? (cursor as { id: string }).id : null,
+            limit,
+          ],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      failure(error);
+    }
+  }
 }

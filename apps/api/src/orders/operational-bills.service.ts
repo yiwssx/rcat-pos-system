@@ -93,6 +93,27 @@ export class OperationalBillsService {
     }
   }
 
+  async byVisit(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    visitId: string,
+  ) {
+    validateIds(tenantId, storeId, visitId);
+    const session = await this.auth.session(req);
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.operational_bill_by_visit($1,$2,$3,$4) AS data",
+          [digestOpaqueSecret(session.token), tenantId, storeId, visitId],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      mapFailure(error);
+    }
+  }
+
   async snapshot(
     req: ApiRequest,
     tenantId: string,

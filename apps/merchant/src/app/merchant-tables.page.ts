@@ -15,7 +15,13 @@ import { HlmCard } from "@spartan-ng/helm/card";
 import { HlmInput } from "@spartan-ng/helm/input";
 import { HlmLabel } from "@spartan-ng/helm/label";
 import { MerchantOrderApi } from "./merchant-order.api";
-import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
+import {
+  MerchantTablesApi,
+  PrintableTable,
+  ServiceMode,
+  StoreQr,
+  StoreServiceMode,
+} from "./merchant-tables.api";
 
 @Component({
   standalone: true,
@@ -137,135 +143,223 @@ import { MerchantTablesApi, PrintableTable } from "./merchant-tables.api";
           </button>
         </section>
 
-        <form
-          hlmCard
-          size="sm"
-          class="min-w-0 gap-4 p-4 sm:p-5"
-          (ngSubmit)="createTable()"
-        >
-          <h2 class="text-lg font-semibold">เพิ่มโต๊ะใหม่</h2>
-          <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end">
-            <div class="grid min-w-0 flex-1 gap-2">
-              <label hlmLabel for="table-label">ชื่อโต๊ะ</label>
-              <input
-                hlmInput
-                id="table-label"
-                class="min-h-11 w-full"
-                name="tableLabel"
-                [(ngModel)]="newLabel"
-                maxlength="60"
-                required
-                placeholder="เช่น โต๊ะ 1"
-                [disabled]="busy()"
-              />
-            </div>
-            <button hlmBtn type="submit" class="min-h-11" [disabled]="busy()">
-              เพิ่มโต๊ะ
-            </button>
-          </div>
-        </form>
-
         <section
           hlmCard
           size="sm"
-          class="min-w-0 gap-4 p-4 sm:p-5"
-          aria-labelledby="table-selection"
+          class="space-y-4 p-4 sm:p-5"
+          aria-labelledby="service-mode-title"
         >
-          <h2 id="table-selection" class="text-lg font-semibold">
-            เลือกโต๊ะเพื่อดูหรือพิมพ์ QR เดิม
+          <h2 id="service-mode-title" class="text-lg font-semibold">
+            รูปแบบบริการของร้าน
           </h2>
           <div
-            class="tables-grid grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+            class="grid gap-2 sm:grid-cols-3"
+            role="group"
+            aria-label="รูปแบบบริการ"
           >
-            @for (table of tables(); track table.tableId) {
-              <article
-                hlmCard
-                size="sm"
-                class="table-card min-w-0 gap-3 p-4"
-                [class.ring-2]="selectedId() === table.tableId"
-                [class.ring-primary]="selectedId() === table.tableId"
+            @for (choice of modes; track choice.id) {
+              <button
+                hlmBtn
+                type="button"
+                class="min-h-14 whitespace-normal"
+                [disabled]="busy() || !mode()"
+                [variant]="
+                  mode()?.serviceMode === choice.id ? 'default' : 'outline'
+                "
+                [attr.aria-pressed]="mode()?.serviceMode === choice.id"
+                (click)="changeMode(choice.id)"
               >
-                <h3 class="break-words font-semibold">{{ table.label }}</h3>
-                <span
-                  hlmBadge
-                  class="w-fit"
-                  [variant]="table.active ? 'secondary' : 'outline'"
-                >
-                  {{ table.active ? "ใช้งานอยู่" : "ปิดใช้งาน" }}
-                </span>
-                <button
-                  hlmBtn
-                  type="button"
-                  variant="outline"
-                  class="min-h-11"
-                  [disabled]="busy() || !table.active"
-                  [attr.aria-pressed]="selectedId() === table.tableId"
-                  (click)="select(table)"
-                >
-                  เลือกโต๊ะนี้
-                </button>
-              </article>
-            } @empty {
-              <p
-                class="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground"
-                role="status"
-              >
-                ยังไม่มีโต๊ะ กรุณาเพิ่มโต๊ะใหม่
-              </p>
+                {{ choice.label }}
+              </button>
             }
           </div>
+          <p class="text-sm text-muted-foreground">
+            เปลี่ยนรูปแบบบริการอาจสิ้นสุดสิทธิ์สั่งซื้อของลูกค้าเดิม
+            แต่ไม่ลบออเดอร์
+          </p>
         </section>
 
-        @if (selected(); as table) {
+        @if (
+          mode()?.serviceMode === "quick" || mode()?.serviceMode === "hybrid"
+        ) {
           <section
             hlmCard
             size="sm"
-            class="table-work min-w-0 gap-4 p-4 sm:p-5"
-            aria-labelledby="table-work-title"
+            class="space-y-3 p-4 sm:p-5"
+            aria-labelledby="counter-qr-title"
           >
-            <div
-              class="flex min-w-0 flex-wrap items-center justify-between gap-3"
-            >
-              <div class="min-w-0 space-y-1">
-                <h2
-                  id="table-work-title"
-                  class="break-words text-lg font-semibold"
-                >
-                  {{ table.label }}
-                </h2>
-                <p class="text-sm leading-relaxed text-muted-foreground">
-                  QR ถาวร · สแกนเพื่อสั่งเมื่อร้านเปิดรับออเดอร์
-                </p>
-              </div>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  hlmBtn
-                  type="button"
-                  class="min-h-11"
-                  [disabled]="busy()"
-                  (click)="print()"
-                >
-                  พิมพ์ QR ของโต๊ะนี้
-                </button>
-              </div>
-            </div>
-            <img
-              class="table-qr mx-auto my-4 aspect-square w-full max-w-xs rounded-xl border border-border bg-white p-3 object-contain"
-              [src]="qrSrc(table.tableId)"
-              [alt]="'QR สำหรับสั่งอาหาร ' + table.label"
-            />
-            <p
-              class="table-url break-all text-center text-sm leading-relaxed text-muted-foreground"
-            >
-              {{ table.printedUrl }}
+            <h2 id="counter-qr-title" class="text-lg font-semibold">
+              QR ประจำร้าน / เคาน์เตอร์
+            </h2>
+            <p class="text-sm text-muted-foreground">
+              ลูกค้าแต่ละคนได้รับสิทธิ์สั่งส่วนตัวจาก QR เดียวกัน ไม่ต้องมีโต๊ะ
             </p>
-            <div class="print-sheet hidden" aria-hidden="true">
-              <h2>RCAT POS · {{ table.label }}</h2>
-              <img [src]="qrSrc(table.tableId)" alt="" />
-              <p>สแกนเพื่อสั่งอาหาร เมื่อร้านเปิดรับออเดอร์</p>
-              <strong>QR สั่งอาหารเท่านั้น · ไม่ใช่ QR ชำระเงิน</strong>
+            @if (counterQr()?.publicId; as publicId) {
+              <img
+                class="mx-auto aspect-square w-full max-w-xs rounded-xl border border-border bg-white p-3"
+                [src]="counterQrSrc(publicId)"
+                alt="QR สั่งอาหารที่เคาน์เตอร์"
+              />
+              <a
+                hlmBtn
+                variant="outline"
+                class="min-h-11"
+                [href]="counterQrSrc(publicId)"
+                target="_blank"
+                rel="noopener noreferrer"
+                >เปิด QR สำหรับพิมพ์</a
+              >
+              <p class="break-all text-sm text-muted-foreground">
+                {{ counterQr()?.printedUrl }}
+              </p>
+            }
+            <button
+              hlmBtn
+              type="button"
+              class="min-h-11"
+              [disabled]="busy()"
+              (click)="rotateCounter()"
+            >
+              {{
+                counterQr()?.publicId
+                  ? "เปลี่ยน QR ประจำร้าน"
+                  : "สร้าง QR ประจำร้าน"
+              }}
+            </button>
+          </section>
+        }
+
+        @if (mode() && mode()?.serviceMode !== "quick") {
+          <form
+            hlmCard
+            size="sm"
+            class="min-w-0 gap-4 p-4 sm:p-5"
+            (ngSubmit)="createTable()"
+          >
+            <h2 class="text-lg font-semibold">เพิ่มโต๊ะใหม่</h2>
+            <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end">
+              <div class="grid min-w-0 flex-1 gap-2">
+                <label hlmLabel for="table-label">ชื่อโต๊ะ</label>
+                <input
+                  hlmInput
+                  id="table-label"
+                  class="min-h-11 w-full"
+                  name="tableLabel"
+                  [(ngModel)]="newLabel"
+                  maxlength="60"
+                  required
+                  placeholder="เช่น โต๊ะ 1"
+                  [disabled]="busy()"
+                />
+              </div>
+              <button hlmBtn type="submit" class="min-h-11" [disabled]="busy()">
+                เพิ่มโต๊ะ
+              </button>
+            </div>
+          </form>
+
+          <section
+            hlmCard
+            size="sm"
+            class="min-w-0 gap-4 p-4 sm:p-5"
+            aria-labelledby="table-selection"
+          >
+            <h2 id="table-selection" class="text-lg font-semibold">
+              เลือกโต๊ะเพื่อดูหรือพิมพ์ QR เดิม
+            </h2>
+            <div
+              class="tables-grid grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+            >
+              @for (table of tables(); track table.tableId) {
+                <article
+                  hlmCard
+                  size="sm"
+                  class="table-card min-w-0 gap-3 p-4"
+                  [class.ring-2]="selectedId() === table.tableId"
+                  [class.ring-primary]="selectedId() === table.tableId"
+                >
+                  <h3 class="break-words font-semibold">{{ table.label }}</h3>
+                  <span
+                    hlmBadge
+                    class="w-fit"
+                    [variant]="table.active ? 'secondary' : 'outline'"
+                  >
+                    {{ table.active ? "ใช้งานอยู่" : "ปิดใช้งาน" }}
+                  </span>
+                  <button
+                    hlmBtn
+                    type="button"
+                    variant="outline"
+                    class="min-h-11"
+                    [disabled]="busy() || !table.active"
+                    [attr.aria-pressed]="selectedId() === table.tableId"
+                    (click)="select(table)"
+                  >
+                    เลือกโต๊ะนี้
+                  </button>
+                </article>
+              } @empty {
+                <p
+                  class="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground"
+                  role="status"
+                >
+                  ยังไม่มีโต๊ะ กรุณาเพิ่มโต๊ะใหม่
+                </p>
+              }
             </div>
           </section>
+
+          @if (selected(); as table) {
+            <section
+              hlmCard
+              size="sm"
+              class="table-work min-w-0 gap-4 p-4 sm:p-5"
+              aria-labelledby="table-work-title"
+            >
+              <div
+                class="flex min-w-0 flex-wrap items-center justify-between gap-3"
+              >
+                <div class="min-w-0 space-y-1">
+                  <h2
+                    id="table-work-title"
+                    class="break-words text-lg font-semibold"
+                  >
+                    {{ table.label }}
+                  </h2>
+                  <p class="text-sm leading-relaxed text-muted-foreground">
+                    QR ถาวร · สแกนเพื่อสั่งเมื่อร้านเปิดรับออเดอร์
+                  </p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    hlmBtn
+                    type="button"
+                    class="min-h-11"
+                    [disabled]="busy()"
+                    (click)="print()"
+                  >
+                    พิมพ์ QR ของโต๊ะนี้
+                  </button>
+                </div>
+              </div>
+              <img
+                class="table-qr mx-auto my-4 aspect-square w-full max-w-xs rounded-xl border border-border bg-white p-3 object-contain"
+                [src]="qrSrc(table.tableId)"
+                [alt]="'QR สำหรับสั่งอาหาร ' + table.label"
+              />
+              <p
+                class="table-url break-all text-center text-sm leading-relaxed text-muted-foreground"
+              >
+                {{ table.printedUrl }}
+              </p>
+              <div class="print-sheet hidden" aria-hidden="true">
+                <h2>RCAT POS · {{ table.label }}</h2>
+                <img [src]="qrSrc(table.tableId)" alt="" />
+                <p>สแกนเพื่อสั่งอาหาร เมื่อร้านเปิดรับออเดอร์</p>
+                <strong>QR สั่งอาหารเท่านั้น · ไม่ใช่ QR ชำระเงิน</strong>
+              </div>
+            </section>
+          }
         }
       }
     </section>
@@ -284,6 +378,13 @@ export class MerchantTablesPage implements OnInit {
   readonly tables = signal<PrintableTable[]>([]);
   readonly selectedId = signal<string | null>(null);
   readonly orderingEnabled = signal(false);
+  readonly mode = signal<StoreServiceMode | null>(null);
+  readonly counterQr = signal<StoreQr | null>(null);
+  readonly modes: readonly { id: ServiceMode; label: string }[] = [
+    { id: "table", label: "Table · บริการที่โต๊ะ" },
+    { id: "quick", label: "Quick · รับที่เคาน์เตอร์" },
+    { id: "hybrid", label: "Hybrid · ทั้งสองแบบ" },
+  ];
   readonly selected = computed(
     () =>
       this.tables().find((table) => table.tableId === this.selectedId()) ??
@@ -325,13 +426,76 @@ export class MerchantTablesPage implements OnInit {
   }
 
   async refresh(): Promise<void> {
-    const data = await this.api.list(this.tenant, this.store);
+    const [data, mode, qr] = await Promise.all([
+      this.api.list(this.tenant, this.store),
+      this.api.mode(this.tenant, this.store),
+      this.api.storeQr(this.tenant, this.store),
+    ]);
+    this.mode.set(mode);
+    this.counterQr.set(qr);
     this.tables.set(data.tables);
     this.orderingEnabled.set(data.orderingEnabled);
     if (!data.tables.some((table) => table.tableId === this.selectedId())) {
       this.selectedId.set(data.tables[0]?.tableId ?? null);
     }
   }
+  async changeMode(mode: ServiceMode): Promise<void> {
+    const current = this.mode();
+    if (!current || this.busy() || current.serviceMode === mode) return;
+    if (
+      !this.document.defaultView?.confirm(
+        "ยืนยันเปลี่ยนรูปแบบบริการของร้าน? สิทธิ์สั่งซื้อของลูกค้าเดิมอาจสิ้นสุดลง",
+      )
+    )
+      return;
+    this.busy.set(true);
+    this.error.set("");
+    this.notice.set("");
+    try {
+      await this.api.changeMode(
+        this.tenant,
+        this.store,
+        mode,
+        current.revision,
+      );
+      await this.refresh();
+      this.notice.set("บันทึกรูปแบบบริการแล้ว");
+    } catch {
+      this.error.set("ไม่สามารถเปลี่ยนรูปแบบบริการได้ กรุณาตรวจสอบสถานะล่าสุด");
+      await this.refresh().catch(() => undefined);
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  async rotateCounter(): Promise<void> {
+    if (this.busy() || !this.mode() || this.mode()?.serviceMode === "table")
+      return;
+    if (
+      this.counterQr()?.publicId &&
+      !this.document.defaultView?.confirm(
+        "เปลี่ยน QR ประจำร้าน? QR เก่าและสิทธิ์สั่งซื้อเดิมจะใช้ไม่ได้",
+      )
+    )
+      return;
+    this.busy.set(true);
+    this.error.set("");
+    try {
+      await this.api.rotateStoreQr(this.tenant, this.store);
+      await this.refresh();
+      this.notice.set("QR ประจำร้านพร้อมใช้งาน");
+    } catch {
+      this.error.set("ไม่สามารถจัดการ QR ประจำร้านได้ กรุณาตรวจสอบสถานะล่าสุด");
+      await this.refresh().catch(() => undefined);
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  counterQrSrc(publicId: string): string {
+    return this.api.storeQrUrl(this.tenant, this.store, publicId);
+  }
+
   qrSrc(tableId: string): string {
     return this.api.qrUrl(this.tenant, this.store, tableId);
   }

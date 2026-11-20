@@ -25,6 +25,39 @@ export type PrintedTableState =
       expiresAt: string;
     };
 
+export type PrintedStoreState =
+  | { open: false; storeName: string }
+  | {
+      open: true;
+      storeName: string;
+      guestSessionId: string;
+      guestToken: string;
+      expiresAt: string;
+    };
+
+export interface QuickGuestOrder extends GuestOrderStatus {
+  action?: "created" | "appended" | "new_after_cutoff";
+  addedSatang?: number;
+  replayed?: boolean;
+}
+type QuickCatalog = Omit<
+  GuestCatalogPage,
+  "visitId" | "tableId" | "tableLabel"
+> & {
+  guestSessionId: string;
+};
+
+// UI-only catalog identity: no synthetic Table Visit is sent to a server.
+function counterCatalog(page: QuickCatalog): GuestCatalogPage {
+  return {
+    ...page,
+    visitId: page.guestSessionId,
+    tableId: null,
+    tableLabel: "เคาน์เตอร์",
+    entryMode: "counter",
+  };
+}
+
 interface GuestTracking {
   orderId: string;
   trackingToken: string;
@@ -62,6 +95,79 @@ export class GuestOrderApi {
         cursor,
         limit: 24,
       }),
+    );
+  }
+
+  async counterPage(
+    token: string,
+    search = "",
+    categoryId: string | null = null,
+    cursor: GuestCatalogCursor | null = null,
+  ): Promise<GuestCatalogPage> {
+    const page = await firstValueFrom(
+      this.http.post<QuickCatalog>("/api/guest/ordering-store/page", {
+        guestToken: token,
+        search,
+        categoryId,
+        cursor,
+        limit: 24,
+      }),
+    );
+    return counterCatalog(page);
+  }
+
+  async counterReview(
+    token: string,
+    items: readonly CartLine[],
+  ): Promise<GuestVisit> {
+    const page = await firstValueFrom(
+      this.http.post<QuickCatalog>("/api/guest/ordering-store/review-cart", {
+        guestToken: token,
+        items,
+      }),
+    );
+    return counterCatalog(page);
+  }
+
+  openPrintedStore(
+    tenantId: string,
+    storeId: string,
+    publicId: string,
+  ): Promise<PrintedStoreState> {
+    return firstValueFrom(
+      this.http.post<PrintedStoreState>("/api/guest/ordering-store/open", {
+        tenantId,
+        storeId,
+        publicId,
+      }),
+    );
+  }
+
+  quickCheckout(
+    token: string,
+    items: readonly CartLine[],
+    context: GuestOrderContext,
+    key: string,
+    orderId: string | null,
+  ): Promise<QuickGuestOrder> {
+    const base = "/api/guest/ordering-store/orders";
+    return firstValueFrom(
+      this.http.post<QuickGuestOrder>(
+        orderId
+          ? base + "/" + encodeURIComponent(orderId) + "/add-items"
+          : base,
+        { guestToken: token, items, ...normalizedOrderContext(context) },
+        { headers: { "Idempotency-Key": key } },
+      ),
+    );
+  }
+
+  quickOrders(token: string): Promise<{ orders: QuickGuestOrder[] }> {
+    return firstValueFrom(
+      this.http.post<{ orders: QuickGuestOrder[] }>(
+        "/api/guest/ordering-store/my-orders",
+        { guestToken: token },
+      ),
     );
   }
 
@@ -285,8 +391,13 @@ export class GuestOrderSession {
     this.pending = null;
   }
 
-  keyFor(items: readonly CartLine[], context: GuestOrderContext): string {
+  keyFor(
+    items: readonly CartLine[],
+    context: GuestOrderContext,
+    target: string | null = null,
+  ): string {
     const payload = JSON.stringify({
+      target,
       items,
       ...normalizedOrderContext(context),
     });

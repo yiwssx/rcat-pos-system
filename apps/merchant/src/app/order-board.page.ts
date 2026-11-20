@@ -34,7 +34,7 @@ import {
   ROLE_LABEL,
   STATUS_LABEL,
 } from "./order-board.domain";
-import { MerchantOrderApi } from "./merchant-order.api";
+import { MerchantOrderApi, OperationalBill } from "./merchant-order.api";
 
 const POLL_MS = 10_000;
 const SSE_RECONCILE_MS = 60_000;
@@ -287,6 +287,24 @@ function failureText(error: unknown): string {
           กำลังแสดง {{ orders().length }} ออเดอร์ที่โหลด ·
           สรุปด้านบนคำนวณจากรายการที่โหลดเท่านั้น
         </p>
+        <div
+          class="flex flex-wrap items-center gap-2"
+          role="group"
+          aria-label="ช่องทางสั่งอาหาร"
+        >
+          @for (channel of channels; track channel.id) {
+            <button
+              hlmBtn
+              type="button"
+              class="min-h-11"
+              [variant]="orderChannel() === channel.id ? 'default' : 'outline'"
+              [attr.aria-pressed]="orderChannel() === channel.id"
+              (click)="orderChannel.set(channel.id)"
+            >
+              {{ channel.label }}
+            </button>
+          }
+        </div>
         @if (visibleOrders().length === 0) {
           <p
             class="my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
@@ -322,7 +340,12 @@ function failureText(error: unknown): string {
                     <p
                       class="mt-1 text-sm leading-relaxed text-muted-foreground"
                     >
-                      โต๊ะ {{ order.tableId.slice(0, 8) }} ·
+                      {{
+                        order.tableId
+                          ? "โต๊ะ " + order.tableId.slice(0, 8)
+                          : "เคาน์เตอร์ / Quick"
+                      }}
+                      ·
                       {{ time(order.createdAt) }}
                     </p>
                   </div>
@@ -413,6 +436,58 @@ function failureText(error: unknown): string {
                     >{{ money(order.amountSatang) }} ฿</strong
                   >
                 </div>
+                @if (order.tableId && order.visitId && mayCloseBill()) {
+                  <button
+                    hlmBtn
+                    variant="outline"
+                    type="button"
+                    class="min-h-11"
+                    [disabled]="billBusy() || !connected()"
+                    (click)="showBill(order)"
+                  >
+                    ดูบิลโต๊ะ
+                  </button>
+                  @if (
+                    bill()?.visitId === order.visitId &&
+                    billOrderId() === order.orderId
+                  ) {
+                    <div
+                      class="space-y-3 rounded-xl border border-border bg-muted/30 p-3"
+                    >
+                      <p class="font-semibold">
+                        {{
+                          bill()!.status === "open"
+                            ? "บิลเปิดอยู่"
+                            : "ปิดบิลแล้ว"
+                        }}
+                      </p>
+                      <p class="text-sm">
+                        {{ bill()!.orderCount }} ออเดอร์ · ยอดรวม
+                        {{ money(bill()!.operationalTotalSatang) }} ฿
+                      </p>
+                      <p class="text-xs text-muted-foreground">
+                        ยอดเพื่อการดำเนินงาน ไม่ใช่ยอดรับชำระเงิน
+                      </p>
+                      @if (bill()!.status === "open") {
+                        <button
+                          hlmBtn
+                          type="button"
+                          variant="destructive"
+                          class="min-h-11"
+                          [disabled]="billBusy() || !connected()"
+                          (click)="closeSelectedBill()"
+                        >
+                          ปิดบิลและจบรอบโต๊ะ
+                        </button>
+                      }
+                    </div>
+                  }
+                }
+                @if (!order.tableId && order.status === "accepted") {
+                  <p class="text-sm text-muted-foreground">
+                    ลูกค้ายังสั่งเพิ่มได้จนกดเริ่มเตรียม
+                  </p>
+                }
                 <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                   @for (
                     action of actions(order.status);
@@ -561,7 +636,9 @@ function failureText(error: unknown): string {
                 @for (event of events(); track event.eventId) {
                   <li class="flex flex-wrap items-center gap-3 p-3 text-sm">
                     <span class="font-semibold">{{
-                      statusLabel[event.status]
+                      event.eventType === "order.items.added"
+                        ? "เพิ่มรายการ"
+                        : statusLabel[event.status]
                     }}</span>
                     <span>ออเดอร์ {{ eventNumber(event.orderId) }}</span>
                     <time
@@ -614,6 +691,19 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     "connecting" | "streaming" | "polling" | "paused" | "blocked"
   >("polling");
   readonly filter = signal("active");
+  readonly channels = [
+    { id: "all", label: "ทุกช่องทาง" },
+    { id: "table", label: "โต๊ะ" },
+    { id: "quick", label: "เคาน์เตอร์" },
+  ];
+  readonly orderChannel = signal("all");
+  readonly bill = signal<OperationalBill | null>(null);
+  readonly billOrderId = signal<string | null>(null);
+  readonly billBusy = signal(false);
+  readonly mayCloseBill = computed(() => {
+    const role = this.store()?.role;
+    return role === "owner" || role === "manager" || role === "cashier";
+  });
 
   setQueueFilter(value: string): void {
     this.filter.set(value);
@@ -628,15 +718,23 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
 
   readonly visibleOrders = computed(() => {
     const filter = this.filter();
-    return this.orders().filter((order) =>
-      filter === "in_progress"
-        ? order.status === "accepted" || order.status === "preparing"
-        : filter === "all"
-          ? true
-          : filter === "active"
-            ? order.status !== "served" && order.status !== "cancelled"
-            : order.status === filter,
-    );
+    return this.orders()
+      .filter((order) =>
+        this.orderChannel() === "table"
+          ? !!order.tableId
+          : this.orderChannel() === "quick"
+            ? !order.tableId
+            : true,
+      )
+      .filter((order) =>
+        filter === "in_progress"
+          ? order.status === "accepted" || order.status === "preparing"
+          : filter === "all"
+            ? true
+            : filter === "active"
+              ? order.status !== "served" && order.status !== "cancelled"
+              : order.status === filter,
+      );
   });
   readonly pendingCount = computed(
     () => this.orders().filter((o) => o.status === "submitted").length,
@@ -782,6 +880,8 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     this.streamState.set("blocked");
     this.orders.set([]);
     this.events.set([]);
+    this.bill.set(null);
+    this.billOrderId.set(null);
     this.store.set(null);
     this.error.set("สิทธิ์ร้านหรือเซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
   }
@@ -995,6 +1095,60 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     } finally {
       if (!this.disposed) this.busyId.set(null);
       await this.refresh();
+    }
+  }
+
+  async showBill(order: MerchantOrder): Promise<void> {
+    if (!order.visitId || !this.mayCloseBill() || this.billBusy()) return;
+    this.billBusy.set(true);
+    this.bill.set(null);
+    this.billOrderId.set(order.orderId);
+    this.error.set("");
+    try {
+      const result = await this.api.billByVisit(
+        this.tenantId,
+        this.storeId,
+        order.visitId,
+      );
+      if (!this.disposed && this.mayCloseBill()) this.bill.set(result);
+    } catch (error) {
+      if (!this.disposed) this.error.set(failureText(error));
+    } finally {
+      this.billBusy.set(false);
+    }
+  }
+
+  async closeSelectedBill(): Promise<void> {
+    const bill = this.bill();
+    if (
+      !bill ||
+      bill.status !== "open" ||
+      !this.mayCloseBill() ||
+      this.billBusy() ||
+      !this.connected()
+    )
+      return;
+    if (
+      !this.win?.confirm(
+        "ปิดบิลและจบรอบโต๊ะนี้? ลูกค้าเดิมจะสั่งเพิ่มไม่ได้ การปิดบิลไม่ใช่การยืนยันรับเงิน",
+      )
+    )
+      return;
+    this.billBusy.set(true);
+    this.error.set("");
+    try {
+      await this.api.closeBill(this.tenantId, this.storeId, bill.billId);
+      const updated = await this.api.billByVisit(
+        this.tenantId,
+        this.storeId,
+        bill.visitId,
+      );
+      if (!this.disposed && this.mayCloseBill()) this.bill.set(updated);
+    } catch (error) {
+      if (!this.disposed) this.error.set(failureText(error));
+      this.bill.set(null);
+    } finally {
+      this.billBusy.set(false);
     }
   }
 

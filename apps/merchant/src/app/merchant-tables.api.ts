@@ -3,6 +3,18 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
+export type ServiceMode = "table" | "quick" | "hybrid";
+
+export interface StoreServiceMode {
+  serviceMode: ServiceMode;
+  revision: number;
+}
+export interface StoreQr {
+  publicId: string | null;
+  printedUrl: string | null;
+  orderingEnabled: boolean;
+  serviceMode: ServiceMode;
+}
 export interface PrintableTable {
   tableId: string;
   label: string;
@@ -102,6 +114,58 @@ export class MerchantTablesApi {
         {},
         { withCredentials: true, headers: this.headers() },
       ),
+    );
+  }
+
+  mode(tenant: string, store: string): Promise<StoreServiceMode> {
+    return firstValueFrom(
+      this.http.get<StoreServiceMode>(scope(tenant, store) + "/service-mode", {
+        withCredentials: true,
+      }),
+    );
+  }
+
+  changeMode(
+    tenant: string,
+    store: string,
+    serviceMode: ServiceMode,
+    expectedRevision: number,
+  ): Promise<StoreServiceMode> {
+    return firstValueFrom(
+      this.http.post<StoreServiceMode>(
+        scope(tenant, store) + "/service-mode",
+        { serviceMode, expectedRevision },
+        { withCredentials: true, headers: this.headers() },
+      ),
+    );
+  }
+
+  storeQr(tenant: string, store: string): Promise<StoreQr> {
+    return firstValueFrom(
+      this.http.get<StoreQr>(scope(tenant, store) + "/store-qr", {
+        withCredentials: true,
+      }),
+    );
+  }
+
+  rotateStoreQr(
+    tenant: string,
+    store: string,
+  ): Promise<{ publicId: string; printedUrl: string }> {
+    return firstValueFrom(
+      this.http.post<{ publicId: string; printedUrl: string }>(
+        scope(tenant, store) + "/store-qr/rotate",
+        {},
+        { withCredentials: true, headers: this.headers() },
+      ),
+    );
+  }
+
+  storeQrUrl(tenant: string, store: string, publicId: string): string {
+    return (
+      scope(tenant, store) +
+      "/store-qr/print-qr.svg?v=" +
+      encodeURIComponent(publicId)
     );
   }
 

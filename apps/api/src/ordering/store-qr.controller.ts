@@ -88,4 +88,18 @@ export class StoreQrController {
     requireAllowedOrigin(req);
     return this.storeQr.resolve(req, body);
   }
+
+  @Post("guest/ordering-store/page")
+  @Header("Cache-Control", "no-store")
+  page(@Req() req: ApiRequest, @Body() body: unknown) {
+    requireAllowedOrigin(req);
+    return this.storeQr.page(req, body);
+  }
+
+  @Post("guest/ordering-store/review-cart")
+  @Header("Cache-Control", "no-store")
+  reviewCart(@Req() req: ApiRequest, @Body() body: unknown) {
+    requireAllowedOrigin(req);
+    return this.storeQr.reviewCart(req, body);
+  }
 }

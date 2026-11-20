@@ -305,8 +305,8 @@ async function main() {
     await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).click();
     await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).waitFor();
 
-    // A permanent printed QR should recover one expired read grant without
-    // showing a misleading expired-QR screen or retaining the old cart.
+    // The same printed QR remains valid, but a revoked grant must not
+    // automatically join a new table cycle or replay an old cart.
     await staticPage.getByRole('button', { name: 'ตรวจสอบอีกครั้ง' }).click();
     await staticPage.locator('.guest-product').first().waitFor();
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' })
@@ -323,38 +323,21 @@ async function main() {
       route.fulfill({ status: 404, contentType: 'application/json',
         body: '{"message":"Ordering visit unavailable"}' }), { times: 1 });
     await staticPage.getByRole('searchbox', { name: 'ค้นหาเมนู' }).fill('ข้าว');
-    await staticPage.getByText('เชื่อมต่อโต๊ะใหม่แล้ว ตะกร้าเดิมถูกล้างเพื่อความปลอดภัย กรุณาเลือกเมนูอีกครั้ง').waitFor();
-    await staticPage.locator('.guest-product').first().waitFor();
-    assert.equal(reconnectOpens, 1, 'Only one silent printed-QR reconnect is permitted');
-    assert.equal(await staticPage.locator('.guest-cart-shortcut').count(), 0,
-      'Recovered visit must start with an empty cart and no stale checkout');
-    assert.equal(await staticPage.getByRole('heading', { name: 'รอบโต๊ะเดิมสิ้นสุดแล้ว' }).count(), 0,
-      'Single expired read grant must not strand the guest on an expired-QR screen');
-    await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-auto-reconnect-phone.png', fullPage: true });
-
-    // A second expired response cannot cause an unbounded regrant loop.
-    // Show an actionable manual fallback; never replay the previous cart.
-    await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' })
-      .getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
-    await staticPage.getByRole('dialog', { name: 'ข้าวผัด' })
-      .getByRole('button', { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
-    await staticPage.locator('.guest-cart-shortcut').waitFor();
-    await staticPage.route('**/api/guest/ordering-visit/page', route =>
-      route.fulfill({ status: 404, contentType: 'application/json',
-        body: '{"message":"Ordering visit unavailable"}' }));
-    await staticPage.getByRole('searchbox', { name: 'ค้นหาเมนู' }).fill('น้ำ');
-    await staticPage.getByRole('heading', { name: 'รอบโต๊ะเดิมสิ้นสุดแล้ว' }).waitFor();
-    assert.equal(reconnectOpens, 1, 'A subsequent failure must not auto-reconnect indefinitely');
+    await staticPage.getByRole('heading', { name: 'รอบการสั่งเดิมสิ้นสุดแล้ว' }).waitFor();
+    assert.equal(reconnectOpens, 0, 'Revoked grant must never silently reconnect');
     assert.equal(await staticPage.locator('.guest-product').count(), 0,
-      'Expired visit must not show a stale menu');
+      'Revoked grant must not retain a stale menu');
     assert.equal(await staticPage.locator('.guest-cart-shortcut').count(), 0,
-      'Expired visit must not offer a stale cart');
+      'Revoked grant must not retain a stale checkout');
+    await staticPage.reload();
+    await staticPage.getByRole('heading', { name: 'รอบการสั่งเดิมสิ้นสุดแล้ว' }).waitFor();
+    assert.equal(reconnectOpens, 0, 'Reload must not silently redeem a new grant');
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-qr-reconnect-phone.png', fullPage: true });
-    await staticPage.unroute('**/api/guest/ordering-visit/page');
-    await staticPage.getByRole('button', { name: 'ตรวจสอบและเชื่อมต่อโต๊ะใหม่' }).click();
+    await staticPage.getByRole('button', { name: 'ยืนยันเริ่มรอบการสั่งใหม่' }).click();
     await staticPage.locator('.guest-product').first().waitFor();
+    assert.equal(reconnectOpens, 1, 'Exactly one explicit new-entry action');
     assert.equal(await staticPage.locator('.guest-cart-shortcut').count(), 0,
-      'Manual recovery must also begin with an empty cart');
+      'Manual recovery must begin with an empty cart');
     await staticPage.setViewportSize({ width: 320, height: 780 });
     const guestWidth = await staticPage.evaluate(() => ({
       viewport: document.documentElement.clientWidth,
