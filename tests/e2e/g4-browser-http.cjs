@@ -1107,6 +1107,18 @@ async function quickOrderHttp(fixture) {
   const oa = await first.json(), ob = await second.json();
   assert.notEqual(oa.orderId, ob.orderId);
   assert.equal(oa.amountSatang, 12500);
+  assert.match(oa.trackingToken, /^[A-Za-z0-9_-]{43}$/);
+  assert.notEqual(oa.trackingToken, ob.trackingToken);
+  assert.notEqual(oa.trackingToken, a.guestToken);
+  const trackUrl = customer + "/api/guest/ordering-store/orders/" + oa.orderId + "/tracking";
+  const tracked = await post(trackUrl, { guestToken: a.guestToken });
+  assert.equal(tracked.status, 200);
+  assert.equal((await tracked.json()).trackingToken, oa.trackingToken);
+  assert.equal((await post(trackUrl, { guestToken: b.guestToken })).status, 404);
+  const payment = await post(customer + "/api/guest/orders/" + oa.orderId + "/payment-request",
+    {}, { Authorization: "Bearer " + oa.trackingToken });
+  assert.equal(payment.status, 200);
+  assert.equal((await payment.json()).available, false, "Live payment must stay disabled");
   const mineUrl = customer + "/api/guest/ordering-store/my-orders";
   const myA = await post(mineUrl, { guestToken: a.guestToken });
   const myB = await post(mineUrl, { guestToken: b.guestToken });
@@ -1125,7 +1137,9 @@ async function quickOrderHttp(fixture) {
   const submittedAdd = await post(addUrl(oa.orderId),
     cart(a.guestToken, "Customer A"), { "Idempotency-Key": appendKey });
   assert.equal(submittedAdd.status, 201, await submittedAdd.clone().text());
-  assert.equal((await submittedAdd.json()).amountSatang, 25000);
+  const appendedOrder = await submittedAdd.json();
+  assert.equal(appendedOrder.amountSatang, 25000);
+  assert.equal(appendedOrder.trackingToken, oa.trackingToken);
   const replay = await post(addUrl(oa.orderId),
     cart(a.guestToken, "Customer A"), { "Idempotency-Key": appendKey });
   assert.equal(replay.status, 201);
@@ -1154,6 +1168,7 @@ async function quickOrderHttp(fixture) {
   assert.equal(next.action, "new_after_cutoff");
   assert.notEqual(next.orderId, oa.orderId);
   assert.equal(next.amountSatang, 12500);
+  assert.notEqual(next.trackingToken, oa.trackingToken);
   const freshMine = await post(mineUrl, { guestToken: a.guestToken });
   assert.equal(freshMine.status, 200);
   const owned = (await freshMine.json()).orders;
@@ -1166,6 +1181,12 @@ async function quickOrderHttp(fixture) {
   });
   assert.equal(rotated.status, 201);
   assert.equal((await post(mineUrl, { guestToken: a.guestToken })).status, 404);
+  assert.equal((await post(trackUrl, { guestToken: a.guestToken })).status, 404);
+  const retained = await fetch(customer + "/api/guest/orders/" + oa.orderId + "/status", {
+    headers: { Authorization: "Bearer " + oa.trackingToken },
+  });
+  assert.equal(retained.status, 200);
+  assert.equal((await retained.json()).amountSatang, 37500);
   assert.equal((await post(addUrl(oa.orderId),
     cart(a.guestToken, "Customer A"),
     { "Idempotency-Key": key("revoked") })).status, 404);
@@ -1245,6 +1266,15 @@ async function serviceModeUi(fixture) {
     const next = await addItem(guest, true);
     assert.equal(next.action, "new_after_cutoff");
     assert.notEqual(next.orderId, first.orderId);
+    // Explicit counter tracking uses the existing non-money payment page.
+    const quickCard = guest.locator("details div.rounded-lg", { hasText: "#" + next.displayNumber.padStart(3, "0") });
+    await quickCard.getByRole("button", { name: "ติดตาม / ชำระเงิน" }).click();
+    await guest.getByRole("heading", { name: "ติดตามคำสั่งซื้อ" }).waitFor();
+    await guest.getByText("ร้านยังไม่เปิดรับชำระเงินผ่านระบบนี้").waitFor();
+    assert.equal(await guest.locator(".guest-payment-qr").count(), 0);
+    assert.equal(new URL(guest.url()).hash, "");
+    await guest.getByRole("link", { name: /กลับไปหน้าเมนู/ }).click();
+    await guest.getByText(/ออเดอร์ของฉัน \\(2\\)/).waitFor();
     // Hybrid still permits the same permanent Table QR and operational Bill.
     const tableId = fixture.tableId;
     const tableUrl = new URL(customer + "/order");
