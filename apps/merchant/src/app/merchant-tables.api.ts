@@ -148,7 +148,10 @@ export class MerchantTablesApi {
     );
   }
 
-  rotateStoreQr(tenant: string, store: string): Promise<{ publicId: string; printedUrl: string }> {
+  rotateStoreQr(
+    tenant: string,
+    store: string,
+  ): Promise<{ publicId: string; printedUrl: string }> {
     return firstValueFrom(
       this.http.post<{ publicId: string; printedUrl: string }>(
         scope(tenant, store) + "/store-qr/rotate",
@@ -159,7 +162,11 @@ export class MerchantTablesApi {
   }
 
   storeQrUrl(tenant: string, store: string, publicId: string): string {
-    return scope(tenant, store) + "/store-qr/print-qr.svg?v=" + encodeURIComponent(publicId);
+    return (
+      scope(tenant, store) +
+      "/store-qr/print-qr.svg?v=" +
+      encodeURIComponent(publicId)
+    );
   }
 
   qrUrl(tenant: string, store: string, table: string): string {
