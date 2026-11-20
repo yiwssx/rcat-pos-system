@@ -28,6 +28,8 @@ import { ProductModifiersController } from "./catalog/product-modifiers.controll
 import { ProductModifiersService } from "./catalog/product-modifiers.service";
 import { GuestOrdersController } from "./orders/guest-orders.controller";
 import { GuestOrdersService } from "./orders/guest-orders.service";
+import { QuickOrdersController } from "./orders/quick-orders.controller";
+import { QuickOrdersService } from "./orders/quick-orders.service";
 import { MerchantOrdersController } from "./orders/merchant-orders.controller";
 import { MerchantOrdersService } from "./orders/merchant-orders.service";
 import { OperationalBillsController } from "./orders/operational-bills.controller";
@@ -65,6 +67,7 @@ import { PaymentFinanceService } from "./payments/payment-finance.service";
     StoreQrController,
     ProductModifiersController,
     GuestOrdersController,
+    QuickOrdersController,
     MerchantOrdersController,
     OperationalBillsController,
     MerchantNotificationsController,
@@ -91,6 +94,7 @@ import { PaymentFinanceService } from "./payments/payment-finance.service";
     GuestRequestBudgetService,
     ProductModifiersService,
     GuestOrdersService,
+    QuickOrdersService,
     MerchantOrdersService,
     OperationalBillsService,
     MerchantNotificationsService,
