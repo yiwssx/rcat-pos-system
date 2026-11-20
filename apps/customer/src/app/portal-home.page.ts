@@ -168,7 +168,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
               <a
                 hlmBtn
                 variant="outline"
-                class="min-h-12 w-full justify-center gap-3 rounded-xl border border-border bg-card px-4 text-base font-semibold text-foreground shadow-sm hover:bg-accent"
+                class="min-h-12 w-full justify-center gap-3 rounded-xl border border-input bg-white px-4 text-base font-semibold text-foreground shadow-sm hover:bg-muted"
                 href="/api/auth/google/start"
               >
                 <svg
