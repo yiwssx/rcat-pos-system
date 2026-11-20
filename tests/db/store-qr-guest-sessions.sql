@@ -46,6 +46,9 @@ BEGIN
     RAISE EXCEPTION 'Store QR leaked before enabling Quick Service';
   END IF;
 
+  -- HTTP CI bootstrap may already have the test shop open; force the
+  -- intended CLOSED state instead of assuming its initial value.
+  PERFORM rcat_private.set_store_ordering_enabled(owner,a,sa,false);
   PERFORM rcat_private.set_store_service_mode(owner,a,sa,'quick',0);
   v:=rcat_private.rotate_store_qr(owner,a,sa);
   qr:=(v->>'publicId')::uuid;
