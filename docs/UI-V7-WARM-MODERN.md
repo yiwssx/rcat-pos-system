@@ -11,8 +11,8 @@ Use existing self-hosted IBM Plex Sans Thai, official Spartan Brain/Helm, semant
 ## Approved desktop/mobile target
 
 - Customer: compact branded store header; category/search rail; 2-column mobile menu, adaptive desktop catalog with sticky cart summary; existing product customization and checkout sheets keep server-authoritative prices and required order context; tracking remains independent of payment.
-- Merchant: shared role-aware shell; compact colored order queue filters, readable order card, explicit accept/prepare/serve actions, item notes and customer/delivery context; adaptive list/grid; collapse secondary management content. Mobile frequent-task navigation is a follow-up presentation slice, still uses existing guarded routes.
-- Admin: account summary derived only from loaded authorized data, responsive account list and compact account form; role and store assignment remain scoped; no new permissions or fake metrics.
+- Merchant: shared role-aware shell; compact colored order queue filters, readable order card, explicit accept/prepare/serve actions, item notes and customer/delivery context; adaptive list/grid; collapse secondary management content. Mobile frequent-task navigation reuses existing permitted routes and opens the existing full navigation sheet for secondary tasks.
+- Admin: account summary derived only from loaded authorized data, responsive searchable account list and compact account form; role and store assignment remain scoped; no new permissions or fake metrics.
 - Remaining management pages: catalog, tables/QR, inventory, stocktake, reports, tenant owner/staff settings and tracking/payment presentation to be reviewed within existing #102. Replace obsolete feature CSS only when its consumers are migrated.
 
 ## Delivery and evidence
