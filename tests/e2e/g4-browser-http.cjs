@@ -1293,7 +1293,7 @@ async function serviceModeUi(fixture) {
     assert.equal(await guest.locator(".guest-payment-qr").count(), 0);
     assert.equal(new URL(guest.url()).hash, "");
     await guest.getByRole("link", { name: /กลับไปหน้าเมนู/ }).click();
-    await guest.getByText(/ออเดอร์ของฉัน \\(2\\)/).waitFor();
+    await guest.getByText("ออเดอร์ของฉัน (2)", { exact: true }).waitFor();
     // Hybrid still permits the same permanent Table QR and operational Bill.
     const tableId = fixture.tableId;
     const tableUrl = new URL(customer + "/order");
