@@ -132,7 +132,7 @@ case "$COMMAND" in
       fail "Owner-approved G4 backup policy required"
     restic_preflight
     command -v docker >/dev/null || fail "Docker Compose unavailable"
-    compose_cmd config --quiet
+    [[ "$TOPOLOGY" == portal ]] || compose_cmd config --quiet
     # Check the remote repository is already initialized; never restic init.
     restic snapshots --json --tag "$(snapshot_tag)" >/dev/null 2>&1 ||
       fail "Offsite encrypted Restic repository is not accessible"
@@ -159,7 +159,7 @@ case "$COMMAND" in
     run_preflight
     [[ "${RCAT_POS_GUEST_RETENTION_APPROVED:-}" == yes ]] ||
       fail "Owner-approved Guest budget retention policy required"
-    compose_cmd config --quiet
+    [[ "$TOPOLOGY" == portal ]] || compose_cmd config --quiet
     # Existing DBA-only CLI deletes EXPIRED Guest HMAC buckets (24h) only.
     # Order, Outbox, audit, inventory, and customer records are untouched.
     compose_cmd --profile ops run --rm budget_maintenance
