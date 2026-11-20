@@ -75,6 +75,29 @@ BEGIN
     (result->>'replayed')::boolean THEN
     RAISE EXCEPTION 'First guest Order did not open one operational Bill'; END IF;
 
+  -- D: private tracking belongs to the exact device, not the public
+  -- Table QR, shared Visit, or an otherwise identical idempotency key.
+  PERFORM rcat_private.bind_guest_order_tracking(
+    order_a,secret_a,'b3-owner-first-0001',decode(repeat('d9',32),'hex'));
+  PERFORM rcat_private.bind_guest_order_tracking(
+    order_a,secret_a,'b3-owner-first-0001',decode(repeat('d9',32),'hex'));
+  result:=rcat_private.guest_order_status(order_a,decode(repeat('d9',32),'hex'));
+  IF result->>'orderId'<>order_a::text THEN
+    RAISE EXCEPTION 'Printed Table tracking token did not bind'; END IF;
+  denied:=false;
+  BEGIN
+    PERFORM rcat_private.bind_guest_order_tracking(
+      order_a,secret_b,'b3-owner-first-0001',decode(repeat('e9',32),'hex'));
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+  END;
+  IF NOT denied THEN RAISE EXCEPTION 'Sibling grant claimed tracking'; END IF;
+  denied:=false;
+  BEGIN
+    PERFORM rcat_private.place_guest_order_when_open(secret_b,'b3-owner-first-0001',cart);
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+  END;
+  IF NOT denied THEN RAISE EXCEPTION 'Sibling grant replayed a foreign Order'; END IF;
+
   -- Quick-only must block both a new Table scan and old Table checkout.
   PERFORM rcat_private.set_store_service_mode(owner,tenant,store,'quick',0);
   denied:=false;
