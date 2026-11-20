@@ -47,17 +47,19 @@ BEGIN
     tenant,store,table_id,decode(repeat('93',32),'hex'),secret_b);
   IF NOT (opened->>'open')::boolean OR NOT (second->>'open')::boolean THEN
     RAISE EXCEPTION 'Printable QR failed to issue guest visits'; END IF;
-  SELECT v.id INTO visit_a FROM rcat.table_ordering_visits v
-  JOIN rcat.table_guest_grants g ON g.visit_id=v.id
-  WHERE g.token_digest=secret_a;
-  IF visit_a IS NULL OR NOT EXISTS (
-    SELECT 1 FROM rcat.table_guest_grants g
-    WHERE g.visit_id=visit_a AND g.token_digest=secret_b
-  ) THEN RAISE EXCEPTION 'Two phones are not sharing the same Table Visit'; END IF;
-  IF EXISTS(
-    SELECT 1 FROM rcat.bills b WHERE b.tenant_id=tenant
-      AND b.store_id=store AND b.table_id=table_id
-  ) THEN RAISE EXCEPTION 'Scanning alone created a Bill'; END IF;
+  visit_a:=(rcat_private.resolve_ordering_visit(secret_a)->>'visitId')::uuid;
+  IF visit_a IS NULL OR
+    (rcat_private.resolve_ordering_visit(secret_b)->>'visitId')::uuid<>visit_a
+  THEN RAISE EXCEPTION 'Two phones are not sharing the same Table Visit'; END IF;
+  -- A scan is not supposed to create a Bill; the staff endpoint cannot
+  -- materialize one yet because there is no Order in this visit.
+  denied:=false;
+  BEGIN
+    PERFORM rcat_private.create_operational_bill(
+      owner,tenant,store,visit_a);
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+  END;
+  IF NOT denied THEN RAISE EXCEPTION 'Scanning alone created a Bill'; END IF;
 
   cart:=jsonb_build_object(
     'orderedBy','Guest A','deliverTo','Table B3',
@@ -152,13 +154,16 @@ BEGIN
     tenant,store,table_id,master_b,secret_c);
   IF NOT (opened->>'open')::boolean THEN
     RAISE EXCEPTION 'Permanent QR failed after proper closure'; END IF;
-  SELECT v.id INTO visit_b
-  FROM rcat.table_ordering_visits v
-  JOIN rcat.table_guest_grants g ON g.visit_id=v.id
-  WHERE g.token_digest=secret_c;
+  visit_b:=(rcat_private.resolve_ordering_visit(secret_c)->>'visitId')::uuid;
   IF visit_b IS NULL OR visit_b=visit_a THEN
     RAISE EXCEPTION 'Old closed Visit reused in new Bill cycle'; END IF;
-  IF (SELECT count(*) FROM rcat.bills b WHERE b.table_id=table_id)<>1 THEN
+  denied:=false;
+  BEGIN
+    PERFORM rcat_private.create_operational_bill(
+      owner,tenant,store,visit_b);
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+  END;
+  IF NOT denied THEN
     RAISE EXCEPTION 'Fresh scan alone opened a second Bill'; END IF;
 
   result:=rcat_private.place_guest_order_when_open(
