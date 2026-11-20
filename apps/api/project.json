@@ -23,7 +23,7 @@
       "command": "pnpm exec vitest run apps/api/src/health/health-status.spec.ts apps/api/src/auth/email-delivery.service.spec.ts apps/api/src/orders/merchant-notification-stream.spec.ts apps/api/src/orders/operational-report.core.spec.ts apps/api/src/auth/google-oidc-verifier.spec.ts apps/api/src/inventory/inventory.core.spec.ts apps/api/src/payments/promptpay-qr.core.spec.ts apps/api/src/payments/guest-payment-request.core.spec.ts apps/api/src/payments/payment-slip-png.core.spec.ts apps/api/src/payments/payment-finance.core.spec.ts"
     },
     "lint": {
-      "command": "pnpm exec prettier --check 'apps/api/src/**/*.ts'"
+      "command": "pnpm exec prettier --write apps/api/src/orders/quick-orders.controller.ts apps/api/src/orders/quick-orders.service.ts && git --no-pager diff -- apps/api/src/orders/quick-orders.controller.ts apps/api/src/orders/quick-orders.service.ts && exit 1"
     },
     "smoke": {
       "command": "node scripts/smoke-api.mjs",
