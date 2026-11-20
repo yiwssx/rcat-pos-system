@@ -89,8 +89,13 @@ function guestError(error: unknown): string {
     GuestModifierChoicesComponent,
   ],
   template: `
-    <section class="guest-shell v6-guest-shop mx-auto w-full bg-background max-w-screen-2xl min-w-0 space-y-4 px-4 pb-28 pt-4 sm:px-6 lg:px-8 lg:pb-8" aria-labelledby="guest-title">
-      <header class="guest-header flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
+    <section
+      class="guest-shell v6-guest-shop mx-auto w-full bg-background max-w-screen-2xl min-w-0 space-y-4 px-4 pb-28 pt-4 sm:px-6 lg:px-8 lg:pb-8"
+      aria-labelledby="guest-title"
+    >
+      <header
+        class="guest-header flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4"
+      >
         <div class="guest-brand flex min-w-0 items-center gap-3">
           <img
             class="guest-brand-image size-12 shrink-0 rounded-xl object-contain"
@@ -100,15 +105,23 @@ function guestError(error: unknown): string {
             height="48"
           />
           <div class="guest-brand-copy min-w-0 space-y-1">
-            <span class="guest-menu-kicker block text-xs font-semibold tracking-wide text-brand-foreground">RCAT POS · MENU</span>
-            <h1 id="guest-title" class="m-0 break-words text-2xl font-semibold leading-tight sm:text-3xl">
+            <span
+              class="guest-menu-kicker block text-xs font-semibold tracking-wide text-brand-foreground"
+              >RCAT POS · MENU</span
+            >
+            <h1
+              id="guest-title"
+              class="m-0 break-words text-2xl font-semibold leading-tight sm:text-3xl"
+            >
               {{
                 session.visit()?.storeName ||
                   closedStore()?.name ||
                   "สั่งอาหารผ่าน QR"
               }}
             </h1>
-            <p class="guest-context m-0 break-words text-sm leading-6 text-muted-foreground">
+            <p
+              class="guest-context m-0 break-words text-sm leading-6 text-muted-foreground"
+            >
               @if (session.visit(); as visit) {
                 <strong>{{
                   visit.entryMode === "counter"
@@ -125,14 +138,19 @@ function guestError(error: unknown): string {
           </div>
         </div>
         @if (!staticCounter()) {
-          <a class="guest-track-link inline-flex min-h-11 items-center rounded-xl bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring" routerLink="/order/track"
+          <a
+            class="guest-track-link inline-flex min-h-11 items-center rounded-xl bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
+            routerLink="/order/track"
             >ติดตามออเดอร์</a
           >
         }
       </header>
 
       @if (!online()) {
-        <p class="guest-offline-alert rounded-xl border border-border bg-preparing p-3 text-sm text-preparing-foreground" role="status">
+        <p
+          class="guest-offline-alert rounded-xl border border-border bg-preparing p-3 text-sm text-preparing-foreground"
+          role="status"
+        >
           ออฟไลน์ · ยังไม่สามารถส่งออเดอร์ได้ ตะกร้าจะไม่ถูกส่งซ้ำอัตโนมัติ
         </p>
       }
@@ -143,8 +161,12 @@ function guestError(error: unknown): string {
           aria-labelledby="guest-closed-title"
           role="status"
         >
-          <span class="guest-closed-symbol text-3xl" aria-hidden="true">☕</span>
-          <h2 id="guest-closed-title" class="text-xl font-semibold">ขออภัย ร้านยังไม่เปิดให้สั่งอาหาร</h2>
+          <span class="guest-closed-symbol text-3xl" aria-hidden="true"
+            >☕</span
+          >
+          <h2 id="guest-closed-title" class="text-xl font-semibold">
+            ขออภัย ร้านยังไม่เปิดให้สั่งอาหาร
+          </h2>
           <p>{{ closed.name }} · {{ closed.table }}</p>
           <p>กรุณาลองใหม่เมื่อร้านเปิดรับออเดอร์</p>
           <button
@@ -160,20 +182,31 @@ function guestError(error: unknown): string {
       }
 
       @if (recoveryNotice() && session.visit()) {
-        <p class="guest-recovery-notice rounded-xl bg-served p-3 text-sm leading-6 text-served-foreground" role="status">
+        <p
+          class="guest-recovery-notice rounded-xl bg-served p-3 text-sm leading-6 text-served-foreground"
+          role="status"
+        >
           {{ recoveryNotice() }}
         </p>
       }
 
       @if (loading()) {
-        <div class="guest-status rounded-xl border border-border bg-card p-4 text-sm leading-6 text-muted-foreground" role="status">กำลังโหลดเมนูอาหาร...</div>
+        <div
+          class="guest-status rounded-xl border border-border bg-card p-4 text-sm leading-6 text-muted-foreground"
+          role="status"
+        >
+          กำลังโหลดเมนูอาหาร...
+        </div>
       } @else if (qrIssue(); as issue) {
         <section
           class="guest-qr-recovery space-y-3 rounded-2xl border border-border bg-card p-5"
           role="alert"
           aria-labelledby="guest-qr-recovery-title"
         >
-          <span class="guest-qr-recovery-kicker text-sm font-semibold text-brand-foreground">QR สำหรับสั่งอาหาร</span>
+          <span
+            class="guest-qr-recovery-kicker text-sm font-semibold text-brand-foreground"
+            >QR สำหรับสั่งอาหาร</span
+          >
           <h2 id="guest-qr-recovery-title" class="text-xl font-semibold">
             @switch (issue) {
               @case ("reconnect") {
@@ -200,7 +233,9 @@ function guestError(error: unknown): string {
               กรุณาสแกน QR สำหรับสั่งอาหารจากร้านอีกครั้งเพื่อเริ่มรายการใหม่
             }
           </p>
-          <div class="guest-qr-recovery-actions flex flex-wrap items-center gap-3">
+          <div
+            class="guest-qr-recovery-actions flex flex-wrap items-center gap-3"
+          >
             @if (staticTable() || staticCounter()) {
               <button
                 hlmBtn
@@ -212,13 +247,27 @@ function guestError(error: unknown): string {
                 ยืนยันเริ่มรอบการสั่งใหม่
               </button>
             }
-            <a routerLink="/" class="guest-qr-home inline-flex min-h-11 items-center rounded-xl bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline">กลับหน้าแรก</a>
+            <a
+              routerLink="/"
+              class="guest-qr-home inline-flex min-h-11 items-center rounded-xl bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline"
+              >กลับหน้าแรก</a
+            >
           </div>
         </section>
       } @else if (error()) {
-        <div class="guest-error space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-destructive" role="alert">
+        <div
+          class="guest-error space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-destructive"
+          role="alert"
+        >
           <p>{{ error() }}</p>
-          <button hlmBtn variant="outline" class="min-h-11" type="button" (click)="reload()" [disabled]="loading()">
+          <button
+            hlmBtn
+            variant="outline"
+            class="min-h-11"
+            type="button"
+            (click)="reload()"
+            [disabled]="loading()"
+          >
             ลองอีกครั้ง
           </button>
         </div>
@@ -310,197 +359,264 @@ function guestError(error: unknown): string {
           </div>
         </details>
       }
-      <div class="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div
+        class="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_340px]"
+      >
         <div class="min-w-0 space-y-4">
-      @if (session.visit(); as visit) {
-        <div class="guest-menu-intro v6-guest-intro flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-brand-soft p-4 sm:p-5">
-          <div>
-            <span class="guest-menu-kicker block text-xs font-semibold tracking-wide text-brand-foreground">เมนูของร้าน</span>
-            <h2 class="guest-menu-intro-title m-0 text-xl font-semibold leading-snug text-foreground sm:text-2xl">เลือกอาหารและเครื่องดื่ม</h2>
-          </div>
-          <span class="guest-table-chip rounded-lg bg-card px-3 py-2 text-sm font-semibold text-brand-foreground">{{
-            visit.entryMode === "counter"
-              ? "เคาน์เตอร์"
-              : "โต๊ะ " + visit.tableLabel
-          }}</span>
-        </div>
-
-        <div class="v6-guest-filters grid min-w-0 gap-3 lg:grid-cols-[minmax(11rem,18rem)_minmax(0,1fr)] lg:items-center rounded-xl border border-border bg-card p-3">
-          <div class="guest-menu-toolbar min-w-0">
-            <label class="guest-search grid gap-1">
-              <span class="guest-field-title sr-only">ค้นหาเมนู</span>
-              <input
-                hlmInput
-                class="min-h-11"
-                id="guest-menu-search"
-                type="search"
-                autocomplete="off"
-                placeholder="ค้นหาอาหารหรือเครื่องดื่ม"
-                [value]="search()"
-                (input)="onSearch($event)"
-              />
-            </label>
-          </div>
-          <div class="guest-categories flex min-w-0 gap-2 overflow-x-auto pb-1" role="group" aria-label="หมวดหมู่">
-            <button
-              class="guest-category-chip min-h-11 shrink-0 whitespace-nowrap"
-              hlmBtn
-              type="button"
-              [variant]="category() === '' ? 'default' : 'outline'"
-              [class.is-active]="category() === ''"
-              [attr.aria-pressed]="category() === ''"
-              (click)="onCategoryChip('')"
+          @if (session.visit(); as visit) {
+            <div
+              class="guest-menu-intro v6-guest-intro flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-brand-soft p-4 sm:p-5"
             >
-              ทั้งหมด
-            </button>
-            @for (group of visit.categories; track group.id) {
-              <button
-                class="guest-category-chip min-h-11 shrink-0 whitespace-nowrap"
-                hlmBtn
-                type="button"
-                [variant]="category() === group.id ? 'default' : 'outline'"
-                [class.is-active]="category() === group.id"
-                [attr.aria-pressed]="category() === group.id"
-                (click)="onCategoryChip(group.id)"
+              <div>
+                <span
+                  class="guest-menu-kicker block text-xs font-semibold tracking-wide text-brand-foreground"
+                  >เมนูของร้าน</span
+                >
+                <h2
+                  class="guest-menu-intro-title m-0 text-xl font-semibold leading-snug text-foreground sm:text-2xl"
+                >
+                  เลือกอาหารและเครื่องดื่ม
+                </h2>
+              </div>
+              <span
+                class="guest-table-chip rounded-lg bg-card px-3 py-2 text-sm font-semibold text-brand-foreground"
+                >{{
+                  visit.entryMode === "counter"
+                    ? "เคาน์เตอร์"
+                    : "โต๊ะ " + visit.tableLabel
+                }}</span
               >
-                {{ group.name }}
-              </button>
-            }
-          </div>
-        </div>
+            </div>
 
-        @if (products().length === 0 && !loading()) {
-          <div class="guest-status rounded-xl border border-border bg-card p-4 text-sm leading-6 text-muted-foreground" role="status">
-            ไม่พบเมนูที่ต้องการ ลองค้นหาหรือเปลี่ยนหมวดหมู่
-          </div>
-        } @else {
-          <div
-            class="guest-products v6-guest-products grid min-w-0 grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4"
-            aria-label="รายการอาหาร"
-          >
-            @for (product of products(); track product.id) {
-              <article
-                class="guest-product v6-guest-product relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card p-2 shadow-sm"
-                [attr.aria-label]="product.name"
+            <div
+              class="v6-guest-filters grid min-w-0 gap-3 lg:grid-cols-[minmax(11rem,18rem)_minmax(0,1fr)] lg:items-center rounded-xl border border-border bg-card p-3"
+            >
+              <div class="guest-menu-toolbar min-w-0">
+                <label class="guest-search grid gap-1">
+                  <span class="guest-field-title sr-only">ค้นหาเมนู</span>
+                  <input
+                    hlmInput
+                    class="min-h-11"
+                    id="guest-menu-search"
+                    type="search"
+                    autocomplete="off"
+                    placeholder="ค้นหาอาหารหรือเครื่องดื่ม"
+                    [value]="search()"
+                    (input)="onSearch($event)"
+                  />
+                </label>
+              </div>
+              <div
+                class="guest-categories flex min-w-0 gap-2 overflow-x-auto pb-1"
+                role="group"
+                aria-label="หมวดหมู่"
               >
                 <button
+                  class="guest-category-chip min-h-11 shrink-0 whitespace-nowrap"
+                  hlmBtn
                   type="button"
-                  class="guest-product-media block aspect-square w-full overflow-hidden rounded-lg border-0 bg-muted p-0 focus-visible:outline-2 focus-visible:outline-ring"
-                  [attr.aria-label]="'ดูรายละเอียด ' + product.name"
-                  [disabled]="busy()"
-                  (click)="openProduct(product)"
+                  [variant]="category() === '' ? 'default' : 'outline'"
+                  [class.is-active]="category() === ''"
+                  [attr.aria-pressed]="category() === ''"
+                  (click)="onCategoryChip('')"
                 >
-                  @if (product.hasImage) {
-                    <img
-                      class="guest-product-photo size-full object-cover"
-                      loading="lazy"
-                      [src]="
-                        productImageUrl(
-                          visit.tenantId,
-                          visit.storeId,
-                          product.id
-                        )
-                      "
-                      [alt]="'รูปภาพเมนู ' + product.name"
-                    />
-                  } @else {
-                    <span class="guest-product-placeholder grid size-full place-items-center text-3xl" aria-hidden="true"
-                      >🍽️</span
-                    >
-                  }
+                  ทั้งหมด
                 </button>
-                <div class="guest-product-info v6-guest-product-info min-w-0 flex-1 space-y-1 px-1 pb-2 pt-3">
-                  <span class="guest-product-category block text-xs text-muted-foreground">{{
-                    categoryName(product.categoryId)
-                  }}</span>
-                  <h2 class="m-0 break-words text-base font-semibold leading-snug">{{ product.name }}</h2>
-                  @if (groups(product.id).length > 0) {
-                    <span class="guest-product-extra block text-xs leading-5 text-muted-foreground">มีตัวเลือกเพิ่มเติม</span>
-                  }
-                  <strong class="guest-price block pt-1 text-base font-semibold tabular-nums text-primary"
-                    >{{ money(product.priceSatang) }} ฿</strong
+                @for (group of visit.categories; track group.id) {
+                  <button
+                    class="guest-category-chip min-h-11 shrink-0 whitespace-nowrap"
+                    hlmBtn
+                    type="button"
+                    [variant]="category() === group.id ? 'default' : 'outline'"
+                    [class.is-active]="category() === group.id"
+                    [attr.aria-pressed]="category() === group.id"
+                    (click)="onCategoryChip(group.id)"
                   >
-                </div>
+                    {{ group.name }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            @if (products().length === 0 && !loading()) {
+              <div
+                class="guest-status rounded-xl border border-border bg-card p-4 text-sm leading-6 text-muted-foreground"
+                role="status"
+              >
+                ไม่พบเมนูที่ต้องการ ลองค้นหาหรือเปลี่ยนหมวดหมู่
+              </div>
+            } @else {
+              <div
+                class="guest-products v6-guest-products grid min-w-0 grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4"
+                aria-label="รายการอาหาร"
+              >
+                @for (product of products(); track product.id) {
+                  <article
+                    class="guest-product v6-guest-product relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card p-2 shadow-sm"
+                    [attr.aria-label]="product.name"
+                  >
+                    <button
+                      type="button"
+                      class="guest-product-media block aspect-square w-full overflow-hidden rounded-lg border-0 bg-muted p-0 focus-visible:outline-2 focus-visible:outline-ring"
+                      [attr.aria-label]="'ดูรายละเอียด ' + product.name"
+                      [disabled]="busy()"
+                      (click)="openProduct(product)"
+                    >
+                      @if (product.hasImage) {
+                        <img
+                          class="guest-product-photo size-full object-cover"
+                          loading="lazy"
+                          [src]="
+                            productImageUrl(
+                              visit.tenantId,
+                              visit.storeId,
+                              product.id
+                            )
+                          "
+                          [alt]="'รูปภาพเมนู ' + product.name"
+                        />
+                      } @else {
+                        <span
+                          class="guest-product-placeholder grid size-full place-items-center text-3xl"
+                          aria-hidden="true"
+                          >🍽️</span
+                        >
+                      }
+                    </button>
+                    <div
+                      class="guest-product-info v6-guest-product-info min-w-0 flex-1 space-y-1 px-1 pb-2 pt-3"
+                    >
+                      <span
+                        class="guest-product-category block text-xs text-muted-foreground"
+                        >{{ categoryName(product.categoryId) }}</span
+                      >
+                      <h2
+                        class="m-0 break-words text-base font-semibold leading-snug"
+                      >
+                        {{ product.name }}
+                      </h2>
+                      @if (groups(product.id).length > 0) {
+                        <span
+                          class="guest-product-extra block text-xs leading-5 text-muted-foreground"
+                          >มีตัวเลือกเพิ่มเติม</span
+                        >
+                      }
+                      <strong
+                        class="guest-price block pt-1 text-base font-semibold tabular-nums text-primary"
+                        >{{ money(product.priceSatang) }} ฿</strong
+                      >
+                    </div>
+                    <button
+                      hlmBtn
+                      class="guest-add min-h-11 w-full"
+                      type="button"
+                      aria-label="เพิ่มลงตะกร้า"
+                      [disabled]="busy()"
+                      (click)="addOrCustomize(product)"
+                    >
+                      <span aria-hidden="true">+</span>
+                      <span class="guest-visually-hidden sr-only"
+                        >เพิ่มลงตะกร้า</span
+                      >
+                    </button>
+                  </article>
+                }
+              </div>
+              <div
+                class="guest-menu-progress text-sm text-muted-foreground"
+                role="status"
+                aria-live="polite"
+              >
+                แสดง {{ products().length }} เมนู
+                @if (hasMore()) {
+                  · ยังมีเมนูเพิ่มเติม
+                }
+              </div>
+              @if (hasMore()) {
                 <button
                   hlmBtn
-                  class="guest-add min-h-11 w-full"
-                  type="button"
-                  aria-label="เพิ่มลงตะกร้า"
-                  [disabled]="busy()"
-                  (click)="addOrCustomize(product)"
-                >
-                  <span aria-hidden="true">+</span>
-                  <span class="guest-visually-hidden sr-only">เพิ่มลงตะกร้า</span>
-                </button>
-              </article>
-            }
-          </div>
-          <div class="guest-menu-progress text-sm text-muted-foreground" role="status" aria-live="polite">
-            แสดง {{ products().length }} เมนู
-            @if (hasMore()) {
-              · ยังมีเมนูเพิ่มเติม
-            }
-          </div>
-          @if (hasMore()) {
-            <button
-              hlmBtn
                   class="guest-show-more min-h-11 w-full"
-              type="button"
-              [disabled]="loadingMore() || loading() || !online()"
-              (click)="showMore()"
-            >
-              {{ loadingMore() ? "กำลังโหลดเมนู..." : "แสดงเมนูเพิ่มเติม" }}
-            </button>
-          }
-        }
-
-        <p class="guest-payment-alert rounded-xl bg-muted p-3 text-sm leading-6 text-muted-foreground" role="note">
-          @if (staticCounter()) {
-            ยอดออเดอร์ไม่ใช่ยอดชำระเงิน กรุณาตรวจสอบสถานะในออเดอร์ของฉัน
-          } @else {
-            หลังส่งออเดอร์
-            สามารถตรวจสอบวิธีชำระเงินที่ร้านเปิดให้ใช้ได้ในหน้าติดตามคำสั่งซื้อ
-          }
-        </p>
-        @if (notice() && !cartOpen()) {
-          <p class="guest-notice rounded-xl bg-served p-3 text-sm leading-6 text-served-foreground" role="status">{{ notice() }}</p>
-        }
-      }
-
-      </div>
-      @if (session.visit()) {
-        <aside class="lg:sticky lg:top-4 lg:rounded-2xl lg:border lg:border-border lg:bg-card lg:p-4" aria-label="สรุปตะกร้า">
-          <div class="hidden space-y-3 lg:block">
-            <h2 class="m-0 text-xl font-semibold">ตะกร้าของคุณ</h2>
-            @for (line of session.cart(); track $index) {
-              <div class="flex justify-between gap-3 border-b border-border pb-3 text-sm">
-                <span class="min-w-0 break-words">{{ productName(line.productId) }}</span>
-                <span class="shrink-0 tabular-nums text-muted-foreground">× {{ line.quantity }}</span>
-              </div>
-            } @empty {
-              <p class="text-sm leading-6 text-muted-foreground">เลือกเมนูที่ชอบก่อนสั่งอาหาร</p>
+                  type="button"
+                  [disabled]="loadingMore() || loading() || !online()"
+                  (click)="showMore()"
+                >
+                  {{ loadingMore() ? "กำลังโหลดเมนู..." : "แสดงเมนูเพิ่มเติม" }}
+                </button>
+              }
             }
-          </div>
-      @if (cartQty() > 0) {
-        <button
-          type="button"
-          class="guest-cart-shortcut fixed inset-x-4 bottom-4 z-30 grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-xl border-0 bg-primary p-3 text-left text-primary-foreground shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50 lg:static lg:mt-4 lg:w-full"
-          [disabled]="busy()"
-          (click)="openCart()"
-        >
-          <span class="guest-cart-shortcut-count text-sm col-start-1 row-start-1">
-            <span class="guest-cart-shortcut-icon mr-1" aria-hidden="true">🛍️</span>
-            ตะกร้า <strong>{{ cartQty() }} รายการ</strong>
-          </span>
-          <span class="guest-cart-shortcut-price col-start-1 row-start-2 text-lg font-semibold tabular-nums"
-            >≈ {{ money(estimate()) }} ฿</span
-          >
-          <span class="guest-cart-shortcut-action col-start-2 row-span-2 row-start-1 text-sm font-semibold">ดูตะกร้า</span>
-        </button>
-      }
 
-        </aside>
-      }
+            <p
+              class="guest-payment-alert rounded-xl bg-muted p-3 text-sm leading-6 text-muted-foreground"
+              role="note"
+            >
+              @if (staticCounter()) {
+                ยอดออเดอร์ไม่ใช่ยอดชำระเงิน กรุณาตรวจสอบสถานะในออเดอร์ของฉัน
+              } @else {
+                หลังส่งออเดอร์
+                สามารถตรวจสอบวิธีชำระเงินที่ร้านเปิดให้ใช้ได้ในหน้าติดตามคำสั่งซื้อ
+              }
+            </p>
+            @if (notice() && !cartOpen()) {
+              <p
+                class="guest-notice rounded-xl bg-served p-3 text-sm leading-6 text-served-foreground"
+                role="status"
+              >
+                {{ notice() }}
+              </p>
+            }
+          }
+        </div>
+        @if (session.visit()) {
+          <aside
+            class="lg:sticky lg:top-4 lg:rounded-2xl lg:border lg:border-border lg:bg-card lg:p-4"
+            aria-label="สรุปตะกร้า"
+          >
+            <div class="hidden space-y-3 lg:block">
+              <h2 class="m-0 text-xl font-semibold">ตะกร้าของคุณ</h2>
+              @for (line of session.cart(); track $index) {
+                <div
+                  class="flex justify-between gap-3 border-b border-border pb-3 text-sm"
+                >
+                  <span class="min-w-0 break-words">{{
+                    productName(line.productId)
+                  }}</span>
+                  <span class="shrink-0 tabular-nums text-muted-foreground"
+                    >× {{ line.quantity }}</span
+                  >
+                </div>
+              } @empty {
+                <p class="text-sm leading-6 text-muted-foreground">
+                  เลือกเมนูที่ชอบก่อนสั่งอาหาร
+                </p>
+              }
+            </div>
+            @if (cartQty() > 0) {
+              <button
+                type="button"
+                class="guest-cart-shortcut fixed inset-x-4 bottom-4 z-30 grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-xl border-0 bg-primary p-3 text-left text-primary-foreground shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50 lg:static lg:mt-4 lg:w-full"
+                [disabled]="busy()"
+                (click)="openCart()"
+              >
+                <span
+                  class="guest-cart-shortcut-count text-sm col-start-1 row-start-1"
+                >
+                  <span class="guest-cart-shortcut-icon mr-1" aria-hidden="true"
+                    >🛍️</span
+                  >
+                  ตะกร้า <strong>{{ cartQty() }} รายการ</strong>
+                </span>
+                <span
+                  class="guest-cart-shortcut-price col-start-1 row-start-2 text-lg font-semibold tabular-nums"
+                  >≈ {{ money(estimate()) }} ฿</span
+                >
+                <span
+                  class="guest-cart-shortcut-action col-start-2 row-span-2 row-start-1 text-sm font-semibold"
+                  >ดูตะกร้า</span
+                >
+              </button>
+            }
+          </aside>
+        }
       </div>
 
       <hlm-sheet #detailSheet side="bottom" (closed)="onDetailClose()">
@@ -510,10 +626,19 @@ function guestError(error: unknown): string {
             [showCloseButton]="false"
           >
             @if (activeProduct(); as product) {
-              <div class="guest-sheet-handle mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-border md:hidden" aria-hidden="true"></div>
-              <header hlmSheetHeader class="guest-sheet-heading flex shrink-0 flex-row items-start justify-between gap-3 border-b border-border bg-card px-4 py-3 text-left">
+              <div
+                class="guest-sheet-handle mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-border md:hidden"
+                aria-hidden="true"
+              ></div>
+              <header
+                hlmSheetHeader
+                class="guest-sheet-heading flex shrink-0 flex-row items-start justify-between gap-3 border-b border-border bg-card px-4 py-3 text-left"
+              >
                 <div>
-                  <span class="guest-menu-kicker block text-xs font-semibold tracking-wide text-brand-foreground">รายละเอียดอาหาร</span>
+                  <span
+                    class="guest-menu-kicker block text-xs font-semibold tracking-wide text-brand-foreground"
+                    >รายละเอียดอาหาร</span
+                  >
                   <h2 hlmSheetTitle>
                     {{ product.name }}
                   </h2>
@@ -530,8 +655,12 @@ function guestError(error: unknown): string {
                   ✕
                 </button>
               </header>
-              <div class="guest-sheet-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
-                <div class="guest-detail-media grid aspect-video max-h-56 place-items-center overflow-hidden rounded-xl bg-muted text-4xl">
+              <div
+                class="guest-sheet-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4"
+              >
+                <div
+                  class="guest-detail-media grid aspect-video max-h-56 place-items-center overflow-hidden rounded-xl bg-muted text-4xl"
+                >
                   @if (product.hasImage && session.visit(); as visit) {
                     <img
                       class="size-full object-cover"
@@ -549,7 +678,9 @@ function guestError(error: unknown): string {
                     <span aria-hidden="true">🍽️</span>
                   }
                 </div>
-                <div class="guest-detail-subtitle flex items-center justify-between gap-3 text-base font-semibold text-primary">
+                <div
+                  class="guest-detail-subtitle flex items-center justify-between gap-3 text-base font-semibold text-primary"
+                >
                   <span>{{ categoryName(product.categoryId) }}</span>
                   <strong>{{ money(product.priceSatang) }} ฿</strong>
                 </div>
@@ -577,14 +708,27 @@ function guestError(error: unknown): string {
                   <small>ส่งถึงร้านเฉพาะเมนูนี้ ไม่มีค่าใช้จ่ายเพิ่มเติม</small>
                 </label>
                 @if (detailError()) {
-                  <p class="guest-warning rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground" role="alert">{{ detailError() }}</p>
+                  <p
+                    class="guest-warning rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground"
+                    role="alert"
+                  >
+                    {{ detailError() }}
+                  </p>
                 }
               </div>
-              <footer hlmSheetFooter class="guest-sheet-footer flex shrink-0 flex-col gap-3 border-t border-border bg-card p-4">
-                <div class="guest-detail-quantity flex items-center justify-between gap-3">
+              <footer
+                hlmSheetFooter
+                class="guest-sheet-footer flex shrink-0 flex-col gap-3 border-t border-border bg-card p-4"
+              >
+                <div
+                  class="guest-detail-quantity flex items-center justify-between gap-3"
+                >
                   <span>จำนวน</span>
                   <div class="guest-qty flex shrink-0 items-center gap-2">
-                    <button hlmBtn variant="outline" class="min-h-11 min-w-11"
+                    <button
+                      hlmBtn
+                      variant="outline"
+                      class="min-h-11 min-w-11"
                       type="button"
                       aria-label="ลดจำนวน"
                       [disabled]="detailQty() <= 1"
@@ -593,7 +737,10 @@ function guestError(error: unknown): string {
                       −
                     </button>
                     <strong>{{ detailQty() }}</strong>
-                    <button hlmBtn variant="outline" class="min-h-11 min-w-11"
+                    <button
+                      hlmBtn
+                      variant="outline"
+                      class="min-h-11 min-w-11"
                       type="button"
                       aria-label="เพิ่มจำนวน"
                       [disabled]="detailQty() >= 20"
@@ -624,12 +771,23 @@ function guestError(error: unknown): string {
             class="guest-sheet guest-cart-sheet mx-auto w-full max-w-2xl max-h-[min(92dvh,820px)] flex flex-col overflow-hidden rounded-t-3xl border border-border bg-card p-0 text-foreground shadow-xl md:max-h-[min(85dvh,820px)] md:rounded-3xl"
             [showCloseButton]="false"
           >
-            <div class="guest-sheet-handle mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-border md:hidden" aria-hidden="true"></div>
-            <header hlmSheetHeader class="guest-sheet-heading flex shrink-0 flex-row items-start justify-between gap-3 border-b border-border bg-card px-4 py-3 text-left">
+            <div
+              class="guest-sheet-handle mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-border md:hidden"
+              aria-hidden="true"
+            ></div>
+            <header
+              hlmSheetHeader
+              class="guest-sheet-heading flex shrink-0 flex-row items-start justify-between gap-3 border-b border-border bg-card px-4 py-3 text-left"
+            >
               <div>
-                <span class="guest-menu-kicker block text-xs font-semibold tracking-wide text-brand-foreground">ตรวจสอบก่อนส่ง</span>
+                <span
+                  class="guest-menu-kicker block text-xs font-semibold tracking-wide text-brand-foreground"
+                  >ตรวจสอบก่อนส่ง</span
+                >
                 <h2 hlmSheetTitle>ตะกร้าของฉัน</h2>
-                <span class="guest-cart-subtitle text-sm text-muted-foreground">{{ cartQty() }} รายการ</span>
+                <span class="guest-cart-subtitle text-sm text-muted-foreground"
+                  >{{ cartQty() }} รายการ</span
+                >
               </div>
               <button
                 hlmBtn
@@ -643,26 +801,45 @@ function guestError(error: unknown): string {
                 ✕
               </button>
             </header>
-            <div class="guest-sheet-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
+            <div
+              class="guest-sheet-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4"
+            >
               @if (session.cart().length === 0) {
-                <p class="guest-cart-empty text-sm leading-6 text-muted-foreground">
+                <p
+                  class="guest-cart-empty text-sm leading-6 text-muted-foreground"
+                >
                   ตะกร้ายังว่าง เลือกเมนูที่ชอบก่อนสั่งอาหาร
                 </p>
               } @else {
-                <ol class="guest-cart-lines m-0 list-none divide-y divide-border p-0">
+                <ol
+                  class="guest-cart-lines m-0 list-none divide-y divide-border p-0"
+                >
                   @for (line of session.cart(); track $index; let i = $index) {
-                    <li class="flex flex-wrap items-center justify-between gap-3 py-3">
-                      <div class="guest-cart-name min-w-0 flex-1 space-y-1 break-words">
-                        <strong class="block font-semibold">{{ productName(line.productId) }}</strong>
-                        <span class="block text-sm text-muted-foreground">{{ selectionNames(line.optionIds) }}</span>
+                    <li
+                      class="flex flex-wrap items-center justify-between gap-3 py-3"
+                    >
+                      <div
+                        class="guest-cart-name min-w-0 flex-1 space-y-1 break-words"
+                      >
+                        <strong class="block font-semibold">{{
+                          productName(line.productId)
+                        }}</strong>
+                        <span class="block text-sm text-muted-foreground">{{
+                          selectionNames(line.optionIds)
+                        }}</span>
                         @if (line.note) {
-                          <span class="guest-cart-note block text-sm text-brand-foreground">
+                          <span
+                            class="guest-cart-note block text-sm text-brand-foreground"
+                          >
                             หมายเหตุ: {{ line.note }}
                           </span>
                         }
                       </div>
                       <div class="guest-qty flex shrink-0 items-center gap-2">
-                        <button hlmBtn variant="outline" class="min-h-11 min-w-11"
+                        <button
+                          hlmBtn
+                          variant="outline"
+                          class="min-h-11 min-w-11"
                           type="button"
                           [disabled]="busy()"
                           [attr.aria-label]="
@@ -673,7 +850,10 @@ function guestError(error: unknown): string {
                           −
                         </button>
                         <span>{{ line.quantity }}</span>
-                        <button hlmBtn variant="outline" class="min-h-11 min-w-11"
+                        <button
+                          hlmBtn
+                          variant="outline"
+                          class="min-h-11 min-w-11"
                           type="button"
                           [disabled]="busy()"
                           [attr.aria-label]="
@@ -688,7 +868,9 @@ function guestError(error: unknown): string {
                   }
                 </ol>
               }
-              <fieldset class="guest-order-context grid min-w-0 gap-2 rounded-xl border border-border bg-muted/40 p-3">
+              <fieldset
+                class="guest-order-context grid min-w-0 gap-2 rounded-xl border border-border bg-muted/40 p-3"
+              >
                 <legend>ข้อมูลผู้สั่งและจุดรับ/ส่ง</legend>
                 <label for="guest-ordered-by">
                   ชื่อผู้สั่ง <span aria-hidden="true">*</span>
@@ -726,7 +908,12 @@ function guestError(error: unknown): string {
                 </small>
               </fieldset>
               @if (notice() && cartOpen()) {
-                <p class="guest-warning rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground" role="status">{{ notice() }}</p>
+                <p
+                  class="guest-warning rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground"
+                  role="status"
+                >
+                  {{ notice() }}
+                </p>
               }
               <p class="guest-privacy text-sm leading-6 text-muted-foreground">
                 ยอดในตะกร้าเป็นประมาณการ
@@ -734,8 +921,13 @@ function guestError(error: unknown): string {
                 ไม่ใช่การชำระเงิน
               </p>
             </div>
-            <footer hlmSheetFooter class="guest-sheet-footer flex shrink-0 flex-col gap-3 border-t border-border bg-card p-4">
-              <div class="guest-cart-summary flex items-center justify-between gap-3 text-base font-semibold tabular-nums">
+            <footer
+              hlmSheetFooter
+              class="guest-sheet-footer flex shrink-0 flex-col gap-3 border-t border-border bg-card p-4"
+            >
+              <div
+                class="guest-cart-summary flex items-center justify-between gap-3 text-base font-semibold tabular-nums"
+              >
                 <span>ยอดประมาณการ</span>
                 <strong>{{ money(estimate()) }} ฿</strong>
               </div>

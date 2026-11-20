@@ -41,20 +41,36 @@ function failure(error: unknown): string {
   imports: [RouterLink, HlmButton, HlmInput],
   template: `
     <div class="owner-shell mx-auto w-full max-w-6xl min-w-0 space-y-4 pb-8">
-      <header class="owner-intro space-y-3 rounded-2xl bg-brand-soft p-4 sm:p-6">
-        <span class="eyebrow block text-xs font-semibold tracking-wide text-brand-foreground">ADMINISTRATION / RCAT POS</span>
-        <h1 class="m-0 max-w-none text-2xl font-semibold leading-tight sm:text-3xl">จัดการร้านค้าและบัญชีบุคลากร</h1>
-        <p class="owner-muted break-words text-sm leading-6 text-muted-foreground">
+      <header
+        class="owner-intro space-y-3 rounded-2xl bg-brand-soft p-4 sm:p-6"
+      >
+        <span
+          class="eyebrow block text-xs font-semibold tracking-wide text-brand-foreground"
+          >ADMINISTRATION / RCAT POS</span
+        >
+        <h1
+          class="m-0 max-w-none text-2xl font-semibold leading-tight sm:text-3xl"
+        >
+          จัดการร้านค้าและบัญชีบุคลากร
+        </h1>
+        <p
+          class="owner-muted break-words text-sm leading-6 text-muted-foreground"
+        >
           พื้นที่บริหารร้านที่บัญชีนี้ได้รับสิทธิ์เท่านั้น
           ไม่ใช่สิทธิ์ผู้ดูแลทุก Tenant ของแพลตฟอร์ม
         </p>
         @if (!unified) {
           <div class="owner-session flex flex-wrap gap-3">
-            <a href="/api/auth/google/start" class="owner-login inline-flex min-h-11 items-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring">
+            <a
+              href="/api/auth/google/start"
+              class="owner-login inline-flex min-h-11 items-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
+            >
               เข้าสู่ระบบด้วย Google Workspace @rcat.ac.th
             </a>
             @if (authenticated()) {
-              <button hlmBtn variant="outline"
+              <button
+                hlmBtn
+                variant="outline"
                 type="button"
                 class="owner-logout min-h-11"
                 (click)="logout()"
@@ -65,34 +81,68 @@ function failure(error: unknown): string {
             }
           </div>
         }
-        <p class="owner-alert rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground" role="note">
+        <p
+          class="owner-alert rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground"
+          role="note"
+        >
           การสร้างร้านและจัดการพนักงานมีผลเมื่อระบบยืนยันเท่านั้น ·
           ยังไม่เปิดรับชำระเงิน
         </p>
       </header>
 
       @if (loading()) {
-        <p class="owner-state rounded-xl bg-card p-4 text-sm text-muted-foreground" role="status">
+        <p
+          class="owner-state rounded-xl bg-card p-4 text-sm text-muted-foreground"
+          role="status"
+        >
           กำลังตรวจสอบสิทธิ์ร้านค้าของบัญชี...
         </p>
       }
       @if (error()) {
-        <div class="owner-error flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive" role="alert">
+        <div
+          class="owner-error flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive"
+          role="alert"
+        >
           {{ error() }}
-          <button hlmBtn variant="outline" class="min-h-11" type="button" (click)="loadStores()" [disabled]="loading()">
+          <button
+            hlmBtn
+            variant="outline"
+            class="min-h-11"
+            type="button"
+            (click)="loadStores()"
+            [disabled]="loading()"
+          >
             ลองใหม่
           </button>
         </div>
       }
       @if (notice()) {
-        <p class="owner-success rounded-xl bg-served p-4 text-sm text-served-foreground" role="status">{{ notice() }}</p>
+        <p
+          class="owner-success rounded-xl bg-served p-4 text-sm text-served-foreground"
+          role="status"
+        >
+          {{ notice() }}
+        </p>
       }
 
       @if (authenticated()) {
-        <section aria-labelledby="owner-stores-title" class="owner-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5">
-          <div class="owner-headline flex flex-wrap items-center justify-between gap-3">
-            <h2 class="m-0 text-lg font-semibold leading-snug" id="owner-stores-title">ร้านที่เข้าถึงได้</h2>
-            <button hlmBtn variant="outline" class="min-h-11"
+        <section
+          aria-labelledby="owner-stores-title"
+          class="owner-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
+        >
+          <div
+            class="owner-headline flex flex-wrap items-center justify-between gap-3"
+          >
+            <h2
+              class="m-0 text-lg font-semibold leading-snug"
+              id="owner-stores-title"
+            >
+              ร้านที่เข้าถึงได้
+            </h2>
+            <button
+              hlmBtn
+              variant="outline"
+              class="min-h-11"
               type="button"
               (click)="loadStores()"
               [disabled]="loading() || pending()"
@@ -101,22 +151,36 @@ function failure(error: unknown): string {
             </button>
           </div>
           @if (stores().length === 0) {
-            <p class="owner-muted break-words text-sm leading-6 text-muted-foreground">
+            <p
+              class="owner-muted break-words text-sm leading-6 text-muted-foreground"
+            >
               บัญชีนี้ยังไม่มีร้านค้า หรือยังไม่ได้รับคำเชิญจากเจ้าของร้าน
             </p>
           } @else {
-            <div class="owner-stores grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div
+              class="owner-stores grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3"
+            >
               @for (store of stores(); track store.tenantId + store.storeId) {
-                <article class="grid min-w-0 gap-2 rounded-xl border border-border bg-card p-4">
-                  <small class="break-words text-sm text-muted-foreground">{{ store.tenantName }}</small>
-                  <h3 class="m-0 text-base font-semibold">{{ store.storeName }}</h3>
-                  <span class="owner-role w-fit rounded-lg bg-secondary px-3 py-1.5 text-sm font-semibold text-secondary-foreground">{{ roleLabel[store.role] }}</span>
+                <article
+                  class="grid min-w-0 gap-2 rounded-xl border border-border bg-card p-4"
+                >
+                  <small class="break-words text-sm text-muted-foreground">{{
+                    store.tenantName
+                  }}</small>
+                  <h3 class="m-0 text-base font-semibold">
+                    {{ store.storeName }}
+                  </h3>
+                  <span
+                    class="owner-role w-fit rounded-lg bg-secondary px-3 py-1.5 text-sm font-semibold text-secondary-foreground"
+                    >{{ roleLabel[store.role] }}</span
+                  >
                   @if (store.role === "owner") {
                     <a [routerLink]="['/tenants', store.tenantId, 'staff']">
                       จัดการบุคลากรและคำเชิญ
                     </a>
                   } @else {
-                    <span class="owner-muted break-words text-sm leading-6 text-muted-foreground"
+                    <span
+                      class="owner-muted break-words text-sm leading-6 text-muted-foreground"
                       >การจัดการสิทธิ์ต้องใช้บัญชีเจ้าของร้าน</span
                     >
                   }
@@ -126,23 +190,38 @@ function failure(error: unknown): string {
           }
         </section>
 
-        <div class="owner-grid v6-owner-actions grid min-w-0 items-start gap-4 lg:grid-cols-2">
+        <div
+          class="owner-grid v6-owner-actions grid min-w-0 items-start gap-4 lg:grid-cols-2"
+        >
           <details
             class="owner-panel v6-owner-disclosure min-w-0 overflow-hidden rounded-2xl border border-border bg-card"
             aria-labelledby="create-title"
           >
-            <summary class="min-h-11 cursor-pointer space-y-1 bg-muted p-4 focus-visible:outline-2 focus-visible:outline-ring">
-              <strong class="block text-base font-semibold" id="create-title">สร้างร้านใหม่</strong>
-              <span class="block text-sm leading-6 text-muted-foreground">สร้างกลุ่มร้านค้าและกำหนดร้านแรก</span>
+            <summary
+              class="min-h-11 cursor-pointer space-y-1 bg-muted p-4 focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              <strong class="block text-base font-semibold" id="create-title"
+                >สร้างร้านใหม่</strong
+              >
+              <span class="block text-sm leading-6 text-muted-foreground"
+                >สร้างกลุ่มร้านค้าและกำหนดร้านแรก</span
+              >
             </summary>
             <div class="v6-owner-form-body space-y-3 px-4 pb-4">
-              <p class="owner-muted break-words text-sm leading-6 text-muted-foreground">
+              <p
+                class="owner-muted break-words text-sm leading-6 text-muted-foreground"
+              >
                 สร้างกลุ่มร้านค้าและร้านแรกสำหรับเริ่มใช้งาน
               </p>
-              <form (submit)="create($event)" class="owner-form grid min-w-0 gap-3">
+              <form
+                (submit)="create($event)"
+                class="owner-form grid min-w-0 gap-3"
+              >
                 <label class="grid min-w-0 gap-2 text-sm font-medium"
                   >รหัสกลุ่มร้านค้า (ภาษาอังกฤษ)
-                  <input hlmInput class="min-h-11 w-full"
+                  <input
+                    hlmInput
+                    class="min-h-11 w-full"
                     name="tenantSlug"
                     type="text"
                     autocomplete="off"
@@ -155,7 +234,9 @@ function failure(error: unknown): string {
                 </label>
                 <label class="grid min-w-0 gap-2 text-sm font-medium"
                   >ชื่อกลุ่มร้านค้า
-                  <input hlmInput class="min-h-11 w-full"
+                  <input
+                    hlmInput
+                    class="min-h-11 w-full"
                     name="tenantName"
                     type="text"
                     autocomplete="organization"
@@ -167,7 +248,9 @@ function failure(error: unknown): string {
                 </label>
                 <label class="grid min-w-0 gap-2 text-sm font-medium"
                   >รหัสร้าน (ภาษาอังกฤษ)
-                  <input hlmInput class="min-h-11 w-full"
+                  <input
+                    hlmInput
+                    class="min-h-11 w-full"
                     name="storeSlug"
                     type="text"
                     autocomplete="off"
@@ -180,7 +263,9 @@ function failure(error: unknown): string {
                 </label>
                 <label class="grid min-w-0 gap-2 text-sm font-medium"
                   >ชื่อร้าน
-                  <input hlmInput class="min-h-11 w-full"
+                  <input
+                    hlmInput
+                    class="min-h-11 w-full"
                     name="storeName"
                     type="text"
                     autocomplete="off"
@@ -190,7 +275,13 @@ function failure(error: unknown): string {
                     required
                   />
                 </label>
-                <button hlmBtn variant="default" class="min-h-11" type="submit" [disabled]="pending()">
+                <button
+                  hlmBtn
+                  variant="default"
+                  class="min-h-11"
+                  type="submit"
+                  [disabled]="pending()"
+                >
                   {{ pending() ? "กำลังดำเนินการ..." : "สร้างร้านค้า" }}
                 </button>
               </form>
@@ -201,19 +292,32 @@ function failure(error: unknown): string {
             class="owner-panel v6-owner-disclosure min-w-0 overflow-hidden rounded-2xl border border-border bg-card"
             aria-labelledby="accept-title"
           >
-            <summary class="min-h-11 cursor-pointer space-y-1 bg-muted p-4 focus-visible:outline-2 focus-visible:outline-ring">
-              <strong class="block text-base font-semibold" id="accept-title">รับคำเชิญเข้าร้าน</strong>
-              <span class="block text-sm leading-6 text-muted-foreground">เข้าร่วมร้านที่เจ้าของร้านเชิญไว้แล้ว</span>
+            <summary
+              class="min-h-11 cursor-pointer space-y-1 bg-muted p-4 focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              <strong class="block text-base font-semibold" id="accept-title"
+                >รับคำเชิญเข้าร้าน</strong
+              >
+              <span class="block text-sm leading-6 text-muted-foreground"
+                >เข้าร่วมร้านที่เจ้าของร้านเชิญไว้แล้ว</span
+              >
             </summary>
             <div class="v6-owner-form-body space-y-3 px-4 pb-4">
-              <p class="owner-muted break-words text-sm leading-6 text-muted-foreground">
+              <p
+                class="owner-muted break-words text-sm leading-6 text-muted-foreground"
+              >
                 ใช้รหัสคำเชิญแบบใช้ครั้งเดียวที่เจ้าของร้านส่งให้
                 ไม่ควรนำรหัสนี้ใส่ URL หรือส่งในกลุ่มสาธารณะ
               </p>
-              <form (submit)="accept($event)" class="owner-form grid min-w-0 gap-3">
+              <form
+                (submit)="accept($event)"
+                class="owner-form grid min-w-0 gap-3"
+              >
                 <label class="grid min-w-0 gap-2 text-sm font-medium"
                   >รหัสคำเชิญ
-                  <input hlmInput class="min-h-11 w-full"
+                  <input
+                    hlmInput
+                    class="min-h-11 w-full"
                     type="password"
                     name="invitationToken"
                     autocomplete="off"
@@ -224,11 +328,19 @@ function failure(error: unknown): string {
                     required
                   />
                 </label>
-                <button hlmBtn variant="default" class="min-h-11" type="submit" [disabled]="pending()">
+                <button
+                  hlmBtn
+                  variant="default"
+                  class="min-h-11"
+                  type="submit"
+                  [disabled]="pending()"
+                >
                   {{ pending() ? "กำลังดำเนินการ..." : "ยืนยันรับคำเชิญ" }}
                 </button>
               </form>
-              <p class="owner-muted break-words text-sm leading-6 text-muted-foreground">
+              <p
+                class="owner-muted break-words text-sm leading-6 text-muted-foreground"
+              >
                 หากยังไม่มีบัญชีที่ได้รับอนุมัติ โปรดติดต่อผู้ดูแลก่อน
                 การรับคำเชิญไม่ได้สร้างบัญชี Google ใหม่
               </p>

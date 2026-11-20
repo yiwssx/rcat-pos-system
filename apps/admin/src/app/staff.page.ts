@@ -41,43 +41,100 @@ function explain(error: unknown): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, HlmButton, HlmInput],
   template: `
-    <section class="owner-shell mx-auto w-full max-w-6xl min-w-0 space-y-4 pb-8" aria-labelledby="staff-heading">
-      <a routerLink="/" class="owner-back inline-flex min-h-11 items-center text-sm font-semibold text-primary no-underline focus-visible:outline-2 focus-visible:outline-ring">← กลับหน้าบริหารร้าน</a>
-      <span class="eyebrow block text-xs font-semibold tracking-wide text-brand-foreground">ROLE BASED ACCESS CONTROL</span>
-      <h1 class="m-0 max-w-none text-2xl font-semibold leading-tight sm:text-3xl" id="staff-heading">จัดการสิทธิ์บุคลากร</h1>
-      <p class="owner-muted break-words text-sm leading-6 text-muted-foreground">
+    <section
+      class="owner-shell mx-auto w-full max-w-6xl min-w-0 space-y-4 pb-8"
+      aria-labelledby="staff-heading"
+    >
+      <a
+        routerLink="/"
+        class="owner-back inline-flex min-h-11 items-center text-sm font-semibold text-primary no-underline focus-visible:outline-2 focus-visible:outline-ring"
+        >← กลับหน้าบริหารร้าน</a
+      >
+      <span
+        class="eyebrow block text-xs font-semibold tracking-wide text-brand-foreground"
+        >ROLE BASED ACCESS CONTROL</span
+      >
+      <h1
+        class="m-0 max-w-none text-2xl font-semibold leading-tight sm:text-3xl"
+        id="staff-heading"
+      >
+        จัดการสิทธิ์บุคลากร
+      </h1>
+      <p
+        class="owner-muted break-words text-sm leading-6 text-muted-foreground"
+      >
         Tenant: {{ tenantId }} · เฉพาะเจ้าของร้านที่ได้รับสิทธิ์
       </p>
-      <p class="owner-alert rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground" role="note">
+      <p
+        class="owner-alert rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground"
+        role="note"
+      >
         การเชิญหรือเปลี่ยนสิทธิ์มีผลต่อการเข้าถึงออเดอร์และข้อมูลร้านค้า
         ทุกคำสั่งต้องผ่าน Session/CSRF และ RBAC ใน PostgreSQL
       </p>
       @if (loading()) {
-        <p role="status" class="owner-state rounded-xl bg-card p-4 text-sm text-muted-foreground">กำลังตรวจสอบสิทธิ์และบุคลากร...</p>
+        <p
+          role="status"
+          class="owner-state rounded-xl bg-card p-4 text-sm text-muted-foreground"
+        >
+          กำลังตรวจสอบสิทธิ์และบุคลากร...
+        </p>
       }
       @if (error()) {
-        <div class="owner-error flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive" role="alert">
+        <div
+          class="owner-error flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive"
+          role="alert"
+        >
           {{ error() }}
-          <button hlmBtn variant="outline" class="min-h-11" type="button" (click)="reload()" [disabled]="pending()">
+          <button
+            hlmBtn
+            variant="outline"
+            class="min-h-11"
+            type="button"
+            (click)="reload()"
+            [disabled]="pending()"
+          >
             ลองใหม่
           </button>
         </div>
       }
       @if (notice()) {
-        <p class="owner-success rounded-xl bg-served p-4 text-sm text-served-foreground" role="status">{{ notice() }}</p>
+        <p
+          class="owner-success rounded-xl bg-served p-4 text-sm text-served-foreground"
+          role="status"
+        >
+          {{ notice() }}
+        </p>
       }
       @if (ready()) {
-        <div class="owner-grid grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
-          <section class="owner-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5" aria-labelledby="invite-heading">
-            <h2 class="m-0 text-lg font-semibold leading-snug" id="invite-heading">เชิญพนักงาน</h2>
-            <p class="owner-muted break-words text-sm leading-6 text-muted-foreground">
+        <div
+          class="owner-grid grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]"
+        >
+          <section
+            class="owner-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
+            aria-labelledby="invite-heading"
+          >
+            <h2
+              class="m-0 text-lg font-semibold leading-snug"
+              id="invite-heading"
+            >
+              เชิญพนักงาน
+            </h2>
+            <p
+              class="owner-muted break-words text-sm leading-6 text-muted-foreground"
+            >
               เชิญเฉพาะผู้มีบัญชี @rcat.ac.th ที่ได้รับอนุมัติแล้ว ระบบออก Token
               ใช้ครั้งเดียว อายุ 72 ชั่วโมง
             </p>
-            <form class="owner-form grid min-w-0 gap-3" (submit)="invite($event)">
+            <form
+              class="owner-form grid min-w-0 gap-3"
+              (submit)="invite($event)"
+            >
               <label class="grid min-w-0 gap-2 text-sm font-medium"
                 >อีเมลบุคลากร
-                <input hlmInput class="min-h-11 w-full"
+                <input
+                  hlmInput
+                  class="min-h-11 w-full"
                   type="email"
                   name="email"
                   autocomplete="email"
@@ -90,13 +147,23 @@ function explain(error: unknown): string {
               </label>
               <label class="grid min-w-0 gap-2 text-sm font-medium"
                 >บทบาท
-                <select class="min-h-11 w-full min-w-0 rounded-xl border border-input bg-card px-3 text-base text-foreground focus-visible:outline-2 focus-visible:outline-ring" [value]="inviteRole()" (change)="onInviteRole($event)">
+                <select
+                  class="min-h-11 w-full min-w-0 rounded-xl border border-input bg-card px-3 text-base text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                  [value]="inviteRole()"
+                  (change)="onInviteRole($event)"
+                >
                   <option value="manager">ผู้จัดการ</option>
                   <option value="cashier">แคชเชียร์</option>
                   <option value="kitchen">พนักงานครัว</option>
                 </select>
               </label>
-              <button hlmBtn variant="default" class="min-h-11" type="submit" [disabled]="pending()">
+              <button
+                hlmBtn
+                variant="default"
+                class="min-h-11"
+                type="submit"
+                [disabled]="pending()"
+              >
                 {{ pending() ? "กำลังตรวจสอบ..." : "ออกคำเชิญ" }}
               </button>
             </form>
@@ -105,21 +172,36 @@ function explain(error: unknown): string {
                 class="owner-secret space-y-3 rounded-xl border border-border bg-preparing p-4"
                 aria-labelledby="invitation-secret-heading"
               >
-                <h3 class="m-0 text-base font-semibold" id="invitation-secret-heading">รหัสคำเชิญครั้งเดียว</h3>
-                <p class="owner-muted break-words text-sm leading-6 text-muted-foreground">
+                <h3
+                  class="m-0 text-base font-semibold"
+                  id="invitation-secret-heading"
+                >
+                  รหัสคำเชิญครั้งเดียว
+                </h3>
+                <p
+                  class="owner-muted break-words text-sm leading-6 text-muted-foreground"
+                >
                   คัดลอกเพื่อส่งทางช่องทางส่วนตัวที่ปลอดภัย
                   ระบบยังไม่ได้ส่งคำเชิญทางอีเมลอัตโนมัติ
                   เมื่อออกจากหน้านี้จะไม่แสดงรหัสซ้ำ
                 </p>
-                <code class="block break-all rounded-lg border border-border bg-card p-3 text-sm">{{ issuedToken() }}</code>
-                <button hlmBtn variant="outline" class="min-h-11"
+                <code
+                  class="block break-all rounded-lg border border-border bg-card p-3 text-sm"
+                  >{{ issuedToken() }}</code
+                >
+                <button
+                  hlmBtn
+                  variant="outline"
+                  class="min-h-11"
                   type="button"
                   [disabled]="pending()"
                   (click)="copyToken()"
                 >
                   คัดลอกรหัสคำเชิญ
                 </button>
-                <button hlmBtn variant="outline"
+                <button
+                  hlmBtn
+                  variant="outline"
                   type="button"
                   class="owner-subtle min-h-11"
                   (click)="dismissToken()"
@@ -130,10 +212,23 @@ function explain(error: unknown): string {
             }
           </section>
 
-          <section class="owner-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5" aria-labelledby="members-heading">
-            <div class="owner-headline flex flex-wrap items-center justify-between gap-3">
-              <h2 class="m-0 text-lg font-semibold leading-snug" id="members-heading">บุคลากรที่มีสิทธิ์</h2>
-              <button hlmBtn variant="outline" class="min-h-11"
+          <section
+            class="owner-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
+            aria-labelledby="members-heading"
+          >
+            <div
+              class="owner-headline flex flex-wrap items-center justify-between gap-3"
+            >
+              <h2
+                class="m-0 text-lg font-semibold leading-snug"
+                id="members-heading"
+              >
+                บุคลากรที่มีสิทธิ์
+              </h2>
+              <button
+                hlmBtn
+                variant="outline"
+                class="min-h-11"
                 type="button"
                 (click)="reload()"
                 [disabled]="pending() || loading()"
@@ -142,21 +237,34 @@ function explain(error: unknown): string {
               </button>
             </div>
             @if (staff().length === 0) {
-              <p class="owner-muted break-words text-sm leading-6 text-muted-foreground">ยังไม่พบข้อมูลบุคลากร</p>
+              <p
+                class="owner-muted break-words text-sm leading-6 text-muted-foreground"
+              >
+                ยังไม่พบข้อมูลบุคลากร
+              </p>
             } @else {
-              <ul class="owner-staff-list m-0 list-none divide-y divide-border p-0">
+              <ul
+                class="owner-staff-list m-0 list-none divide-y divide-border p-0"
+              >
                 @for (member of staff(); track member.user_id) {
                   <li class="space-y-3 py-3">
-                    <div class="owner-staff-meta flex flex-wrap items-center gap-2 text-sm">
+                    <div
+                      class="owner-staff-meta flex flex-wrap items-center gap-2 text-sm"
+                    >
                       <strong>{{ shortId(member.user_id) }}</strong>
                       <span>{{ roleLabel[member.role] }}</span>
                     </div>
                     @if (member.role !== "owner") {
-                      <div class="owner-staff-controls grid min-w-0 gap-2 sm:flex sm:flex-wrap sm:items-center">
-                        <label class="grid min-w-0 gap-2 text-sm font-medium" [attr.for]="'role-' + member.user_id"
+                      <div
+                        class="owner-staff-controls grid min-w-0 gap-2 sm:flex sm:flex-wrap sm:items-center"
+                      >
+                        <label
+                          class="grid min-w-0 gap-2 text-sm font-medium"
+                          [attr.for]="'role-' + member.user_id"
                           >เปลี่ยนบทบาท</label
                         >
-                        <select class="min-h-11 w-full min-w-0 rounded-xl border border-input bg-card px-3 text-base text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                        <select
+                          class="min-h-11 w-full min-w-0 rounded-xl border border-input bg-card px-3 text-base text-foreground focus-visible:outline-2 focus-visible:outline-ring"
                           [id]="'role-' + member.user_id"
                           [disabled]="pending()"
                           [value]="roleFor(member)"
@@ -166,7 +274,10 @@ function explain(error: unknown): string {
                           <option value="cashier">แคชเชียร์</option>
                           <option value="kitchen">พนักงานครัว</option>
                         </select>
-                        <button hlmBtn variant="outline" class="min-h-11"
+                        <button
+                          hlmBtn
+                          variant="outline"
+                          class="min-h-11"
                           type="button"
                           [disabled]="
                             pending() || roleFor(member) === member.role
@@ -175,7 +286,9 @@ function explain(error: unknown): string {
                         >
                           บันทึกสิทธิ์
                         </button>
-                        <button hlmBtn variant="destructive"
+                        <button
+                          hlmBtn
+                          variant="destructive"
                           type="button"
                           class="owner-danger min-h-11"
                           [disabled]="pending()"
@@ -185,7 +298,9 @@ function explain(error: unknown): string {
                         </button>
                       </div>
                     } @else {
-                      <p class="owner-muted break-words text-sm leading-6 text-muted-foreground">
+                      <p
+                        class="owner-muted break-words text-sm leading-6 text-muted-foreground"
+                      >
                         ไม่สามารถเปลี่ยนหรือลบเจ้าของร้านผ่านหน้านี้
                       </p>
                     }
@@ -193,7 +308,9 @@ function explain(error: unknown): string {
                 }
               </ul>
             }
-            <p class="owner-muted break-words text-sm leading-6 text-muted-foreground">
+            <p
+              class="owner-muted break-words text-sm leading-6 text-muted-foreground"
+            >
               รายการแสดงรหัส User ID แบบย่อ เนื่องจาก API
               ไม่เปิดเผยอีเมลผู้ใช้งานอื่น
               โปรดตรวจสอบรายชื่อจริงจากระบบสิทธิ์ที่ได้รับอนุมัติ

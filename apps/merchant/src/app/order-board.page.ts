@@ -208,13 +208,13 @@ function failureText(error: unknown): string {
             [attr.aria-pressed]="filter() === 'submitted'"
             (click)="setQueueFilter('submitted')"
           >
-            <span class="whitespace-normal text-xs font-medium text-current sm:text-sm"
+            <span
+              class="whitespace-normal text-xs font-medium text-current sm:text-sm"
               >รอรับออเดอร์</span
             >
-            <strong
-              class="text-2xl font-semibold tabular-nums text-current"
-              >{{ pendingCount() }}</strong
-            >
+            <strong class="text-2xl font-semibold tabular-nums text-current">{{
+              pendingCount()
+            }}</strong>
             <small class="hidden text-xs font-normal text-current sm:block"
               >แตะเพื่อดูรายการใหม่</small
             >
@@ -229,13 +229,13 @@ function failureText(error: unknown): string {
             [attr.aria-pressed]="filter() === 'in_progress'"
             (click)="setQueueFilter('in_progress')"
           >
-            <span class="whitespace-normal text-xs font-medium text-current sm:text-sm"
+            <span
+              class="whitespace-normal text-xs font-medium text-current sm:text-sm"
               >กำลังดำเนินงาน</span
             >
-            <strong
-              class="text-2xl font-semibold tabular-nums text-current"
-              >{{ preparingCount() }}</strong
-            >
+            <strong class="text-2xl font-semibold tabular-nums text-current">{{
+              preparingCount()
+            }}</strong>
             <small class="hidden text-xs font-normal text-current sm:block"
               >รับแล้ว / กำลังเตรียม</small
             >
@@ -250,11 +250,13 @@ function failureText(error: unknown): string {
             [attr.aria-pressed]="filter() === 'served'"
             (click)="setQueueFilter('served')"
           >
-            <span class="whitespace-normal text-xs font-medium text-current sm:text-sm">เสิร์ฟแล้ว</span>
-            <strong
-              class="text-2xl font-semibold tabular-nums text-current"
-              >{{ servedCount() }}</strong
+            <span
+              class="whitespace-normal text-xs font-medium text-current sm:text-sm"
+              >เสิร์ฟแล้ว</span
             >
+            <strong class="text-2xl font-semibold tabular-nums text-current">{{
+              servedCount()
+            }}</strong>
             <small class="hidden text-xs font-normal text-current sm:block"
               >รายการเสร็จสิ้น</small
             >
@@ -352,13 +354,21 @@ function failureText(error: unknown): string {
                   <span
                     hlmBadge
                     class="shrink-0 self-start"
-                    [variant]="order.status === 'cancelled' ? 'destructive' : 'outline'"
+                    [variant]="
+                      order.status === 'cancelled' ? 'destructive' : 'outline'
+                    "
                     [class.bg-incoming]="order.status === 'submitted'"
-                    [class.text-incoming-foreground]="order.status === 'submitted'"
+                    [class.text-incoming-foreground]="
+                      order.status === 'submitted'
+                    "
                     [class.bg-accepted]="order.status === 'accepted'"
-                    [class.text-accepted-foreground]="order.status === 'accepted'"
+                    [class.text-accepted-foreground]="
+                      order.status === 'accepted'
+                    "
                     [class.bg-preparing]="order.status === 'preparing'"
-                    [class.text-preparing-foreground]="order.status === 'preparing'"
+                    [class.text-preparing-foreground]="
+                      order.status === 'preparing'
+                    "
                     [class.bg-served]="order.status === 'served'"
                     [class.text-served-foreground]="order.status === 'served'"
                   >

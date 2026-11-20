@@ -43,51 +43,117 @@ function failure(error: unknown): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, HlmButton, HlmInput],
   template: `
-    <section class="platform-console mx-auto max-w-6xl min-w-0 space-y-4" aria-labelledby="platform-heading">
-      <header class="platform-heading flex flex-wrap items-start justify-between gap-4 rounded-2xl bg-brand-soft p-5">
+    <section
+      class="platform-console mx-auto max-w-6xl min-w-0 space-y-4"
+      aria-labelledby="platform-heading"
+    >
+      <header
+        class="platform-heading flex flex-wrap items-start justify-between gap-4 rounded-2xl bg-brand-soft p-5"
+      >
         <div>
-          <span class="platform-eyebrow text-sm font-semibold text-brand-foreground">การจัดการผู้ใช้งาน</span>
-          <h1 id="platform-heading" class="m-0 max-w-none text-2xl font-semibold leading-tight sm:text-3xl">จัดการผู้ใช้งาน</h1>
+          <span
+            class="platform-eyebrow text-sm font-semibold text-brand-foreground"
+            >การจัดการผู้ใช้งาน</span
+          >
+          <h1
+            id="platform-heading"
+            class="m-0 max-w-none text-2xl font-semibold leading-tight sm:text-3xl"
+          >
+            จัดการผู้ใช้งาน
+          </h1>
           <p class="mt-2 max-w-prose text-sm leading-6 text-muted-foreground">
             เพิ่มบุคลากรด้วยอีเมล @rcat.ac.th
             แล้วกำหนดว่าใครเป็นผู้ดูแลระบบหรือผู้ดูแลร้าน
           </p>
         </div>
-        <a routerLink="/" class="platform-back inline-flex min-h-11 items-center rounded-xl border border-border bg-card px-3 text-sm font-semibold text-foreground no-underline">กลับหน้าหลัก</a>
+        <a
+          routerLink="/"
+          class="platform-back inline-flex min-h-11 items-center rounded-xl border border-border bg-card px-3 text-sm font-semibold text-foreground no-underline"
+          >กลับหน้าหลัก</a
+        >
       </header>
 
-      <div class="platform-status-line flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-        <span class="platform-role-chip rounded-lg bg-secondary px-3 py-2 font-semibold text-secondary-foreground">
+      <div
+        class="platform-status-line flex flex-wrap items-center gap-3 text-sm text-muted-foreground"
+      >
+        <span
+          class="platform-role-chip rounded-lg bg-secondary px-3 py-2 font-semibold text-secondary-foreground"
+        >
           {{ isSuper() ? "Super Admin" : "Admin" }}
         </span>
         <span>การเปลี่ยนแปลงสิทธิ์ทุกครั้งมีการบันทึกประวัติ</span>
       </div>
 
       @if (error()) {
-        <p class="platform-error rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">{{ error() }}</p>
+        <p
+          class="platform-error rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+          role="alert"
+        >
+          {{ error() }}
+        </p>
       }
       @if (notice()) {
-        <p class="platform-success rounded-xl bg-served p-4 text-sm text-served-foreground" role="status">{{ notice() }}</p>
+        <p
+          class="platform-success rounded-xl bg-served p-4 text-sm text-served-foreground"
+          role="status"
+        >
+          {{ notice() }}
+        </p>
       }
       @if (loading()) {
-        <p role="status" class="platform-loading rounded-xl bg-card p-4 text-sm text-muted-foreground">
+        <p
+          role="status"
+          class="platform-loading rounded-xl bg-card p-4 text-sm text-muted-foreground"
+        >
           กำลังโหลดรายการผู้ใช้ที่ได้รับอนุญาต…
         </p>
       }
 
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-label="สรุปบัญชีผู้ใช้งาน">
-        <div class="rounded-xl bg-brand-soft p-4 text-brand-foreground"><span class="block text-sm">บัญชีทั้งหมด</span><strong class="text-2xl font-semibold tabular-nums">{{ accounts().length }}</strong></div>
-        <div class="rounded-xl bg-served p-4 text-served-foreground"><span class="block text-sm">ใช้งานได้</span><strong class="text-2xl font-semibold tabular-nums">{{ activeCount() }}</strong></div>
-        <div class="rounded-xl bg-muted p-4 text-muted-foreground"><span class="block text-sm">ระงับ</span><strong class="text-2xl font-semibold tabular-nums">{{ accounts().length - activeCount() }}</strong></div>
+      <div
+        class="grid grid-cols-2 gap-3 sm:grid-cols-3"
+        aria-label="สรุปบัญชีผู้ใช้งาน"
+      >
+        <div class="rounded-xl bg-brand-soft p-4 text-brand-foreground">
+          <span class="block text-sm">บัญชีทั้งหมด</span
+          ><strong class="text-2xl font-semibold tabular-nums">{{
+            accounts().length
+          }}</strong>
+        </div>
+        <div class="rounded-xl bg-served p-4 text-served-foreground">
+          <span class="block text-sm">ใช้งานได้</span
+          ><strong class="text-2xl font-semibold tabular-nums">{{
+            activeCount()
+          }}</strong>
+        </div>
+        <div class="rounded-xl bg-muted p-4 text-muted-foreground">
+          <span class="block text-sm">ระงับ</span
+          ><strong class="text-2xl font-semibold tabular-nums">{{
+            accounts().length - activeCount()
+          }}</strong>
+        </div>
       </div>
-      <div class="platform-columns grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
-        <details #accountEditor class="platform-panel min-w-0 overflow-hidden rounded-2xl border border-border bg-card">
-          <summary class="min-h-11 cursor-pointer space-y-1 bg-muted px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring">
-            <strong class="block text-base font-semibold">อนุญาตบัญชีบุคลากร</strong>
-            <span class="block text-sm text-muted-foreground">เพิ่ม Admin หรือ Merchant ตามสิทธิ์ผู้ดูแล</span>
+      <div
+        class="platform-columns grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]"
+      >
+        <details
+          #accountEditor
+          class="platform-panel min-w-0 overflow-hidden rounded-2xl border border-border bg-card"
+        >
+          <summary
+            class="min-h-11 cursor-pointer space-y-1 bg-muted px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            <strong class="block text-base font-semibold"
+              >อนุญาตบัญชีบุคลากร</strong
+            >
+            <span class="block text-sm text-muted-foreground"
+              >เพิ่ม Admin หรือ Merchant ตามสิทธิ์ผู้ดูแล</span
+            >
           </summary>
           <div class="platform-panel-body space-y-4 p-4">
-            <form (submit)="save($event)" class="platform-form grid min-w-0 gap-3 text-sm">
+            <form
+              (submit)="save($event)"
+              class="platform-form grid min-w-0 gap-3 text-sm"
+            >
               <label for="platform-email">อีเมล Google Workspace</label>
               <input
                 hlmInput
@@ -115,7 +181,12 @@ function failure(error: unknown): string {
                   <option value="admin">Admin — จัดการบัญชี Merchant</option>
                 }
               </select>
-              <button hlmBtn class="min-h-11 w-full" type="submit" [disabled]="pending()">
+              <button
+                hlmBtn
+                class="min-h-11 w-full"
+                type="submit"
+                [disabled]="pending()"
+              >
                 {{ pending() ? "กำลังบันทึก…" : "เพิ่ม / ปรับสิทธิ์บัญชี" }}
               </button>
             </form>
@@ -126,20 +197,44 @@ function failure(error: unknown): string {
           </div>
         </details>
 
-        <details class="platform-panel min-w-0 overflow-hidden rounded-2xl border border-border bg-card" open>
-          <summary class="min-h-11 cursor-pointer space-y-1 bg-muted px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring">
-            <strong class="block text-base font-semibold">บัญชีที่อนุญาตแล้ว</strong>
-            <span class="block text-sm text-muted-foreground">{{ accounts().length }} บัญชี</span>
+        <details
+          class="platform-panel min-w-0 overflow-hidden rounded-2xl border border-border bg-card"
+          open
+        >
+          <summary
+            class="min-h-11 cursor-pointer space-y-1 bg-muted px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            <strong class="block text-base font-semibold"
+              >บัญชีที่อนุญาตแล้ว</strong
+            >
+            <span class="block text-sm text-muted-foreground"
+              >{{ accounts().length }} บัญชี</span
+            >
           </summary>
-          <div class="platform-panel-body platform-account-list divide-y divide-border p-4">
+          <div
+            class="platform-panel-body platform-account-list divide-y divide-border p-4"
+          >
             <label class="block space-y-2 pb-3 text-sm font-medium">
               <span>ค้นหาบัญชี</span>
-              <input hlmInput class="min-h-11 w-full" type="search" placeholder="ค้นหาอีเมล" [value]="accountQuery()" (input)="setAccountQuery($event)" />
+              <input
+                hlmInput
+                class="min-h-11 w-full"
+                type="search"
+                placeholder="ค้นหาอีเมล"
+                [value]="accountQuery()"
+                (input)="setAccountQuery($event)"
+              />
             </label>
             @for (account of visibleAccounts(); track account.userId) {
-              <article class="platform-account flex min-w-0 flex-wrap items-center justify-between gap-3 py-3">
-                <div class="platform-account-meta min-w-0 flex-1 space-y-1 break-all">
-                  <strong class="block text-base font-semibold">{{ account.email }}</strong>
+              <article
+                class="platform-account flex min-w-0 flex-wrap items-center justify-between gap-3 py-3"
+              >
+                <div
+                  class="platform-account-meta min-w-0 flex-1 space-y-1 break-all"
+                >
+                  <strong class="block text-base font-semibold">{{
+                    account.email
+                  }}</strong>
                   <span class="block text-sm text-muted-foreground"
                     >{{ label(account.role) }} ·
                     {{ account.active ? "ใช้งานได้" : "ระงับ" }}</span
@@ -174,22 +269,36 @@ function failure(error: unknown): string {
                 }
               </article>
             } @empty {
-              <p class="platform-hint text-sm leading-6 text-muted-foreground">ไม่พบบัญชีที่ตรงกับรายการค้นหา</p>
+              <p class="platform-hint text-sm leading-6 text-muted-foreground">
+                ไม่พบบัญชีที่ตรงกับรายการค้นหา
+              </p>
             }
           </div>
         </details>
       </div>
 
-      <details class="platform-panel platform-tenant-panel min-w-0 overflow-hidden rounded-2xl border border-border bg-card" open>
-        <summary class="min-h-11 cursor-pointer space-y-1 bg-muted px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring">
-          <strong class="block text-base font-semibold">มอบหมายผู้ดูแลร้านค้า</strong>
-          <span class="block text-sm text-muted-foreground">เลือกผู้ดูแลร้านและกลุ่มร้านค้าที่ต้องการ</span>
+      <details
+        class="platform-panel platform-tenant-panel min-w-0 overflow-hidden rounded-2xl border border-border bg-card"
+        open
+      >
+        <summary
+          class="min-h-11 cursor-pointer space-y-1 bg-muted px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          <strong class="block text-base font-semibold"
+            >มอบหมายผู้ดูแลร้านค้า</strong
+          >
+          <span class="block text-sm text-muted-foreground"
+            >เลือกผู้ดูแลร้านและกลุ่มร้านค้าที่ต้องการ</span
+          >
         </summary>
         <div class="platform-panel-body space-y-4 p-4">
-          <form (submit)="assign($event)" class="platform-form platform-assign grid min-w-0 gap-3 text-sm">
+          <form
+            (submit)="assign($event)"
+            class="platform-form platform-assign grid min-w-0 gap-3 text-sm"
+          >
             <label for="platform-merchant-email">บัญชี Merchant</label>
             <select
-                class="min-h-11 w-full min-w-0 rounded-xl border border-input bg-card px-3 text-base text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              class="min-h-11 w-full min-w-0 rounded-xl border border-input bg-card px-3 text-base text-foreground focus-visible:outline-2 focus-visible:outline-ring"
               id="platform-merchant-email"
               [value]="merchantEmail()"
               (change)="setMerchantEmail($event)"
@@ -204,7 +313,7 @@ function failure(error: unknown): string {
             </select>
             <label for="platform-tenant">กลุ่มร้านค้า</label>
             <select
-                class="min-h-11 w-full min-w-0 rounded-xl border border-input bg-card px-3 text-base text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              class="min-h-11 w-full min-w-0 rounded-xl border border-input bg-card px-3 text-base text-foreground focus-visible:outline-2 focus-visible:outline-ring"
               id="platform-tenant"
               [value]="selectedTenant()"
               (change)="setTenant($event)"
@@ -217,7 +326,12 @@ function failure(error: unknown): string {
                 </option>
               }
             </select>
-            <button hlmBtn class="min-h-11 w-full" type="submit" [disabled]="pending()">
+            <button
+              hlmBtn
+              class="min-h-11 w-full"
+              type="submit"
+              [disabled]="pending()"
+            >
               มอบหมายผู้ดูแลร้าน
             </button>
           </form>
@@ -231,10 +345,18 @@ function failure(error: unknown): string {
       </details>
 
       @if (isSuper()) {
-        <details class="platform-panel platform-tenant-panel min-w-0 overflow-hidden rounded-2xl border border-border bg-card">
-          <summary class="min-h-11 cursor-pointer space-y-1 bg-muted px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring">
-            <strong class="block text-base font-semibold">เข้าจัดการร้านทุกแห่ง</strong>
-            <span class="block text-sm text-muted-foreground">ระบบบันทึกประวัติการเข้าจัดการร้าน</span>
+        <details
+          class="platform-panel platform-tenant-panel min-w-0 overflow-hidden rounded-2xl border border-border bg-card"
+        >
+          <summary
+            class="min-h-11 cursor-pointer space-y-1 bg-muted px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            <strong class="block text-base font-semibold"
+              >เข้าจัดการร้านทุกแห่ง</strong
+            >
+            <span class="block text-sm text-muted-foreground"
+              >ระบบบันทึกประวัติการเข้าจัดการร้าน</span
+            >
           </summary>
           <div class="platform-panel-body space-y-4 p-4">
             <p class="platform-hint text-sm leading-6 text-muted-foreground">
@@ -242,7 +364,9 @@ function failure(error: unknown): string {
             </p>
             <div class="platform-tenant-list divide-y divide-border">
               @for (tenant of tenants(); track tenant.tenantId) {
-                <div class="platform-tenant-row flex flex-wrap items-center justify-between gap-3 py-3">
+                <div
+                  class="platform-tenant-row flex flex-wrap items-center justify-between gap-3 py-3"
+                >
                   <span>{{ tenant.tenantName }}</span>
                   <button
                     hlmBtn
@@ -274,11 +398,15 @@ export class PlatformAccessPage implements OnInit {
   );
   readonly accounts = signal<PlatformAccount[]>([]);
   readonly tenants = signal<PlatformTenant[]>([]);
-  readonly activeCount = computed(() => this.accounts().filter((account) => account.active).length);
+  readonly activeCount = computed(
+    () => this.accounts().filter((account) => account.active).length,
+  );
   readonly accountQuery = signal("");
   readonly visibleAccounts = computed(() => {
     const query = this.accountQuery().trim().toLowerCase();
-    return this.accounts().filter((account) => account.email.toLowerCase().includes(query));
+    return this.accounts().filter((account) =>
+      account.email.toLowerCase().includes(query),
+    );
   });
   readonly loading = signal(true);
   readonly pending = signal(false);

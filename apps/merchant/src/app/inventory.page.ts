@@ -46,13 +46,26 @@ function inventoryError(error: unknown): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, HlmBadge, HlmButton, HlmCard, HlmInput, HlmLabel],
   template: `
-    <section class="inventory-shell mx-auto w-full max-w-6xl min-w-0 space-y-4 pb-8" aria-labelledby="inventory-heading">
+    <section
+      class="inventory-shell mx-auto w-full max-w-6xl min-w-0 space-y-4 pb-8"
+      aria-labelledby="inventory-heading"
+    >
       <a hlmBtn variant="link" class="min-h-11 px-0" routerLink="/">
         ← กลับไปหน้าร้านค้า
       </a>
-      <span class="eyebrow block text-xs font-semibold tracking-wide text-brand-foreground">INVENTORY / EXPLICIT ORDER TRACKING</span>
-      <h1 class="m-0 max-w-none text-2xl font-semibold leading-tight sm:text-3xl" id="inventory-heading">สต็อกวัตถุดิบของร้าน</h1>
-      <p class="inventory-muted break-words text-sm leading-6 text-muted-foreground">
+      <span
+        class="eyebrow block text-xs font-semibold tracking-wide text-brand-foreground"
+        >INVENTORY / EXPLICIT ORDER TRACKING</span
+      >
+      <h1
+        class="m-0 max-w-none text-2xl font-semibold leading-tight sm:text-3xl"
+        id="inventory-heading"
+      >
+        สต็อกวัตถุดิบของร้าน
+      </h1>
+      <p
+        class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
+      >
         {{ store()?.storeName || "กำลังตรวจสอบสิทธิ์..." }}
         · ปริมาณใช้หน่วย g / ml / ชิ้น และจำนวนเต็มทศนิยมไม่เกิน 3 ตำแหน่ง
       </p>
@@ -76,17 +89,34 @@ function inventoryError(error: unknown): string {
       </p>
 
       @if (error()) {
-        <div class="inventory-error rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive" role="alert">{{ error() }}</div>
+        <div
+          class="inventory-error rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive"
+          role="alert"
+        >
+          {{ error() }}
+        </div>
       }
       @if (notice()) {
-        <p class="inventory-notice rounded-xl bg-served p-4 text-sm text-served-foreground" role="status">{{ notice() }}</p>
+        <p
+          class="inventory-notice rounded-xl bg-served p-4 text-sm text-served-foreground"
+          role="status"
+        >
+          {{ notice() }}
+        </p>
       }
       @if (loading()) {
-        <p class="inventory-muted break-words text-sm leading-6 text-muted-foreground" role="status">กำลังโหลดสต็อกจาก Server...</p>
+        <p
+          class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
+          role="status"
+        >
+          กำลังโหลดสต็อกจาก Server...
+        </p>
       }
       @if (store(); as currentStore) {
         @if (snapshot(); as data) {
-          <div class="inventory-toolbar flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+          <div
+            class="inventory-toolbar flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground"
+          >
             <span
               >วัตถุดิบ {{ data.items.length }} รายการ · บันทึกล่าสุดสูงสุด 50
               รายการ</span
@@ -108,26 +138,54 @@ function inventoryError(error: unknown): string {
             class="inventory-panel min-w-0 gap-4 p-4 sm:p-5 rounded-2xl border-border bg-card"
             aria-labelledby="stock-list-heading"
           >
-            <h2 class="m-0 text-lg font-semibold leading-snug" id="stock-list-heading">ยอดคงเหลือจาก Ledger</h2>
+            <h2
+              class="m-0 text-lg font-semibold leading-snug"
+              id="stock-list-heading"
+            >
+              ยอดคงเหลือจาก Ledger
+            </h2>
             @if (data.items.length === 0) {
-              <p class="inventory-muted break-words text-sm leading-6 text-muted-foreground">ยังไม่มีวัตถุดิบในร้าน</p>
+              <p
+                class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
+              >
+                ยังไม่มีวัตถุดิบในร้าน
+              </p>
             } @else {
               <div class="inventory-table-wrap w-full min-w-0 overflow-x-auto">
-                <table class="w-full min-w-[560px] border-collapse text-left text-sm">
+                <table
+                  class="w-full min-w-[560px] border-collapse text-left text-sm"
+                >
                   <thead>
                     <tr>
-                      <th scope="col" class="bg-muted p-3 font-semibold">วัตถุดิบ</th>
-                      <th scope="col" class="bg-muted p-3 font-semibold">คงเหลือ</th>
-                      <th scope="col" class="bg-muted p-3 font-semibold">เกณฑ์แจ้งเตือน</th>
-                      <th scope="col" class="bg-muted p-3 font-semibold">สถานะ</th>
+                      <th scope="col" class="bg-muted p-3 font-semibold">
+                        วัตถุดิบ
+                      </th>
+                      <th scope="col" class="bg-muted p-3 font-semibold">
+                        คงเหลือ
+                      </th>
+                      <th scope="col" class="bg-muted p-3 font-semibold">
+                        เกณฑ์แจ้งเตือน
+                      </th>
+                      <th scope="col" class="bg-muted p-3 font-semibold">
+                        สถานะ
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     @for (item of data.items; track item.itemId) {
                       <tr>
-                        <th scope="row" class="border-b border-border p-3 font-medium">{{ item.name }}</th>
-                        <td class="border-b border-border p-3 tabular-nums">{{ units(item.onHand) }} {{ item.unit }}</td>
-                        <td class="border-b border-border p-3 tabular-nums">{{ units(item.reorderAt) }} {{ item.unit }}</td>
+                        <th
+                          scope="row"
+                          class="border-b border-border p-3 font-medium"
+                        >
+                          {{ item.name }}
+                        </th>
+                        <td class="border-b border-border p-3 tabular-nums">
+                          {{ units(item.onHand) }} {{ item.unit }}
+                        </td>
+                        <td class="border-b border-border p-3 tabular-nums">
+                          {{ units(item.reorderAt) }} {{ item.unit }}
+                        </td>
                         <td class="border-b border-border p-3 tabular-nums">
                           @if (isLow(item)) {
                             <span hlmBadge variant="destructive"
@@ -150,12 +208,19 @@ function inventoryError(error: unknown): string {
           @if (
             currentStore.role === "owner" || currentStore.role === "manager"
           ) {
-            <div class="inventory-grid grid min-w-0 items-start gap-4 xl:grid-cols-2">
+            <div
+              class="inventory-grid grid min-w-0 items-start gap-4 xl:grid-cols-2"
+            >
               <section
                 class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
                 aria-labelledby="add-ingredient-heading"
               >
-                <h2 class="m-0 text-lg font-semibold leading-snug" id="add-ingredient-heading">เพิ่มวัตถุดิบ</h2>
+                <h2
+                  class="m-0 text-lg font-semibold leading-snug"
+                  id="add-ingredient-heading"
+                >
+                  เพิ่มวัตถุดิบ
+                </h2>
                 <form
                   class="grid min-w-0 gap-4"
                   (submit)="createIngredient($event)"
@@ -212,8 +277,15 @@ function inventoryError(error: unknown): string {
                 class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
                 aria-labelledby="movement-heading"
               >
-                <h2 class="m-0 text-lg font-semibold leading-snug" id="movement-heading">บันทึกการเคลื่อนไหว</h2>
-                <p class="inventory-muted break-words text-sm leading-6 text-muted-foreground">
+                <h2
+                  class="m-0 text-lg font-semibold leading-snug"
+                  id="movement-heading"
+                >
+                  บันทึกการเคลื่อนไหว
+                </h2>
+                <p
+                  class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
+                >
                   รับของเข้าต้องใช้จำนวนบวก หากปรับลด ให้เลือกปรับยอดและใส่ -
                   นำหน้า ระบบจะปฏิเสธรายการที่ทำให้ยอดติดลบ
                 </p>
@@ -279,7 +351,9 @@ function inventoryError(error: unknown): string {
                   >
                     {{ busy() ? "กำลังตรวจสอบ..." : "ยืนยันบันทึกสต็อก" }}
                   </button>
-                  <p class="inventory-muted break-words text-sm leading-6 text-muted-foreground">
+                  <p
+                    class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
+                  >
                     หากเครือข่ายขัดข้อง กดลองอีกครั้งโดยไม่เปลี่ยนข้อมูล
                     เพื่อส่งรหัส Idempotency เดิม
                   </p>
@@ -287,9 +361,19 @@ function inventoryError(error: unknown): string {
               </section>
             </div>
 
-            <section class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5" aria-labelledby="recipe-heading">
-              <h2 class="m-0 text-lg font-semibold leading-snug" id="recipe-heading">สูตรการใช้วัตถุดิบต่อสินค้า 1 รายการ</h2>
-              <p class="inventory-muted break-words text-sm leading-6 text-muted-foreground">
+            <section
+              class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
+              aria-labelledby="recipe-heading"
+            >
+              <h2
+                class="m-0 text-lg font-semibold leading-snug"
+                id="recipe-heading"
+              >
+                สูตรการใช้วัตถุดิบต่อสินค้า 1 รายการ
+              </h2>
+              <p
+                class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
+              >
                 สูตรนี้เป็นข้อมูลวางแผนจนกว่าจะเปิดติดตามสต็อกรายสินค้า
                 หลังเปิดแล้วจะตัดวัตถุดิบเมื่อร้านรับออเดอร์ ใส่ 0
                 เพื่อลบส่วนประกอบ
@@ -359,31 +443,47 @@ function inventoryError(error: unknown): string {
               class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
               aria-labelledby="tracked-products-heading"
             >
-              <h2 class="m-0 text-lg font-semibold leading-snug" id="tracked-products-heading">
+              <h2
+                class="m-0 text-lg font-semibold leading-snug"
+                id="tracked-products-heading"
+              >
                 เปิดตัดสต็อกตามออเดอร์เป็นรายสินค้า
               </h2>
-              <p class="inventory-muted break-words text-sm leading-6 text-muted-foreground">
+              <p
+                class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
+              >
                 เปิดได้หลังบันทึกสูตรวัตถุดิบหลักเท่านั้น
                 ตัวเลือกเสริมที่ไม่มีสูตรจะใช้วัตถุดิบเพิ่ม 0
                 ตรวจสอบสูตรตัวเลือกเสริมทุกตัวก่อนเปิดติดตาม
                 การเปิดนี้ไม่ตัดสต็อกจากออเดอร์เก่า
               </p>
               @if ((catalog()?.products?.length || 0) === 0) {
-                <p class="inventory-muted break-words text-sm leading-6 text-muted-foreground">ยังไม่มีสินค้าในเมนู</p>
+                <p
+                  class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
+                >
+                  ยังไม่มีสินค้าในเมนู
+                </p>
               } @else {
-                <ul class="inventory-tracking-list m-0 list-none divide-y divide-border p-0">
+                <ul
+                  class="inventory-tracking-list m-0 list-none divide-y divide-border p-0"
+                >
                   @for (
                     product of catalog()?.products || [];
                     track product.id
                   ) {
-                    <li class="flex min-w-0 flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <li
+                      class="flex min-w-0 flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
                       <span>
                         <strong>{{ product.name }}</strong>
-                        <small class="block break-words text-sm leading-6 text-muted-foreground">{{
-                          isTracked(product.id)
-                            ? "เปิดตัดสต็อกเมื่อรับออเดอร์"
-                            : "ยังไม่เปิดติดตาม"
-                        }}</small>
+                        <small
+                          class="block break-words text-sm leading-6 text-muted-foreground"
+                          >{{
+                            isTracked(product.id)
+                              ? "เปิดตัดสต็อกเมื่อรับออเดอร์"
+                              : "ยังไม่เปิดติดตาม"
+                          }}</small
+                        >
                       </span>
                       <button
                         hlmBtn
@@ -407,10 +507,15 @@ function inventoryError(error: unknown): string {
               class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
               aria-labelledby="modifier-recipe-heading"
             >
-              <h2 class="m-0 text-lg font-semibold leading-snug" id="modifier-recipe-heading">
+              <h2
+                class="m-0 text-lg font-semibold leading-snug"
+                id="modifier-recipe-heading"
+              >
                 สูตรวัตถุดิบของตัวเลือกเสริม (Modifier)
               </h2>
-              <p class="inventory-muted break-words text-sm leading-6 text-muted-foreground">
+              <p
+                class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
+              >
                 เพิ่มปริมาณวัตถุดิบเฉพาะเมื่อเลือกรายการเสริมนี้
                 สูตรจะถูกรวมกับสูตรหลักตามจำนวนสินค้าที่สั่ง ใส่ 0
                 เพื่อลบส่วนประกอบ
@@ -480,12 +585,16 @@ function inventoryError(error: unknown): string {
                 </button>
               </form>
               @if (data.modifierRecipes.length > 0) {
-                <ul class="inventory-detail-list m-0 list-none divide-y divide-border p-0">
+                <ul
+                  class="inventory-detail-list m-0 list-none divide-y divide-border p-0"
+                >
                   @for (
                     recipe of data.modifierRecipes;
                     track recipe.optionId + recipe.itemId
                   ) {
-                    <li class="flex min-w-0 flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <li
+                      class="flex min-w-0 flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
                       <strong>{{ modifierName(recipe.optionId) }}</strong>
                       <span
                         >{{ ingredientName(recipe.itemId) }}
@@ -499,21 +608,36 @@ function inventoryError(error: unknown): string {
             </section>
           }
 
-          <div class="inventory-grid grid min-w-0 items-start gap-4 xl:grid-cols-2">
+          <div
+            class="inventory-grid grid min-w-0 items-start gap-4 xl:grid-cols-2"
+          >
             <section
               class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
               aria-labelledby="recipe-list-heading"
             >
-              <h2 class="m-0 text-lg font-semibold leading-snug" id="recipe-list-heading">สูตรที่บันทึกแล้ว</h2>
+              <h2
+                class="m-0 text-lg font-semibold leading-snug"
+                id="recipe-list-heading"
+              >
+                สูตรที่บันทึกแล้ว
+              </h2>
               @if (data.recipes.length === 0) {
-                <p class="inventory-muted break-words text-sm leading-6 text-muted-foreground">ยังไม่มีข้อมูลสูตรวัตถุดิบ</p>
+                <p
+                  class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
+                >
+                  ยังไม่มีข้อมูลสูตรวัตถุดิบ
+                </p>
               } @else {
-                <ul class="inventory-detail-list m-0 list-none divide-y divide-border p-0">
+                <ul
+                  class="inventory-detail-list m-0 list-none divide-y divide-border p-0"
+                >
                   @for (
                     recipe of data.recipes;
                     track recipe.productId + recipe.itemId
                   ) {
-                    <li class="flex min-w-0 flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <li
+                      class="flex min-w-0 flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
                       <strong>{{ recipe.productName }}</strong>
                       <span>
                         {{ ingredientName(recipe.itemId) }}
@@ -529,16 +653,29 @@ function inventoryError(error: unknown): string {
               class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
               aria-labelledby="movement-list-heading"
             >
-              <h2 class="m-0 text-lg font-semibold leading-snug" id="movement-list-heading">ประวัติการเคลื่อนไหวล่าสุด</h2>
+              <h2
+                class="m-0 text-lg font-semibold leading-snug"
+                id="movement-list-heading"
+              >
+                ประวัติการเคลื่อนไหวล่าสุด
+              </h2>
               @if (data.recentMovements.length === 0) {
-                <p class="inventory-muted break-words text-sm leading-6 text-muted-foreground">ยังไม่มีการบันทึกการเคลื่อนไหว</p>
+                <p
+                  class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
+                >
+                  ยังไม่มีการบันทึกการเคลื่อนไหว
+                </p>
               } @else {
-                <ul class="inventory-detail-list m-0 list-none divide-y divide-border p-0">
+                <ul
+                  class="inventory-detail-list m-0 list-none divide-y divide-border p-0"
+                >
                   @for (
                     movement of data.recentMovements;
                     track movement.movementId
                   ) {
-                    <li class="flex min-w-0 flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <li
+                      class="flex min-w-0 flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
                       <strong>{{ ingredientName(movement.itemId) }}</strong>
                       <span
                         >{{ movementLabel(movement.kind) }}
@@ -546,7 +683,10 @@ function inventoryError(error: unknown): string {
                         {{ ingredientUnit(movement.itemId) }}
                         · คงเหลือ {{ units(movement.quantityAfter) }}
                       </span>
-                      <small class="block break-words text-sm leading-6 text-muted-foreground">{{ movement.reason }}</small>
+                      <small
+                        class="block break-words text-sm leading-6 text-muted-foreground"
+                        >{{ movement.reason }}</small
+                      >
                     </li>
                   }
                 </ul>

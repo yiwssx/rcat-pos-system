@@ -38,25 +38,43 @@ const TRACK_INTERVAL_MS = 15_000;
         class="guest-track-link inline-flex min-h-11 items-center rounded-xl bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
         >← กลับไปหน้าเมนู</a
       >
-      <span class="eyebrow block text-xs font-semibold tracking-wide text-brand-foreground">ORDER TRACKING</span>
-      <h1 class="m-0 max-w-none text-2xl font-semibold leading-tight sm:text-3xl" id="tracking-title">ติดตามคำสั่งซื้อ</h1>
-      <p class="guest-context break-words text-sm leading-6 text-muted-foreground">
+      <span
+        class="eyebrow block text-xs font-semibold tracking-wide text-brand-foreground"
+        >ORDER TRACKING</span
+      >
+      <h1
+        class="m-0 max-w-none text-2xl font-semibold leading-tight sm:text-3xl"
+        id="tracking-title"
+      >
+        ติดตามคำสั่งซื้อ
+      </h1>
+      <p
+        class="guest-context break-words text-sm leading-6 text-muted-foreground"
+      >
         ติดตามความคืบหน้าของอาหารและตรวจสอบการชำระเงินได้ที่นี่
       </p>
       @if (!online()) {
-        <p class="guest-warning rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground" role="status">
+        <p
+          class="guest-warning rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground"
+          role="status"
+        >
           ออฟไลน์ · สถานะออเดอร์ล่าสุดอาจเปลี่ยนแล้ว
           ระบบจะตรวจสอบใหม่เมื่อเชื่อมต่ออินเทอร์เน็ต
         </p>
       }
 
       @if (!session.tracking()) {
-        <div class="guest-status rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground" role="status">
+        <div
+          class="guest-status rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground"
+          role="status"
+        >
           ไม่พบคำสั่งซื้อที่ติดตามได้ในแท็บนี้ โปรดเปิดหน้าเมนูจาก QR
           และส่งคำสั่งซื้อก่อน
         </div>
       } @else {
-        <div class="guest-track-card min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-6">
+        <div
+          class="guest-track-card min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-6"
+        >
           <p class="guest-track-id m-0 text-lg font-semibold tabular-nums">
             หมายเลขออเดอร์ {{ number(status()?.displayNumber) }}
           </p>
@@ -65,19 +83,31 @@ const TRACK_INTERVAL_MS = 15_000;
               class="guest-order-state inline-flex rounded-lg px-3 py-2 text-sm font-semibold"
               [class.is-finished]="status()!.status === 'served'"
               [class.bg-incoming]="status()!.status === 'submitted'"
-              [class.text-incoming-foreground]="status()!.status === 'submitted'"
+              [class.text-incoming-foreground]="
+                status()!.status === 'submitted'
+              "
               [class.bg-accepted]="status()!.status === 'accepted'"
               [class.text-accepted-foreground]="status()!.status === 'accepted'"
               [class.bg-preparing]="status()!.status === 'preparing'"
-              [class.text-preparing-foreground]="status()!.status === 'preparing'"
+              [class.text-preparing-foreground]="
+                status()!.status === 'preparing'
+              "
               [class.bg-served]="status()!.status === 'served'"
               [class.text-served-foreground]="status()!.status === 'served'"
               [class.text-destructive]="status()!.status === 'cancelled'"
             >
               {{ statusLabel[status()!.status] }}
             </span>
-            <h2 class="guest-amount m-0 text-2xl font-semibold tabular-nums text-primary">{{ money(status()!.amountSatang) }} ฿</h2>
-            <p class="guest-context break-words text-sm leading-6 text-muted-foreground">ยอดรวมของออเดอร์</p>
+            <h2
+              class="guest-amount m-0 text-2xl font-semibold tabular-nums text-primary"
+            >
+              {{ money(status()!.amountSatang) }} ฿
+            </h2>
+            <p
+              class="guest-context break-words text-sm leading-6 text-muted-foreground"
+            >
+              ยอดรวมของออเดอร์
+            </p>
             <p class="guest-track-time text-sm text-muted-foreground">
               อัปเดตล่าสุด {{ formatDate(status()!.updatedAt) }}
             </p>
@@ -85,24 +115,44 @@ const TRACK_INTERVAL_MS = 15_000;
             <p role="status">กำลังโหลดสถานะออเดอร์...</p>
           }
           @if (error()) {
-            <div class="guest-error rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive" role="alert">{{ error() }}</div>
+            <div
+              class="guest-error rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive"
+              role="alert"
+            >
+              {{ error() }}
+            </div>
           }
           @if (status()?.status === "cancelled") {
-            <p class="guest-payment-alert space-y-2 rounded-xl bg-muted p-3 text-sm leading-6 text-foreground" role="note">
+            <p
+              class="guest-payment-alert space-y-2 rounded-xl bg-muted p-3 text-sm leading-6 text-foreground"
+              role="note"
+            >
               ออเดอร์ถูกยกเลิกแล้ว · ไม่สามารถสร้าง QR ชำระเงินใหม่ได้
             </p>
           } @else if (status()?.paymentState === "manual_confirmed") {
-            <p class="guest-payment-alert space-y-2 rounded-xl bg-muted p-3 text-sm leading-6 text-foreground" role="status">
+            <p
+              class="guest-payment-alert space-y-2 rounded-xl bg-muted p-3 text-sm leading-6 text-foreground"
+              role="status"
+            >
               ร้านยืนยันว่าได้รับเงินแล้ว โดยพนักงานตรวจสอบรายการเงินเข้าจริง
             </p>
           } @else if (status()?.paymentState === "slip_submitted") {
-            <p class="guest-payment-alert space-y-2 rounded-xl bg-muted p-3 text-sm leading-6 text-foreground" role="status">
+            <p
+              class="guest-payment-alert space-y-2 rounded-xl bg-muted p-3 text-sm leading-6 text-foreground"
+              role="status"
+            >
               ส่งสลิปแล้ว · รอร้านตรวจสอบยอดเงินเข้าจริง
             </p>
           } @else if (payment()) {
-            <div class="guest-payment-card min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4">
-              <h2 class="m-0 text-lg font-semibold leading-snug">ชำระเงินด้วยพร้อมเพย์</h2>
-              <p class="guest-context break-words text-sm leading-6 text-muted-foreground">
+            <div
+              class="guest-payment-card min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4"
+            >
+              <h2 class="m-0 text-lg font-semibold leading-snug">
+                ชำระเงินด้วยพร้อมเพย์
+              </h2>
+              <p
+                class="guest-context break-words text-sm leading-6 text-muted-foreground"
+              >
                 ยอดชำระ {{ money(payment()!.amountSatang) }} ฿ ·
                 จ่ายตอนนี้หรือภายหลังได้
               </p>
@@ -113,15 +163,25 @@ const TRACK_INTERVAL_MS = 15_000;
                 width="240"
                 height="240"
               />
-              <p class="guest-context break-words text-sm leading-6 text-muted-foreground">
+              <p
+                class="guest-context break-words text-sm leading-6 text-muted-foreground"
+              >
                 ใช้แอปธนาคารสแกน หรือบันทึกรูป QR
                 เพื่อนำเข้าแอปธนาคารบนโทรศัพท์เครื่องเดียวกัน
               </p>
               <div class="guest-track-actions flex flex-wrap gap-2">
-                <button hlmBtn variant="default" class="min-h-11" type="button" (click)="savePaymentQr()">
+                <button
+                  hlmBtn
+                  variant="default"
+                  class="min-h-11"
+                  type="button"
+                  (click)="savePaymentQr()"
+                >
                   บันทึกรูป QR เพื่อชำระเงิน
                 </button>
-                <button hlmBtn variant="outline"
+                <button
+                  hlmBtn
+                  variant="outline"
                   type="button"
                   class="guest-subtle min-h-11"
                   [disabled]="paymentLoading() || !online()"
@@ -130,7 +190,10 @@ const TRACK_INTERVAL_MS = 15_000;
                   ตรวจสอบ QR อีกครั้ง
                 </button>
               </div>
-              <p class="guest-payment-alert space-y-2 rounded-xl bg-muted p-3 text-sm leading-6 text-foreground" role="note">
+              <p
+                class="guest-payment-alert space-y-2 rounded-xl bg-muted p-3 text-sm leading-6 text-foreground"
+                role="note"
+              >
                 หลังโอนเงิน โปรดแนบสลิปและรอร้านตรวจสอบยอดเงินเข้าจริง
                 การแนบสลิปไม่ใช่การยืนยันว่าร้านได้รับเงินแล้ว
               </p>
@@ -144,7 +207,9 @@ const TRACK_INTERVAL_MS = 15_000;
                 [disabled]="slipLoading() || !online()"
                 (change)="onSlipSelected($event)"
               />
-              <p class="guest-context break-words text-sm leading-6 text-muted-foreground">
+              <p
+                class="guest-context break-words text-sm leading-6 text-muted-foreground"
+              >
                 รองรับรูป PNG, JPG, WebP · ระบบแปลงและลดขนาดก่อนส่ง
               </p>
               @if (slipLoading()) {
@@ -154,18 +219,31 @@ const TRACK_INTERVAL_MS = 15_000;
                 <p role="status">{{ slipMessage() }}</p>
               }
               @if (slipError()) {
-                <p class="guest-warning rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground" role="alert">{{ slipError() }}</p>
+                <p
+                  class="guest-warning rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground"
+                  role="alert"
+                >
+                  {{ slipError() }}
+                </p>
               }
             </div>
           } @else if (paymentLoading()) {
-            <p class="guest-status rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground" role="status">
+            <p
+              class="guest-status rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground"
+              role="status"
+            >
               กำลังตรวจสอบช่องทางชำระเงิน...
             </p>
           } @else if (paymentChecked()) {
-            <div class="guest-payment-alert space-y-2 rounded-xl bg-muted p-3 text-sm leading-6 text-foreground" role="note">
+            <div
+              class="guest-payment-alert space-y-2 rounded-xl bg-muted p-3 text-sm leading-6 text-foreground"
+              role="note"
+            >
               ร้านยังไม่เปิดรับชำระเงินผ่านระบบนี้
               กรุณาสอบถามวิธีชำระเงินจากร้าน
-              <button hlmBtn variant="outline"
+              <button
+                hlmBtn
+                variant="outline"
                 type="button"
                 class="guest-subtle min-h-11"
                 [disabled]="!online()"
@@ -176,28 +254,48 @@ const TRACK_INTERVAL_MS = 15_000;
             </div>
           }
           @if (paymentError()) {
-            <p class="guest-warning rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground" role="status">{{ paymentError() }}</p>
+            <p
+              class="guest-warning rounded-xl bg-preparing p-3 text-sm leading-6 text-preparing-foreground"
+              role="status"
+            >
+              {{ paymentError() }}
+            </p>
           }
           @if (history()?.events?.length) {
             <h2 class="m-0 text-lg font-semibold leading-snug">ประวัติสถานะ</h2>
-            <ol class="guest-timeline m-0 list-none space-y-3 border-l-2 border-border pl-4">
+            <ol
+              class="guest-timeline m-0 list-none space-y-3 border-l-2 border-border pl-4"
+            >
               @for (event of history()!.events; track $index) {
-                <li class="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-muted p-3 text-sm">
+                <li
+                  class="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-muted p-3 text-sm"
+                >
                   <strong>{{ statusLabel[event.status] }}</strong>
-                  <time class="text-muted-foreground">{{ formatDate(event.occurredAt) }}</time>
+                  <time class="text-muted-foreground">{{
+                    formatDate(event.occurredAt)
+                  }}</time>
                 </li>
               }
             </ol>
           }
           <div class="guest-track-actions flex flex-wrap gap-2">
-            <button hlmBtn variant="default" class="min-h-11"
+            <button
+              hlmBtn
+              variant="default"
+              class="min-h-11"
               type="button"
               [disabled]="loading() || !online()"
               (click)="refresh()"
             >
               {{ loading() ? "กำลังโหลด..." : "ตรวจสถานะล่าสุด" }}
             </button>
-            <button hlmBtn variant="outline" type="button" class="guest-subtle min-h-11" (click)="clear()">
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              class="guest-subtle min-h-11"
+              (click)="clear()"
+            >
               ล้างข้อมูลติดตามจากแท็บนี้
             </button>
           </div>

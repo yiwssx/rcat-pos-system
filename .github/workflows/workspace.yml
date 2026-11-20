@@ -49,34 +49,6 @@ jobs:
       - name: Install from committed lockfile
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm install --frozen-lockfile
-      - name: Export V7 formatter patch (temporary read-only engineering handoff)
-        if: github.event_name == 'pull_request' && github.event.pull_request.number == 162 && steps.impact.outputs.workspace == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          paths=(
-            apps/admin/src/app/home.page.ts
-            apps/admin/src/app/staff.page.ts
-            apps/customer/src/app/app.component.ts
-            apps/customer/src/app/guest-order.page.ts
-            apps/customer/src/app/guest-track.page.ts
-            apps/customer/src/app/platform-access.page.ts
-            apps/customer/src/app/portal-home.page.ts
-            apps/customer/src/app/portal-workspace-nav.component.ts
-            apps/merchant/src/app/inventory.page.ts
-            apps/merchant/src/app/order-board.page.ts
-          )
-          pnpm exec prettier --version
-          pnpm exec prettier --write "${paths[@]}"
-          pnpm exec prettier --check "${paths[@]}"
-          git diff --no-ext-diff --no-color --unified=0 -- "${paths[@]}" > /tmp/rcat-v7-format.patch
-          test -s /tmp/rcat-v7-format.patch
-          echo RCAT_V7_FORMAT_PATCH_BEGIN
-          base64 -w 900 /tmp/rcat-v7-format.patch
-          echo
-          echo RCAT_V7_FORMAT_PATCH_END
-          git restore --worktree -- "${paths[@]}"
-          git diff --exit-code -- "${paths[@]}"
       - name: Verify the installed deepmerge prototype guard
         if: steps.impact.outputs.workspace == 'true'
         run: node scripts/ci/verify-deepmerge-security.cjs
