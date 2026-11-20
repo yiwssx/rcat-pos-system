@@ -153,6 +153,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/operational-bills.sql
       - name: Verify dormant service-mode CAS, tenant rights and audit
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/service-modes.sql
+      - name: Verify independent Store QR scans, per-customer capabilities and revocation
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/store-qr-guest-sessions.sql
       - name: Verify merchant/guest Order history, audit ordering and privacy
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-status-history.sql
       - name: Verify durable Order outbox, rollback, replay, and tenant-scoped acknowledgements
@@ -199,7 +201,11 @@ jobs:
         run: node scripts/smoke-auth.mjs
       - name: Verify new tenant and invitation audit events
         run: |
-          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action NOT IN ('catalog.product.updated','catalog.product.archived')" | grep -qx '29'
+          # B2 HTTP smoke adds 2 audited service-mode changes, 2 QR rotations
+          # and 2 authenticated store intake changes. Preserve exact audit totals.
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action NOT IN ('catalog.product.updated','catalog.product.archived')" | grep -qx '35'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action='store.service_mode.changed'" | grep -qx '2'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action='store.qr.rotated'" | grep -qx '2'
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action IN ('catalog.product.updated','catalog.product.archived')" | grep -qx '2'
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(DISTINCT action) FROM rcat.audit_events WHERE action IN ('tenant.created','staff.invited','staff.invitation.accepted','staff.role.changed','staff.removed')" | grep -qx '5'
       - name: Provision isolated RCAT Workspace staff after legacy audit-count tests
