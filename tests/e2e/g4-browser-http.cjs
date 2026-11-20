@@ -1221,7 +1221,7 @@ async function serviceModeUi(fixture) {
     await guest.locator(".guest-product", { hasText: fixture.name }).waitFor();
     await other.locator(".guest-product", { hasText: fixture.name }).waitFor();
     assert.equal(new URL(guest.url()).hash, "");
-    const addItem = async (page, add = false) => {
+    const addItem = async (page, add = false, action = "created") => {
       await page.locator(".guest-product", { hasText: fixture.name })
         .getByRole("button", { name: "เพิ่มลงตะกร้า" }).click();
       await page.getByRole("dialog", { name: fixture.name })
@@ -1235,8 +1235,27 @@ async function serviceModeUi(fixture) {
         /\/api\/guest\/ordering-store\/orders(?:\/[^/]+\/add-items)?$/.test(new URL(res.url()).pathname));
       await cart.getByRole("button", { name: add ? "ยืนยันสั่งเพิ่ม" : "ยืนยันส่งคำสั่งซื้อ", exact: true }).click();
       const result = await response;
-      assert.equal(result.status(), 201, await result.text());
-      return result.json();
+      assert.equal(result.status(), 201, "Counter checkout HTTP response");
+      // UI acceptance should verify the rendered result, not depend on the
+      // DevTools response-body cache (which Chromium can evict after reload).
+      // HTTP contract assertions remain in quickOrderHttp above.
+      const notices = {
+        created: "ส่งออเดอร์สำเร็จ ",
+        appended: "เพิ่มรายการสำเร็จ ",
+        new_after_cutoff: "ร้านเริ่มเตรียมแล้ว สร้างออเดอร์ใหม่ ",
+      };
+      await page.getByText(notices[action], { exact: false }).waitFor();
+      const capability = await page.evaluate(() =>
+        JSON.parse(sessionStorage.getItem("rcat-pos:guest-order-tracking:v1") || "{}"));
+      assert.match(capability.orderId, /^[0-9a-f-]{36}$/i);
+      assert.match(capability.trackingToken, /^[A-Za-z0-9_-]{43}$/);
+      const status = await fetch(customer + "/api/guest/orders/" + capability.orderId + "/status", {
+        headers: { Authorization: "Bearer " + capability.trackingToken },
+      });
+      assert.equal(status.status, 200, "Current tab can track its submitted Order");
+      const order = await status.json();
+      assert.equal(order.orderId, capability.orderId);
+      return { ...order, action };
     };
     const first = await addItem(guest);
     assert.equal(first.action, "created");
@@ -1254,7 +1273,7 @@ async function serviceModeUi(fixture) {
     await guest.getByRole("button", { name: "อัปเดตสถานะ" }).click();
     await guest.getByText(label + " · ร้านรับออเดอร์แล้ว", { exact: true }).waitFor();
     await guest.getByRole("button", { name: "เพิ่มรายการในออเดอร์นี้" }).click();
-    const appended = await addItem(guest, true);
+    const appended = await addItem(guest, true, "appended");
     assert.equal(appended.action, "appended");
     assert.equal(appended.orderId, first.orderId);
     await card.getByText("250.00 ฿", { exact: true }).waitFor({ timeout: 20000 });
@@ -1263,7 +1282,7 @@ async function serviceModeUi(fixture) {
     await guest.getByRole("button", { name: "อัปเดตสถานะ" }).click();
     await guest.getByText(label + " · กำลังเตรียม", { exact: true }).waitFor();
     await guest.getByRole("button", { name: "สั่งเพิ่มเป็นออเดอร์ใหม่" }).click();
-    const next = await addItem(guest, true);
+    const next = await addItem(guest, true, "new_after_cutoff");
     assert.equal(next.action, "new_after_cutoff");
     assert.notEqual(next.orderId, first.orderId);
     // Explicit counter tracking uses the existing non-money payment page.
@@ -1295,8 +1314,16 @@ async function serviceModeUi(fixture) {
       res.request().method() === "POST" && new URL(res.url()).pathname === "/api/guest/orders");
     await tableCart.getByRole("button", { name: /ยืนยันส่งคำสั่งซื้อ/ }).click();
     const tableResult = await tableResponse;
-    assert.equal(tableResult.status(), 201, await tableResult.text());
-    const tableOrder = await tableResult.json();
+    assert.equal(tableResult.status(), 201, "Table checkout HTTP response");
+    await other.getByRole("heading", { name: "ติดตามคำสั่งซื้อ" }).waitFor();
+    const tableCapability = await other.evaluate(() =>
+      JSON.parse(sessionStorage.getItem("rcat-pos:guest-order-tracking:v1") || "{}"));
+    assert.match(tableCapability.trackingToken, /^[A-Za-z0-9_-]{43}$/);
+    const tableStatus = await fetch(customer + "/api/guest/orders/" + tableCapability.orderId + "/status", {
+      headers: { Authorization: "Bearer " + tableCapability.trackingToken },
+    });
+    assert.equal(tableStatus.status, 200);
+    const tableOrder = await tableStatus.json();
     const tableLabel = "#" + tableOrder.displayNumber.padStart(3, "0");
     const tableCard = staff.locator('article[aria-label="ออเดอร์ ' + tableLabel + '"]');
     await tableCard.getByRole("button", { name: "ดูบิลโต๊ะ" }).click();
