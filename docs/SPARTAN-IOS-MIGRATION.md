@@ -1,4 +1,6 @@
-# RCAT POS — Spartan-first / iOS-inspired UI contract
+# RCAT POS — Spartan-first / iOS-inspired interaction contract
+
+> **20 Nov 2026:** [V7 Warm Modern](UI-V7-WARM-MODERN.md) supersedes the 18 Nov visual palette only. All component architecture and security restrictions below remain binding.
 
 **Owner directive, 18 Nov 2026.** This overrides the V6 vivid/gradient treatment for future UI decisions. It is an implementation contract for the existing Angular 22 + Nx 24 application, not a second frontend framework or a claim that all screens are already migrated.
 
@@ -12,7 +14,7 @@
 
 ## Design language
 
-- **Canvas:** quiet, very light neutral gray `#F5F5F7`; **surface:** white; **text:** dark `#1C1C1E`; **secondary:** `#6E6E73`; **separators:** `#E5E5EA`. RCAT orange is a restrained semantic primary action, not a sidebar-sized fill or decorative gradient. No decorative waves on operational screens.
+- **Canvas:** Warm Cream `#FFF5E9`; **surface:** Ivory `#FFFDFA`; **text:** Espresso `#382921`; **secondary text:** `#765B4C`; **separators:** `#E9D7C4`. Deep Teal `#186B60` is the primary action; Terracotta `#C04C2B` is brand accent only. Mint selection, semantic status colors, no decorative waves or gradient sidebar on operational screens.
 - **Font:** keep self-hosted IBM Plex Sans Thai until device-level comparison proves a better alternative. Use actual weights 400, 500, 600, 700; no synthetic 750/800/850/900 variants. Body at least 16px in the primary work surfaces, supportive text generally at least 14px; line-height around 1.5–1.65 for Thai text. Currency and order numbers use tabular numerals.
 - **Spacing:** one consistent Tailwind rhythm (4/8/12/16/24/32px), with 16px phone and 24–32px desktop outer gutters. Component interior padding comes from Helm's variants rather than per-screen selectors.
 - **Components:** Helm Button, Card, Input, Field/Label, Native Select/Select, Badge, Alert, Dialog/Sheet, Dropdown Menu, Tabs, Table, Skeleton, Separator, Tooltip, Pagination, Switch as appropriate. Use native semantics where Spartan does not offer a primitive. Controls remain at least 44px touchable in operational flows.
