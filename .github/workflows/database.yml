@@ -157,6 +157,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/store-qr-guest-sessions.sql
       - name: Verify active Bill uniqueness, two-client aggregation, closure and fresh table cycle
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/bill-lifecycle.sql
+      - name: Verify Quick per-person Order, idempotent additions, stock and Preparing cutoff
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/quick-order-addons.sql
       - name: Verify merchant/guest Order history, audit ordering and privacy
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-status-history.sql
       - name: Verify durable Order outbox, rollback, replay, and tenant-scoped acknowledgements
