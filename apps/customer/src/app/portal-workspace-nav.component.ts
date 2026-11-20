@@ -4,6 +4,7 @@ import {
   computed,
   inject,
   input,
+  output,
 } from "@angular/core";
 import { Router, RouterLink, RouterLinkActive } from "@angular/router";
 import { HlmNativeSelect } from "@spartan-ng/helm/native-select";
@@ -30,6 +31,45 @@ import { permitsRoute } from "./portal-permissions";
   ],
   host: { class: "block min-w-0" },
   template: `
+    @if (compact()) {
+      <nav
+        aria-label="งานที่ใช้บ่อย"
+        class="grid grid-flow-col auto-cols-fr items-stretch gap-1 border-t border-border bg-card px-2 py-2"
+      >
+        @if (store(); as selected) {
+          @for (item of quickMenu; track item.path) {
+            @if (allowed(item.path)) {
+              <a
+                [routerLink]="['/', item.path, selected.tenantId, selected.storeId]"
+                routerLinkActive="bg-accent text-accent-foreground font-semibold"
+                class="flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-center text-xs font-medium text-muted-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                <span aria-hidden="true" class="text-lg leading-none">{{ item.icon }}</span>
+                <span>{{ item.label }}</span>
+              </a>
+            }
+          }
+        }
+        @if (!store() && (session.platformRole() === "super_admin" || session.platformRole() === "admin")) {
+          <a
+            routerLink="/platform"
+            routerLinkActive="bg-accent text-accent-foreground font-semibold"
+            class="flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-center text-xs font-medium text-muted-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
+          >
+            <span aria-hidden="true" class="text-lg leading-none">◎</span>
+            ผู้ใช้งาน
+          </a>
+        }
+        <button
+          type="button"
+          class="flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border-0 bg-card px-1 text-xs font-medium text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+          (click)="more.emit()"
+        >
+          <span aria-hidden="true" class="text-lg leading-none">···</span>
+          เพิ่มเติม
+        </button>
+      </nav>
+    } @else {
     <div class="grid gap-6">
       <section
         class="grid gap-3 rounded-2xl border border-border bg-brand-soft p-4"
@@ -225,12 +265,20 @@ import { permitsRoute } from "./portal-permissions";
         เมนูแสดงตามสิทธิ์ที่ได้รับจากระบบ
       </p>
     </div>
+    }
   `,
 })
 export class PortalWorkspaceNavComponent {
   readonly session = inject(PortalSession);
   private readonly router = inject(Router);
   readonly url = input.required<string>();
+  readonly compact = input(false);
+  readonly more = output<void>();
+  readonly quickMenu = [
+    { path: "orders", label: "ออเดอร์", icon: "▤" },
+    { path: "catalog", label: "สินค้า", icon: "▦" },
+    { path: "tables", label: "โต๊ะและ QR", icon: "▧" },
+  ];
   readonly store = computed(() => {
     const segments = this.url().split(/[/?#]/);
     return (
