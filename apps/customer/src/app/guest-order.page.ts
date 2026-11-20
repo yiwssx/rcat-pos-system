@@ -89,7 +89,7 @@ function guestError(error: unknown): string {
     GuestModifierChoicesComponent,
   ],
   template: `
-    <section class="guest-shell v6-guest-shop mx-auto w-full max-w-screen-2xl min-w-0 space-y-4 px-4 pb-28 pt-4 sm:px-6 lg:px-8 lg:pb-8" aria-labelledby="guest-title">
+    <section class="guest-shell v6-guest-shop mx-auto w-full bg-background max-w-screen-2xl min-w-0 space-y-4 px-4 pb-28 pt-4 sm:px-6 lg:px-8 lg:pb-8" aria-labelledby="guest-title">
       <header class="guest-header flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4">
         <div class="guest-brand flex min-w-0 items-center gap-3">
           <img
@@ -148,6 +148,8 @@ function guestError(error: unknown): string {
           <p>{{ closed.name }} · {{ closed.table }}</p>
           <p>กรุณาลองใหม่เมื่อร้านเปิดรับออเดอร์</p>
           <button
+            hlmBtn
+            class="min-h-11"
             type="button"
             (click)="reload()"
             [disabled]="loading() || !online()"
@@ -201,6 +203,7 @@ function guestError(error: unknown): string {
           <div class="guest-qr-recovery-actions flex flex-wrap items-center gap-3">
             @if (staticTable() || staticCounter()) {
               <button
+                hlmBtn
                 type="button"
                 class="guest-qr-reconnect min-h-11"
                 (click)="reload()"
@@ -215,7 +218,7 @@ function guestError(error: unknown): string {
       } @else if (error()) {
         <div class="guest-error space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-destructive" role="alert">
           <p>{{ error() }}</p>
-          <button type="button" (click)="reload()" [disabled]="loading()">
+          <button hlmBtn variant="outline" class="min-h-11" type="button" (click)="reload()" [disabled]="loading()">
             ลองอีกครั้ง
           </button>
         </div>
@@ -322,7 +325,7 @@ function guestError(error: unknown): string {
           }}</span>
         </div>
 
-        <div class="v6-guest-filters grid min-w-0 gap-3 rounded-xl border border-border bg-card p-3">
+        <div class="v6-guest-filters grid min-w-0 gap-3 lg:grid-cols-[minmax(11rem,18rem)_minmax(0,1fr)] lg:items-center rounded-xl border border-border bg-card p-3">
           <div class="guest-menu-toolbar min-w-0">
             <label class="guest-search grid gap-1">
               <span class="guest-field-title sr-only">ค้นหาเมนู</span>
@@ -481,18 +484,18 @@ function guestError(error: unknown): string {
       @if (cartQty() > 0) {
         <button
           type="button"
-          class="guest-cart-shortcut fixed inset-x-4 bottom-4 z-30 flex min-h-14 items-center justify-between gap-3 rounded-xl bg-primary p-3 text-left text-primary-foreground shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:static lg:w-full"
+          class="guest-cart-shortcut fixed inset-x-4 bottom-4 z-30 grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-xl border-0 bg-primary p-3 text-left text-primary-foreground shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50 lg:static lg:mt-4 lg:w-full"
           [disabled]="busy()"
           (click)="openCart()"
         >
-          <span class="guest-cart-shortcut-count text-sm">
+          <span class="guest-cart-shortcut-count text-sm col-start-1 row-start-1">
             <span class="guest-cart-shortcut-icon mr-1" aria-hidden="true">🛍️</span>
             ตะกร้า <strong>{{ cartQty() }} รายการ</strong>
           </span>
-          <span class="guest-cart-shortcut-price text-lg font-semibold tabular-nums"
+          <span class="guest-cart-shortcut-price col-start-1 row-start-2 text-lg font-semibold tabular-nums"
             >≈ {{ money(estimate()) }} ฿</span
           >
-          <span class="guest-cart-shortcut-action text-sm font-semibold">ดูตะกร้า</span>
+          <span class="guest-cart-shortcut-action col-start-2 row-span-2 row-start-1 text-sm font-semibold">ดูตะกร้า</span>
         </button>
       }
 
