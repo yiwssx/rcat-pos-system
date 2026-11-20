@@ -11,9 +11,9 @@ import { DatabaseAccess } from "../database/db-access";
 
 export interface MerchantNotificationEvent {
   eventId: string;
-  eventType: "order.submitted" | "order.status.changed";
+  eventType: "order.submitted" | "order.status.changed" | "order.items.added";
   orderId: string;
-  tableId: string;
+  tableId: string | null;
   status: "submitted" | "accepted" | "preparing" | "served" | "cancelled";
   previousStatus: string | null;
   occurredAt: string;
