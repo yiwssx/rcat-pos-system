@@ -155,6 +155,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/service-modes.sql
       - name: Verify independent Store QR scans, per-customer capabilities and revocation
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/store-qr-guest-sessions.sql
+      - name: Verify active Bill uniqueness, two-client aggregation, closure and fresh table cycle
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/bill-lifecycle.sql
       - name: Verify merchant/guest Order history, audit ordering and privacy
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-status-history.sql
       - name: Verify durable Order outbox, rollback, replay, and tenant-scoped acknowledgements
@@ -203,7 +205,11 @@ jobs:
         run: |
           # B2 HTTP smoke adds 2 audited service-mode changes, 2 QR rotations
           # and 2 authenticated store intake changes. Preserve exact audit totals.
-          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action NOT IN ('catalog.product.updated','catalog.product.archived')" | grep -qx '35'
+          # B3 public Checkout now auto-opens one Bill, then staff closes it:
+          # two lifecycle audits replace one historical manual bill.created event.
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action NOT IN ('catalog.product.updated','catalog.product.archived')" | grep -qx '36'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action='bill.operational.auto_opened'" | grep -qx '1'
+          psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action='bill.operational.closed'" | grep -qx '1'
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action='store.service_mode.changed'" | grep -qx '2'
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action='store.qr.rotated'" | grep -qx '2'
           psql -X -v ON_ERROR_STOP=1 -Atc "SELECT count(*) FROM rcat.audit_events WHERE action IN ('catalog.product.updated','catalog.product.archived')" | grep -qx '2'
