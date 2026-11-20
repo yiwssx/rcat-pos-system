@@ -36,8 +36,7 @@ function cartFromBody(raw: unknown) {
   const body = raw as Record<string, unknown>;
   if (
     Object.keys(body).some(
-      (key) =>
-        !["guestToken", "orderedBy", "deliverTo", "items"].includes(key),
+      (key) => !["guestToken", "orderedBy", "deliverTo", "items"].includes(key),
     ) ||
     typeof body["guestToken"] !== "string"
   ) {
