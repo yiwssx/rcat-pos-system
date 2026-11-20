@@ -1,3 +1,11 @@
+-- Per-Order ownership of current public Table checkout; capability digests
+-- remain private, never appear in the Merchant inbox or guest receipts.
+CREATE TABLE rcat_private.table_order_guest_owners (
+ order_id uuid PRIMARY KEY REFERENCES rcat.orders(id) ON DELETE CASCADE,
+ token_digest bytea NOT NULL CHECK(octet_length(token_digest)=32)
+);
+REVOKE ALL ON rcat_private.table_order_guest_owners FROM PUBLIC,rcat_app,rcat_auth;
+
 -- D: expose existing Bill by immutable Visit ID (including expired Visits).
 -- Read only; do not use create_bill as a lookup or create a synthetic Bill.
 CREATE FUNCTION rcat_private.operational_bill_by_visit(
@@ -143,6 +151,19 @@ BEGIN
  SELECT * INTO v_existing FROM rcat.orders o
  WHERE o.visit_id=v_visit AND o.idempotency_key=p_idempotency_key;
  IF FOUND THEN
+   -- An idempotency key is not an ownership credential. New public Orders
+   -- are bound to the precise submitting grant; legacy Orders have only the
+   -- master-visit binding and cannot be claimed by a different grant.
+   IF NOT EXISTS (
+     SELECT 1 FROM rcat_private.table_order_guest_owners g
+     WHERE g.order_id=v_existing.id AND g.token_digest=p_visit_digest
+   ) AND (
+     EXISTS(SELECT 1 FROM rcat_private.table_order_guest_owners g WHERE g.order_id=v_existing.id)
+     OR NOT EXISTS(SELECT 1 FROM rcat.table_ordering_visits v
+       WHERE v.id=v_visit AND v.token_digest=p_visit_digest)
+   ) THEN
+     RAISE EXCEPTION 'Order unavailable' USING ERRCODE='42501';
+   END IF;
    IF v_existing.request_data IS DISTINCT FROM p_cart THEN
      RAISE EXCEPTION 'Idempotency key reused with changed cart'
        USING ERRCODE='23505';
@@ -164,7 +185,67 @@ BEGIN
  END IF;
  v_result:=rcat_private.place_guest_order(
    p_visit_digest,p_idempotency_key,p_cart);
+ INSERT INTO rcat_private.table_order_guest_owners(order_id,token_digest)
+ VALUES((v_result->>'orderId')::uuid,p_visit_digest);
  v_bill:=rcat_private._ensure_table_bill_for_visit(
    v_tenant,v_store,v_table,v_visit);
  RETURN v_result||jsonb_build_object('billId',v_bill);
+END $$;
+
+
+-- Tracking binding runs inside the same DB transaction as checkout. Preserve
+-- existing Order-only status tokens; never accept a sibling Guest grant.
+CREATE OR REPLACE FUNCTION rcat_private.bind_guest_order_tracking(
+  p_order_id uuid, p_visit_digest bytea, p_idempotency_key text,
+  p_tracking_digest bytea
+) RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog
+AS $$
+DECLARE v_existing bytea;
+BEGIN
+  IF p_order_id IS NULL
+    OR p_visit_digest IS NULL OR octet_length(p_visit_digest)<>32
+    OR p_tracking_digest IS NULL OR octet_length(p_tracking_digest)<>32
+    OR p_idempotency_key IS NULL OR length(p_idempotency_key) NOT BETWEEN 16 AND 96
+  THEN RAISE EXCEPTION 'Order unavailable' USING ERRCODE='42501'; END IF;
+
+  SELECT o.tracking_token_digest INTO v_existing
+  FROM rcat.orders o
+  JOIN rcat.table_ordering_visits v
+    ON v.id=o.visit_id AND v.tenant_id=o.tenant_id
+       AND v.store_id=o.store_id
+  WHERE o.id=p_order_id AND o.idempotency_key=p_idempotency_key
+    AND (
+      EXISTS (
+        SELECT 1 FROM rcat_private.table_order_guest_owners g
+        WHERE g.order_id=o.id AND g.token_digest=p_visit_digest
+      )
+      OR (
+        v.token_digest=p_visit_digest
+        AND NOT EXISTS (
+          SELECT 1 FROM rcat_private.table_order_guest_owners g
+          WHERE g.order_id=o.id
+        )
+      )
+    )
+    AND v.revoked_at IS NULL AND v.expires_at>clock_timestamp()
+    AND (
+      v.token_digest=p_visit_digest OR EXISTS (
+        SELECT 1 FROM rcat.table_guest_grants g
+        WHERE g.visit_id=v.id AND g.token_digest=p_visit_digest
+          AND g.revoked_at IS NULL AND g.expires_at>clock_timestamp()
+      )
+    )
+  FOR UPDATE OF o;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Order unavailable' USING ERRCODE='42501';
+  END IF;
+
+  IF v_existing IS NULL THEN
+    UPDATE rcat.orders
+      SET tracking_token_digest=p_tracking_digest
+      WHERE id=p_order_id;
+  ELSIF v_existing<>p_tracking_digest THEN
+    RAISE EXCEPTION 'Tracking capability mismatch' USING ERRCODE='23505';
+  END IF;
 END $$;
