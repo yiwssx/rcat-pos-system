@@ -43,6 +43,18 @@ export class QuickOrdersController {
     );
   }
 
+  @Post("orders/:orderId/tracking")
+  @HttpCode(200)
+  @Header("Cache-Control", "no-store")
+  tracking(
+    @Req() req: ApiRequest,
+    @Param("orderId") orderId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.quickOrders.tracking(req, orderId, body);
+  }
+
   @Post("my-orders")
   @HttpCode(200)
   @Header("Cache-Control", "no-store")

@@ -270,7 +270,25 @@ function guestError(error: unknown): string {
                       : "สั่งเพิ่มเป็นออเดอร์ใหม่"
                   }}
                 </button>
+                <button
+                  hlmBtn
+                  type="button"
+                  variant="outline"
+                  class="min-h-11"
+                  [disabled]="busy() || !online() || cartQty() > 0"
+                  (click)="openQuickTracking(order.orderId)"
+                >
+                  ติดตาม / ชำระเงิน
+                </button>
               </div>
+            }
+            @if (quickOrders().length) {
+              <p class="text-sm text-muted-foreground">
+                เมื่อสร้าง QR ชำระเงินแล้ว การสั่งเพิ่มจะเป็นออเดอร์ใหม่
+                @if (cartQty() > 0) {
+                  กรุณาจัดการตะกร้าก่อนเปิดหน้าติดตาม
+                }
+              </p>
             }
             @if (quickTarget()) {
               <p class="text-sm" role="status">
@@ -928,6 +946,32 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     this.invalidateExpiredVisit();
   }
 
+  async openQuickTracking(orderId: string): Promise<void> {
+    const counter = this.staticCounter();
+    const token = this.session.visitToken();
+    if (!counter || !token || this.busy() || !this.online() || this.cartQty()) {
+      return;
+    }
+    this.busy.set(true);
+    this.quickError.set("");
+    try {
+      const selected = await this.api.quickTracking(token, orderId);
+      if (this.session.visitToken() !== token) return;
+      this.session.saveTracking(selected.orderId, selected.trackingToken);
+      await this.router.navigate(["/order/track"], {
+        queryParams: {
+          tenant: counter.tenantId,
+          store: counter.storeId,
+          counter: counter.publicId,
+        },
+      });
+    } catch (error) {
+      this.quickError.set(guestError(error));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
   async refreshQuickOrders(): Promise<void> {
     const token = this.session.visitToken();
     if (!this.staticCounter() || !token || this.quickLoading()) return;
@@ -1381,7 +1425,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
           key,
           target,
         );
-        this.session.setCart([]);
+        this.session.saveTracking(result.orderId, result.trackingToken);
         this.quickTarget.set(null);
         this.closeCart();
         this.notice.set(

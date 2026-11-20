@@ -196,5 +196,76 @@ BEGIN
    RAISE EXCEPTION 'Exactly one request per Order was not retained';
  END IF;
 END $$;
+-- G6: Quick ownership feeds the existing Order-only payment contract.
+-- No real recipient, live transfer, or payment flag is enabled outside this
+-- rolled-back test. Creating tracking alone must not freeze add-ons.
+SET LOCAL ROLE rcat_auth;
+DO $$
+DECLARE
+ t uuid:=current_setting('test.g5.tenant')::uuid;
+ s uuid:=current_setting('test.g5.store')::uuid;
+ owner bytea:=decode(repeat('e1',32),'hex');
+ a bytea:=decode(repeat('91',32),'hex');
+ b bytea:=decode(repeat('92',32),'hex');
+ track bytea:=decode(repeat('93',32),'hex');
+ other_track bytea:=decode(repeat('94',32),'hex');
+ qr uuid;cat uuid;product uuid;oid uuid;cart jsonb;v jsonb;pay jsonb;denied boolean;
+BEGIN
+ PERFORM rcat_private.set_store_service_mode(owner,t,s,'quick',0);
+ PERFORM rcat_private.set_store_ordering_enabled(owner,t,s,true);
+ qr:=(rcat_private.rotate_store_qr(owner,t,s)->>'publicId')::uuid;
+ PERFORM rcat_private.open_printed_store_qr(t,s,qr,a);
+ PERFORM rcat_private.open_printed_store_qr(t,s,qr,b);
+ cat:=rcat_private.add_menu_category(owner,t,s,'g6-quick-pay','Counter');
+ product:=rcat_private.add_menu_product(owner,t,s,cat,'Synthetic counter item',6500);
+ cart:=jsonb_build_object('orderedBy','CI','deliverTo','Counter',
+   'items',jsonb_build_array(jsonb_build_object('productId',product,
+     'quantity',1,'optionIds','[]'::jsonb)));
+ v:=rcat_private.quick_order_submit(a,'g6-quick-first-00001',cart,NULL);
+ oid:=(v->>'orderId')::uuid;
+ PERFORM rcat_private.bind_quick_order_tracking(oid,a,track);
+ PERFORM rcat_private.bind_quick_order_tracking(oid,a,track);
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.bind_quick_order_tracking(oid,b,other_track);
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Sibling counter session claimed payment bearer'; END IF;
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.bind_quick_order_tracking(oid,a,other_track);
+ EXCEPTION WHEN unique_violation THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Tracking bearer overwritten'; END IF;
+ pay:=rcat_private.guest_order_payment_request(oid,track,false);
+ IF pay->>'available'<>'false' THEN
+   RAISE EXCEPTION 'Disabled counter payment request available'; END IF;
+ v:=rcat_private.quick_order_submit(a,'g6-quick-append-0001',cart,oid);
+ IF v->>'action'<>'appended' OR v->>'amountSatang'<>'13000' THEN
+   RAISE EXCEPTION 'Tracking or disabled payment froze Quick append'; END IF;
+ pay:=rcat_private.guest_order_payment_request(oid,track,true);
+ IF pay->>'available'<>'true' OR pay->>'amountSatang'<>'13000' THEN
+   RAISE EXCEPTION 'Synthetic dual-gate Quick Payment amount mismatch'; END IF;
+ v:=rcat_private.quick_order_submit(a,'g6-quick-afterpay-01',cart,oid);
+ IF v->>'action'<>'new_after_cutoff' OR v->>'orderId'=oid::text THEN
+   RAISE EXCEPTION 'Existing payment snapshot was modified by Quick add-on'; END IF;
+ IF rcat_private.guest_order_payment_request(oid,track,true)->>'requestId'
+      <>pay->>'requestId'
+   OR rcat_private.guest_order_status(oid,track)->>'amountSatang'<>'13000'
+   OR rcat_private.guest_order_status(oid,track)->>'paymentState'<>'awaiting_payment'
+ THEN RAISE EXCEPTION 'Original payable snapshot changed or falsely confirmed'; END IF;
+ PERFORM rcat_private.rotate_store_qr(owner,t,s);
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.bind_quick_order_tracking(oid,a,track);
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Revoked Store grant reissued tracking'; END IF;
+ IF rcat_private.guest_order_status(oid,track)->>'orderId'<>oid::text THEN
+   RAISE EXCEPTION 'Order-only tracking lost after Store QR rotation'; END IF;
+END $$;
+RESET ROLE;
+
 ROLLBACK;
+\echo 'PASS: Quick Order ownership and existing gated Payment snapshot freeze'
 \echo 'PASS: dual-gate PromptPay request, Order token, satang, idempotency and independent kitchen'

@@ -8,7 +8,7 @@ import {
   inject,
   signal,
 } from "@angular/core";
-import { RouterLink } from "@angular/router";
+import { ActivatedRoute, RouterLink } from "@angular/router";
 import {
   formatSatang,
   formatOrderNumber,
@@ -31,7 +31,12 @@ const TRACK_INTERVAL_MS = 15_000;
       class="guest-shell guest-tracking"
       aria-labelledby="tracking-title"
     >
-      <a routerLink="/order" class="guest-track-link">← กลับไปหน้าเมนู</a>
+      <a
+        routerLink="/order"
+        [queryParams]="counterReturn"
+        class="guest-track-link"
+        >← กลับไปหน้าเมนู</a
+      >
       <span class="eyebrow">ORDER TRACKING</span>
       <h1 id="tracking-title">ติดตามคำสั่งซื้อ</h1>
       <p class="guest-context">
@@ -196,6 +201,25 @@ const TRACK_INTERVAL_MS = 15_000;
 export class GuestTrackPage implements OnInit, OnDestroy {
   readonly session = inject(GuestOrderSession);
   private readonly api = inject(GuestOrderApi);
+  private readonly route = inject(ActivatedRoute);
+  readonly counterReturn = this.publicCounterReturn();
+
+  private publicCounterReturn(): Record<string, string> {
+    const query = this.route.snapshot.queryParamMap;
+    const tenant = query.get("tenant");
+    const store = query.get("store");
+    const counter = query.get("counter");
+    const uuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return query.keys.length === 3 &&
+      tenant &&
+      store &&
+      counter &&
+      [tenant, store, counter].every((value) => uuid.test(value))
+      ? { tenant, store, counter }
+      : {};
+  }
+
   private readonly document = inject(DOCUMENT);
   private readonly window = this.document.defaultView;
   private interval?: ReturnType<typeof setInterval>;
