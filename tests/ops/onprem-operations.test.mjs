@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { createServer } from "node:http";
 import { once } from "node:events";
-import { readFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -121,6 +122,16 @@ test("staging readiness probe checks all origins, rejects paid mode and hides ra
     assert.equal(report.checks.length, 3);
     assert.ok(!good.stdout.includes("127.0.0.1"));
 
+    const portal = await executeNode(readiness, {
+      ...env, RCAT_POS_TOPOLOGY: "portal",
+      RCAT_POS_MERCHANT_PORT: "", RCAT_POS_ADMIN_PORT: "",
+    });
+    assert.equal(portal.status, 0, portal.stderr);
+    assert.equal(JSON.parse(portal.stdout).checks.length, 1);
+    assert.equal(JSON.parse(portal.stdout).status, "ready");
+    const unknown = await executeNode(readiness, { ...env, RCAT_POS_TOPOLOGY: "unknown" });
+    assert.notEqual(unknown.status, 0);
+
     const invalid = await executeNode(readiness, { ...env, RCAT_POS_HOST_BIND_IP: "0.0.0.0" });
     assert.notEqual(invalid.status, 0);
     assert.match(invalid.stderr, /configuration invalid/);
@@ -130,6 +141,77 @@ test("staging readiness probe checks all origins, rejects paid mode and hides ra
       await new Promise((resolveClose) => server.close(resolveClose));
     }
   }
+});
+
+test("portal operations use explicit local project and require protected backup approval", () => {
+  const dir = mkdtempSync(resolve(tmpdir(), "rcat-portal-ops-"));
+  try {
+    const protectedEnv = resolve(dir, ".env.portal");
+    const dba = resolve(dir, "dba");
+    const resticPassword = resolve(dir, "restic-password");
+    const log = resolve(dir, "mock.log");
+    writeFileSync(dba, "synthetic-dba-test", { mode: 0o600 });
+    writeFileSync(resticPassword, "synthetic-restic-test", { mode: 0o600 });
+    // Stub all mutable tools: no Docker daemon, external network or database.
+    writeFileSync(resolve(dir, "docker"), '#!/bin/sh\nprintf "docker %s\\n" "$*" >> "$MOCK_LOG"\ncase "$*" in *"exec -T postgres"*) printf "synthetic-archive";; esac\n', { mode: 0o700 });
+    writeFileSync(resolve(dir, "restic"), '#!/bin/sh\nprintf "restic %s\\n" "$*" >> "$MOCK_LOG"\ncase "$1" in snapshots) printf "[]";; backup) cat >/dev/null;; *) exit 1;; esac\n', { mode: 0o700 });
+    const cfg = [
+      "RCAT_POS_PUBLIC_ORIGIN=https://pos.example.invalid",
+      "RCAT_POS_HOST_BIND_IP=127.0.0.1",
+      "RCAT_POS_CUSTOMER_PORT=11890",
+      "RCAT_POS_DB_PASSWORD_FILE=" + dba,
+      "AUTH_DATABASE_URL=postgresql://auth:fixture@postgres/db",
+      "TENANT_DATABASE_URL=postgresql://tenant:fixture@postgres/db",
+      "RESTIC_REPOSITORY=sftp:synthetic-invalid:/backup",
+      "RESTIC_PASSWORD_FILE=" + resticPassword,
+    ].join("\n") + "\n";
+    writeFileSync(protectedEnv, cfg, { mode: 0o600 });
+    const env = {
+      RCAT_POS_TOPOLOGY: "portal", RCAT_POS_ENV_FILE: protectedEnv,
+      RCAT_POS_ENVIRONMENT: "staging", RCAT_POS_BACKUP_POLICY_APPROVED: "yes",
+      MOCK_LOG: log, PATH: dir + ":" + process.env.PATH,
+    };
+    // The inherited approval must not turn on the protected Portal policy.
+    const denied = execute("bash", [ops, "backup", "--apply"], env);
+    assert.notEqual(denied.status, 0, denied.stdout);
+    assert.match(denied.stderr, /Owner-approved G4 backup policy required/);
+    assert.doesNotMatch(readFileSync(log, "utf8"), /restic|exec -T postgres/);
+    writeFileSync(protectedEnv, cfg + "RCAT_POS_BACKUP_POLICY_APPROVED=yes\n");
+    const permitted = execute("bash", [ops, "backup", "--apply"], env);
+    assert.equal(permitted.status, 0, permitted.stderr);
+    const trace = readFileSync(log, "utf8");
+    assert.match(trace, /--host=unix:\/\/\/var\/run\/docker\.sock compose/);
+    assert.match(trace, /-p rcat-pos-staging -f .*compose\.portal\.yaml/);
+    assert.doesNotMatch(trace, /compose\.staging\.yaml/);
+    assert.match(trace, /exec -T postgres/);
+    assert.match(trace, /snapshots --json --tag rcat-pos-staging,rcat-pos-portal,postgres16/);
+    assert.match(trace, /backup --stdin .*--tag rcat-pos-portal/);
+    const before = trace;
+    writeFileSync(protectedEnv, cfg + "RCAT_POS_BACKUP_POLICY_APPROVED=yes\nRCAT_POS_PAYMENT_QR_RELEASE_APPROVED=true\n");
+    const payment = execute("bash", [ops, "backup", "--apply"], env);
+    assert.notEqual(payment.status, 0, payment.stdout);
+    assert.match(payment.stderr, /non-payment configuration/);
+    assert.equal(readFileSync(log, "utf8"), before);
+    chmodSync(protectedEnv, 0o644);
+    const exposed = execute("bash", [ops, "backup", "--apply"], env);
+    assert.notEqual(exposed.status, 0);
+    assert.match(exposed.stderr, /mode 600/);
+    assert.equal(readFileSync(log, "utf8"), before);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("portal freshness never accepts legacy-only snapshots or exceeds approved RPO", () => {
+  const now = new Date().toISOString();
+  const env = { RCAT_POS_TOPOLOGY: "portal" };
+  const legacy = [{ time: now, tags: ["rcat-pos-staging", "postgres16"] }];
+  const portal = [{ time: now, tags: ["rcat-pos-staging", "rcat-pos-portal", "postgres16"] }];
+  assert.notEqual(execute("python3", [snapshot], env, JSON.stringify(legacy)).status, 0);
+  const ok = execute("python3", [snapshot], env, JSON.stringify(portal));
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.equal(JSON.parse(ok.stdout).maxAgeHours, 24);
+  assert.notEqual(execute("python3", [snapshot], { ...env, RCAT_POS_BACKUP_MAX_AGE_HOURS: "25" }, JSON.stringify(portal)).status, 0);
 });
 
 test("opt-in maintenance container has DBA secret, runtime API does not", () => {
