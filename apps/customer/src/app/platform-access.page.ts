@@ -132,7 +132,11 @@ function failure(error: unknown): string {
             <span class="block text-sm text-muted-foreground">{{ accounts().length }} บัญชี</span>
           </summary>
           <div class="platform-panel-body platform-account-list divide-y divide-border p-4">
-            @for (account of accounts(); track account.userId) {
+            <label class="block space-y-2 pb-3 text-sm font-medium">
+              <span>ค้นหาบัญชี</span>
+              <input hlmInput class="min-h-11 w-full" type="search" placeholder="ค้นหาอีเมล" [value]="accountQuery()" (input)="setAccountQuery($event)" />
+            </label>
+            @for (account of visibleAccounts(); track account.userId) {
               <article class="platform-account flex min-w-0 flex-wrap items-center justify-between gap-3 py-3">
                 <div class="platform-account-meta min-w-0 flex-1 space-y-1 break-all">
                   <strong class="block text-base font-semibold">{{ account.email }}</strong>
@@ -170,7 +174,7 @@ function failure(error: unknown): string {
                 }
               </article>
             } @empty {
-              <p class="platform-hint text-sm leading-6 text-muted-foreground">ยังไม่พบรายการผู้ใช้</p>
+              <p class="platform-hint text-sm leading-6 text-muted-foreground">ไม่พบบัญชีที่ตรงกับรายการค้นหา</p>
             }
           </div>
         </details>
@@ -271,6 +275,11 @@ export class PlatformAccessPage implements OnInit {
   readonly accounts = signal<PlatformAccount[]>([]);
   readonly tenants = signal<PlatformTenant[]>([]);
   readonly activeCount = computed(() => this.accounts().filter((account) => account.active).length);
+  readonly accountQuery = signal("");
+  readonly visibleAccounts = computed(() => {
+    const query = this.accountQuery().trim().toLowerCase();
+    return this.accounts().filter((account) => account.email.toLowerCase().includes(query));
+  });
   readonly loading = signal(true);
   readonly pending = signal(false);
   readonly error = signal("");
@@ -323,6 +332,10 @@ export class PlatformAccessPage implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  setAccountQuery(event: Event): void {
+    this.accountQuery.set((event.target as HTMLInputElement).value);
   }
 
   setEmail(event: Event): void {
