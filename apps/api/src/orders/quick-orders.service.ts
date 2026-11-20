@@ -6,6 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { createHmac } from "node:crypto";
 import { digestOpaqueSecret } from "../../../../libs/server-auth/src";
 import { ApiRequest } from "../auth/request-security";
 import { DatabaseAccess } from "../database/db-access";
@@ -130,6 +131,15 @@ function failure(error: unknown): never {
   throw error;
 }
 
+// Stable across every add-on and retry for this Order, but separate from the
+// Store Guest mutation capability and existing Table tracking domain.
+function orderTrackingToken(guestToken: string, orderId: string): string {
+  return createHmac("sha256", Buffer.from(guestToken, "base64url"))
+    .update("rcat-pos-quick-order-tracking:v1\\0")
+    .update(orderId.toLowerCase())
+    .digest("base64url");
+}
+
 /** A printed QR is never an identity or an Order editing credential. */
 @Injectable()
 export class QuickOrdersService {
@@ -153,13 +163,57 @@ export class QuickOrdersService {
     const { guestToken, tokenDigest, cart } = cartFromBody(raw);
     await this.guestBudget.consume(req, "checkout", guestToken);
     try {
-      const result = await this.database.auth((client) =>
-        client.query<{ data: Record<string, unknown> }>(
+      return await this.database.auth(async (client) => {
+        const result = await client.query<{ data: Record<string, unknown> }>(
           "SELECT rcat_private.quick_order_submit($1,$2,$3::jsonb,$4::uuid) AS data",
           [tokenDigest, idempotencyKey, JSON.stringify(cart), requestedOrderId],
+        );
+        const order = result.rows[0]?.data;
+        if (!order || typeof order["orderId"] !== "string") {
+          throw new Error("Quick checkout did not return an Order ID");
+        }
+        const trackingToken = orderTrackingToken(guestToken, order["orderId"]);
+        await client.query(
+          "SELECT rcat_private.bind_quick_order_tracking($1,$2,$3)",
+          [order["orderId"], tokenDigest, digestOpaqueSecret(trackingToken)],
+        );
+        return { ...order, trackingToken };
+      });
+    } catch (error) {
+      failure(error);
+    }
+  }
+
+  async tracking(req: ApiRequest, orderId: string, raw: unknown) {
+    if (!UUID.test(orderId)) {
+      throw new NotFoundException("Quick Order unavailable");
+    }
+    if (
+      !raw ||
+      typeof raw !== "object" ||
+      Array.isArray(raw) ||
+      Object.keys(raw).length !== 1 ||
+      typeof (raw as Record<string, unknown>)["guestToken"] !== "string"
+    ) {
+      throw new NotFoundException("Quick session unavailable");
+    }
+    const token = (raw as Record<string, string>)["guestToken"]!;
+    await this.guestBudget.consume(req, "resolve", token);
+    let digest: Buffer;
+    try {
+      digest = digestOpaqueSecret(token);
+    } catch {
+      throw new NotFoundException("Quick session unavailable");
+    }
+    const trackingToken = orderTrackingToken(token, orderId);
+    try {
+      await this.database.auth((client) =>
+        client.query(
+          "SELECT rcat_private.bind_quick_order_tracking($1,$2,$3)",
+          [orderId, digest, digestOpaqueSecret(trackingToken)],
         ),
       );
-      return result.rows[0]?.data;
+      return { orderId: orderId.toLowerCase(), trackingToken };
     } catch (error) {
       failure(error);
     }
