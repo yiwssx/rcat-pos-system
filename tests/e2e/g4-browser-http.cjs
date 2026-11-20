@@ -1176,6 +1176,116 @@ async function quickOrderHttp(fixture) {
   }));
 }
 
+// D: exercise the actual Angular UI (not another API-only proof).
+async function serviceModeUi(fixture) {
+  const m = await browser.newContext({ viewport: { width: 390, height: 844 }, ignoreHTTPSErrors: true });
+  const a = await browser.newContext({ viewport: { width: 390, height: 844 }, ignoreHTTPSErrors: true });
+  const b = await browser.newContext({ viewport: { width: 320, height: 700 }, ignoreHTTPSErrors: true });
+  const staff = await m.newPage(), guest = await a.newPage(), other = await b.newPage();
+  staff.on("dialog", dialog => dialog.accept());
+  try {
+    await merchantLoginRequest(m);
+    await staff.goto(merchant + "/tables/" + tenant + "/" + store);
+    await staff.getByRole("button", { name: "Hybrid · ทั้งสองแบบ" }).click();
+    await staff.getByText("บันทึกรูปแบบบริการแล้ว").waitFor();
+    await staff.getByRole("button", { name: "เปลี่ยน QR ประจำร้าน" }).click();
+    await staff.getByText("QR ประจำร้านพร้อมใช้งาน").waitFor();
+    const qrCard = staff.locator('section[aria-labelledby="counter-qr-title"]');
+    await qrCard.locator("img").waitFor();
+    const qrUrl = (await qrCard.locator("p.break-all").innerText()).trim();
+    const url = new URL(qrUrl);
+    assert.equal(url.origin, customer);
+    assert.deepEqual([...url.searchParams.keys()].sort(), ["counter", "store", "tenant"]);
+    await Promise.all([guest.goto(qrUrl), other.goto(qrUrl)]);
+    await guest.locator(".guest-product", { hasText: fixture.name }).waitFor();
+    await other.locator(".guest-product", { hasText: fixture.name }).waitFor();
+    assert.equal(new URL(guest.url()).hash, "");
+    const addItem = async (page, add = false) => {
+      await page.locator(".guest-product", { hasText: fixture.name })
+        .getByRole("button", { name: "เพิ่มลงตะกร้า" }).click();
+      await page.getByRole("dialog", { name: fixture.name })
+        .getByRole("button", { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
+      await page.getByRole("button", { name: "ดูตะกร้า" }).click();
+      const cart = page.getByRole("dialog", { name: "ตะกร้าของฉัน" });
+      await cart.getByRole("textbox", { name: /ชื่อผู้สั่ง/ }).fill("D Guest UI");
+      await cart.getByRole("textbox", { name: /สถานที่รับ\/ส่ง/ }).fill("เคาน์เตอร์");
+      const response = page.waitForResponse(res =>
+        res.request().method() === "POST" &&
+        /\/api\/guest\/ordering-store\/orders(?:\/[^/]+\/add-items)?$/.test(new URL(res.url()).pathname));
+      await cart.getByRole("button", { name: add ? "ยืนยันสั่งเพิ่ม" : "ยืนยันส่งคำสั่งซื้อ", exact: true }).click();
+      const result = await response;
+      assert.equal(result.status(), 201, await result.text());
+      return result.json();
+    };
+    const first = await addItem(guest);
+    assert.equal(first.action, "created");
+    await guest.getByText(/ส่งออเดอร์สำเร็จ/).waitFor();
+    await guest.getByText("ยอดออเดอร์ 125.00 ฿").waitFor();
+    assert.equal(await other.getByText(/ออเดอร์ของฉัน \(0\)/).count(), 1);
+    await guest.reload();
+    const label = "#" + first.displayNumber.padStart(3, "0");
+    await guest.getByText(label + " · ส่งคำสั่งซื้อแล้ว", { exact: true }).waitFor();
+    await staff.goto(merchant + "/orders/" + tenant + "/" + store);
+    const card = staff.locator('article[aria-label="ออเดอร์ ' + label + '"]');
+    await card.getByText(/เคาน์เตอร์ \/ Quick/).waitFor();
+    await card.getByRole("button", { name: "รับออเดอร์", exact: true }).click();
+    await card.getByText("รับออเดอร์แล้ว", { exact: true }).waitFor();
+    await guest.getByRole("button", { name: "อัปเดตสถานะ" }).click();
+    await guest.getByText(label + " · ร้านรับออเดอร์แล้ว", { exact: true }).waitFor();
+    await guest.getByRole("button", { name: "เพิ่มรายการในออเดอร์นี้" }).click();
+    const appended = await addItem(guest, true);
+    assert.equal(appended.action, "appended");
+    assert.equal(appended.orderId, first.orderId);
+    await card.getByText("250.00 ฿", { exact: true }).waitFor({ timeout: 20000 });
+    await card.getByRole("button", { name: "เริ่มเตรียม" }).click();
+    await card.getByText("กำลังเตรียม", { exact: true }).waitFor();
+    await guest.getByRole("button", { name: "อัปเดตสถานะ" }).click();
+    await guest.getByText(label + " · กำลังเตรียม", { exact: true }).waitFor();
+    await guest.getByRole("button", { name: "สั่งเพิ่มเป็นออเดอร์ใหม่" }).click();
+    const next = await addItem(guest, true);
+    assert.equal(next.action, "new_after_cutoff");
+    assert.notEqual(next.orderId, first.orderId);
+    // Hybrid still permits the same permanent Table QR and operational Bill.
+    const tableId = fixture.tableId;
+    const tableUrl = new URL(customer + "/order");
+    tableUrl.searchParams.set("tenant", tenant);
+    tableUrl.searchParams.set("store", store);
+    tableUrl.searchParams.set("table", tableId);
+    await other.goto(tableUrl.toString());
+    await other.locator(".guest-product", { hasText: fixture.name }).waitFor();
+    await other.locator(".guest-product", { hasText: fixture.name })
+      .getByRole("button", { name: "เพิ่มลงตะกร้า" }).click();
+    await other.getByRole("dialog", { name: fixture.name })
+      .getByRole("button", { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
+    await other.getByRole("button", { name: "ดูตะกร้า" }).click();
+    const tableCart = other.getByRole("dialog", { name: "ตะกร้าของฉัน" });
+    await tableCart.getByRole("textbox", { name: /ชื่อผู้สั่ง/ }).fill("D Table UI");
+    await tableCart.getByRole("textbox", { name: /สถานที่รับ\/ส่ง/ }).fill("โต๊ะ");
+    const tableResponse = other.waitForResponse(res =>
+      res.request().method() === "POST" && new URL(res.url()).pathname === "/api/guest/orders");
+    await tableCart.getByRole("button", { name: /ยืนยันส่งคำสั่งซื้อ/ }).click();
+    const tableResult = await tableResponse;
+    assert.equal(tableResult.status(), 201, await tableResult.text());
+    const tableOrder = await tableResult.json();
+    const tableLabel = "#" + tableOrder.displayNumber.padStart(3, "0");
+    const tableCard = staff.locator('article[aria-label="ออเดอร์ ' + tableLabel + '"]');
+    await tableCard.getByRole("button", { name: "ดูบิลโต๊ะ" }).click();
+    await tableCard.getByText("บิลเปิดอยู่").waitFor();
+    await tableCard.getByRole("button", { name: "ปิดบิลและจบรอบโต๊ะ" }).click();
+    await tableCard.getByText("ปิดบิลแล้ว", { exact: true }).waitFor();
+    await other.goto(tableUrl.toString());
+    await other.getByRole("button", { name: "ยืนยันเริ่มรอบการสั่งใหม่" }).waitFor();
+    assert.equal(await other.locator(".guest-product").count(), 0, "Closed Bill silently issued a new grant");
+    await other.reload();
+    await other.getByRole("button", { name: "ยืนยันเริ่มรอบการสั่งใหม่" }).waitFor();
+    await other.getByRole("button", { name: "ยืนยันเริ่มรอบการสั่งใหม่" }).click();
+    await other.locator(".guest-product", { hasText: fixture.name }).waitFor();
+    console.log(JSON.stringify({scenario:"D real Guest/Merchant Hybrid UI, append, Preparing, close and explicit re-entry",result:"PASS"}));
+  } finally {
+    await Promise.all([m.close(), a.close(), b.close()]);
+  }
+}
+
 async function main() {
   const api = start("NestJS API", process.execPath, ["dist/apps/api/src/main.js"], {
     NODE_ENV: "test",
@@ -1214,6 +1324,7 @@ async function main() {
   });
   await require("./g4-readiness.cjs")();
   await quickOrderHttp(fixture);
+  await serviceModeUi(fixture);
 }
 
 (async () => {
