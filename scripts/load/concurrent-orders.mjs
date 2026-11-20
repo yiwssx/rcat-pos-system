@@ -237,6 +237,171 @@ async function verifyStock(a, b, expectedA, expectedB) {
   assert.equal(stock.get(b), expectedB, "Second ingredient stock mismatch");
 }
 
+// E: Exercise the remaining close/scan/checkout race using independent
+// restricted DB sessions and prove both wait on REAL locks before release.
+// Reuse only the disposable fixture and existing 64-client CI invocation.
+async function billCycleRace(productId) {
+  const scan = "SELECT rcat_private.open_printed_ordering_table($1,$2,$3,$4,$5) AS data";
+  const checkout = "SELECT rcat_private.place_guest_order_when_open($1,$2,$3::jsonb) AS data";
+  const close = "SELECT rcat_private.close_operational_bill($1,$2,$3,$4) AS data";
+  const resolve = "SELECT rcat_private.resolve_ordering_visit($1) AS data";
+  const payload = JSON.stringify({
+    orderedBy: "CI table race",
+    deliverTo: "Table race",
+    items: [{ productId, quantity: 1, optionIds: [] }],
+  });
+
+  // The leading transaction executes the business operation, but holds its
+  // locks until both competing statements are confirmed blocked by PostgreSQL.
+  async function race(leading, competing) {
+    const leader = await pool.connect();
+    const followers = [];
+    const jobs = [];
+    let leaderActive = false;
+    try {
+      await leader.query("BEGIN");
+      leaderActive = true;
+      await leader.query("SET LOCAL ROLE rcat_auth");
+      await leader.query("SET LOCAL lock_timeout = '20s'");
+      const first = (await leader.query(...leading)).rows[0].data;
+      for (const args of competing) {
+        const client = await pool.connect();
+        followers.push(client);
+        await client.query("BEGIN");
+        await client.query("SET LOCAL ROLE rcat_auth");
+        await client.query("SET LOCAL lock_timeout = '20s'");
+        jobs.push(measured(async () => {
+          try {
+            const result = (await client.query(...args)).rows[0].data;
+            await client.query("COMMIT");
+            return result;
+          } catch (error) {
+            await client.query("ROLLBACK").catch(() => undefined);
+            throw error;
+          }
+        }));
+      }
+      let waiting = 0;
+      for (let attempt = 0; attempt < 100; attempt++) {
+        waiting = await counts(
+          "SELECT count(*)::int AS total FROM unnest($1::int[]) AS p(pid) WHERE cardinality(pg_blocking_pids(p.pid))>0",
+          [followers.map((client) => client.processID)],
+        );
+        if (waiting === followers.length) break;
+        await new Promise((done) => setTimeout(done, 50));
+      }
+      assert.equal(waiting, followers.length, "Competing scan/checkout/close must really wait on the leading transaction");
+      await leader.query("COMMIT");
+      leaderActive = false;
+      return { first, outcomes: await Promise.all(jobs) };
+    } finally {
+      if (leaderActive) await leader.query("ROLLBACK").catch(() => undefined);
+      leader.release();
+      await Promise.allSettled(jobs);
+      for (const client of followers) {
+        await client.query("ROLLBACK").catch(() => undefined);
+        client.release();
+      }
+    }
+  }
+
+  for (const closeFirst of [true, false]) {
+    const tag = closeFirst ? "close-first" : "checkout-first";
+    const newTable = await authenticated(
+      "SELECT rcat_private.create_ordering_table($1,$2,$3,$4) AS data",
+      [session, tenantId, storeId, "Bill race " + tag],
+    );
+    const oldToken = randomBytes(32);
+    const racingToken = randomBytes(32);
+    const freshToken = randomBytes(32);
+    const scanArgs = (token) => [scan, [tenantId, storeId, newTable, randomBytes(32), token]];
+    const submitArgs = (token, purpose) => [
+      checkout, [token, "bill-race-" + purpose + "-" + randomUUID(), payload],
+    ];
+    assert.equal((await authenticated(...scanArgs(oldToken))).open, true);
+    const oldVisit = (await authenticated(resolve, [oldToken])).visitId;
+    const initial = await authenticated(...submitArgs(oldToken, "initial"));
+    assert.ok(initial.billId);
+    assert.equal(initial.paymentState, "not_requested");
+    const closeArgs = [close, [session, tenantId, storeId, initial.billId]];
+    const lateArgs = submitArgs(oldToken, "competing");
+    const result = await race(
+      closeFirst ? closeArgs : lateArgs,
+      [closeFirst ? lateArgs : closeArgs, scanArgs(racingToken)],
+    );
+    const [other, scanned] = result.outcomes;
+    assert.equal(scanned.ok, true, "Concurrent permanent QR scan failed");
+    assert.equal(scanned.value.open, true);
+    if (closeFirst) {
+      assert.equal(result.first.status, "closed");
+      assert.equal(result.first.paymentVerified, false);
+      assert.equal(other.code, "42501", "Checkout waiting behind close must be denied");
+    } else {
+      assert.equal(result.first.billId, initial.billId, "Checkout winning before close belongs to the old Bill");
+      assert.equal(result.first.paymentState, "not_requested");
+      assert.equal(other.ok, true, "Merchant close must complete after checkout");
+      assert.equal(other.value.status, "closed");
+      assert.equal(other.value.paymentVerified, false);
+    }
+
+    const oldDenied = await measured(() => authenticated(...submitArgs(oldToken, "stale")));
+    assert.equal(oldDenied.code, "42501", "Closed visit must not submit into the next cycle");
+    const oldRead = await measured(() => authenticated(resolve, [oldToken]));
+    assert.equal(oldRead.code, "42501");
+    const racedRead = await measured(() => authenticated(resolve, [racingToken]));
+    if (closeFirst) {
+      assert.equal(racedRead.ok, true, "Scan waiting behind close must obtain a new visit");
+    }
+    if (racedRead.ok) {
+      assert.notEqual(racedRead.value.visitId, oldVisit, "Racing scan kept authority over a closed Bill");
+    } else {
+      assert.equal(racedRead.code, "42501", "Only a scan linearized before closure may be revoked");
+    }
+
+    // QR scans alone do not create a phantom Bill. Check the immutable old
+    // cycle and then create exactly one new Bill from a deliberate fresh scan.
+    assert.equal(await counts(
+      "SELECT count(*)::int AS total FROM rcat.bills WHERE table_id=$1 AND closed_at IS NULL",
+      [newTable],
+    ), 0);
+    assert.equal(await counts(
+      "SELECT count(*)::int AS total FROM rcat.orders WHERE visit_id=$1",
+      [oldVisit],
+    ), closeFirst ? 1 : 2);
+    assert.equal(await counts(
+      "SELECT count(*)::int AS total FROM rcat.audit_events WHERE subject_id=$1 AND action='bill.operational.closed'",
+      [initial.billId],
+    ), 1);
+    assert.equal((await authenticated(...scanArgs(freshToken))).open, true);
+    const freshVisit = (await authenticated(resolve, [freshToken])).visitId;
+    assert.notEqual(freshVisit, oldVisit);
+    const next = await authenticated(...submitArgs(freshToken, "fresh"));
+    assert.notEqual(next.billId, initial.billId);
+    assert.equal(next.paymentState, "not_requested");
+    assert.equal(await counts(
+      "SELECT count(*)::int AS total FROM rcat.bills WHERE table_id=$1",
+      [newTable],
+    ), 2);
+    assert.equal(await counts(
+      "SELECT count(*)::int AS total FROM rcat.bills WHERE table_id=$1 AND closed_at IS NULL",
+      [newTable],
+    ), 1);
+    assert.equal(await counts(
+      "SELECT count(*)::int AS total FROM rcat.orders WHERE visit_id=$1",
+      [freshVisit],
+    ), 1);
+    console.log(JSON.stringify({
+      case: "E concurrent Bill close / QR scan / checkout",
+      schedule: tag,
+      result: "PASS",
+      actualWaitingConnections: 2,
+      staleOrder: "denied",
+      newBill: "independent",
+      paymentVerified: false,
+    }));
+  }
+}
+
 async function run() {
   const started = performance.now();
   const { productId, ingredientA, ingredientB, tableId } = await createFixture();
@@ -405,6 +570,7 @@ async function run() {
     "SELECT count(*)::int AS total FROM rcat.inventory_order_allocations WHERE tenant_id=$1 AND returned_at IS NOT NULL",
     [tenantId],
   ), 6, "Frozen cancellation allocations not marked returned exactly once");
+  if (concurrency === 64) await billCycleRace(productId);
   console.log(JSON.stringify({
     result: "PASS",
     ciOnly: true,
