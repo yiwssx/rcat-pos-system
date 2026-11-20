@@ -151,6 +151,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/guest-order-tracking.sql
       - name: Verify single-visit Bill aggregation, idempotency, audit and RLS
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/operational-bills.sql
+      - name: Verify dormant service-mode CAS, tenant rights and audit
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/service-modes.sql
       - name: Verify merchant/guest Order history, audit ordering and privacy
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-status-history.sql
       - name: Verify durable Order outbox, rollback, replay, and tenant-scoped acknowledgements
