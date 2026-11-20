@@ -212,7 +212,9 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     const uuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return query.keys.length === 3 &&
-      tenant && store && counter &&
+      tenant &&
+      store &&
+      counter &&
       [tenant, store, counter].every((value) => uuid.test(value))
       ? { tenant, store, counter }
       : {};
