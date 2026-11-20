@@ -236,3 +236,7 @@ jobs:
           CI: 'true'
           RCAT_LOAD_CLIENTS: '64'
         run: node scripts/load/concurrent-orders.mjs
+      - name: Verify Quick Order append and Preparing concurrency
+        env:
+          CI: 'true'
+        run: node scripts/load/quick-order-races.mjs
