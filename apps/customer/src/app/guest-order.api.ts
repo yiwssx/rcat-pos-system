@@ -40,7 +40,10 @@ export interface QuickGuestOrder extends GuestOrderStatus {
   addedSatang?: number;
   replayed?: boolean;
 }
-type QuickCatalog = Omit<GuestCatalogPage, "visitId" | "tableId" | "tableLabel"> & {
+type QuickCatalog = Omit<
+  GuestCatalogPage,
+  "visitId" | "tableId" | "tableLabel"
+> & {
   guestSessionId: string;
 };
 
@@ -150,7 +153,9 @@ export class GuestOrderApi {
     const base = "/api/guest/ordering-store/orders";
     return firstValueFrom(
       this.http.post<QuickGuestOrder>(
-        orderId ? base + "/" + encodeURIComponent(orderId) + "/add-items" : base,
+        orderId
+          ? base + "/" + encodeURIComponent(orderId) + "/add-items"
+          : base,
         { guestToken: token, items, ...normalizedOrderContext(context) },
         { headers: { "Idempotency-Key": key } },
       ),
