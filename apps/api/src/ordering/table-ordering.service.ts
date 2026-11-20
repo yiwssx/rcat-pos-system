@@ -47,6 +47,9 @@ function safeError(error: unknown): never {
       HttpStatus.TOO_MANY_REQUESTS,
     );
   }
+  if (code === "P0043") {
+    throw new ConflictException("BILL_CLOSURE_REQUIRED");
+  }
   if (code === "23505") {
     throw new ConflictException("Table label already exists");
   }

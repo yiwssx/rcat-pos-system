@@ -196,11 +196,12 @@ async function apiSetup() {
   });
   assert.equal(tableRes.status, 201, await tableRes.clone().text());
   const { tableId } = await tableRes.json();
-  async function rotate() {
+  async function rotate(expected = 201) {
     const res = await fetch(merchant + orderScope + "/tables/" + tableId + "/rotate", {
       method: "POST", headers,
     });
-    assert.equal(res.status, 201, await res.clone().text());
+    assert.equal(res.status, expected, await res.clone().text());
+    if (expected !== 201) return null;
     const body = await res.json();
     const uri = new URL(body.orderingUrl);
     assert.equal(uri.pathname, "/order");
@@ -208,8 +209,32 @@ async function apiSetup() {
     assert.match(token, /^[A-Za-z0-9_-]{43}$/);
     return token;
   }
+  async function closeActiveBill() {
+    // Scoped ephemeral CI fixture lookup only. Closure itself must go
+    // through the real authenticated Merchant API and CSRF boundary.
+    const rows = await db.query(
+      "SELECT id FROM rcat.bills WHERE tenant_id=$1 AND store_id=$2 AND table_id=$3 AND closed_at IS NULL",
+      [tenant, store, tableId],
+    );
+    assert.equal(rows.rows.length, 1, "Expected exactly one active Table Bill");
+    const billId = rows.rows[0].id;
+    const url = merchant + orderScope + "/bills/" + billId + "/close";
+    const res = await fetch(url, { method: "POST", headers });
+    assert.equal(res.status, 201, await res.clone().text());
+    const closed = await res.json();
+    assert.equal(closed.billId, billId);
+    assert.equal(closed.status, "closed");
+    assert.equal(closed.paymentVerified, false,
+      "Operational Bill closure must never certify Payment");
+    assert.equal(closed.replayed, false);
+    const repeated = await fetch(url, { method: "POST", headers });
+    assert.equal(repeated.status, 201);
+    assert.equal((await repeated.json()).replayed, true,
+      "Repeated staff closure must not double-audit or mutate the Bill");
+    return billId;
+  }
   return { name, productId, tableId, categoryId, merchantHeaders: headers,
-    token: await rotate(), rotate };
+    token: await rotate(), rotate, closeActiveBill };
 }
 
 async function browserFlow(fixture) {
@@ -1010,7 +1035,20 @@ async function httpLoad(fixture) {
   );
   assert.equal(outbox.rows[0].total, batchSize + 2 + resumedSubmitted, "HTTP retries duplicated outbox");
   const oldToken = fixture.token;
+  // B3 requires an explicit staff-close before starting another Table cycle.
+  // The previous rotation-only E2E was correctly rejected with HTTP 409.
+  await fixture.rotate(409);
+  const closedBillId = await fixture.closeActiveBill();
   await fixture.rotate();
+  const closedSnapshot = await fetch(
+    merchant + orderScope + "/bills/" + closedBillId,
+    { headers: fixture.merchantHeaders },
+  );
+  assert.equal(closedSnapshot.status, 200);
+  const previous = await closedSnapshot.json();
+  assert.equal(previous.status, "closed");
+  assert.ok(previous.orderCount >= batchSize + 1,
+    "Closed Bill lost previously committed guest Orders");
   const denied = await burst(
     Array.from({ length: 8 }, () =>
       () => post(customer + "/api/guest/orders",

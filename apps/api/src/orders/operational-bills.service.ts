@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -23,6 +24,9 @@ function mapFailure(error: unknown): never {
       : undefined;
   if (code === "42501" || code === "28000" || code === "23503") {
     throw new NotFoundException("Bill unavailable");
+  }
+  if (code === "P0043") {
+    throw new ConflictException("Previous table Bill must be closed first");
   }
   if (code === "22023" || code === "22P02" || code === "23514") {
     throw new BadRequestException("Invalid Bill request");
@@ -59,6 +63,28 @@ export class OperationalBillsService {
         client.query<{ data: { billId: string; created: boolean } }>(
           "SELECT rcat_private.create_operational_bill($1,$2,$3,$4) AS data",
           [digestOpaqueSecret(session.token), tenantId, storeId, visitId],
+        ),
+      );
+      return result.rows[0]?.data;
+    } catch (error) {
+      mapFailure(error);
+    }
+  }
+
+  async close(
+    req: ApiRequest,
+    tenantId: string,
+    storeId: string,
+    billId: string,
+  ) {
+    validateIds(tenantId, storeId, billId);
+    const session = await this.auth.session(req);
+    this.auth.requireCsrf(req, session);
+    try {
+      const result = await this.database.auth((client) =>
+        client.query<{ data: Record<string, unknown> }>(
+          "SELECT rcat_private.close_operational_bill($1,$2,$3,$4) AS data",
+          [digestOpaqueSecret(session.token), tenantId, storeId, billId],
         ),
       );
       return result.rows[0]?.data;
