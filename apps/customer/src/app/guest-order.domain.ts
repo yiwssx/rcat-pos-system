@@ -29,8 +29,9 @@ export interface GuestVisit {
   visitId: string;
   tenantId: string;
   storeId: string;
-  tableId: string;
+  tableId: string | null;
   tableLabel: string;
+  entryMode?: "counter";
   storeName: string;
   expiresAt: string;
   categories: GuestCategory[];
