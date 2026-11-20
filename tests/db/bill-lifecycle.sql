@@ -75,6 +75,24 @@ BEGIN
     (result->>'replayed')::boolean THEN
     RAISE EXCEPTION 'First guest Order did not open one operational Bill'; END IF;
 
+  -- Quick-only must block both a new Table scan and old Table checkout.
+  PERFORM rcat_private.set_store_service_mode(owner,tenant,store,'quick',0);
+  denied:=false;
+  BEGIN
+    PERFORM rcat_private.open_printed_ordering_table(
+      tenant,store,table_id,master_b,secret_c);
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+  END;
+  IF NOT denied THEN RAISE EXCEPTION 'Quick-only accepted Table QR'; END IF;
+  denied:=false;
+  BEGIN
+    PERFORM rcat_private.place_guest_order_when_open(
+      secret_b,'quick-only-table-denied',cart);
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+  END;
+  IF NOT denied THEN RAISE EXCEPTION 'Quick-only accepted old Table guest'; END IF;
+  PERFORM rcat_private.set_store_service_mode(owner,tenant,store,'hybrid',1);
+
   -- Same-visit, different device has a distinct Order but the SAME Bill.
   result:=rcat_private.place_guest_order_when_open(
     secret_b,'b3-other-guest-0001',
@@ -108,6 +126,17 @@ BEGIN
   END;
   IF NOT denied THEN RAISE EXCEPTION 'Open Bill allowed a new table cycle'; END IF;
 
+  -- D: immutable Visit lookup must read the existing Bill, never create it.
+  snapshot:=rcat_private.operational_bill_by_visit(owner,tenant,store,visit_a);
+  IF snapshot->>'billId'<>bill_a::text OR snapshot->>'status'<>'open' THEN
+    RAISE EXCEPTION 'Read-only Bill lookup failed'; END IF;
+  denied:=false;
+  BEGIN
+    PERFORM rcat_private.operational_bill_by_visit(owner,other_tenant,other_store,visit_a);
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+  END;
+  IF NOT denied THEN RAISE EXCEPTION 'Cross-tenant Bill lookup allowed'; END IF;
+
   -- Staff from another tenant, or the kitchen role, may not close the Bill.
   denied:=false;
   BEGIN
@@ -130,6 +159,10 @@ BEGIN
   result:=rcat_private.close_operational_bill(owner,tenant,store,bill_a);
   IF (result->>'replayed')::boolean IS DISTINCT FROM true THEN
     RAISE EXCEPTION 'Repeated close was not a no-op'; END IF;
+
+  snapshot:=rcat_private.operational_bill_by_visit(owner,tenant,store,visit_a);
+  IF snapshot->>'status'<>'closed' OR snapshot->>'billId'<>bill_a::text THEN
+    RAISE EXCEPTION 'Closed historical Bill became unreadable'; END IF;
 
   -- Both old phones lose permission immediately, including an old key retry.
   FOREACH secret_a IN ARRAY ARRAY[secret_a,secret_b] LOOP
