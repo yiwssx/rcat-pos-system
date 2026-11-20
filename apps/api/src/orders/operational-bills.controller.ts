@@ -27,6 +27,18 @@ export class OperationalBillsController {
     return this.bills.create(req, tenantId, storeId, body);
   }
 
+  @Post(":billId/close")
+  @Header("Cache-Control", "no-store")
+  close(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("billId") billId: string,
+  ) {
+    requireAllowedOrigin(req);
+    return this.bills.close(req, tenantId, storeId, billId);
+  }
+
   @Get(":billId")
   @Header("Cache-Control", "no-store")
   snapshot(
