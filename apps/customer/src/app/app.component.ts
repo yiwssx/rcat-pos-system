@@ -111,7 +111,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
               />
               <span class="grid min-w-0 gap-0.5">
                 <strong
-                  class="hidden whitespace-nowrap text-sm font-semibold tracking-tight min-[360px]:block sm:text-lg"
+                  class="hidden whitespace-nowrap text-sm font-semibold tracking-tight text-brand-foreground min-[360px]:block sm:text-lg"
                   >RCAT POS</strong
                 >
                 <span
@@ -164,7 +164,9 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
             class="hidden min-w-0 border-r border-border bg-card p-4 lg:block"
             aria-label="พื้นที่ทำงาน"
           >
-            <rcat-portal-workspace-nav [url]="url()" />
+            <div class="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto">
+              <rcat-portal-workspace-nav [url]="url()" />
+            </div>
           </aside>
           <hlm-sheet
             class="lg:hidden"
@@ -193,7 +195,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
           tabindex="-1"
           [class]="
             staffWorkspace()
-              ? 'min-w-0 w-full max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8'
+              ? 'min-w-0 w-full max-w-screen-2xl px-4 py-4 sm:px-6 lg:px-8 lg:py-6'
               : 'min-w-0 w-full'
           "
         >
