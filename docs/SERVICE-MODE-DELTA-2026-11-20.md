@@ -83,3 +83,9 @@ A private, tenant-and-store-keyed **dormant** preference is added with `table | 
 5. **E/F — acceptance:** test multi-phone same table aggregation, two strangers same Store QR isolation, old-page Bill revocation, concurrent close/scan/order, same-device append/Preparing race, changed idempotency payload and cross-tenant permission denial; real Owner Local Demo visual/physical QR acceptance.
 
 **Release separation:** B1 SQL CI is not B2–F completion; #81 on-host staging and #82 protected offsite policy are separate, G5 #7 Payment remains last and per-Order. No new infrastructure, service, workflow file or live host action for this stage.
+
+## G6 cross-feature release correction — 20 November 2026
+
+Quick Orders must reuse the established Order-specific tracking and manual PromptPay flow; the Store QR or mutation grant is never a payment bearer. Migration 049 binds an Order-only digest to the exact active Store Guest owner. Checkout returns the stable per-Order token inside the same transaction; explicit tracking selection on the owned Order list can reissue it while that session is valid. Old issued tracking remains order-only after Store QR rotation; old mutation grants cannot bind new credentials. No bearer enters URLs or raw database storage.
+
+The customer explicitly opens the existing tracking/payment screen, with only public QR parameters used for return navigation. Requesting a real payable QR already freezes that Order's amount: additional items produce a separate Order, even if the old Order has not started Preparing. Issuing tracking or a disabled payment response does not freeze append. No payment request is created merely by Quick checkout. The existing server/recipient release gates, manual confirmation, private slip review and per-Order obligation remain unchanged. No real payment or production activation. Use the existing SQL and Browser/HTTP test suites for the changed cross-feature path, not a new Owner Demo round.
