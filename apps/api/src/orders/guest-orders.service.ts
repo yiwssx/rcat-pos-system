@@ -120,6 +120,9 @@ function mapOrderFailure(error: unknown): never {
   if (code === "42501" || code === "28000") {
     throw new NotFoundException("Order or visit unavailable");
   }
+  if (code === "P0043") {
+    throw new ConflictException("BILL_CLOSURE_REQUIRED");
+  }
   if (code === "P0040") {
     throw new ConflictException("ORDERING_CLOSED");
   }
