@@ -1,4 +1,4 @@
-\\set ON_ERROR_STOP on
+\set ON_ERROR_STOP on
 -- EPHEMERAL CI ONLY. Never run this fixture against a live store.
 -- Stage B1 persists a dormant service-mode preference; ordering still uses
 -- the existing Table QR flow until the guarded B2+ migration is accepted.
@@ -146,4 +146,4 @@ BEGIN
   IF NOT denied THEN RAISE EXCEPTION 'App role can read private mode config'; END IF;
 END $$;
 ROLLBACK;
-\\echo 'PASS: dormant Table default, Quick/Hybrid preference, revision CAS, audit, tenant/RBAC and private storage'
+\echo 'PASS: dormant Table default, Quick/Hybrid preference, revision CAS, audit, tenant/RBAC and private storage'
