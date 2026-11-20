@@ -200,7 +200,7 @@ END $$;
 -- No real recipient, live transfer, or payment flag is enabled outside this
 -- rolled-back test. Creating tracking alone must not freeze add-ons.
 SET LOCAL ROLE rcat_auth;
-DO $
+DO $$
 DECLARE
  t uuid:=current_setting('test.g5.tenant')::uuid;
  s uuid:=current_setting('test.g5.store')::uuid;
@@ -263,7 +263,7 @@ BEGIN
  IF NOT denied THEN RAISE EXCEPTION 'Revoked Store grant reissued tracking'; END IF;
  IF rcat_private.guest_order_status(oid,track)->>'orderId'<>oid::text THEN
    RAISE EXCEPTION 'Order-only tracking lost after Store QR rotation'; END IF;
-END $;
+END $$;
 RESET ROLE;
 
 ROLLBACK;
