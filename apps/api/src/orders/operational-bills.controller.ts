@@ -39,6 +39,17 @@ export class OperationalBillsController {
     return this.bills.close(req, tenantId, storeId, billId);
   }
 
+  @Get("by-visit/:visitId")
+  @Header("Cache-Control", "no-store")
+  byVisit(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Param("visitId") visitId: string,
+  ) {
+    return this.bills.byVisit(req, tenantId, storeId, visitId);
+  }
+
   @Get(":billId")
   @Header("Cache-Control", "no-store")
   snapshot(
