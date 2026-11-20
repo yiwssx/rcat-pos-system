@@ -1117,7 +1117,7 @@ async function quickOrderHttp(fixture) {
   assert.equal((await post(trackUrl, { guestToken: b.guestToken })).status, 404);
   const payment = await post(customer + "/api/guest/orders/" + oa.orderId + "/payment-request",
     {}, { Authorization: "Bearer " + oa.trackingToken });
-  assert.equal(payment.status, 200);
+  assert.equal(payment.status, 201, await payment.clone().text());
   assert.equal((await payment.json()).available, false, "Live payment must stay disabled");
   const mineUrl = customer + "/api/guest/ordering-store/my-orders";
   const myA = await post(mineUrl, { guestToken: a.guestToken });
