@@ -745,6 +745,114 @@ try {
   assert.equal(staticGrant.open, true);
   assert.equal(staticGrant.tableLabel, "โต๊ะ 1");
   assert.equal(staticGrant.visitToken.length, 43, "Printed QR never contains bearer tokens");
+  // B2: the public counter QR must never authenticate a customer's Order.
+  const modeUrl = "/api/tenants/" + made.tenantId +
+    "/stores/" + made.storeId + "/service-mode";
+  const storeQrUrl = "/api/tenants/" + made.tenantId +
+    "/stores/" + made.storeId + "/store-qr";
+  const modeDefault = await api(modeUrl, { headers: { Cookie: cookieHeader } });
+  assert.equal(modeDefault.status, 200);
+  assert.equal((await modeDefault.json()).serviceMode, "table");
+  assert.equal((await api(storeQrUrl + "/rotate", {
+    method: "POST", headers: catHeaders,
+  })).status, 404, "Table Service cannot create a counter QR");
+  assert.equal((await api(modeUrl, {
+    method: "POST", headers: { ...json, Cookie: cookieHeader },
+    body: JSON.stringify({ serviceMode: "quick", expectedRevision: 0 }),
+  })).status, 403, "Mode mutation must require CSRF");
+  assert.equal((await api(modeUrl, {
+    method: "POST", headers: { ...json, Cookie: bHeader, "X-CSRF-Token": bCsrf },
+    body: JSON.stringify({ serviceMode: "quick", expectedRevision: 0 }),
+  })).status, 404, "Foreign merchant cannot configure service modes");
+  const modeQuick = await api(modeUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ serviceMode: "quick", expectedRevision: 0 }),
+  });
+  assert.equal(modeQuick.status, 201, await modeQuick.clone().text());
+  assert.equal((await modeQuick.json()).revision, 1);
+  assert.equal((await api(modeUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ serviceMode: "hybrid", expectedRevision: 0 }),
+  })).status, 409, "Stale mode revision must conflict");
+
+  const issuedStoreQr = await api(storeQrUrl + "/rotate", {
+    method: "POST", headers: catHeaders,
+  });
+  assert.equal(issuedStoreQr.status, 201, await issuedStoreQr.clone().text());
+  const storeCode = await issuedStoreQr.json();
+  const counterUrl = new URL(storeCode.printedUrl);
+  assert.equal(counterUrl.searchParams.get("counter"), storeCode.publicId);
+  assert.equal(counterUrl.searchParams.get("store"), made.storeId);
+  assert.equal(counterUrl.hash, "", "Public counter QR cannot contain a Guest bearer");
+  const publicStore = await api(storeQrUrl, { headers: { Cookie: cookieHeader } });
+  assert.equal(publicStore.status, 200);
+  assert.equal((await publicStore.json()).publicId, storeCode.publicId);
+  const storeSvg = await api(storeQrUrl + "/print-qr.svg", {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(storeSvg.status, 200);
+  assert.match(storeSvg.headers.get("content-type") || "", /image\/svg\+xml/);
+
+  const openCounter = (publicId) => api("/api/guest/ordering-store/open", {
+    method: "POST", headers: json,
+    body: JSON.stringify({
+      tenantId: made.tenantId, storeId: made.storeId, publicId,
+    }),
+  });
+  const counterA = await openCounter(storeCode.publicId);
+  const counterB = await openCounter(storeCode.publicId);
+  assert.equal(counterA.status, 201, await counterA.clone().text());
+  assert.equal(counterB.status, 201, await counterB.clone().text());
+  const customerA = await counterA.json(), customerB = await counterB.json();
+  assert.equal(customerA.guestToken.length, 43);
+  assert.equal(customerB.guestToken.length, 43);
+  assert.notEqual(customerA.guestSessionId, customerB.guestSessionId);
+  assert.notEqual(customerA.guestToken, customerB.guestToken);
+
+  const resolveCounter = (guestToken) => api("/api/guest/ordering-store/resolve", {
+    method: "POST", headers: json, body: JSON.stringify({ guestToken }),
+  });
+  const identityA = await resolveCounter(customerA.guestToken);
+  const identityB = await resolveCounter(customerB.guestToken);
+  assert.equal(identityA.status, 201);
+  assert.equal(identityB.status, 201);
+  assert.equal((await identityA.json()).guestSessionId, customerA.guestSessionId);
+  assert.equal((await identityB.json()).guestSessionId, customerB.guestSessionId);
+  assert.equal((await api("/api/guest/ordering-visit/resolve", {
+    method: "POST", headers: json,
+    body: JSON.stringify({ token: customerA.guestToken }),
+  })).status, 404, "Store guest must not inherit Table Visit authority");
+
+  const rotatedStoreQr = await api(storeQrUrl + "/rotate", {
+    method: "POST", headers: catHeaders,
+  });
+  assert.equal(rotatedStoreQr.status, 201);
+  const nextCounter = await rotatedStoreQr.json();
+  assert.notEqual(nextCounter.publicId, storeCode.publicId);
+  assert.equal((await openCounter(storeCode.publicId)).status, 404);
+  assert.equal((await resolveCounter(customerA.guestToken)).status, 404);
+  assert.equal((await resolveCounter(customerB.guestToken)).status, 404);
+  const counterFresh = await openCounter(nextCounter.publicId);
+  assert.equal(counterFresh.status, 201);
+  const freshGuest = await counterFresh.json();
+
+  // Closing and reopening ordering does NOT resurrect the previous client.
+  assert.equal((await api(orderingUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ enabled: false }),
+  })).status, 201);
+  assert.equal((await api(orderingUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ enabled: true }),
+  })).status, 201);
+  assert.equal((await resolveCounter(freshGuest.guestToken)).status, 404);
+  assert.equal((await openCounter(nextCounter.publicId)).status, 201);
+  assert.equal((await api(modeUrl, {
+    method: "POST", headers: catHeaders,
+    body: JSON.stringify({ serviceMode: "table", expectedRevision: 1 }),
+  })).status, 201);
+  assert.equal((await openCounter(nextCounter.publicId)).status, 404,
+    "Table-only mode may not accept Store QR scans");
   const currentTables = await api(tableUrl, { headers: { Cookie: cookieHeader } });
   assert.equal(currentTables.status, 200);
   const printed = await currentTables.json();
