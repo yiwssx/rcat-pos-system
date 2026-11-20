@@ -130,8 +130,8 @@ async function main() {
       const style = getComputedStyle(element);
       return { background: style.backgroundColor, image: style.backgroundImage };
     });
-    assert.equal(shell.background, 'rgb(255, 255, 255)',
-      'Desktop sidebar must use the white neutral iOS surface');
+    assert.equal(shell.background, 'rgb(255, 253, 250)',
+      'Desktop sidebar must use the V7 ivory surface');
     assert.equal(shell.image, 'none',
       'Legacy V6 orange gradient decoration must be removed from the sidebar');
     await page.setViewportSize({ width: 320, height: 780 });
@@ -239,8 +239,8 @@ async function main() {
       active: getComputedStyle(document.querySelector('.guest-category-chip.is-active')).backgroundColor,
       cta: getComputedStyle(document.querySelector('.guest-add')).backgroundColor,
     }));
-    assert.equal(guestPalette.active, 'rgb(201, 65, 8)', 'Guest category selection uses accessible solid brand orange');
-    assert.equal(guestPalette.cta, 'rgb(201, 65, 8)', 'Guest add-to-cart uses accessible solid brand orange');
+    assert.equal(guestPalette.active, 'rgb(24, 107, 96)', 'Guest category selection uses V7 deep teal');
+    assert.equal(guestPalette.cta, 'rgb(24, 107, 96)', 'Guest add-to-cart uses V7 deep teal');
     // The desktop filter is one compact rail, not a full-width stacked form.
     await staticPage.setViewportSize({ width: 1365, height: 900 });
     const filterSize = await staticPage.evaluate(() => {
@@ -250,6 +250,8 @@ async function main() {
     });
     assert.ok(filterSize.railHeight < 85, 'Desktop search/categories should use one compact row');
     assert.ok(filterSize.fieldWidth < 460, 'Desktop search should not occupy the entire screen');
+    assert.equal(await staticPage.getByRole('heading', { name: 'ตะกร้าของคุณ' }).isVisible(), true,
+      'V7 desktop shows the cart summary beside the catalog');
     assert.equal(await staticPage.getByRole('searchbox', { name: 'ค้นหาเมนู' }).count(), 1);
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-search-desktop.png', fullPage: true });
     await staticPage.setViewportSize({ width: 390, height: 844 });
@@ -275,11 +277,12 @@ async function main() {
         ctaText: getComputedStyle(action).color,
       };
     });
-    assert.equal(guestLight.background, 'rgb(245, 245, 247)', 'Guest must use the light neutral canvas');
-    assert.match(guestLight.cart, /rgba?\(255, 255, 255/, 'Cart bar must be white, not an unreadable orange gradient');
-    assert.equal(guestLight.label, 'rgb(28, 28, 30)', 'Cart count must use readable dark text');
-    assert.equal(guestLight.cta, 'rgb(201, 65, 8)', 'Only cart action uses dark orange');
+    assert.equal(guestLight.background, 'rgb(255, 245, 233)', 'Guest must use the V7 warm cream canvas');
+    assert.equal(guestLight.cart, 'rgb(24, 107, 96)', 'V7 cart bar uses deep teal, not orange');
+    assert.equal(guestLight.label, 'rgb(255, 255, 255)', 'Cart count must use readable light text on teal');
     assert.equal(guestLight.ctaText, 'rgb(255, 255, 255)', 'Cart action must have readable white text');
+    assert.equal(await staticPage.getByRole('heading', { name: 'ตะกร้าของคุณ' }).isVisible(), false,
+      'V7 mobile hides the desktop cart summary');
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-ios-cart-bar-phone.png', fullPage: true });
     await staticPage.getByRole('button', { name: 'ดูตะกร้า' }).click();
     // CDK dialog accessibility container is zero-sized by design.
