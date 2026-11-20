@@ -111,8 +111,12 @@ function guestError(error: unknown): string {
             </h1>
             <p class="guest-context">
               @if (session.visit(); as visit) {
-                <strong>{{ visit.entryMode === "counter" ? "รับที่เคาน์เตอร์" : "โต๊ะ " + visit.tableLabel }}</strong> ·
-                สั่งอาหารผ่านมือถือ
+                <strong>{{
+                  visit.entryMode === "counter"
+                    ? "รับที่เคาน์เตอร์"
+                    : "โต๊ะ " + visit.tableLabel
+                }}</strong>
+                · สั่งอาหารผ่านมือถือ
               } @else if (closedStore(); as closed) {
                 {{ closed.table }}
               } @else {
@@ -122,7 +126,9 @@ function guestError(error: unknown): string {
           </div>
         </div>
         @if (!staticCounter()) {
-          <a class="guest-track-link" routerLink="/order/track">ติดตามออเดอร์</a>
+          <a class="guest-track-link" routerLink="/order/track"
+            >ติดตามออเดอร์</a
+          >
         }
       </header>
 
@@ -217,30 +223,69 @@ function guestError(error: unknown): string {
       }
 
       @if (staticCounter() && session.visit()) {
-        <details class="my-3 rounded-xl border border-border bg-card p-4 text-foreground" open>
-          <summary class="cursor-pointer font-semibold">ออเดอร์ของฉัน ({{ quickOrders().length }})</summary>
+        <details
+          class="my-3 rounded-xl border border-border bg-card p-4 text-foreground"
+          open
+        >
+          <summary class="cursor-pointer font-semibold">
+            ออเดอร์ของฉัน ({{ quickOrders().length }})
+          </summary>
           <div class="mt-3 space-y-3">
-            <button hlmBtn variant="outline" type="button" class="min-h-11"
-              [disabled]="quickLoading() || busy() || !online()" (click)="refreshQuickOrders()">
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              class="min-h-11"
+              [disabled]="quickLoading() || busy() || !online()"
+              (click)="refreshQuickOrders()"
+            >
               อัปเดตสถานะ
             </button>
             @if (quickError()) {
-              <p role="alert" class="text-sm text-destructive">{{ quickError() }}</p>
+              <p role="alert" class="text-sm text-destructive">
+                {{ quickError() }}
+              </p>
             }
             @for (order of quickOrders(); track order.orderId) {
               <div class="space-y-2 rounded-lg border border-border p-3">
-                <p class="font-semibold">{{ orderNumber(order.displayNumber) }} · {{ statusLabel[order.status] }}</p>
-                <p class="text-sm">ยอดออเดอร์ {{ money(order.amountSatang) }} ฿</p>
-                <button hlmBtn variant="outline" type="button" class="min-h-11"
-                  [disabled]="busy()" [attr.aria-pressed]="quickTarget() === order.orderId"
-                  (click)="quickTarget.set(order.orderId)">
-                  {{ order.status === "submitted" || order.status === "accepted" ? "เพิ่มรายการในออเดอร์นี้" : "สั่งเพิ่มเป็นออเดอร์ใหม่" }}
+                <p class="font-semibold">
+                  {{ orderNumber(order.displayNumber) }} ·
+                  {{ statusLabel[order.status] }}
+                </p>
+                <p class="text-sm">
+                  ยอดออเดอร์ {{ money(order.amountSatang) }} ฿
+                </p>
+                <button
+                  hlmBtn
+                  variant="outline"
+                  type="button"
+                  class="min-h-11"
+                  [disabled]="busy()"
+                  [attr.aria-pressed]="quickTarget() === order.orderId"
+                  (click)="quickTarget.set(order.orderId)"
+                >
+                  {{
+                    order.status === "submitted" || order.status === "accepted"
+                      ? "เพิ่มรายการในออเดอร์นี้"
+                      : "สั่งเพิ่มเป็นออเดอร์ใหม่"
+                  }}
                 </button>
               </div>
             }
             @if (quickTarget()) {
-              <p class="text-sm" role="status">เลือกสั่งเพิ่มแล้ว หากร้านเริ่มเตรียม ระบบจะสร้างออเดอร์ใหม่</p>
-              <button hlmBtn variant="outline" type="button" class="min-h-11" [disabled]="busy()" (click)="quickTarget.set(null)">สั่งเป็นออเดอร์ใหม่</button>
+              <p class="text-sm" role="status">
+                เลือกสั่งเพิ่มแล้ว หากร้านเริ่มเตรียม ระบบจะสร้างออเดอร์ใหม่
+              </p>
+              <button
+                hlmBtn
+                variant="outline"
+                type="button"
+                class="min-h-11"
+                [disabled]="busy()"
+                (click)="quickTarget.set(null)"
+              >
+                สั่งเป็นออเดอร์ใหม่
+              </button>
             }
           </div>
         </details>
@@ -251,7 +296,11 @@ function guestError(error: unknown): string {
             <span class="guest-menu-kicker">เมนูของร้าน</span>
             <h2 class="guest-menu-intro-title">เลือกอาหารและเครื่องดื่ม</h2>
           </div>
-          <span class="guest-table-chip">{{ visit.entryMode === "counter" ? "เคาน์เตอร์" : "โต๊ะ " + visit.tableLabel }}</span>
+          <span class="guest-table-chip">{{
+            visit.entryMode === "counter"
+              ? "เคาน์เตอร์"
+              : "โต๊ะ " + visit.tableLabel
+          }}</span>
         </div>
 
         <div class="v6-guest-filters">
@@ -653,7 +702,9 @@ function guestError(error: unknown): string {
                   busy()
                     ? "กำลังส่งออเดอร์ กรุณาอย่าปิดหน้า..."
                     : staticCounter()
-                      ? (quickTarget() ? "ยืนยันสั่งเพิ่ม" : "ยืนยันส่งคำสั่งซื้อ")
+                      ? quickTarget()
+                        ? "ยืนยันสั่งเพิ่ม"
+                        : "ยืนยันส่งคำสั่งซื้อ"
                       : "ยืนยันส่งคำสั่งซื้อและดูวิธีชำระเงิน"
                 }}
               </button>
@@ -774,9 +825,14 @@ export class GuestOrderPage implements OnInit, OnDestroy {
         return;
       }
       if (tableId) this.staticTable.set({ tenantId, storeId, tableId });
-      else if (publicId) this.staticCounter.set({ tenantId, storeId, publicId });
+      else if (publicId)
+        this.staticCounter.set({ tenantId, storeId, publicId });
       this.entryStorageKey =
-        "rcat-pos:qr-entry:v1:" + tenantId + ":" + storeId + ":" +
+        "rcat-pos:qr-entry:v1:" +
+        tenantId +
+        ":" +
+        storeId +
+        ":" +
         (tableId ? "table:" + tableId : "counter:" + publicId);
       // Reload an existing possession grant, never silently mint a new one
       // after closure/revocation. Empty marker requires explicit action.
@@ -794,7 +850,10 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       } catch {
         this.qrIssue.set("reconnect");
       }
-    } else if (this.session.visitToken() && this.session.visit()?.entryMode !== "counter") {
+    } else if (
+      this.session.visitToken() &&
+      this.session.visit()?.entryMode !== "counter"
+    ) {
       this.scanToken = this.session.visitToken();
       void this.load(this.session.visitToken()!);
     } else {
@@ -850,7 +909,9 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     this.quickOrders.set([]);
     this.quickTarget.set(null);
     this.rememberEntry("");
-    this.qrIssue.set(this.staticTable() || this.staticCounter() ? "reconnect" : "invalid");
+    this.qrIssue.set(
+      this.staticTable() || this.staticCounter() ? "reconnect" : "invalid",
+    );
   }
 
   private rememberEntry(token: string): void {
@@ -874,7 +935,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     this.quickError.set("");
     try {
       const result = await this.api.quickOrders(token);
-      if (this.session.visitToken() === token) this.quickOrders.set(result.orders);
+      if (this.session.visitToken() === token)
+        this.quickOrders.set(result.orders);
     } catch (error) {
       if (this.session.visitToken() !== token) return;
       if (error instanceof HttpErrorResponse && error.status === 404) {
@@ -889,7 +951,12 @@ export class GuestOrderPage implements OnInit, OnDestroy {
 
   private menuPage(token: string, cursor: GuestCatalogCursor | null = null) {
     return this.staticCounter()
-      ? this.api.counterPage(token, this.search(), this.category() || null, cursor)
+      ? this.api.counterPage(
+          token,
+          this.search(),
+          this.category() || null,
+          cursor,
+        )
       : this.api.page(token, this.search(), this.category() || null, cursor);
   }
 
@@ -957,13 +1024,22 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     this.rememberEntry("");
     try {
       const state = counter
-        ? await this.api.openPrintedStore(counter.tenantId, counter.storeId, counter.publicId)
-        : await this.api.openPrintedTable(table!.tenantId, table!.storeId, table!.tableId);
+        ? await this.api.openPrintedStore(
+            counter.tenantId,
+            counter.storeId,
+            counter.publicId,
+          )
+        : await this.api.openPrintedTable(
+            table!.tenantId,
+            table!.storeId,
+            table!.tableId,
+          );
       if (version !== this.requestVersion) return;
       if (!state.open) {
         this.closedStore.set({
           name: state.storeName,
-          table: "tableLabel" in state ? "โต๊ะ " + state.tableLabel : "เคาน์เตอร์",
+          table:
+            "tableLabel" in state ? "โต๊ะ " + state.tableLabel : "เคาน์เตอร์",
         });
         return;
       }
@@ -1298,15 +1374,26 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       const target = this.staticCounter() ? this.quickTarget() : null;
       const key = this.session.keyFor(lines, context, target);
       if (this.staticCounter()) {
-        const result = await this.api.quickCheckout(token, lines, context, key, target);
+        const result = await this.api.quickCheckout(
+          token,
+          lines,
+          context,
+          key,
+          target,
+        );
         this.session.setCart([]);
         this.quickTarget.set(null);
         this.closeCart();
         this.notice.set(
-          (result.action === "appended" ? "เพิ่มรายการสำเร็จ " :
-            result.action === "new_after_cutoff" ? "ร้านเริ่มเตรียมแล้ว สร้างออเดอร์ใหม่ " :
-              "ส่งออเดอร์สำเร็จ ") + this.orderNumber(result.displayNumber) +
-            " · ยอด " + this.money(result.amountSatang) + " ฿",
+          (result.action === "appended"
+            ? "เพิ่มรายการสำเร็จ "
+            : result.action === "new_after_cutoff"
+              ? "ร้านเริ่มเตรียมแล้ว สร้างออเดอร์ใหม่ "
+              : "ส่งออเดอร์สำเร็จ ") +
+            this.orderNumber(result.displayNumber) +
+            " · ยอด " +
+            this.money(result.amountSatang) +
+            " ฿",
         );
         await this.refreshQuickOrders();
         return;
@@ -1332,7 +1419,10 @@ export class GuestOrderPage implements OnInit, OnDestroy {
         this.session.invalidateVisit();
         this.closedStore.set({
           name: visit.storeName,
-          table: visit.entryMode === "counter" ? "เคาน์เตอร์" : "โต๊ะ " + visit.tableLabel,
+          table:
+            visit.entryMode === "counter"
+              ? "เคาน์เตอร์"
+              : "โต๊ะ " + visit.tableLabel,
         });
         this.products.set([]);
       }
