@@ -6,9 +6,7 @@
   "targets": {
     "build": {
       "command": "pnpm exec ng build customer",
-      "outputs": [
-        "{workspaceRoot}/dist/apps/customer"
-      ]
+      "outputs": ["{workspaceRoot}/dist/apps/customer"]
     },
     "serve": {
       "command": "pnpm exec ng serve customer --host 127.0.0.1",
@@ -22,11 +20,8 @@
       "command": "pnpm exec vitest run apps/customer/src/app/app.spec.ts apps/customer/src/app/portal-access.spec.ts"
     },
     "lint": {
-      "command": "pnpm exec prettier --write apps/customer/src/app/guest-order.api.ts apps/customer/src/app/guest-order.page.ts && git --no-pager diff -- apps/customer/src/app/guest-order.api.ts apps/customer/src/app/guest-order.page.ts && exit 1"
+      "command": "pnpm exec prettier --check 'apps/customer/src/**/*.{ts,css,html}'"
     }
   },
-  "implicitDependencies": [
-    "merchant",
-    "admin"
-  ]
+  "implicitDependencies": ["merchant", "admin"]
 }
