@@ -28,10 +28,13 @@ BEGIN
  -- Validate the private counter capability. Public IDs and Table tokens
  -- cannot authorize this read. The resolver locks the store for sharing.
  v_identity:=rcat_private.resolve_store_guest_session(p_digest);
- SELECT g.* INTO STRICT v FROM rcat_private.store_guest_sessions g
+ SELECT g.* INTO v FROM rcat_private.store_guest_sessions g
  WHERE g.id=(v_identity->>'guestSessionId')::uuid
  AND g.token_digest=p_digest AND g.revoked_at IS NULL
  AND g.expires_at>clock_timestamp();
+ IF NOT FOUND THEN
+   RAISE EXCEPTION 'Store session unavailable' USING ERRCODE='42501';
+ END IF;
 
  WITH matched AS MATERIALIZED (
   SELECT p.* FROM rcat.menu_products p
@@ -118,10 +121,13 @@ BEGIN
  -- Validate the private counter capability. Public IDs and Table tokens
  -- cannot authorize this read. The resolver locks the store for sharing.
  v_identity:=rcat_private.resolve_store_guest_session(p_digest);
- SELECT g.* INTO STRICT v FROM rcat_private.store_guest_sessions g
+ SELECT g.* INTO v FROM rcat_private.store_guest_sessions g
  WHERE g.id=(v_identity->>'guestSessionId')::uuid
  AND g.token_digest=p_digest AND g.revoked_at IS NULL
  AND g.expires_at>clock_timestamp();
+ IF NOT FOUND THEN
+   RAISE EXCEPTION 'Store session unavailable' USING ERRCODE='42501';
+ END IF;
 
  -- Only products present and currently orderable. Missing items stay
  -- absent so the browser explicitly requests cart reconfirmation/removal.
