@@ -12,7 +12,12 @@ function configuration(env) {
     !["127.0.0.1", "10.10.1.100"].includes(env.RCAT_POS_HOST_BIND_IP)) {
     throw new Error("Only the approved RCAT IOT staging listener may be monitored");
   }
-  const ports = names.map(([name, key]) => {
+  const topology = env.RCAT_POS_TOPOLOGY ?? "legacy";
+  if (!["legacy", "portal"].includes(topology)) {
+    throw new Error("Unknown approved staging topology");
+  }
+  const listeners = topology === "portal" ? [names[0]] : names;
+  const ports = listeners.map(([name, key]) => {
     const raw = env[key];
     if (!/^\d{4,5}$/.test(raw ?? "") || Number(raw) < 1024 || Number(raw) > 65535) {
       throw new Error("Invalid local staging listener for " + name);

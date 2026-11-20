@@ -8,15 +8,19 @@ from datetime import datetime, timezone
 
 def main():
     try:
-        hours = float(os.environ.get("RCAT_POS_BACKUP_MAX_AGE_HOURS", "26"))
-        if not 1 <= hours <= 72:
-            raise ValueError("Backup freshness threshold must be between 1 and 72 hours")
+        portal = os.environ.get("RCAT_POS_TOPOLOGY") == "portal"
+        maximum = 24 if portal else 72
+        hours = float(os.environ.get("RCAT_POS_BACKUP_MAX_AGE_HOURS", "24" if portal else "26"))
+        if not 1 <= hours <= maximum:
+            raise ValueError("Backup freshness threshold outside permitted policy")
         snapshots = json.load(sys.stdin)
         if not isinstance(snapshots, list):
             raise ValueError("Expected Restic snapshot list")
         timestamps = []
         for item in snapshots:
             if not isinstance(item, dict) or "rcat-pos-staging" not in item.get("tags", []):
+                continue
+            if portal and not {"rcat-pos-portal", "postgres16"}.issubset(item.get("tags", [])):
                 continue
             raw = item.get("time")
             if not isinstance(raw, str):
