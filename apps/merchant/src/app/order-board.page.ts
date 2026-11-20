@@ -195,27 +195,27 @@ function failureText(error: unknown): string {
         </p>
       } @else if (store()) {
         <div
-          class="my-4 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3"
+          class="my-4 grid min-w-0 grid-cols-3 gap-2 sm:gap-3"
           aria-label="กรองออเดอร์ตามสถานะ"
         >
           <button
             hlmBtn
             type="button"
             variant="outline"
-            class="grid min-h-24 min-w-0 justify-items-start gap-1 rounded-xl px-4 py-3 text-left"
+            class="grid min-h-20 min-w-0 justify-items-start gap-1 rounded-xl px-2 py-3 text-left sm:px-4 bg-incoming text-incoming-foreground"
             [class.border-primary]="filter() === 'submitted'"
-            [class.bg-accent]="filter() === 'submitted'"
+            [class.ring-2]="filter() === 'submitted'"
             [attr.aria-pressed]="filter() === 'submitted'"
             (click)="setQueueFilter('submitted')"
           >
-            <span class="text-sm font-medium text-foreground"
+            <span class="whitespace-normal text-xs font-medium text-current sm:text-sm"
               >รอรับออเดอร์</span
             >
             <strong
-              class="text-2xl font-semibold tabular-nums text-foreground"
+              class="text-2xl font-semibold tabular-nums text-current"
               >{{ pendingCount() }}</strong
             >
-            <small class="text-xs font-normal text-muted-foreground"
+            <small class="hidden text-xs font-normal text-current sm:block"
               >แตะเพื่อดูรายการใหม่</small
             >
           </button>
@@ -223,20 +223,20 @@ function failureText(error: unknown): string {
             hlmBtn
             type="button"
             variant="outline"
-            class="grid min-h-24 min-w-0 justify-items-start gap-1 rounded-xl px-4 py-3 text-left"
+            class="grid min-h-20 min-w-0 justify-items-start gap-1 rounded-xl px-2 py-3 text-left sm:px-4 bg-preparing text-preparing-foreground"
             [class.border-primary]="filter() === 'in_progress'"
-            [class.bg-accent]="filter() === 'in_progress'"
+            [class.ring-2]="filter() === 'in_progress'"
             [attr.aria-pressed]="filter() === 'in_progress'"
             (click)="setQueueFilter('in_progress')"
           >
-            <span class="text-sm font-medium text-foreground"
+            <span class="whitespace-normal text-xs font-medium text-current sm:text-sm"
               >กำลังดำเนินงาน</span
             >
             <strong
-              class="text-2xl font-semibold tabular-nums text-foreground"
+              class="text-2xl font-semibold tabular-nums text-current"
               >{{ preparingCount() }}</strong
             >
-            <small class="text-xs font-normal text-muted-foreground"
+            <small class="hidden text-xs font-normal text-current sm:block"
               >รับแล้ว / กำลังเตรียม</small
             >
           </button>
@@ -244,18 +244,18 @@ function failureText(error: unknown): string {
             hlmBtn
             type="button"
             variant="outline"
-            class="grid min-h-24 min-w-0 justify-items-start gap-1 rounded-xl px-4 py-3 text-left"
+            class="grid min-h-20 min-w-0 justify-items-start gap-1 rounded-xl px-2 py-3 text-left sm:px-4 bg-served text-served-foreground"
             [class.border-primary]="filter() === 'served'"
-            [class.bg-accent]="filter() === 'served'"
+            [class.ring-2]="filter() === 'served'"
             [attr.aria-pressed]="filter() === 'served'"
             (click)="setQueueFilter('served')"
           >
-            <span class="text-sm font-medium text-foreground">เสิร์ฟแล้ว</span>
+            <span class="whitespace-normal text-xs font-medium text-current sm:text-sm">เสิร์ฟแล้ว</span>
             <strong
-              class="text-2xl font-semibold tabular-nums text-foreground"
+              class="text-2xl font-semibold tabular-nums text-current"
               >{{ servedCount() }}</strong
             >
-            <small class="text-xs font-normal text-muted-foreground"
+            <small class="hidden text-xs font-normal text-current sm:block"
               >รายการเสร็จสิ้น</small
             >
           </button>
@@ -352,15 +352,15 @@ function failureText(error: unknown): string {
                   <span
                     hlmBadge
                     class="shrink-0 self-start"
-                    [variant]="
-                      order.status === 'cancelled'
-                        ? 'destructive'
-                        : order.status === 'submitted'
-                          ? 'default'
-                          : order.status === 'served'
-                            ? 'secondary'
-                            : 'outline'
-                    "
+                    [variant]="order.status === 'cancelled' ? 'destructive' : 'outline'"
+                    [class.bg-incoming]="order.status === 'submitted'"
+                    [class.text-incoming-foreground]="order.status === 'submitted'"
+                    [class.bg-accepted]="order.status === 'accepted'"
+                    [class.text-accepted-foreground]="order.status === 'accepted'"
+                    [class.bg-preparing]="order.status === 'preparing'"
+                    [class.text-preparing-foreground]="order.status === 'preparing'"
+                    [class.bg-served]="order.status === 'served'"
+                    [class.text-served-foreground]="order.status === 'served'"
                   >
                     {{ statusLabel[order.status] }}
                   </span>
@@ -416,7 +416,7 @@ function failureText(error: unknown): string {
                       }
                       @if (item.note) {
                         <p
-                          class="mt-2 rounded-lg bg-muted/50 p-2 text-sm leading-relaxed text-foreground"
+                          class="mt-2 rounded-lg bg-brand-soft p-2 text-sm leading-relaxed text-brand-foreground"
                         >
                           <strong>หมายเหตุ:</strong> {{ item.note }}
                         </p>
