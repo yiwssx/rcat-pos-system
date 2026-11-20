@@ -21,6 +21,8 @@ import { ProductMediaController } from "./catalog/product-media.controller";
 import { ProductMediaService } from "./catalog/product-media.service";
 import { TableOrderingController } from "./ordering/table-ordering.controller";
 import { TableOrderingService } from "./ordering/table-ordering.service";
+import { StoreQrController } from "./ordering/store-qr.controller";
+import { StoreQrService } from "./ordering/store-qr.service";
 import { GuestRequestBudgetService } from "./ordering/guest-request-budget.service";
 import { ProductModifiersController } from "./catalog/product-modifiers.controller";
 import { ProductModifiersService } from "./catalog/product-modifiers.service";
@@ -60,6 +62,7 @@ import { PaymentFinanceService } from "./payments/payment-finance.service";
     CatalogController,
     ProductMediaController,
     TableOrderingController,
+    StoreQrController,
     ProductModifiersController,
     GuestOrdersController,
     MerchantOrdersController,
@@ -84,6 +87,7 @@ import { PaymentFinanceService } from "./payments/payment-finance.service";
     CatalogService,
     ProductMediaService,
     TableOrderingService,
+    StoreQrService,
     GuestRequestBudgetService,
     ProductModifiersService,
     GuestOrdersService,
