@@ -71,7 +71,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
           <div
             class="mx-auto grid w-full max-w-5xl items-center gap-8 px-4 py-10 sm:px-6 md:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] md:gap-10 md:py-16"
           >
-            <section class="grid min-w-0 gap-5" aria-labelledby="portal-title">
+            <section class="grid min-w-0 gap-5 rounded-3xl bg-brand-soft p-5 sm:p-8" aria-labelledby="portal-title">
               <div class="flex items-center gap-3">
                 <img
                   src="/rcat-pos-logo.webp"
@@ -81,7 +81,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                   class="size-14 rounded-2xl object-contain"
                 />
                 <span
-                  class="text-sm font-semibold tracking-wide text-muted-foreground"
+                  class="text-sm font-semibold tracking-wide text-brand-foreground"
                   >RCAT POS SYSTEM</span
                 >
               </div>
