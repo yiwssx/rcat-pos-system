@@ -600,7 +600,7 @@ BEGIN
         FROM rcat.order_items i
         WHERE i.tenant_id=o.tenant_id AND i.store_id=o.store_id
           AND i.order_id=o.id)
-      ) ORDER BY o.created_at,o.id),'[]'::jsonb)
+      ) ORDER BY o.created_at,o.id)
       FROM (SELECT * FROM rcat.orders
         WHERE quick_session_id=v_guest.id AND tenant_id=v_guest.tenant_id
           AND store_id=v_guest.store_id
