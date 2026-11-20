@@ -16,6 +16,28 @@ import { StoreQrService } from "./store-qr.service";
 export class StoreQrController {
   constructor(private readonly storeQr: StoreQrService) {}
 
+  @Get("tenants/:tenantId/stores/:storeId/service-mode")
+  @Header("Cache-Control", "no-store")
+  mode(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+  ) {
+    return this.storeQr.mode(req, tenantId, storeId);
+  }
+
+  @Post("tenants/:tenantId/stores/:storeId/service-mode")
+  @Header("Cache-Control", "no-store")
+  changeMode(
+    @Req() req: ApiRequest,
+    @Param("tenantId") tenantId: string,
+    @Param("storeId") storeId: string,
+    @Body() body: unknown,
+  ) {
+    requireAllowedOrigin(req);
+    return this.storeQr.changeMode(req, tenantId, storeId, body);
+  }
+
   @Get("tenants/:tenantId/stores/:storeId/store-qr")
   @Header("Cache-Control", "no-store")
   snapshot(
