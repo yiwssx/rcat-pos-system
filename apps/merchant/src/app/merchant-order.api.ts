@@ -174,7 +174,9 @@ export class MerchantOrderApi {
   ): Promise<OperationalBill> {
     return firstValueFrom(
       this.http.get<OperationalBill>(
-        scopePath(tenantId, storeId) + "/bills/by-visit/" + encodeURIComponent(visitId),
+        scopePath(tenantId, storeId) +
+          "/bills/by-visit/" +
+          encodeURIComponent(visitId),
         { withCredentials: true },
       ),
     );
@@ -186,8 +188,15 @@ export class MerchantOrderApi {
     billId: string,
   ): Promise<{ billId: string; status: "closed"; paymentVerified: false }> {
     return firstValueFrom(
-      this.http.post<{ billId: string; status: "closed"; paymentVerified: false }>(
-        scopePath(tenantId, storeId) + "/bills/" + encodeURIComponent(billId) + "/close",
+      this.http.post<{
+        billId: string;
+        status: "closed";
+        paymentVerified: false;
+      }>(
+        scopePath(tenantId, storeId) +
+          "/bills/" +
+          encodeURIComponent(billId) +
+          "/close",
         {},
         {
           headers: { "X-CSRF-Token": this.csrfToken() },
