@@ -50,6 +50,25 @@ BEGIN
  result:=rcat_private.open_printed_store_qr(t,s,qr,guest_b);
  IF NOT (result->>'open')::boolean THEN RAISE EXCEPTION 'Second client denied'; END IF;
 
+ -- D: menu and selected-item review use the private counter capability.
+ result:=rcat_private.quick_guest_catalog_page(guest_a,'Quick coffee',cat,NULL,NULL,24);
+ IF result->>'entryMode'<>'counter'
+   OR jsonb_array_length(result->'products')<>1
+   OR result->'products'->0->>'id'<>product::text
+   OR result?'tableId' OR result?'visitId' THEN
+   RAISE EXCEPTION 'Counter menu returned wrong scope or fake Table Visit'; END IF;
+ result:=rcat_private.quick_guest_cart_review(guest_b,ARRAY[product],ARRAY[]::uuid[]);
+ IF jsonb_array_length(result->'products')<>1
+   OR result->'products'->0->>'priceSatang'<>'6500' THEN
+   RAISE EXCEPTION 'Counter cart review incorrect'; END IF;
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.quick_guest_catalog_page(
+     guest_stale,'',NULL,NULL,NULL,24);
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Unknown guest can browse private counter menu'; END IF;
+
  request:=jsonb_build_object(
   'orderedBy','Customer A','deliverTo','Counter',
   'items',jsonb_build_array(jsonb_build_object(
@@ -183,6 +202,12 @@ BEGIN
  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
  END;
  IF NOT denied THEN RAISE EXCEPTION 'Old token read after QR rotation'; END IF;
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.quick_guest_cart_review(guest_a,ARRAY[product],ARRAY[]::uuid[]);
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Revoked guest can review counter cart'; END IF;
  denied:=false;
  BEGIN
    PERFORM rcat_private.quick_order_submit(
