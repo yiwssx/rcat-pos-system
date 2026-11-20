@@ -147,6 +147,22 @@ BEGIN
  END;
  IF NOT denied THEN RAISE EXCEPTION 'Unbounded bill read accepted'; END IF;
 
+ -- B3: cashier explicitly closes the active Bill before a new table cycle.
+ -- This is an operational closure, not a verified Payment event.
+ v_out:=rcat_private.close_operational_bill(
+   v_cashier,v_tenant,v_store,v_bill);
+ IF v_out->>'status'<>'closed' OR (v_out->>'replayed')::boolean
+   OR (v_out->>'paymentVerified')::boolean THEN
+   RAISE EXCEPTION 'Staff close did not preserve Payment boundary'; END IF;
+ v_out:=rcat_private.close_operational_bill(
+   v_cashier,v_tenant,v_store,v_bill);
+ IF (v_out->>'replayed')::boolean IS DISTINCT FROM true THEN
+   RAISE EXCEPTION 'Closed Bill replay performed another transition'; END IF;
+ v_snap:=rcat_private.operational_bill_snapshot(
+   v_owner,v_tenant,v_store,v_bill,50);
+ IF v_snap->>'status'<>'closed' OR v_snap->>'closedAt' IS NULL THEN
+   RAISE EXCEPTION 'Closed Bill historical snapshot inaccessible'; END IF;
+
  -- Rotation starts another table visit and therefore another Bill.
  SELECT visit_id INTO v_second_visit
    FROM rcat_private.rotate_ordering_visit(
