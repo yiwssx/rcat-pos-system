@@ -1445,8 +1445,8 @@ try {
   const billCreations = await Promise.all(billReplies.map((r) => r.json()));
   assert.equal(new Set(billCreations.map((b) => b.billId)).size, 1,
     "Five concurrent Bill requests must create one Bill ID");
-  assert.equal(billCreations.filter((b) => b.created).length, 1,
-    "Only the initial Bill creation may emit an audit event");
+  assert.equal(billCreations.filter((b) => b.created).length, 0,
+    "First Guest checkout already opened this Bill atomically");
   const billId = billCreations[0].billId;
   const billDetailUrl = billUrl + "/" + billId;
   assert.equal((await api(billDetailUrl)).status, 401);
@@ -1471,6 +1471,8 @@ try {
   assert.ok(sameVisitOrders.length >= 3,
     "Merchant inbox should expose visit IDs for Bill creation");
   assert.equal(billBefore.visitId, secondVisit.visitId);
+  assert.equal(billBefore.status, "open");
+  assert.equal(billBefore.creationSource, "guest_order");
   assert.equal(billBefore.orderCount, sameVisitOrders.length);
   assert.equal(
     billBefore.operationalTotalSatang,
@@ -1623,6 +1625,47 @@ try {
   assert.ok(reportCsv.includes("NOT REVENUE"));
   assert.ok(reportCsv.includes("not_implemented"));
   assert.ok(!reportCsv.includes("provider_verified"));
+
+  // B3: Merchant explicitly closes the operational Bill. This is NOT Payment.
+  const billCloseUrl = billDetailUrl + "/close";
+  assert.equal((await api(billCloseUrl, {
+    method: "POST", headers: { ...json, Cookie: cookieHeader },
+  })).status, 403, "Bill close requires CSRF");
+  assert.equal((await api(billCloseUrl, {
+    method: "POST", headers: { ...catHeaders, Origin: undefined },
+  })).status, 403, "Bill close requires allowed Origin");
+  assert.equal((await api(
+    `/api/tenants/00000000-0000-4000-8000-000000000002/stores/20000000-0000-4000-8000-000000000002/bills/${billId}/close`,
+    { method: "POST", headers: catHeaders },
+  )).status, 404, "Staff cannot close another tenant's Bill");
+  const closedBillResponse = await api(billCloseUrl, {
+    method: "POST", headers: catHeaders,
+  });
+  assert.equal(closedBillResponse.status, 201,
+    await closedBillResponse.clone().text());
+  const closedBill = await closedBillResponse.json();
+  assert.equal(closedBill.status, "closed");
+  assert.equal(closedBill.paymentVerified, false);
+  assert.equal(closedBill.replayed, false);
+  const repeatedClose = await api(billCloseUrl, {
+    method: "POST", headers: catHeaders,
+  });
+  assert.equal(repeatedClose.status, 201);
+  assert.equal((await repeatedClose.json()).replayed, true);
+  assert.equal((await publicResolve(secondToken)).status, 404,
+    "Bill close must revoke prior Guest visit immediately");
+  assert.equal((await checkout("b3-stale-afterclose-0001", cart)).status, 404,
+    "Old Guest cart cannot place an Order into the new Bill");
+  const closedSnapshotResponse = await api(billDetailUrl, {
+    headers: { Cookie: cookieHeader },
+  });
+  assert.equal(closedSnapshotResponse.status, 200);
+  assert.equal((await closedSnapshotResponse.json()).status, "closed");
+
+  // Permanent Table QR fresh scan starts a distinct visit, not a phantom Bill.
+  const freshCycle = await scan();
+  assert.equal(freshCycle.status, 201);
+  assert.equal((await freshCycle.json()).open, true);
 
   const changedVisit = await api(rotateUrl, {
     method: "POST", headers: catHeaders,
