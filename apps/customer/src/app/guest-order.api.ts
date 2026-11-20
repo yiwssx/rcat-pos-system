@@ -149,15 +149,29 @@ export class GuestOrderApi {
     context: GuestOrderContext,
     key: string,
     orderId: string | null,
-  ): Promise<QuickGuestOrder> {
+  ): Promise<QuickGuestOrder & { trackingToken: string }> {
     const base = "/api/guest/ordering-store/orders";
     return firstValueFrom(
-      this.http.post<QuickGuestOrder>(
+      this.http.post<QuickGuestOrder & { trackingToken: string }>(
         orderId
           ? base + "/" + encodeURIComponent(orderId) + "/add-items"
           : base,
         { guestToken: token, items, ...normalizedOrderContext(context) },
         { headers: { "Idempotency-Key": key } },
+      ),
+    );
+  }
+
+  quickTracking(
+    token: string,
+    orderId: string,
+  ): Promise<{ orderId: string; trackingToken: string }> {
+    return firstValueFrom(
+      this.http.post<{ orderId: string; trackingToken: string }>(
+        "/api/guest/ordering-store/orders/" +
+          encodeURIComponent(orderId) +
+          "/tracking",
+        { guestToken: token },
       ),
     );
   }
