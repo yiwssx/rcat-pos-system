@@ -211,16 +211,16 @@ function inventoryError(error: unknown): string {
             <div
               class="inventory-grid grid min-w-0 items-start gap-4 xl:grid-cols-2"
             >
-              <section
+              <details
                 class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
                 aria-labelledby="add-ingredient-heading"
               >
-                <h2
-                  class="m-0 text-lg font-semibold leading-snug"
+                <summary
+                  class="min-h-11 cursor-pointer text-base font-semibold leading-6 focus-visible:outline-2 focus-visible:outline-ring"
                   id="add-ingredient-heading"
                 >
                   เพิ่มวัตถุดิบ
-                </h2>
+                </summary>
                 <form
                   class="grid min-w-0 gap-4"
                   (submit)="createIngredient($event)"
@@ -271,18 +271,18 @@ function inventoryError(error: unknown): string {
                     สร้างวัตถุดิบ
                   </button>
                 </form>
-              </section>
+              </details>
 
-              <section
+              <details
                 class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
                 aria-labelledby="movement-heading"
               >
-                <h2
-                  class="m-0 text-lg font-semibold leading-snug"
+                <summary
+                  class="min-h-11 cursor-pointer text-base font-semibold leading-6 focus-visible:outline-2 focus-visible:outline-ring"
                   id="movement-heading"
                 >
                   บันทึกการเคลื่อนไหว
-                </h2>
+                </summary>
                 <p
                   class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
                 >
@@ -358,19 +358,19 @@ function inventoryError(error: unknown): string {
                     เพื่อส่งรหัส Idempotency เดิม
                   </p>
                 </form>
-              </section>
+              </details>
             </div>
 
-            <section
+            <details
               class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
               aria-labelledby="recipe-heading"
             >
-              <h2
-                class="m-0 text-lg font-semibold leading-snug"
+              <summary
+                class="min-h-11 cursor-pointer text-base font-semibold leading-6 focus-visible:outline-2 focus-visible:outline-ring"
                 id="recipe-heading"
               >
                 สูตรการใช้วัตถุดิบต่อสินค้า 1 รายการ
-              </h2>
+              </summary>
               <p
                 class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
               >
@@ -438,17 +438,17 @@ function inventoryError(error: unknown): string {
                   บันทึกสูตรวัตถุดิบ
                 </button>
               </form>
-            </section>
-            <section
+            </details>
+            <details
               class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
               aria-labelledby="tracked-products-heading"
             >
-              <h2
-                class="m-0 text-lg font-semibold leading-snug"
+              <summary
+                class="min-h-11 cursor-pointer text-base font-semibold leading-6 focus-visible:outline-2 focus-visible:outline-ring"
                 id="tracked-products-heading"
               >
                 เปิดตัดสต็อกตามออเดอร์เป็นรายสินค้า
-              </h2>
+              </summary>
               <p
                 class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
               >
@@ -501,18 +501,18 @@ function inventoryError(error: unknown): string {
                   }
                 </ul>
               }
-            </section>
+            </details>
 
-            <section
+            <details
               class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
               aria-labelledby="modifier-recipe-heading"
             >
-              <h2
-                class="m-0 text-lg font-semibold leading-snug"
+              <summary
+                class="min-h-11 cursor-pointer text-base font-semibold leading-6 focus-visible:outline-2 focus-visible:outline-ring"
                 id="modifier-recipe-heading"
               >
                 สูตรวัตถุดิบของตัวเลือกเสริม (Modifier)
-              </h2>
+              </summary>
               <p
                 class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
               >
@@ -605,22 +605,22 @@ function inventoryError(error: unknown): string {
                   }
                 </ul>
               }
-            </section>
+            </details>
           }
 
           <div
             class="inventory-grid grid min-w-0 items-start gap-4 xl:grid-cols-2"
           >
-            <section
+            <details
               class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
               aria-labelledby="recipe-list-heading"
             >
-              <h2
-                class="m-0 text-lg font-semibold leading-snug"
+              <summary
+                class="min-h-11 cursor-pointer text-base font-semibold leading-6 focus-visible:outline-2 focus-visible:outline-ring"
                 id="recipe-list-heading"
               >
                 สูตรที่บันทึกแล้ว
-              </h2>
+              </summary>
               @if (data.recipes.length === 0) {
                 <p
                   class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
@@ -648,17 +648,17 @@ function inventoryError(error: unknown): string {
                   }
                 </ul>
               }
-            </section>
-            <section
+            </details>
+            <details
               class="inventory-panel min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5"
               aria-labelledby="movement-list-heading"
             >
-              <h2
-                class="m-0 text-lg font-semibold leading-snug"
+              <summary
+                class="min-h-11 cursor-pointer text-base font-semibold leading-6 focus-visible:outline-2 focus-visible:outline-ring"
                 id="movement-list-heading"
               >
                 ประวัติการเคลื่อนไหวล่าสุด
-              </h2>
+              </summary>
               @if (data.recentMovements.length === 0) {
                 <p
                   class="inventory-muted break-words text-sm leading-6 text-muted-foreground"
@@ -691,7 +691,7 @@ function inventoryError(error: unknown): string {
                   }
                 </ul>
               }
-            </section>
+            </details>
           </div>
         }
       }

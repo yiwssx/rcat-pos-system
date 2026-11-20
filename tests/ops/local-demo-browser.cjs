@@ -198,7 +198,11 @@ async function main() {
     assert.equal(await createDisclosure.evaluate(el => el.open), true,
       'Owner can expand the native keyboard-accessible creation form');
     await createDisclosure.locator('summary').click();
+    await adminPage.evaluate(() => window.scrollTo(0, 0));
     await adminPage.screenshot({ path: '/tmp/rcat-portal-owner-mobile.png', fullPage: true });
+    await adminPage.setViewportSize({ width: 1365, height: 900 });
+    await adminPage.evaluate(() => window.scrollTo(0, 0));
+    await adminPage.screenshot({ path: '/tmp/rcat-portal-owner-desktop.png' });
     // All three local hosts retain a trusted-certificate path for Node fetch too.
     for (const origin of [customer]) {
       const ready = await fetch(origin + '/api/ready');
@@ -391,9 +395,11 @@ async function main() {
     await card.getByText('ไม่ใส่ผัก').waitFor();
     await card.getByRole('button', { name: 'รับออเดอร์', exact: true }).click();
     await card.getByText('รับออเดอร์แล้ว', { exact: true }).waitFor();
-    await board.screenshot({ path: '/tmp/rcat-portal-orders-mobile.png', fullPage: true });
+    await board.evaluate(() => window.scrollTo(0, 0));
+    await board.screenshot({ path: '/tmp/rcat-portal-orders-mobile.png' });
     await board.setViewportSize({ width: 1365, height: 900 });
-    await board.screenshot({ path: '/tmp/rcat-portal-orders-desktop.png', fullPage: true });
+    await board.evaluate(() => window.scrollTo(0, 0));
+    await board.screenshot({ path: '/tmp/rcat-portal-orders-desktop.png' });
 
     // Reuse this authenticated, synthetic CI fixture to capture actual
     // management screens; no new service, database or payment checks.
@@ -409,7 +415,19 @@ async function main() {
       // The heading renders before the async API response. A loading-state
       // screenshot is not evidence of a completed management workspace.
       await capture.locator(management.ready).first().waitFor({ state: 'visible', timeout: 25000 });
+      if (management.route === 'inventory') {
+        const task = capture.locator('details[aria-labelledby="add-ingredient-heading"]');
+        assert.equal(await task.evaluate(el => el.open), false, 'Inventory task is collapsed by default');
+        await task.locator('summary').click();
+        assert.equal(await task.evaluate(el => el.open), true, 'Inventory task is expandable');
+        await task.getByRole('textbox', { name: 'ชื่อวัตถุดิบ' }).waitFor();
+        await task.locator('summary').click();
+      }
+      await capture.evaluate(() => window.scrollTo(0, 0));
       await capture.screenshot({ path: '/tmp/rcat-portal-' + management.file + '.png', fullPage: true });
+      await capture.setViewportSize({ width: 390, height: 844 });
+      await capture.evaluate(() => window.scrollTo(0, 0));
+      await capture.screenshot({ path: '/tmp/rcat-portal-' + management.route + '-mobile.png' });
       await capture.close();
     }
 
