@@ -1066,6 +1066,116 @@ async function httpLoad(fixture) {
   console.log("PASS: real HTTP idempotency, scoped Order snapshots, transactional Outbox, revoked QR");
 }
 
+// C: real HTTPS checks for Quick Orders without sharing the public QR as a
+// customer authorization token. Run AFTER existing G4 workload evidence so
+// this added flow does not change the prior benchmark/SSE acceptance samples.
+async function quickOrderHttp(fixture) {
+  const headers = fixture.merchantHeaders;
+  const modeUrl = merchant + orderScope + "/service-mode";
+  const mode = await fetch(modeUrl, {
+    method: "POST", headers,
+    body: JSON.stringify({ serviceMode: "quick", expectedRevision: 0 }),
+  });
+  assert.equal(mode.status, 201, await mode.clone().text());
+  const qrRes = await fetch(merchant + orderScope + "/store-qr/rotate", {
+    method: "POST", headers,
+  });
+  assert.equal(qrRes.status, 201, await qrRes.clone().text());
+  const { publicId } = await qrRes.json();
+  const open = async () => {
+    const res = await post(customer + "/api/guest/ordering-store/open", {
+      tenantId: tenant, storeId: store, publicId,
+    });
+    assert.equal(res.status, 201, await res.clone().text());
+    return res.json();
+  };
+  const [a, b] = await Promise.all([open(), open()]);
+  assert.notEqual(a.guestSessionId, b.guestSessionId);
+  assert.notEqual(a.guestToken, b.guestToken);
+  const cart = (token, name) => ({
+    guestToken: token, orderedBy: name, deliverTo: "Counter",
+    items: [{ productId: fixture.productId, quantity: 1,
+      optionIds: [], note: "Less ice" }],
+  });
+  const key = (tag) => "g4-quick-" + tag + "-" + randomUUID();
+  const first = await post(customer + "/api/guest/ordering-store/orders",
+    cart(a.guestToken, "Customer A"), { "Idempotency-Key": key("first") });
+  const second = await post(customer + "/api/guest/ordering-store/orders",
+    cart(b.guestToken, "Customer B"), { "Idempotency-Key": key("second") });
+  assert.equal(first.status, 201, await first.clone().text());
+  assert.equal(second.status, 201, await second.clone().text());
+  const oa = await first.json(), ob = await second.json();
+  assert.notEqual(oa.orderId, ob.orderId);
+  assert.equal(oa.amountSatang, 12500);
+  const mineUrl = customer + "/api/guest/ordering-store/my-orders";
+  const myA = await post(mineUrl, { guestToken: a.guestToken });
+  const myB = await post(mineUrl, { guestToken: b.guestToken });
+  assert.equal(myA.status, 200);
+  assert.equal(myB.status, 200);
+  const listA = await myA.json(), listB = await myB.json();
+  assert.deepEqual(listA.orders.map((o) => o.orderId), [oa.orderId]);
+  assert.deepEqual(listB.orders.map((o) => o.orderId), [ob.orderId]);
+
+  const addUrl = (order) =>
+    customer + "/api/guest/ordering-store/orders/" + order + "/add-items";
+  const foreign = await post(addUrl(oa.orderId),
+    cart(b.guestToken, "Customer B"), { "Idempotency-Key": key("forged") });
+  assert.equal(foreign.status, 404, "Another Guest accessed foreign Order");
+  const appendKey = key("append");
+  const submittedAdd = await post(addUrl(oa.orderId),
+    cart(a.guestToken, "Customer A"), { "Idempotency-Key": appendKey });
+  assert.equal(submittedAdd.status, 201, await submittedAdd.clone().text());
+  assert.equal((await submittedAdd.json()).amountSatang, 25000);
+  const replay = await post(addUrl(oa.orderId),
+    cart(a.guestToken, "Customer A"), { "Idempotency-Key": appendKey });
+  assert.equal(replay.status, 201);
+  assert.equal((await replay.json()).replayed, true);
+
+  const transition = (expectedStatus, nextStatus) =>
+    fetch(merchant + orderScope + "/orders/" + oa.orderId + "/status", {
+      method: "PATCH", headers,
+      body: JSON.stringify({ expectedStatus, nextStatus }),
+    });
+  const accepted = await transition("submitted", "accepted");
+  assert.equal(accepted.status, 200, await accepted.clone().text());
+  const acceptedAdd = await post(addUrl(oa.orderId),
+    cart(a.guestToken, "Customer A"),
+    { "Idempotency-Key": key("accepted") });
+  assert.equal(acceptedAdd.status, 201, await acceptedAdd.clone().text());
+  assert.equal((await acceptedAdd.json()).amountSatang, 37500);
+  const preparing = await transition("accepted", "preparing");
+  assert.equal(preparing.status, 200, await preparing.clone().text());
+  const afterPreparing = await post(addUrl(oa.orderId),
+    cart(a.guestToken, "Customer A"),
+    { "Idempotency-Key": key("preparing") });
+  assert.equal(afterPreparing.status, 201,
+    await afterPreparing.clone().text());
+  const next = await afterPreparing.json();
+  assert.equal(next.action, "new_after_cutoff");
+  assert.notEqual(next.orderId, oa.orderId);
+  assert.equal(next.amountSatang, 12500);
+  const freshMine = await post(mineUrl, { guestToken: a.guestToken });
+  assert.equal(freshMine.status, 200);
+  const owned = (await freshMine.json()).orders;
+  assert.equal(owned.length, 2);
+  assert.ok(owned.every((o) => o.orderId !== ob.orderId));
+  assert.equal(owned.find((o) => o.orderId === oa.orderId).amountSatang, 37500);
+
+  const rotated = await fetch(merchant + orderScope + "/store-qr/rotate", {
+    method: "POST", headers,
+  });
+  assert.equal(rotated.status, 201);
+  assert.equal((await post(mineUrl, { guestToken: a.guestToken })).status, 404);
+  assert.equal((await post(addUrl(oa.orderId),
+    cart(a.guestToken, "Customer A"),
+    { "Idempotency-Key": key("revoked") })).status, 404);
+  console.log(JSON.stringify({
+    scenario: "C Quick separate Guests, append before Preparing, new after cutoff",
+    result: "PASS", crossCustomer: "denied", replay: "idempotent",
+    paymentVerified: false,
+  }));
+}
+
 async function main() {
   const api = start("NestJS API", process.execPath, ["dist/apps/api/src/main.js"], {
     NODE_ENV: "test",
@@ -1103,6 +1213,7 @@ async function main() {
     currentVisitToken,
   });
   await require("./g4-readiness.cjs")();
+  await quickOrderHttp(fixture);
 }
 
 (async () => {
