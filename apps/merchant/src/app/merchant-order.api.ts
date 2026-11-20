@@ -167,6 +167,36 @@ export class MerchantOrderApi {
     );
   }
 
+  billByVisit(
+    tenantId: string,
+    storeId: string,
+    visitId: string,
+  ): Promise<OperationalBill> {
+    return firstValueFrom(
+      this.http.get<OperationalBill>(
+        scopePath(tenantId, storeId) + "/bills/by-visit/" + encodeURIComponent(visitId),
+        { withCredentials: true },
+      ),
+    );
+  }
+
+  closeBill(
+    tenantId: string,
+    storeId: string,
+    billId: string,
+  ): Promise<{ billId: string; status: "closed"; paymentVerified: false }> {
+    return firstValueFrom(
+      this.http.post<{ billId: string; status: "closed"; paymentVerified: false }>(
+        scopePath(tenantId, storeId) + "/bills/" + encodeURIComponent(billId) + "/close",
+        {},
+        {
+          headers: { "X-CSRF-Token": this.csrfToken() },
+          withCredentials: true,
+        },
+      ),
+    );
+  }
+
   paymentReviewQueue(
     tenantId: string,
     storeId: string,
@@ -250,4 +280,15 @@ export interface PromptPayReceiverSettings {
   maskedReceiver?: string;
   revision: number;
   changed?: boolean;
+}
+
+export interface OperationalBill {
+  billId: string;
+  visitId: string;
+  tableId: string;
+  status: "open" | "closed";
+  orderCount: number;
+  operationalTotalSatang: number;
+  cancelledTotalSatang: number;
+  closedAt: string | null;
 }
