@@ -330,15 +330,36 @@ async function main() {
       'Desktop sidebar must use the V8 white surface');
     assert.equal(shell.image, 'none',
       'Legacy V6 orange gradient decoration must be removed from the sidebar');
-    const collapse = page.getByRole('button', {name:'ยุบแถบเมนู'});
-    await collapse.click();
-    await page.getByRole('button',{name:'ขยายแถบเมนู'}).waitFor();
-    assert.ok(await desktopNav.evaluate(el=>el.getBoundingClientRect().width)<=73,'Collapsed rail <=72px');
-    await desktopNav.getByRole('link',{name:'ออเดอร์',exact:true}).waitFor();
-    await auditVisual(page,'desktop-collapsed-rail');
-    await page.getByRole('button',{name:'ขยายแถบเมนู'}).click();
-    assert.ok(await desktopNav.evaluate(el=>el.getBoundingClientRect().width)>=239,'Expanded rail >=240px');
-    await auditVisual(page,'desktop-expanded-workspace');
+    // Wait for the signal-driven Angular render and actual grid geometry,
+    // rather than measuring immediately after a click. Keep both width bounds
+    // and the adjacent workspace check; a stuck or overflowing rail still fails.
+    async function verifyDesktopRail(collapsed) {
+      const expectedWidth = collapsed ? 72 : 240;
+      const expectedExpanded = collapsed ? 'false' : 'true';
+      await page.getByRole('button', {
+        name: collapsed ? 'ขยายแถบเมนู' : 'ยุบแถบเมนู',
+      }).waitFor({ state: 'visible' });
+      await page.waitForFunction(({ expectedWidth, expectedExpanded }) => {
+        const aside = document.querySelector('rcat-root aside[aria-label="พื้นที่ทำงาน"]');
+        const toggle = aside?.querySelector('button[aria-controls="portal-desktop-navigation"]');
+        const main = document.querySelector('rcat-root main');
+        if (!aside || !main || toggle?.getAttribute('aria-expanded') !== expectedExpanded) return false;
+        const a = aside.getBoundingClientRect();
+        const m = main.getBoundingClientRect();
+        return Math.abs(a.width - expectedWidth) <= 1 && m.left >= a.right - 1 && m.top < 160;
+      }, { expectedWidth, expectedExpanded }, { timeout: 10000 });
+      const actualWidth = await desktopNav.evaluate(el => el.getBoundingClientRect().width);
+      assert.ok(Math.abs(actualWidth - expectedWidth) <= 1,
+        'Desktop rail must measure ' + expectedWidth + 'px; actual ' + actualWidth + 'px');
+      console.log('HYBRID_RAIL ' + JSON.stringify({ collapsed, width: actualWidth, expectedWidth }));
+    }
+    await page.getByRole('button', { name: 'ยุบแถบเมนู' }).click();
+    await verifyDesktopRail(true);
+    await desktopNav.getByRole('link', { name: 'ออเดอร์', exact: true }).waitFor();
+    await auditVisual(page, 'desktop-collapsed-rail');
+    await page.getByRole('button', { name: 'ขยายแถบเมนู' }).click();
+    await verifyDesktopRail(false);
+    await auditVisual(page, 'desktop-expanded-workspace');
     await page.setViewportSize({ width: 320, height: 780 });
     const officialLogo = page.getByRole('link', { name: 'RCAT POS หน้าแรก' }).locator('img');
     await officialLogo.waitFor();
