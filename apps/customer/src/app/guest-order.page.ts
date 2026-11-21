@@ -593,7 +593,7 @@ function guestError(error: unknown): string {
             @if (cartQty() > 0) {
               <button
                 type="button"
-                class="guest-cart-shortcut fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 grid min-h-14 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-3 gap-y-1 rounded-xl border border-primary-line bg-primary p-3 text-left text-primary-foreground shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-disabled disabled:text-disabled-foreground disabled:opacity-100 lg:static lg:mt-4 lg:w-full"
+                class="guest-cart-shortcut fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 grid min-h-14 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-3 gap-y-1 rounded-xl border border-action bg-action p-3 text-left text-action-foreground shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-disabled disabled:text-disabled-foreground disabled:opacity-100 lg:static lg:mt-4 lg:w-full"
                 [disabled]="busy()"
                 (click)="openCart()"
               >

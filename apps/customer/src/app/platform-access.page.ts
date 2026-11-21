@@ -48,11 +48,11 @@ function failure(error: unknown): string {
       aria-labelledby="platform-heading"
     >
       <header
-        class="platform-heading flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-border bg-card p-5"
+        class="platform-heading flex flex-wrap items-start justify-between gap-4 rounded-2xl bg-action p-5 text-action-foreground"
       >
         <div>
           <span
-            class="platform-eyebrow text-sm font-semibold text-brand-foreground"
+            class="platform-eyebrow text-sm font-semibold text-action-foreground"
             >การจัดการผู้ใช้งาน</span
           >
           <h1
@@ -61,7 +61,7 @@ function failure(error: unknown): string {
           >
             จัดการผู้ใช้งาน
           </h1>
-          <p class="mt-2 max-w-prose text-sm leading-6 text-muted-foreground">
+          <p class="mt-2 max-w-prose text-sm leading-6 text-action-foreground">
             เพิ่มบุคลากรด้วยอีเมล @rcat.ac.th
             แล้วกำหนดว่าใครเป็นผู้ดูแลระบบหรือผู้ดูแลร้าน
           </p>

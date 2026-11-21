@@ -474,7 +474,7 @@ async function main() {
       cta: getComputedStyle(document.querySelector('.guest-add')).backgroundColor,
     }));
     assert.equal(guestPalette.active, 'rgb(223, 233, 253)', 'Guest category selection uses Modern Pastel SaaS');
-    assert.equal(guestPalette.cta, 'rgb(223, 233, 253)', 'Guest add-to-cart uses Modern Pastel SaaS');
+    assert.equal(guestPalette.cta, 'rgb(35, 67, 153)', 'Guest add-to-cart uses Expressive primary action');
     await auditWidths(staticPage,'customer-catalog');
     await staticPage.locator('.guest-add').first().hover();
     await auditVisual(staticPage,'customer-primary-hover');
@@ -524,10 +524,10 @@ async function main() {
         ctaText: getComputedStyle(action).color,
       };
     });
-    assert.equal(guestLight.background, 'rgb(245, 247, 252)', 'Guest must use the Hybrid cloud canvas');
-    assert.equal(guestLight.cart, 'rgb(223, 233, 253)', 'Hybrid cart bar uses soft blue');
-    assert.equal(guestLight.label, 'rgb(0, 0, 0)', 'Cart count uses black text on pastel');
-    assert.equal(guestLight.ctaText, 'rgb(0, 0, 0)', 'Cart action must have readable black text');
+    assert.equal(guestLight.background, 'rgb(241, 245, 251)', 'Guest must use the Expressive cloud canvas');
+    assert.equal(guestLight.cart, 'rgb(35, 67, 153)', 'Cart bar uses strong primary action');
+    assert.equal(guestLight.label, 'rgb(255, 255, 255)', 'Cart count uses readable white text');
+    assert.equal(guestLight.ctaText, 'rgb(255, 255, 255)', 'Cart action must have readable white text');
     assert.equal(await staticPage.getByRole('heading', { name: 'ตะกร้าของคุณ' }).isVisible(), false,
       'V7 mobile hides the desktop cart summary');
     for(const width of [320,390]){
@@ -697,6 +697,23 @@ async function main() {
       }
       await auditWidths(capture,'merchant-'+management.route);
       if (management.route === 'catalog') {
+        const product = capture.locator('.catalog-product').first();
+        await product.waitFor({state:'visible'});
+        const edit = product.getByRole('button', {name:'แก้ไข',exact:true});
+        const sale = product.getByRole('button', {name:'ปิดขาย',exact:true});
+        const more = product.locator('summary:has-text("เพิ่มเติม")');
+        await edit.waitFor();
+        const bounds = await Promise.all([edit,sale,more].map(x=>x.boundingBox()));
+        assert.ok(bounds.every(x=>x && x.height>=44 && x.height<=56),
+          'Catalog row actions are compact without reducing touch targets');
+        assert.equal(await product.getByRole('button',{name:'เก็บถาวร',exact:true}).isVisible(),false);
+        await more.click();
+        await product.getByRole('button',{name:'เก็บถาวร',exact:true}).waitFor();
+        await more.click();
+        await product.getByRole('button',{name:'รูปสินค้า',exact:true}).click();
+        await product.locator('input[type=file]').waitFor();
+        await auditVisual(capture,'merchant-catalog-image-panel');
+        await product.getByRole('button',{name:'รูปสินค้า',exact:true}).click();
         const create = capture.locator('summary:has-text("เพิ่มหมวดหมู่หรือสินค้าใหม่")');
         await create.click();
         await auditVisual(capture,'merchant-catalog-expanded-create');
