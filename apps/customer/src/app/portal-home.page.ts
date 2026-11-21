@@ -475,7 +475,8 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                 <div hlmCardContent class="grid gap-4">
                   <ol class="grid gap-4 text-sm leading-6">
                     <li class="grid grid-cols-[2rem_minmax(0,1fr)] gap-2">
-                      <span class="grid size-8 place-items-center rounded-lg bg-card font-semibold tabular-nums text-foreground"
+                      <span
+                        class="grid size-8 place-items-center rounded-lg bg-card font-semibold tabular-nums text-foreground"
                         >01</span
                       >
                       <div>

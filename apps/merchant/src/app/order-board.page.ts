@@ -321,9 +321,7 @@ function failureText(error: unknown): string {
             }}
           </p>
         } @else {
-          <div
-            class="grid min-w-0 grid-cols-1 gap-3"
-          >
+          <div class="grid min-w-0 grid-cols-1 gap-3">
             @for (order of visibleOrders(); track order.orderId) {
               <article
                 hlmCard

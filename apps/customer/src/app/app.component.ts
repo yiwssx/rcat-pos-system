@@ -186,13 +186,17 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                 variant="ghost"
                 size="icon"
                 type="button"
-                [attr.aria-label]="sidebarCollapsed() ? 'ขยายแถบเมนู' : 'ยุบแถบเมนู'"
+                [attr.aria-label]="
+                  sidebarCollapsed() ? 'ขยายแถบเมนู' : 'ยุบแถบเมนู'
+                "
                 [attr.aria-expanded]="!sidebarCollapsed()"
                 aria-controls="portal-desktop-navigation"
                 (click)="sidebarCollapsed.set(!sidebarCollapsed())"
               >
                 <ng-icon
-                  [name]="sidebarCollapsed() ? 'lucidePanelLeftOpen' : 'lucidePanelLeftClose'"
+                  [name]="
+                    sidebarCollapsed() ? 'lucidePanelLeftOpen' : 'lucidePanelLeftClose'
+                  "
                   aria-hidden="true"
                 />
               </button>
