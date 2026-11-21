@@ -47,7 +47,7 @@ function explain(error: unknown): string {
     >
       <a
         routerLink="/"
-        class="owner-back inline-flex min-h-11 items-center text-sm font-semibold text-primary no-underline focus-visible:outline-2 focus-visible:outline-ring"
+        class="owner-back inline-flex min-h-11 items-center text-sm font-semibold text-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
         >← กลับหน้าบริหารร้าน</a
       >
       <span
@@ -82,7 +82,7 @@ function explain(error: unknown): string {
       }
       @if (error()) {
         <div
-          class="owner-error flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive"
+          class="owner-error flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-card p-4 text-sm text-foreground"
           role="alert"
         >
           {{ error() }}

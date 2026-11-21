@@ -81,21 +81,21 @@ function failureText(error: unknown): string {
   ],
   template: `
     <section
-      class="mx-auto box-border w-full max-w-7xl space-y-4 px-4 pb-12 pt-6 sm:px-6 lg:px-8"
+      class="mx-auto box-border w-full max-w-7xl space-y-3 pb-8 sm:space-y-4"
       aria-labelledby="board-title"
     >
       <header
-        class="mb-4 flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between"
+        class="mb-2 flex min-w-0 items-start justify-between gap-2 border-b border-border pb-3 sm:mb-4 sm:items-center sm:gap-4"
       >
-        <div class="min-w-0 space-y-2">
+        <div class="min-w-0 flex-1 space-y-1">
           <a hlmBtn routerLink="/" variant="link" size="lg">← เปลี่ยนร้าน</a>
           <span
-            class="block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+            class="hidden text-xs font-semibold uppercase tracking-widest text-muted-foreground sm:block"
             >ORDER MANAGEMENT</span
           >
           <h1
             id="board-title"
-            class="text-3xl font-semibold tracking-tight text-foreground"
+            class="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
           >
             กระดานออเดอร์
           </h1>
@@ -110,7 +110,7 @@ function failureText(error: unknown): string {
           hlmBtn
           type="button"
           variant="outline"
-          class="min-h-11 w-full shrink-0 gap-2 sm:w-auto"
+          class="min-h-11 w-11 shrink-0 gap-2 sm:w-auto"
           [attr.aria-label]="
             refreshing() ? 'กำลังซิงก์ออเดอร์' : 'รีเฟรชออเดอร์'
           "
@@ -118,19 +118,21 @@ function failureText(error: unknown): string {
           (click)="refresh()"
         >
           <span aria-hidden="true">↻</span>
-          <span>{{ refreshing() ? "กำลังซิงก์..." : "รีเฟรชออเดอร์" }}</span>
+          <span class="hidden sm:inline">{{
+            refreshing() ? "กำลังซิงก์..." : "รีเฟรชออเดอร์"
+          }}</span>
         </button>
       </header>
 
       <div
-        class="my-3 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3 text-sm leading-relaxed text-foreground"
+        class="my-2 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-2 sm:p-3 text-sm leading-relaxed text-foreground"
         role="status"
         aria-live="polite"
       >
         <span
           aria-hidden="true"
           class="size-2.5 shrink-0 rounded-full"
-          [class.bg-primary]="connected()"
+          [class.bg-served-line]="connected()"
           [class.bg-destructive]="!connected()"
         ></span>
         {{
@@ -154,14 +156,14 @@ function failureText(error: unknown): string {
       </div>
 
       <p
-        class="my-3 rounded-xl border border-border bg-muted/40 p-3 text-sm leading-relaxed text-foreground"
+        class="my-2 rounded-xl border border-border bg-muted/40 p-2 text-sm leading-relaxed text-foreground"
       >
         รับและเตรียมอาหารได้ทันที · สถานะชำระเงินแยกจากงานครัว
       </p>
 
       @if (error()) {
         <div
-          class="my-3 flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive"
+          class="my-3 flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-danger-soft p-4 text-sm leading-relaxed text-foreground"
           role="alert"
         >
           <span class="min-w-0 flex-1">{{ error() }}</span>
@@ -195,15 +197,15 @@ function failureText(error: unknown): string {
         </p>
       } @else if (store()) {
         <div
-          class="my-4 grid min-w-0 grid-cols-3 gap-2 sm:gap-3"
+          class="my-3 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,5rem),1fr))] gap-2 sm:gap-3"
           aria-label="กรองออเดอร์ตามสถานะ"
         >
           <button
             hlmBtn
             type="button"
             variant="outline"
-            class="grid min-h-20 min-w-0 justify-items-start gap-1 rounded-xl px-2 py-3 text-left sm:px-4 bg-incoming text-incoming-foreground"
-            [class.border-primary]="filter() === 'submitted'"
+            class="grid min-h-16 min-w-0 justify-items-start gap-1 rounded-xl border-input bg-incoming hover:bg-incoming px-2 py-2 text-left text-foreground sm:px-4 sm:py-3"
+            [class.border-primary-line]="filter() === 'submitted'"
             [class.ring-2]="filter() === 'submitted'"
             [attr.aria-pressed]="filter() === 'submitted'"
             (click)="setQueueFilter('submitted')"
@@ -223,8 +225,8 @@ function failureText(error: unknown): string {
             hlmBtn
             type="button"
             variant="outline"
-            class="grid min-h-20 min-w-0 justify-items-start gap-1 rounded-xl px-2 py-3 text-left sm:px-4 bg-preparing text-preparing-foreground"
-            [class.border-primary]="filter() === 'in_progress'"
+            class="grid min-h-16 min-w-0 justify-items-start gap-1 rounded-xl border-input bg-preparing hover:bg-preparing px-2 py-2 text-left text-foreground sm:px-4 sm:py-3"
+            [class.border-primary-line]="filter() === 'in_progress'"
             [class.ring-2]="filter() === 'in_progress'"
             [attr.aria-pressed]="filter() === 'in_progress'"
             (click)="setQueueFilter('in_progress')"
@@ -244,8 +246,8 @@ function failureText(error: unknown): string {
             hlmBtn
             type="button"
             variant="outline"
-            class="grid min-h-20 min-w-0 justify-items-start gap-1 rounded-xl px-2 py-3 text-left sm:px-4 bg-served text-served-foreground"
-            [class.border-primary]="filter() === 'served'"
+            class="grid min-h-16 min-w-0 justify-items-start gap-1 rounded-xl border-input bg-served hover:bg-served px-2 py-2 text-left text-foreground sm:px-4 sm:py-3"
+            [class.border-primary-line]="filter() === 'served'"
             [class.ring-2]="filter() === 'served'"
             [attr.aria-pressed]="filter() === 'served'"
             (click)="setQueueFilter('served')"
@@ -319,16 +321,14 @@ function failureText(error: unknown): string {
             }}
           </p>
         } @else {
-          <div
-            class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3"
-          >
+          <div class="grid min-w-0 grid-cols-1 gap-3">
             @for (order of visibleOrders(); track order.orderId) {
               <article
                 hlmCard
                 size="sm"
-                class="order-card min-w-0 gap-4 p-4"
+                class="order-card min-w-0 gap-3 rounded-xl p-4 sm:p-5"
                 [class.ring-2]="order.status === 'submitted'"
-                [class.ring-primary]="order.status === 'submitted'"
+                [class.ring-primary-line]="order.status === 'submitted'"
                 [attr.aria-label]="'ออเดอร์ ' + number(order.displayNumber)"
               >
                 <div
@@ -426,7 +426,7 @@ function failureText(error: unknown): string {
                       }
                       @if (item.note) {
                         <p
-                          class="mt-2 rounded-lg bg-brand-soft p-2 text-sm leading-relaxed text-brand-foreground"
+                          class="mt-2 rounded-lg bg-muted p-2 text-sm leading-relaxed text-brand-foreground"
                         >
                           <strong>หมายเหตุ:</strong> {{ item.note }}
                         </p>
@@ -498,7 +498,9 @@ function failureText(error: unknown): string {
                     ลูกค้ายังสั่งเพิ่มได้จนกดเริ่มเตรียม
                   </p>
                 }
-                <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                <div
+                  class="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:flex sm:flex-wrap"
+                >
                   @for (
                     action of actions(order.status);
                     track action.nextStatus

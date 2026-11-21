@@ -15,6 +15,12 @@ import {
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { catchError, tap, throwError } from "rxjs";
 import { HlmButton } from "@spartan-ng/helm/button";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import {
+  lucideMenu,
+  lucidePanelLeftClose,
+  lucidePanelLeftOpen,
+} from "@ng-icons/lucide";
 import {
   HlmSheet,
   HlmSheetContent,
@@ -56,7 +62,11 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
   selector: "rcat-root",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    provideIcons({ lucideMenu, lucidePanelLeftClose, lucidePanelLeftOpen }),
+  ],
   imports: [
+    NgIcon,
     RouterLink,
     RouterOutlet,
     HlmButton,
@@ -79,7 +89,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
 
       @if (!guestMenu()) {
         <header
-          class="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 sm:px-6 lg:px-8"
+          class="relative z-30 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 sm:px-6 lg:px-8"
         >
           <div class="flex min-w-0 items-center gap-3">
             @if (staffWorkspace()) {
@@ -94,7 +104,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                 [attr.aria-expanded]="mobileNavOpen()"
                 (click)="toggleMobileNav()"
               >
-                <span aria-hidden="true" class="text-xl leading-none">☰</span>
+                <ng-icon name="lucideMenu" aria-hidden="true" />
               </button>
             }
             <a
@@ -155,19 +165,48 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
       <div
         [class]="
           staffWorkspace()
-            ? 'grid min-w-0 flex-1 lg:grid-cols-[260px_minmax(0,1fr)]'
+            ? sidebarCollapsed()
+              ? 'grid min-w-0 flex-1 lg:grid-cols-[72px_minmax(0,1fr)]'
+              : 'grid min-w-0 flex-1 lg:grid-cols-[240px_minmax(0,1fr)]'
             : 'min-w-0 flex-1'
         "
       >
         @if (staffWorkspace()) {
           <aside
-            class="hidden min-w-0 border-r border-border bg-card p-4 lg:block"
+            class="hidden min-w-0 bg-card lg:block"
+            [class.p-2]="sidebarCollapsed()"
+            [class.p-4]="!sidebarCollapsed()"
             aria-label="พื้นที่ทำงาน"
           >
             <div
-              class="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto"
+              class="sticky top-4 grid max-h-[calc(100dvh-2rem)] gap-3 overflow-y-auto"
             >
-              <rcat-portal-workspace-nav [url]="url()" />
+              <button
+                hlmBtn
+                variant="ghost"
+                size="icon"
+                type="button"
+                [attr.aria-label]="
+                  sidebarCollapsed() ? 'ขยายแถบเมนู' : 'ยุบแถบเมนู'
+                "
+                [attr.aria-expanded]="!sidebarCollapsed()"
+                aria-controls="portal-desktop-navigation"
+                (click)="sidebarCollapsed.set(!sidebarCollapsed())"
+              >
+                <ng-icon
+                  [name]="
+                    sidebarCollapsed()
+                      ? 'lucidePanelLeftOpen'
+                      : 'lucidePanelLeftClose'
+                  "
+                  aria-hidden="true"
+                />
+              </button>
+              <rcat-portal-workspace-nav
+                id="portal-desktop-navigation"
+                [url]="url()"
+                [rail]="sidebarCollapsed()"
+              />
             </div>
           </aside>
           <hlm-sheet
@@ -211,7 +250,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
           }
           @if (message()) {
             <p
-              class="mb-4 rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm text-destructive"
+              class="mb-4 rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm text-foreground"
               role="alert"
             >
               {{ message() }}
@@ -244,6 +283,7 @@ export class AppComponent {
   readonly url = signal(this.router.url);
   readonly loggingOut = signal(false);
   readonly mobileNavOpen = signal(false);
+  readonly sidebarCollapsed = signal(false);
   readonly message = signal("");
   readonly guestOrder = computed(() =>
     /^\/order(?:\/|\?|#|$)/.test(this.url()),

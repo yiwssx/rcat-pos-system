@@ -48,7 +48,7 @@ function failure(error: unknown): string {
       aria-labelledby="platform-heading"
     >
       <header
-        class="platform-heading flex flex-wrap items-start justify-between gap-4 rounded-2xl bg-brand-soft p-5"
+        class="platform-heading flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-border bg-card p-5"
       >
         <div>
           <span
@@ -86,7 +86,7 @@ function failure(error: unknown): string {
 
       @if (error()) {
         <p
-          class="platform-error rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+          class="platform-error rounded-xl border border-destructive/30 bg-danger-soft p-4 text-sm text-foreground"
           role="alert"
         >
           {{ error() }}
@@ -110,22 +110,28 @@ function failure(error: unknown): string {
       }
 
       <div
-        class="grid grid-cols-2 gap-3 sm:grid-cols-3"
+        class="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))] gap-3"
         aria-label="สรุปบัญชีผู้ใช้งาน"
       >
-        <div class="rounded-xl bg-brand-soft p-4 text-brand-foreground">
+        <div
+          class="rounded-2xl border border-border bg-primary p-4 text-foreground"
+        >
           <span class="block text-sm">บัญชีทั้งหมด</span
           ><strong class="text-2xl font-semibold tabular-nums">{{
             accounts().length
           }}</strong>
         </div>
-        <div class="rounded-xl bg-served p-4 text-served-foreground">
+        <div
+          class="rounded-2xl border border-border bg-served p-4 text-foreground"
+        >
           <span class="block text-sm">ใช้งานได้</span
           ><strong class="text-2xl font-semibold tabular-nums">{{
             activeCount()
           }}</strong>
         </div>
-        <div class="rounded-xl bg-muted p-4 text-muted-foreground">
+        <div
+          class="rounded-2xl border border-border bg-danger-soft p-4 text-foreground"
+        >
           <span class="block text-sm">ระงับ</span
           ><strong class="text-2xl font-semibold tabular-nums">{{
             accounts().length - activeCount()
@@ -133,11 +139,11 @@ function failure(error: unknown): string {
         </div>
       </div>
       <div
-        class="platform-columns grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]"
+        class="platform-columns grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]"
       >
         <details
           #accountEditor
-          class="platform-panel min-w-0 overflow-hidden rounded-2xl border border-border bg-card"
+          class="platform-panel min-w-0 rounded-xl border border-border bg-card"
         >
           <summary
             class="min-h-11 cursor-pointer space-y-1 bg-muted px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring"
@@ -198,7 +204,7 @@ function failure(error: unknown): string {
         </details>
 
         <details
-          class="platform-panel min-w-0 overflow-hidden rounded-2xl border border-border bg-card"
+          class="platform-panel min-w-0 rounded-xl border border-border bg-card"
           open
         >
           <summary
@@ -227,7 +233,7 @@ function failure(error: unknown): string {
             </label>
             @for (account of visibleAccounts(); track account.userId) {
               <article
-                class="platform-account flex min-w-0 flex-wrap items-center justify-between gap-3 py-3"
+                class="platform-account grid min-w-0 gap-3 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
               >
                 <div
                   class="platform-account-meta min-w-0 flex-1 space-y-1 break-all"
@@ -244,7 +250,9 @@ function failure(error: unknown): string {
                   account.role !== "super_admin" &&
                   (isSuper() || account.role === "merchant")
                 ) {
-                  <div class="platform-account-actions flex flex-wrap gap-2">
+                  <div
+                    class="platform-account-actions flex min-w-0 flex-wrap gap-2"
+                  >
                     <button
                       hlmBtn
                       variant="outline"
@@ -278,8 +286,7 @@ function failure(error: unknown): string {
       </div>
 
       <details
-        class="platform-panel platform-tenant-panel min-w-0 overflow-hidden rounded-2xl border border-border bg-card"
-        open
+        class="platform-panel platform-tenant-panel min-w-0 rounded-xl border border-border bg-card"
       >
         <summary
           class="min-h-11 cursor-pointer space-y-1 bg-muted px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring"
@@ -338,7 +345,12 @@ function failure(error: unknown): string {
           @if (tenants().length === 0) {
             <p class="platform-hint text-sm leading-6 text-muted-foreground">
               ยังไม่มีกลุ่มร้านค้า สร้างกลุ่มร้านค้าและร้านแรกจาก
-              <a routerLink="/settings">ตั้งค่าร้านค้า</a> ก่อนมอบหมายสิทธิ์
+              <a
+                class="inline-flex min-h-11 min-w-11 items-center text-foreground underline"
+                routerLink="/settings"
+                >ตั้งค่าร้านค้า</a
+              >
+              ก่อนมอบหมายสิทธิ์
             </p>
           }
         </div>
@@ -346,7 +358,7 @@ function failure(error: unknown): string {
 
       @if (isSuper()) {
         <details
-          class="platform-panel platform-tenant-panel min-w-0 overflow-hidden rounded-2xl border border-border bg-card"
+          class="platform-panel platform-tenant-panel min-w-0 rounded-xl border border-border bg-card"
         >
           <summary
             class="min-h-11 cursor-pointer space-y-1 bg-muted px-4 py-3 focus-visible:outline-2 focus-visible:outline-ring"

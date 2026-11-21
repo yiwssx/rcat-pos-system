@@ -1,0 +1,9 @@
+# Modern Pastel SaaS Hybrid (A+B) — #102 / PR #163
+
+Owner approved this design following V7/V8 visual rejection and rejection of the proposed peach-only V8.1. This is a presentation change, not a feature expansion or new build system.
+
+- Canvas #F5F7FC, white surface, primary #DFE9FD / hover #D0DFFC / outline #526DAC, secondary #E8DFFC / outline #7562A4, mint #E2F2E9, vanilla #FBEBCF, pale red #FCE4E6. Black text (#000000), secondary #333333, inputs white with #767676 border. Keep opaque foreground/surface pairing; meaningful icons and borders >=3:1, necessary text >=7:1. Orange confined to the existing brand identity.
+- Desktop staff workspace: white sidebar, 240 CSS px expanded / 72 collapsed, consistent Lucide icon family and accessible labels, existing role-filtered navigation and store selector. Mobile existing sheet and bottom navigation. No new roles, routes, API or fake metrics.
+- Customer: adaptive food catalog, photo aspect ratio 4:3, pastel actions, desktop cart panel/mobile sticky cart, current sheets/checkout/tracking. Merchant: compact status summary tiles with real loaded order counts and actionable list, existing catalog/tables/inventory/reports. Admin: account list/editor, pastel count tiles, preserve platform and tenant-owner boundaries. Bento layout only where existing data permits.
+- V8 contrast/reflow/target contract unchanged: six widths 320/390/768/1024/1366/1920, text resize 200%, no page overflow or clipped necessary content, 44x44 CSS px target, focus and representative action/status icon checks, reachable final catalog item and cart action with persistent controls.
+- Reuse evidence where exact code and claim match. New rendered visual evidence required for new palette/layout. Existing CI-only fixture, not owner UAT or production auth. No migration, Auth/RBAC, backend, payment, infra, backup or deployment changes.

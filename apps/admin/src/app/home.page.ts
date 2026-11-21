@@ -100,7 +100,7 @@ function failure(error: unknown): string {
       }
       @if (error()) {
         <div
-          class="owner-error flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive"
+          class="owner-error flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-card p-4 text-sm text-foreground"
           role="alert"
         >
           {{ error() }}
@@ -175,7 +175,10 @@ function failure(error: unknown): string {
                     >{{ roleLabel[store.role] }}</span
                   >
                   @if (store.role === "owner") {
-                    <a [routerLink]="['/tenants', store.tenantId, 'staff']">
+                    <a
+                      class="inline-flex min-h-11 min-w-11 items-center py-2 text-foreground underline"
+                      [routerLink]="['/tenants', store.tenantId, 'staff']"
+                    >
                       จัดการบุคลากรและคำเชิญ
                     </a>
                   } @else {

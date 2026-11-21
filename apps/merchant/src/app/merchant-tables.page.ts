@@ -77,7 +77,7 @@ import {
         </p>
       } @else if (!authorized()) {
         <p
-          class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+          class="rounded-xl border border-destructive/30 bg-danger-soft p-4 text-sm text-foreground"
           role="alert"
         >
           {{ error() || "บัญชีนี้ไม่มีสิทธิ์จัดการโต๊ะ" }}
@@ -85,7 +85,7 @@ import {
       } @else {
         @if (error()) {
           <p
-            class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+            class="rounded-xl border border-destructive/30 bg-danger-soft p-4 text-sm text-foreground"
             role="alert"
           >
             {{ error() }}

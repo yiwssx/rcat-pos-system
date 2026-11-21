@@ -5,20 +5,29 @@ import { FoundationPhaseComponent } from "@rcat/ui";
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FoundationPhaseComponent],
-  template: ` <section class="status-view" aria-labelledby="status-title">
-    <span class="eyebrow">SYSTEM READINESS</span>
-    <h1 id="status-title">สถานะการพัฒนา</h1>
-    <p class="lede">
+  template: ` <section
+    class="mx-auto grid w-full max-w-3xl min-w-0 gap-4 p-4 sm:p-8"
+    aria-labelledby="status-title"
+  >
+    <span class="text-sm font-semibold text-foreground">SYSTEM READINESS</span>
+    <h1 id="status-title" class="text-2xl font-semibold sm:text-3xl">
+      สถานะการพัฒนา
+    </h1>
+    <p class="text-base leading-7 text-muted-foreground">
       ตรวจสอบความพร้อมของส่วนแสดงผล โดยไม่มีข้อมูลธุรกรรมหรือบัญชีร้านจริง
     </p>
-    <div class="status-card">
+    <div
+      class="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4"
+    >
       <div>
         <strong>Frontend</strong>
         <p>Angular Standalone · TypeScript</p>
       </div>
       <rcat-foundation-phase [label]="phase()" />
     </div>
-    <div class="status-card">
+    <div
+      class="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4"
+    >
       <div>
         <strong>คำสั่งซื้อและ Payment</strong>
         <p>
@@ -26,7 +35,9 @@ import { FoundationPhaseComponent } from "@rcat/ui";
           Payment จริง
         </p>
       </div>
-      <span class="phase muted">Not available</span>
+      <span class="rounded-md bg-muted px-3 py-2 text-sm text-foreground"
+        >Not available</span
+      >
     </div>
   </section>`,
 })

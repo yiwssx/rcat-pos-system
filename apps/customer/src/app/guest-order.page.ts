@@ -90,11 +90,11 @@ function guestError(error: unknown): string {
   ],
   template: `
     <section
-      class="guest-shell v6-guest-shop mx-auto w-full bg-background max-w-screen-2xl min-w-0 space-y-4 px-4 pb-28 pt-4 sm:px-6 lg:px-8 lg:pb-8"
+      class="guest-shell v6-guest-shop mx-auto w-full bg-background max-w-screen-2xl min-w-0 space-y-4 px-4 pb-48 pt-4 sm:px-6 lg:px-8 lg:pb-8"
       aria-labelledby="guest-title"
     >
       <header
-        class="guest-header flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4"
+        class="guest-header flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5"
       >
         <div class="guest-brand flex min-w-0 items-center gap-3">
           <img
@@ -139,7 +139,7 @@ function guestError(error: unknown): string {
         </div>
         @if (!staticCounter()) {
           <a
-            class="guest-track-link inline-flex min-h-11 items-center rounded-xl bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
+            class="guest-track-link inline-flex min-h-11 min-w-11 items-center rounded-xl border border-secondary-line bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
             routerLink="/order/track"
             >ติดตามออเดอร์</a
           >
@@ -249,14 +249,14 @@ function guestError(error: unknown): string {
             }
             <a
               routerLink="/"
-              class="guest-qr-home inline-flex min-h-11 items-center rounded-xl bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline"
+              class="guest-qr-home inline-flex min-h-11 min-w-11 items-center rounded-xl border border-secondary-line bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline"
               >กลับหน้าแรก</a
             >
           </div>
         </section>
       } @else if (error()) {
         <div
-          class="guest-error space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-destructive"
+          class="guest-error space-y-3 rounded-xl border border-destructive/30 bg-danger-soft p-4 text-foreground"
           role="alert"
         >
           <p>{{ error() }}</p>
@@ -278,7 +278,7 @@ function guestError(error: unknown): string {
           class="my-3 rounded-xl border border-border bg-card p-4 text-foreground"
           open
         >
-          <summary class="cursor-pointer font-semibold">
+          <summary class="min-h-11 cursor-pointer py-3 font-semibold">
             ออเดอร์ของฉัน ({{ quickOrders().length }})
           </summary>
           <div class="mt-3 space-y-3">
@@ -293,7 +293,7 @@ function guestError(error: unknown): string {
               อัปเดตสถานะ
             </button>
             @if (quickError()) {
-              <p role="alert" class="text-sm text-destructive">
+              <p role="alert" class="text-sm text-foreground">
                 {{ quickError() }}
               </p>
             }
@@ -365,7 +365,7 @@ function guestError(error: unknown): string {
         <div class="min-w-0 space-y-4">
           @if (session.visit(); as visit) {
             <div
-              class="guest-menu-intro v6-guest-intro flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-brand-soft p-4 sm:p-5"
+              class="guest-menu-intro v6-guest-intro flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 sm:p-5"
             >
               <div>
                 <span
@@ -379,7 +379,7 @@ function guestError(error: unknown): string {
                 </h2>
               </div>
               <span
-                class="guest-table-chip rounded-lg bg-card px-3 py-2 text-sm font-semibold text-brand-foreground"
+                class="guest-table-chip rounded-lg bg-secondary px-3 py-2 text-sm font-semibold text-brand-foreground"
                 >{{
                   visit.entryMode === "counter"
                     ? "เคาน์เตอร์"
@@ -407,12 +407,12 @@ function guestError(error: unknown): string {
                 </label>
               </div>
               <div
-                class="guest-categories flex min-w-0 gap-2 overflow-x-auto pb-1"
+                class="guest-categories flex min-w-0 flex-wrap gap-2 pb-1"
                 role="group"
                 aria-label="หมวดหมู่"
               >
                 <button
-                  class="guest-category-chip min-h-11 shrink-0 whitespace-nowrap"
+                  class="guest-category-chip min-h-11 max-w-full whitespace-normal"
                   hlmBtn
                   type="button"
                   [variant]="category() === '' ? 'default' : 'outline'"
@@ -424,7 +424,7 @@ function guestError(error: unknown): string {
                 </button>
                 @for (group of visit.categories; track group.id) {
                   <button
-                    class="guest-category-chip min-h-11 shrink-0 whitespace-nowrap"
+                    class="guest-category-chip min-h-11 max-w-full whitespace-normal"
                     hlmBtn
                     type="button"
                     [variant]="category() === group.id ? 'default' : 'outline'"
@@ -447,17 +447,17 @@ function guestError(error: unknown): string {
               </div>
             } @else {
               <div
-                class="guest-products v6-guest-products grid min-w-0 grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4"
+                class="guest-products v6-guest-products grid min-w-0 grid-cols-1 gap-3 min-[360px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
                 aria-label="รายการอาหาร"
               >
                 @for (product of products(); track product.id) {
                   <article
-                    class="guest-product v6-guest-product relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card p-2 shadow-sm"
+                    class="guest-product v6-guest-product relative flex min-w-0 flex-col rounded-xl border border-border bg-card p-2 shadow-sm"
                     [attr.aria-label]="product.name"
                   >
                     <button
                       type="button"
-                      class="guest-product-media block aspect-square w-full overflow-hidden rounded-lg border-0 bg-muted p-0 focus-visible:outline-2 focus-visible:outline-ring"
+                      class="guest-product-media block aspect-[4/3] w-full overflow-hidden rounded-lg border-0 bg-muted p-0 focus-visible:outline-2 focus-visible:outline-ring"
                       [attr.aria-label]="'ดูรายละเอียด ' + product.name"
                       [disabled]="busy()"
                       (click)="openProduct(product)"
@@ -502,7 +502,7 @@ function guestError(error: unknown): string {
                         >
                       }
                       <strong
-                        class="guest-price block pt-1 text-base font-semibold tabular-nums text-primary"
+                        class="guest-price block pt-1 text-base font-semibold tabular-nums text-foreground"
                         >{{ money(product.priceSatang) }} ฿</strong
                       >
                     </div>
@@ -593,7 +593,7 @@ function guestError(error: unknown): string {
             @if (cartQty() > 0) {
               <button
                 type="button"
-                class="guest-cart-shortcut fixed inset-x-4 bottom-4 z-30 grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-xl border-0 bg-primary p-3 text-left text-primary-foreground shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50 lg:static lg:mt-4 lg:w-full"
+                class="guest-cart-shortcut fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 grid min-h-14 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-3 gap-y-1 rounded-xl border border-primary-line bg-primary p-3 text-left text-primary-foreground shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-disabled disabled:text-disabled-foreground disabled:opacity-100 lg:static lg:mt-4 lg:w-full"
                 [disabled]="busy()"
                 (click)="openCart()"
               >
@@ -610,7 +610,7 @@ function guestError(error: unknown): string {
                   >≈ {{ money(estimate()) }} ฿</span
                 >
                 <span
-                  class="guest-cart-shortcut-action col-start-2 row-span-2 row-start-1 text-sm font-semibold"
+                  class="guest-cart-shortcut-action col-start-2 row-span-2 row-start-1 break-words text-right text-sm font-semibold"
                   >ดูตะกร้า</span
                 >
               </button>
@@ -622,7 +622,7 @@ function guestError(error: unknown): string {
       <hlm-sheet #detailSheet side="bottom" (closed)="onDetailClose()">
         <ng-template hlmSheetPortal>
           <hlm-sheet-content
-            class="guest-sheet guest-product-sheet mx-auto w-full max-w-2xl max-h-[min(92dvh,820px)] flex flex-col overflow-hidden rounded-t-3xl border border-border bg-card p-0 text-foreground shadow-xl md:max-h-[min(85dvh,820px)] md:rounded-3xl"
+            class="guest-sheet guest-product-sheet mx-auto w-full max-w-2xl max-h-[min(92dvh,820px)] flex flex-col overflow-hidden rounded-t-2xl border border-border bg-card p-0 text-foreground shadow-xl md:max-h-[min(85dvh,820px)] md:rounded-2xl"
             [showCloseButton]="false"
           >
             @if (activeProduct(); as product) {
@@ -679,7 +679,7 @@ function guestError(error: unknown): string {
                   }
                 </div>
                 <div
-                  class="guest-detail-subtitle flex items-center justify-between gap-3 text-base font-semibold text-primary"
+                  class="guest-detail-subtitle flex items-center justify-between gap-3 text-base font-semibold text-foreground"
                 >
                   <span>{{ categoryName(product.categoryId) }}</span>
                   <strong>{{ money(product.priceSatang) }} ฿</strong>
@@ -768,7 +768,7 @@ function guestError(error: unknown): string {
       <hlm-sheet #cartSheet side="bottom" (closed)="onCartClose()">
         <ng-template hlmSheetPortal>
           <hlm-sheet-content
-            class="guest-sheet guest-cart-sheet mx-auto w-full max-w-2xl max-h-[min(92dvh,820px)] flex flex-col overflow-hidden rounded-t-3xl border border-border bg-card p-0 text-foreground shadow-xl md:max-h-[min(85dvh,820px)] md:rounded-3xl"
+            class="guest-sheet guest-cart-sheet mx-auto w-full max-w-2xl max-h-[min(92dvh,820px)] flex flex-col overflow-hidden rounded-t-2xl border border-border bg-card p-0 text-foreground shadow-xl md:max-h-[min(85dvh,820px)] md:rounded-2xl"
             [showCloseButton]="false"
           >
             <div

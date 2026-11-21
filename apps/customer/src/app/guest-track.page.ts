@@ -94,12 +94,12 @@ const TRACK_INTERVAL_MS = 15_000;
               "
               [class.bg-served]="status()!.status === 'served'"
               [class.text-served-foreground]="status()!.status === 'served'"
-              [class.text-destructive]="status()!.status === 'cancelled'"
+              [class.text-foreground]="status()!.status === 'cancelled'"
             >
               {{ statusLabel[status()!.status] }}
             </span>
             <h2
-              class="guest-amount m-0 text-2xl font-semibold tabular-nums text-primary"
+              class="guest-amount m-0 text-2xl font-semibold tabular-nums text-foreground"
             >
               {{ money(status()!.amountSatang) }} ฿
             </h2>
@@ -116,7 +116,7 @@ const TRACK_INTERVAL_MS = 15_000;
           }
           @if (error()) {
             <div
-              class="guest-error rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive"
+              class="guest-error rounded-xl border border-destructive/30 bg-card p-4 text-sm text-foreground"
               role="alert"
             >
               {{ error() }}

@@ -1,35 +1,48 @@
-/* V7 Warm Modern: one semantic theme for Customer, Merchant and Admin. */
+/* Owner-approved Modern Pastel SaaS Hybrid: opaque light surfaces, dark text. */
 :root {
-  --background: #fff5e9;
-  --foreground: #382921;
-  --card: #fffdfa;
-  --card-foreground: #382921;
-  --popover: #fffdfa;
-  --popover-foreground: #382921;
-  --primary: #186b60;
-  --primary-foreground: #ffffff;
-  --secondary: #ddf2e9;
-  --secondary-foreground: #186b60;
-  --muted: #f4e9da;
-  --muted-foreground: #765b4c;
-  --accent: #ddf2e9;
-  --accent-foreground: #186b60;
-  --destructive: #a33135;
-  --border: #e9d7c4;
-  --input: #a88d76;
-  --ring: #186b60;
-  --brand: #c04c2b;
-  --brand-soft: #fce0cb;
-  --brand-foreground: #923d21;
-  --incoming: #e3ecfc;
-  --incoming-foreground: #315fa6;
-  --accepted: #f0e7ff;
-  --accepted-foreground: #654391;
-  --preparing: #ffeac5;
-  --preparing-foreground: #80520c;
-  --served: #ddf2e9;
-  --served-foreground: #186b60;
-  --radius: 1rem;
+  --background: #f5f7fc;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #dfe9fd;
+  --primary-foreground: #000000;
+  --secondary: #e8dffc;
+  --secondary-foreground: #000000;
+  --muted: #f1f3f7;
+  --muted-foreground: #333333;
+  --accent: #dfe9fd;
+  --accent-foreground: #000000;
+  --destructive: #8a2024;
+  --border: #d9e0ec;
+  --input: #767676;
+  --ring: #526dac;
+  --brand: #526dac;
+  --brand-soft: #ffe4d0;
+  --brand-foreground: #000000;
+  --incoming: #dfe9fd;
+  --incoming-foreground: #000000;
+  --accepted: #e8dffc;
+  --accepted-foreground: #000000;
+  --preparing: #fbebcf;
+  --preparing-foreground: #000000;
+  --served: #e2f2e9;
+  --served-foreground: #000000;
+  --primary-line: #526dac;
+  --secondary-line: #7562a4;
+  --danger-hover: #f8d3d7;
+  --primary-hover: #d0dffc;
+  --destructive-hover: #70171b;
+  --destructive-foreground: #ffffff;
+  --disabled: #e5e7eb;
+  --disabled-foreground: #333333;
+  --incoming-line: #526dac;
+  --accepted-line: #7562a4;
+  --preparing-line: #99701f;
+  --served-line: #387557;
+  --danger-soft: #fce4e6;
+  --radius: 0.75rem;
 }
 @theme inline {
   --color-background: var(--background);
@@ -58,5 +71,68 @@
   --color-preparing-foreground: var(--preparing-foreground);
   --color-served: var(--served);
   --color-served-foreground: var(--served-foreground);
+  --color-primary-line: var(--primary-line);
+  --color-secondary-line: var(--secondary-line);
+  --color-danger-hover: var(--danger-hover);
+  --color-primary-hover: var(--primary-hover);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-disabled: var(--disabled);
+  --color-disabled-foreground: var(--disabled-foreground);
+  --color-incoming-line: var(--incoming-line);
+  --color-accepted-line: var(--accepted-line);
+  --color-preparing-line: var(--preparing-line);
+  --color-served-line: var(--served-line);
+  --color-danger-soft: var(--danger-soft);
+  --color-destructive: var(--destructive);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --radius-lg: var(--radius);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    font-size: 16px;
+    background: var(--background);
+    color: var(--foreground);
+  }
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  h1, h2, h3, h4, p {
+    margin: 0;
+  }
+  a {
+    color: inherit;
+  }
+  button, input, select, textarea {
+    font: inherit;
+    max-width: 100%;
+  }
+  img, video {
+    max-width: 100%;
+  }
+  ::placeholder {
+    color: var(--muted-foreground);
+    opacity: 1;
+  }
+  fieldset {
+    min-width: 0;
+    margin: 0;
+  }
+  html {
+    scroll-padding-block: 1rem 8rem;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 }

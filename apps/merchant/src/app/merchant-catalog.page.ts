@@ -96,7 +96,7 @@ function bahtInput(satang: number): string {
       } @else {
         @if (error()) {
           <p
-            class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive"
+            class="rounded-xl border border-destructive/30 bg-danger-soft p-4 text-sm leading-relaxed text-foreground"
             role="alert"
           >
             {{ error() }}
@@ -497,7 +497,7 @@ function bahtInput(satang: number): string {
                       <input
                         [id]="'catalog-media-' + product.id"
                         type="file"
-                        class="block w-full min-w-0 max-w-full text-sm text-foreground"
+                        class="block min-h-11 w-full min-w-0 max-w-full rounded-xl border border-input bg-card p-2 text-sm text-foreground"
                         accept="image/jpeg,image/png,image/webp"
                         [disabled]="saving()"
                         (change)="uploadImage($event, product)"
@@ -807,9 +807,12 @@ function bahtInput(satang: number): string {
                                   inputmode="decimal"
                                   [disabled]="saving()"
                                 />
-                                <label hlmLabel class="flex items-center gap-2">
+                                <label
+                                  hlmLabel
+                                  class="flex min-h-11 min-w-11 cursor-pointer items-center gap-2"
+                                >
                                   <input
-                                    class="size-5 accent-primary"
+                                    class="size-5 accent-primary-line"
                                     type="checkbox"
                                     name="optionEditAvailable"
                                     [(ngModel)]="optionEdit.available"
