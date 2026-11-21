@@ -195,7 +195,9 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
               >
                 <ng-icon
                   [name]="
-                    sidebarCollapsed() ? 'lucidePanelLeftOpen' : 'lucidePanelLeftClose'
+                    sidebarCollapsed()
+                      ? 'lucidePanelLeftOpen'
+                      : 'lucidePanelLeftClose'
                   "
                   aria-hidden="true"
                 />

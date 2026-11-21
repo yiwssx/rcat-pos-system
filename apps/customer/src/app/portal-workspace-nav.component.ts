@@ -120,7 +120,9 @@ import { permitsRoute } from "./portal-permissions";
             aria-label="ร้านที่กำลังทำงาน"
           >
             <div class="flex items-center justify-between gap-2">
-              <h2 class="text-sm font-semibold text-foreground">พื้นที่ทำงาน</h2>
+              <h2 class="text-sm font-semibold text-foreground">
+                พื้นที่ทำงาน
+              </h2>
               <span hlmBadge variant="secondary">RCAT POS</span>
             </div>
             @if (store(); as selected) {

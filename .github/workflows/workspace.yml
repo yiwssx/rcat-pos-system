@@ -49,25 +49,6 @@ jobs:
       - name: Install from committed lockfile
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm install --frozen-lockfile
-      - name: Emit exact formatter patch for two Hybrid templates (temporary read-only diagnostic)
-        if: steps.impact.outputs.workspace == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          pnpm exec prettier --version
-          patch=$(mktemp)
-          formatted=$(mktemp)
-          trap 'rm -f "$patch" "$formatted"' EXIT
-          for f in apps/customer/src/app/app.component.ts apps/customer/src/app/portal-workspace-nav.component.ts; do
-            pnpm exec prettier "$f" > "$formatted"
-            diff -u --label "a/$f" --label "b/$f" "$f" "$formatted" >> "$patch" || test "$?" -eq 1
-          done
-          echo "HYBRID_FORMAT_PATCH_BEGIN"
-          cat "$patch"
-          echo "HYBRID_FORMAT_PATCH_END"
-          printf 'HYBRID_FORMAT_PATCH_BASE64='
-          base64 -w0 "$patch"
-          echo
       - name: Verify the installed deepmerge prototype guard
         if: steps.impact.outputs.workspace == 'true'
         run: node scripts/ci/verify-deepmerge-security.cjs
