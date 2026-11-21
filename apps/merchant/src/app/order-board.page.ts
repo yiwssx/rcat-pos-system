@@ -498,7 +498,9 @@ function failureText(error: unknown): string {
                     ลูกค้ายังสั่งเพิ่มได้จนกดเริ่มเตรียม
                   </p>
                 }
-                <div class="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:flex sm:flex-wrap">
+                <div
+                  class="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:flex sm:flex-wrap"
+                >
                   @for (
                     action of actions(order.status);
                     track action.nextStatus

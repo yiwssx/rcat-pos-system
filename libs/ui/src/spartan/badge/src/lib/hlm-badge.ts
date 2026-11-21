@@ -3,13 +3,12 @@ import { classes } from "@spartan-ng/helm/utils";
 import { type VariantProps, cva } from "class-variance-authority";
 
 const badgeVariants = cva(
-  "min-h-6 gap-1 rounded-md border border-transparent px-2 py-0.5 text-xs font-medium transition-all has-data-[icon=inline-end]:pe-1.5 has-data-[icon=inline-start]:ps-1.5 [&>ng-icon]:text-[length:--spacing(3)]! group/badge focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 inline-flex w-fit max-w-full min-w-0 items-center justify-center whitespace-normal break-words focus-visible:ring-[3px] [&>ng-icon]:pointer-events-none",
+  "min-h-6 gap-1 rounded-md border border-transparent px-2 py-0.5 text-xs font-medium transition-none has-data-[icon=inline-end]:pe-1.5 has-data-[icon=inline-start]:ps-1.5 [&>ng-icon]:text-[length:--spacing(3)]! group/badge focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 inline-flex w-fit max-w-full min-w-0 items-center justify-center whitespace-normal break-words focus-visible:ring-[3px] [&>ng-icon]:pointer-events-none",
   {
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground [a]:hover:bg-primary-hover",
-        secondary:
-          "bg-secondary text-secondary-foreground [a]:hover:bg-accent",
+        secondary: "bg-secondary text-secondary-foreground [a]:hover:bg-accent",
         destructive:
           "bg-danger-soft text-foreground [a]:hover:bg-danger-soft focus-visible:ring-destructive/30",
         outline:

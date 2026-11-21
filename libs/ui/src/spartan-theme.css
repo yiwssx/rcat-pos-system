@@ -114,6 +114,10 @@
   img, video {
     max-width: 100%;
   }
+  ::placeholder {
+    color: var(--muted-foreground);
+    opacity: 1;
+  }
   fieldset {
     min-width: 0;
     margin: 0;

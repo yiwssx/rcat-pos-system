@@ -113,19 +113,25 @@ function failure(error: unknown): string {
         class="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3"
         aria-label="สรุปบัญชีผู้ใช้งาน"
       >
-        <div class="rounded-xl border border-border border-t-4 border-t-brand bg-card p-4 text-foreground">
+        <div
+          class="rounded-xl border border-border border-t-4 border-t-brand bg-card p-4 text-foreground"
+        >
           <span class="block text-sm">บัญชีทั้งหมด</span
           ><strong class="text-2xl font-semibold tabular-nums">{{
             accounts().length
           }}</strong>
         </div>
-        <div class="rounded-xl border border-border border-t-4 border-t-served-line bg-card p-4 text-foreground">
+        <div
+          class="rounded-xl border border-border border-t-4 border-t-served-line bg-card p-4 text-foreground"
+        >
           <span class="block text-sm">ใช้งานได้</span
           ><strong class="text-2xl font-semibold tabular-nums">{{
             activeCount()
           }}</strong>
         </div>
-        <div class="rounded-xl border border-border border-t-4 border-t-input bg-card p-4 text-foreground">
+        <div
+          class="rounded-xl border border-border border-t-4 border-t-input bg-card p-4 text-foreground"
+        >
           <span class="block text-sm">ระงับ</span
           ><strong class="text-2xl font-semibold tabular-nums">{{
             accounts().length - activeCount()
@@ -244,7 +250,9 @@ function failure(error: unknown): string {
                   account.role !== "super_admin" &&
                   (isSuper() || account.role === "merchant")
                 ) {
-                  <div class="platform-account-actions flex min-w-0 flex-wrap gap-2">
+                  <div
+                    class="platform-account-actions flex min-w-0 flex-wrap gap-2"
+                  >
                     <button
                       hlmBtn
                       variant="outline"

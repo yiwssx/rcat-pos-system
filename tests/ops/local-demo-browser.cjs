@@ -81,7 +81,7 @@ async function auditVisual(page, name, rootSelector = 'body') {
       const bg=background(el);
       if(bg.unknown){fail('unresolved-background',el,kind);return;}
       // Whole-control opacity is intentionally not used for necessary text.
-      const color=rgb(fg);
+      const color=[...rgb(fg)];
       color[3]*=opacity;
       const value=ratio(blend(color,bg.color),bg.color);
       minText=Math.min(minText,value);textCount++;
@@ -105,9 +105,8 @@ async function auditVisual(page, name, rootSelector = 'body') {
         for(let p=el;p&&p!==document.body;p=p.parentElement){
           if(p===scroller)break;
           const st=style(p);
-          if(!['hidden','clip'].includes(st.overflowX))continue;
           const box=p.getBoundingClientRect();
-          if(r.left<box.left-1||r.right>box.right+1){fail('clipped-text',el,describe(p));break;}
+          if((['hidden','clip'].includes(st.overflowX)&&(r.left<box.left-1||r.right>box.right+1))||(['hidden','clip'].includes(st.overflowY)&&(r.top<box.top-1||r.bottom>box.bottom+1))){fail('clipped-text',el,describe(p));break;}
         }
       }
     }
@@ -393,6 +392,12 @@ async function main() {
     assert.equal(guestPalette.active, 'rgb(146, 54, 23)', 'Guest category selection uses V8 RCAT Signature');
     assert.equal(guestPalette.cta, 'rgb(146, 54, 23)', 'Guest add-to-cart uses V8 RCAT Signature');
     await auditWidths(staticPage,'customer-catalog');
+    await staticPage.locator('.guest-add').first().hover();
+    await auditVisual(staticPage,'customer-primary-hover');
+    await staticPage.locator('#guest-menu-search').focus();
+    await auditVisual(staticPage,'customer-input-focus');
+    await staticPage.locator('#guest-menu-search').blur();
+    await staticPage.mouse.move(0,0);
     await auditTextResize(staticPage,'customer-catalog');
     // The desktop filter is one compact rail, not a full-width stacked form.
     await staticPage.setViewportSize({ width: 1365, height: 900 });
@@ -551,6 +556,9 @@ async function main() {
     await card.getByRole('button', { name: 'รับออเดอร์', exact: true }).click();
     await card.getByText('รับออเดอร์แล้ว', { exact: true }).waitFor();
     await auditWidths(board,'merchant-orders');
+    await board.locator('button[data-slot=button]').first().focus();
+    await auditVisual(board,'merchant-control-focus');
+    await board.locator('button[data-slot=button]').first().blur();
     await auditTextResize(board,'merchant-orders');
     await board.evaluate(() => window.scrollTo(0, 0));
     await board.screenshot({ path: '/tmp/rcat-portal-orders-mobile.png' });
@@ -611,7 +619,7 @@ async function main() {
       const platformPage=await platform.newPage();
       await platformPage.goto(admin+'/platform');
       await platformPage.getByRole('heading',{name:'จัดการผู้ใช้งาน',exact:true}).waitFor();
-      await platformPage.getByText('merchant-with-a-very-long-identifier-for-reflow-check@demo.invalid',{exact:true}).waitFor();
+      await platformPage.locator('.platform-account-list').getByText('merchant-with-a-very-long-identifier-for-reflow-check@demo.invalid',{exact:true}).waitFor();
       await auditWidths(platformPage,'platform-admin-visual-fixture');
       await auditTextResize(platformPage,'platform-admin-visual-fixture');
       await platformPage.screenshot({path:'/tmp/rcat-portal-platform-admin-mobile.png',fullPage:true});
@@ -619,6 +627,8 @@ async function main() {
       await platformPage.screenshot({path:'/tmp/rcat-portal-platform-admin-desktop.png',fullPage:true});
       await platformPage.getByText('อนุญาตบัญชีบุคลากร',{exact:true}).click();
       await auditVisual(platformPage,'platform-admin-expanded-editor');
+      await platformPage.locator('#platform-email').focus();
+      await auditVisual(platformPage,'platform-admin-field-focus');
     } finally {await platform.close();}
 
     // Repeat the actual one-command launcher; no duplicate fixtures/password reset.

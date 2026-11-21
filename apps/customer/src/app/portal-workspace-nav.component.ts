@@ -135,7 +135,7 @@ import { permitsRoute } from "./portal-permissions";
               routerLink="/"
               routerLinkActive="bg-accent text-accent-foreground font-semibold"
               [routerLinkActiveOptions]="{ exact: true }"
-              class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >พื้นที่ทำงาน</a
             >
           </section>
@@ -157,7 +157,7 @@ import { permitsRoute } from "./portal-permissions";
                       selected.storeId,
                     ]"
                     routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                    class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     >{{ item.label }}</a
                   >
                 }
@@ -180,7 +180,7 @@ import { permitsRoute } from "./portal-permissions";
                       selected.storeId,
                     ]"
                     routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                    class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     >{{ item.label }}</a
                   >
                 }
@@ -189,7 +189,7 @@ import { permitsRoute } from "./portal-permissions";
                 <a
                   [routerLink]="['/tenants', selected.tenantId, 'staff']"
                   routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                  class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >พนักงานและสิทธิ์</a
                 >
               }
@@ -209,7 +209,7 @@ import { permitsRoute } from "./portal-permissions";
                     selected.storeId,
                   ]"
                   routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                  class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >บัญชีพร้อมเพย์ของร้าน</a
                 >
                 <a
@@ -219,7 +219,7 @@ import { permitsRoute } from "./portal-permissions";
                     selected.storeId,
                   ]"
                   routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                  class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >ตรวจสอบสลิป</a
                 >
                 <a
@@ -229,7 +229,7 @@ import { permitsRoute } from "./portal-permissions";
                     selected.storeId,
                   ]"
                   routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                  class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >รายงานรับเงินและคืนเงิน</a
                 >
               </section>
@@ -249,7 +249,7 @@ import { permitsRoute } from "./portal-permissions";
               <a
                 routerLink="/platform"
                 routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >จัดการผู้ใช้งาน</a
               >
             </section>
@@ -265,7 +265,7 @@ import { permitsRoute } from "./portal-permissions";
               <a
                 routerLink="/settings"
                 routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >ตั้งค่าร้าน</a
               >
             </section>

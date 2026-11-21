@@ -497,7 +497,7 @@ function bahtInput(satang: number): string {
                       <input
                         [id]="'catalog-media-' + product.id"
                         type="file"
-                        class="block w-full min-w-0 max-w-full text-sm text-foreground"
+                        class="block min-h-11 w-full min-w-0 max-w-full rounded-xl border border-input bg-card p-2 text-sm text-foreground"
                         accept="image/jpeg,image/png,image/webp"
                         [disabled]="saving()"
                         (change)="uploadImage($event, product)"

@@ -5,22 +5,11 @@ import { FOUNDATION_STATUS } from "./status-labels";
   selector: "rcat-foundation-phase",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<span class="foundation-pill" role="status">{{ label() }}</span>`,
-  styles: [
-    `
-      .foundation-pill {
-        display: inline-flex;
-        align-items: center;
-        min-height: 2rem;
-        padding: 0.4rem 0.75rem;
-        border-radius: 999px;
-        background: #e7f5ed;
-        color: #22694a;
-        font-size: 0.75rem;
-        white-space: nowrap;
-      }
-    `,
-  ],
+  template: `<span
+    class="inline-flex min-h-8 max-w-full items-center rounded-md bg-served px-3 py-2 text-sm text-foreground"
+    role="status"
+    >{{ label() }}</span
+  >`,
 })
 export class FoundationPhaseComponent {
   readonly label = input<string>(FOUNDATION_STATUS.active);
