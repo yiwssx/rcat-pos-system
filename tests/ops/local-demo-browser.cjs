@@ -63,6 +63,15 @@ async function auditVisual(page, name, rootSelector = 'body') {
     };
     const visible = el => {
       if(!el || el.closest('svg,script,style,template,[aria-hidden="true"],.sr-only'))return false;
+      // A closed native disclosure intentionally has no visible content
+      // except its first direct summary. Chromium can still return layout
+      // rectangles for its unpainted descendants. Test the expanded state too.
+      for(let p=el;p;p=p.parentElement){
+        if(p.tagName==='DETAILS'&&!p.open){
+          const summary=[...p.children].find(c=>c.tagName==='SUMMARY');
+          if(!summary||!summary.contains(el))return false;
+        }
+      }
       const r=el.getBoundingClientRect(),st=style(el);
       return r.width>1&&r.height>1&&st.visibility==='visible'&&st.display!=='none';
     };
@@ -342,6 +351,7 @@ async function main() {
     await createDisclosure.locator('summary').click();
     assert.equal(await createDisclosure.evaluate(el => el.open), true,
       'Owner can expand the native keyboard-accessible creation form');
+    await auditVisual(adminPage,'tenant-owner-expanded-create');
     await createDisclosure.locator('summary').click();
     await adminPage.evaluate(() => window.scrollTo(0, 0));
     await adminPage.screenshot({ path: '/tmp/rcat-portal-owner-mobile.png', fullPage: true });
@@ -556,6 +566,12 @@ async function main() {
     await card.getByRole('button', { name: 'รับออเดอร์', exact: true }).click();
     await card.getByText('รับออเดอร์แล้ว', { exact: true }).waitFor();
     await auditWidths(board,'merchant-orders');
+    const events = board.locator('details').filter({has:board.locator('#events-title')}).first();
+    if (await events.count()) {
+      if (!await events.evaluate(el=>el.open)) await events.locator('summary').click();
+      await auditVisual(board,'merchant-expanded-events');
+      await events.locator('summary').click();
+    }
     await board.locator('button[data-slot=button]').first().focus();
     await auditVisual(board,'merchant-control-focus');
     await board.locator('button[data-slot=button]').first().blur();
@@ -586,9 +602,16 @@ async function main() {
         await task.locator('summary').click();
         assert.equal(await task.evaluate(el => el.open), true, 'Inventory task is expandable');
         await task.getByRole('textbox', { name: 'ชื่อวัตถุดิบ' }).waitFor();
+        await auditVisual(capture,'merchant-inventory-expanded-task');
         await task.locator('summary').click();
       }
       await auditWidths(capture,'merchant-'+management.route);
+      if (management.route === 'catalog') {
+        const create = capture.locator('summary:has-text("เพิ่มหมวดหมู่หรือสินค้าใหม่")');
+        await create.click();
+        await auditVisual(capture,'merchant-catalog-expanded-create');
+        await create.click();
+      }
       await capture.evaluate(() => window.scrollTo(0, 0));
       await capture.screenshot({ path: '/tmp/rcat-portal-' + management.file + '.png', fullPage: true });
       await capture.setViewportSize({ width: 390, height: 844 });
