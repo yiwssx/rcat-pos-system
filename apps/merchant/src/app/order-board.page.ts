@@ -85,21 +85,21 @@ function failureText(error: unknown): string {
       aria-labelledby="board-title"
     >
       <header
-        class="mb-2 flex min-w-0 items-start justify-between gap-2 border-b border-border pb-3 sm:mb-4 sm:items-center sm:gap-4"
+        class="mb-2 flex min-w-0 items-start justify-between gap-2 rounded-2xl bg-action p-3 text-action-foreground sm:mb-4 sm:items-center sm:gap-4 sm:p-5"
       >
         <div class="min-w-0 flex-1 space-y-1">
-          <a hlmBtn routerLink="/" variant="link" size="lg">← เปลี่ยนร้าน</a>
+          <a hlmBtn routerLink="/" variant="outline">← เปลี่ยนร้าน</a>
           <span
-            class="hidden text-xs font-semibold uppercase tracking-widest text-muted-foreground sm:block"
+            class="hidden text-xs font-semibold uppercase tracking-widest text-action-foreground sm:block"
             >ORDER MANAGEMENT</span
           >
           <h1
             id="board-title"
-            class="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
+            class="text-2xl font-semibold tracking-tight text-action-foreground sm:text-3xl"
           >
             กระดานออเดอร์
           </h1>
-          <p class="text-sm leading-relaxed text-muted-foreground">
+          <p class="text-sm leading-relaxed text-action-foreground">
             {{ store()?.storeName || "กำลังตรวจสอบสิทธิ์ร้าน" }}
             @if (store()) {
               <span>· {{ roleLabel[store()!.role] }}</span>
