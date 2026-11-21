@@ -81,7 +81,7 @@ function failureMessage(error: unknown): string {
 
       @if (error()) {
         <div
-          class="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive"
+          class="rounded-xl border border-destructive/30 bg-danger-soft p-4 text-sm leading-relaxed text-foreground"
           role="alert"
         >
           {{ error() }}

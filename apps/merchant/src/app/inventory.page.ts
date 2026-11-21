@@ -90,7 +90,7 @@ function inventoryError(error: unknown): string {
 
       @if (error()) {
         <div
-          class="inventory-error rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive"
+          class="inventory-error rounded-xl border border-destructive/30 bg-card p-4 text-sm text-foreground"
           role="alert"
         >
           {{ error() }}

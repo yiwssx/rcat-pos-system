@@ -1,4 +1,4 @@
-> **Current UI authority (20 Nov 2026):** [V7 Warm Modern](UI-V7-WARM-MODERN.md) and [Spartan-first migration contract](SPARTAN-IOS-MIGRATION.md). Historical drafts below are retained for evidence only.
+> **Current UI authority — V8:** [RCAT Signature Clarity First](UI-V8-RCAT-SIGNATURE.md) and [Spartan-first migration contract](SPARTAN-IOS-MIGRATION.md). Historical drafts below are retained for evidence only.
 
 # RCAT POS — Historical Design System Brief (V1–V5 superseded)
 

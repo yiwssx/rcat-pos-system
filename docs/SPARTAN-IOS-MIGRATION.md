@@ -1,5 +1,7 @@
 # RCAT POS — Spartan-first / iOS-inspired interaction contract
 
+> **V8 owner decision:** [RCAT Signature Clarity First](UI-V8-RCAT-SIGNATURE.md) supersedes all prior visual palettes. Existing Spartan and safety architecture stays binding.
+
 > **20 Nov 2026:** [V7 Warm Modern](UI-V7-WARM-MODERN.md) supersedes the 18 Nov visual palette only. All component architecture and security restrictions below remain binding.
 
 **Owner directive, 18 Nov 2026.** This overrides the V6 vivid/gradient treatment for future UI decisions. It is an implementation contract for the existing Angular 22 + Nx 24 application, not a second frontend framework or a claim that all screens are already migrated.

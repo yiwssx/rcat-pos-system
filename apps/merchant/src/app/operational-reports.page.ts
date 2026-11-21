@@ -71,7 +71,7 @@ const STATUS_LABEL: Record<string, string> = {
       </p>
       @if (error()) {
         <div
-          class="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive"
+          class="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-danger-soft p-4 text-sm leading-relaxed text-foreground"
           role="alert"
         >
           <span class="min-w-0 flex-1">{{ error() }}</span>
