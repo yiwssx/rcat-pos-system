@@ -158,7 +158,7 @@ async function auditVisual(page, name, rootSelector = 'body') {
     for(const el of root.querySelectorAll('button span[aria-hidden=true],a span[aria-hidden=true],ng-icon,[role=status] span[aria-hidden=true]')){
       if(!iconVisible(el)||el.closest('.guest-cart-shortcut-icon,.guest-product-placeholder'))continue;
       const st=style(el),glyph=el.textContent.trim();
-      if(glyph&&/\\p{Extended_Pictographic}/u.test(glyph)&&!/[+↻×✕☰◎·]/u.test(glyph))continue;
+      if(glyph&&/\p{Extended_Pictographic}/u.test(glyph)&&!/[+↻×✕☰◎·]/u.test(glyph))continue;
       const dot=el.classList.contains('rounded-full')&&!glyph;
       const bg=background(dot?el.parentElement:el);
       if(bg.unknown){fail('icon-background',el,'unresolved');continue;}

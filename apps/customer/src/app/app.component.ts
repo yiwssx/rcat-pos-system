@@ -164,9 +164,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
             class="hidden min-w-0 border-r border-border bg-card p-4 lg:block"
             aria-label="พื้นที่ทำงาน"
           >
-            <div
-              class="sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto"
-            >
+            <div class="sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
               <rcat-portal-workspace-nav [url]="url()" />
             </div>
           </aside>
