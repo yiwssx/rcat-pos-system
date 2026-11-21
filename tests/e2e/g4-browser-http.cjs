@@ -512,9 +512,11 @@ async function browserFlow(fixture) {
     });
     assert.ok(cardInset.every((px) => px >= 12),
       "Catalog item needs readable inset on both sides");
-    assert.equal(await newItem.locator("details").filter({ hasText: "จัดการรูปสินค้า" })
-      .evaluate((element) => element.open), false,
-    "Image uploader must start collapsed to keep each item compact");
+    const imageToggle = newItem.getByRole("button", { name: "รูปสินค้า", exact: true });
+    assert.equal(await imageToggle.getAttribute("aria-expanded"), "false",
+      "Image uploader must start collapsed to keep each item compact");
+    assert.equal(await newItem.locator('input[type="file"]').count(), 0,
+      "Collapsed image uploader must not occupy a row");
     await newItem.getByRole("button", { name: "แก้ไข" }).click();
     const editForm = newItem.locator(".catalog-edit");
     await editForm.getByLabel("ชื่อสินค้า", { exact: true })
@@ -528,7 +530,7 @@ async function browserFlow(fixture) {
     await revisedItem.getByText("99.50 บาท").waitFor();
     // G2 multi-group editor: a draft typed for one group must never be
     // submitted to another group. Only one option form may own input IDs.
-    await revisedItem.getByRole("button", { name: "จัดการตัวเลือกสินค้า" }).click();
+    await revisedItem.getByRole("button", { name: "ตัวเลือกสินค้า", exact: true }).click();
     const modifiers = revisedItem.locator(".catalog-modifier-panel");
     const createGroup = modifiers.locator("form").first();
     const oneChoice = modifiers.getByRole("button", { name: "เลือกอย่างเดียว (บังคับ)" });
@@ -636,7 +638,7 @@ async function browserFlow(fixture) {
         mediaReplies.push({ status: response.status(), detail });
       }
     });
-    await revisedItem.getByText("จัดการรูปสินค้า", { exact: true }).click();
+    await revisedItem.getByRole("button", { name: "รูปสินค้า", exact: true }).click();
     await revisedItem.locator('input[type="file"]').setInputFiles({
       name: "catalog-menu-test.png",
       mimeType: "image/png",
@@ -672,8 +674,12 @@ async function browserFlow(fixture) {
     );
     assert.equal(foreignMedia.status(), 404);
 
+    const archive = revisedItem.getByRole("button", { name: "เก็บถาวร", exact: true });
+    assert.equal(await archive.isVisible(), false, "Archive must require opening More");
+    await revisedItem.locator("summary").filter({ hasText: "เพิ่มเติม" }).click();
+    await archive.waitFor();
     second.once("dialog", (dialog) => dialog.accept());
-    await revisedItem.getByRole("button", { name: "เก็บถาวร" }).click();
+    await archive.click();
     await second.getByText("เก็บสินค้าถาวรแล้ว").waitFor();
     await second.getByRole("button", { name: "แสดงสินค้าเก็บถาวร" }).click();
     await second.locator(".catalog-product", {

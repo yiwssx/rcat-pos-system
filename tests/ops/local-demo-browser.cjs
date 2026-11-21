@@ -473,7 +473,7 @@ async function main() {
       active: getComputedStyle(document.querySelector('.guest-category-chip.is-active')).backgroundColor,
       cta: getComputedStyle(document.querySelector('.guest-add')).backgroundColor,
     }));
-    assert.equal(guestPalette.active, 'rgb(223, 233, 253)', 'Guest category selection uses Modern Pastel SaaS');
+    assert.equal(guestPalette.active, 'rgb(223, 233, 253)', 'Guest selected category retains soft blue');
     assert.equal(guestPalette.cta, 'rgb(35, 67, 153)', 'Guest add-to-cart uses Expressive primary action');
     await auditWidths(staticPage,'customer-catalog');
     await staticPage.locator('.guest-add').first().hover();
@@ -709,6 +709,7 @@ async function main() {
         assert.equal(await product.getByRole('button',{name:'เก็บถาวร',exact:true}).isVisible(),false);
         await more.click();
         await product.getByRole('button',{name:'เก็บถาวร',exact:true}).waitFor();
+        await auditVisual(capture,'merchant-catalog-more-open');
         await more.click();
         await product.getByRole('button',{name:'รูปสินค้า',exact:true}).click();
         await product.locator('input[type=file]').waitFor();

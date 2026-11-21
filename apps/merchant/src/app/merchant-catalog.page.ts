@@ -450,13 +450,9 @@ function bahtInput(satang: number): string {
                       type="button"
                       variant="outline"
                       [attr.aria-expanded]="imageProductId() === product.id"
-                      [attr.aria-controls]="'catalog-image-panel-' + product.id"
+                      [attr.aria-controls]="'image-panel-' + product.id"
                       [disabled]="saving()"
-                      (click)="
-                        imageProductId.set(
-                          imageProductId() === product.id ? null : product.id
-                        )
-                      "
+                      (click)="toggleImageEditor(product)"
                     >
                       รูปสินค้า
                     </button>
@@ -465,7 +461,7 @@ function bahtInput(satang: number): string {
                       type="button"
                       variant="outline"
                       [attr.aria-expanded]="modifierProductId() === product.id"
-                      [attr.aria-controls]="'catalog-modifier-panel-' + product.id"
+                      [attr.aria-controls]="'modifier-panel-' + product.id"
                       [disabled]="saving()"
                       (click)="toggleModifierEditor(product)"
                     >
@@ -514,7 +510,7 @@ function bahtInput(satang: number): string {
                 }
               </div>
               @if (!product.archivedAt && imageProductId() === product.id) {
-                <div [attr.id]="'catalog-image-panel-' + product.id">
+                <div [attr.id]="'image-panel-' + product.id">
                   <div
                     class="mt-3 grid min-w-0 gap-3 rounded-xl border border-border bg-muted/30 p-4"
                     aria-label="รูปภาพสินค้า"
@@ -563,7 +559,7 @@ function bahtInput(satang: number): string {
                 @if (modifierProductId() === product.id) {
                   <section
                     class="catalog-modifier-panel grid gap-4 rounded-2xl border border-border bg-card p-4 md:p-6"
-                    [attr.id]="'catalog-modifier-panel-' + product.id"
+                    [attr.id]="'modifier-panel-' + product.id"
                   >
                     <h4 class="text-lg font-semibold text-foreground">
                       ตัวเลือกเพิ่มเติมของ {{ product.name }}
@@ -1466,6 +1462,10 @@ export class MerchantCatalogPage implements OnInit {
         ),
       "บันทึกหมวดหมู่แล้ว",
     );
+  }
+
+  toggleImageEditor(product: CatalogProduct): void {
+    this.imageProductId.update((id) => (id === product.id ? null : product.id));
   }
 
   toggleModifierEditor(product: CatalogProduct): void {

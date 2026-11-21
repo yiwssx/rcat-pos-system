@@ -415,7 +415,7 @@ function guestError(error: unknown): string {
                   class="guest-category-chip min-h-11 max-w-full whitespace-normal"
                   hlmBtn
                   type="button"
-                  [variant]="category() === '' ? 'default' : 'outline'"
+                  [variant]="category() === '' ? 'selected' : 'outline'"
                   [class.is-active]="category() === ''"
                   [attr.aria-pressed]="category() === ''"
                   (click)="onCategoryChip('')"
@@ -427,7 +427,7 @@ function guestError(error: unknown): string {
                     class="guest-category-chip min-h-11 max-w-full whitespace-normal"
                     hlmBtn
                     type="button"
-                    [variant]="category() === group.id ? 'default' : 'outline'"
+                    [variant]="category() === group.id ? 'selected' : 'outline'"
                     [class.is-active]="category() === group.id"
                     [attr.aria-pressed]="category() === group.id"
                     (click)="onCategoryChip(group.id)"
