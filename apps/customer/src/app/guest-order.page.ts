@@ -90,11 +90,11 @@ function guestError(error: unknown): string {
   ],
   template: `
     <section
-      class="guest-shell v6-guest-shop mx-auto w-full bg-background max-w-screen-2xl min-w-0 space-y-4 px-4 pb-40 pt-4 sm:px-6 lg:px-8 lg:pb-8"
+      class="guest-shell v6-guest-shop mx-auto w-full bg-background max-w-screen-2xl min-w-0 space-y-4 px-4 pb-48 pt-4 sm:px-6 lg:px-8 lg:pb-8"
       aria-labelledby="guest-title"
     >
       <header
-        class="guest-header flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4"
+        class="guest-header flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5"
       >
         <div class="guest-brand flex min-w-0 items-center gap-3">
           <img
@@ -139,7 +139,7 @@ function guestError(error: unknown): string {
         </div>
         @if (!staticCounter()) {
           <a
-            class="guest-track-link inline-flex min-h-11 items-center rounded-xl bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
+            class="guest-track-link inline-flex min-h-11 min-w-11 items-center rounded-xl border border-secondary-line bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
             routerLink="/order/track"
             >ติดตามออเดอร์</a
           >
@@ -249,7 +249,7 @@ function guestError(error: unknown): string {
             }
             <a
               routerLink="/"
-              class="guest-qr-home inline-flex min-h-11 items-center rounded-xl bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline"
+              class="guest-qr-home inline-flex min-h-11 min-w-11 items-center rounded-xl border border-secondary-line bg-secondary px-3 text-sm font-semibold text-secondary-foreground no-underline"
               >กลับหน้าแรก</a
             >
           </div>
@@ -379,7 +379,7 @@ function guestError(error: unknown): string {
                 </h2>
               </div>
               <span
-                class="guest-table-chip rounded-lg bg-card px-3 py-2 text-sm font-semibold text-brand-foreground"
+                class="guest-table-chip rounded-lg bg-secondary px-3 py-2 text-sm font-semibold text-brand-foreground"
                 >{{
                   visit.entryMode === "counter"
                     ? "เคาน์เตอร์"
@@ -457,7 +457,7 @@ function guestError(error: unknown): string {
                   >
                     <button
                       type="button"
-                      class="guest-product-media block aspect-square w-full overflow-hidden rounded-lg border-0 bg-muted p-0 focus-visible:outline-2 focus-visible:outline-ring"
+                      class="guest-product-media block aspect-[4/3] w-full overflow-hidden rounded-lg border-0 bg-muted p-0 focus-visible:outline-2 focus-visible:outline-ring"
                       [attr.aria-label]="'ดูรายละเอียด ' + product.name"
                       [disabled]="busy()"
                       (click)="openProduct(product)"
@@ -593,7 +593,7 @@ function guestError(error: unknown): string {
             @if (cartQty() > 0) {
               <button
                 type="button"
-                class="guest-cart-shortcut fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 grid min-h-14 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-3 gap-y-1 rounded-xl border-0 bg-primary p-3 text-left text-primary-foreground shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-disabled disabled:text-disabled-foreground disabled:opacity-100 lg:static lg:mt-4 lg:w-full"
+                class="guest-cart-shortcut fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 grid min-h-14 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-3 gap-y-1 rounded-xl border border-primary-line bg-primary p-3 text-left text-primary-foreground shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-disabled disabled:text-disabled-foreground disabled:opacity-100 lg:static lg:mt-4 lg:w-full"
                 [disabled]="busy()"
                 (click)="openCart()"
               >

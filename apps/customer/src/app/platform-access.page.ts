@@ -48,7 +48,7 @@ function failure(error: unknown): string {
       aria-labelledby="platform-heading"
     >
       <header
-        class="platform-heading flex flex-wrap items-start justify-between gap-4 rounded-xl border border-border bg-card p-5"
+        class="platform-heading flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-border bg-card p-5"
       >
         <div>
           <span
@@ -110,11 +110,11 @@ function failure(error: unknown): string {
       }
 
       <div
-        class="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3"
+        class="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))] gap-3"
         aria-label="สรุปบัญชีผู้ใช้งาน"
       >
         <div
-          class="rounded-xl border border-border border-t-4 border-t-brand bg-card p-4 text-foreground"
+          class="rounded-2xl border border-border bg-primary p-4 text-foreground"
         >
           <span class="block text-sm">บัญชีทั้งหมด</span
           ><strong class="text-2xl font-semibold tabular-nums">{{
@@ -122,7 +122,7 @@ function failure(error: unknown): string {
           }}</strong>
         </div>
         <div
-          class="rounded-xl border border-border border-t-4 border-t-served-line bg-card p-4 text-foreground"
+          class="rounded-2xl border border-border bg-served p-4 text-foreground"
         >
           <span class="block text-sm">ใช้งานได้</span
           ><strong class="text-2xl font-semibold tabular-nums">{{
@@ -130,7 +130,7 @@ function failure(error: unknown): string {
           }}</strong>
         </div>
         <div
-          class="rounded-xl border border-border border-t-4 border-t-input bg-card p-4 text-foreground"
+          class="rounded-2xl border border-border bg-danger-soft p-4 text-foreground"
         >
           <span class="block text-sm">ระงับ</span
           ><strong class="text-2xl font-semibold tabular-nums">{{

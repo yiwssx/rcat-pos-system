@@ -40,10 +40,10 @@ import {
       @if (group().maxSelect === 1 && group().minSelect === 0) {
         <label
           hlmLabel
-          class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 text-foreground has-[:checked]:border-primary/40 has-[:checked]:bg-accent"
+          class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-input bg-card px-3 py-2 text-foreground has-[:checked]:border-primary-line has-[:checked]:bg-accent"
         >
           <input
-            class="size-5 shrink-0 accent-primary"
+            class="size-5 shrink-0 accent-primary-line"
             type="radio"
             [name]="'modifier-' + group().id"
             [checked]="selectedCount() === 0"
@@ -61,10 +61,10 @@ import {
       @for (choice of choices(); track choice.id) {
         <label
           hlmLabel
-          class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 text-foreground has-[:checked]:border-primary/40 has-[:checked]:bg-accent has-[:disabled]:cursor-not-allowed has-[:disabled]:bg-disabled"
+          class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-input bg-card px-3 py-2 text-foreground has-[:checked]:border-primary-line has-[:checked]:bg-accent has-[:disabled]:cursor-not-allowed has-[:disabled]:bg-disabled"
         >
           <input
-            class="size-5 shrink-0 accent-primary"
+            class="size-5 shrink-0 accent-primary-line"
             [type]="group().maxSelect === 1 ? 'radio' : 'checkbox'"
             [name]="'modifier-' + group().id"
             [checked]="isSelected(choice.id)"

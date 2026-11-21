@@ -132,7 +132,7 @@ function failureText(error: unknown): string {
         <span
           aria-hidden="true"
           class="size-2.5 shrink-0 rounded-full"
-          [class.bg-primary]="connected()"
+          [class.bg-served-line]="connected()"
           [class.bg-destructive]="!connected()"
         ></span>
         {{
@@ -204,8 +204,8 @@ function failureText(error: unknown): string {
             hlmBtn
             type="button"
             variant="outline"
-            class="grid min-h-16 min-w-0 justify-items-start gap-1 rounded-xl border-t-4 border-t-incoming-line bg-card px-2 py-2 text-left text-foreground sm:px-4 sm:py-3"
-            [class.border-primary]="filter() === 'submitted'"
+            class="grid min-h-16 min-w-0 justify-items-start gap-1 rounded-xl border-input bg-incoming hover:bg-incoming px-2 py-2 text-left text-foreground sm:px-4 sm:py-3"
+            [class.border-primary-line]="filter() === 'submitted'"
             [class.ring-2]="filter() === 'submitted'"
             [attr.aria-pressed]="filter() === 'submitted'"
             (click)="setQueueFilter('submitted')"
@@ -225,8 +225,8 @@ function failureText(error: unknown): string {
             hlmBtn
             type="button"
             variant="outline"
-            class="grid min-h-16 min-w-0 justify-items-start gap-1 rounded-xl border-t-4 border-t-preparing-line bg-card px-2 py-2 text-left text-foreground sm:px-4 sm:py-3"
-            [class.border-primary]="filter() === 'in_progress'"
+            class="grid min-h-16 min-w-0 justify-items-start gap-1 rounded-xl border-input bg-preparing hover:bg-preparing px-2 py-2 text-left text-foreground sm:px-4 sm:py-3"
+            [class.border-primary-line]="filter() === 'in_progress'"
             [class.ring-2]="filter() === 'in_progress'"
             [attr.aria-pressed]="filter() === 'in_progress'"
             (click)="setQueueFilter('in_progress')"
@@ -246,8 +246,8 @@ function failureText(error: unknown): string {
             hlmBtn
             type="button"
             variant="outline"
-            class="grid min-h-16 min-w-0 justify-items-start gap-1 rounded-xl border-t-4 border-t-served-line bg-card px-2 py-2 text-left text-foreground sm:px-4 sm:py-3"
-            [class.border-primary]="filter() === 'served'"
+            class="grid min-h-16 min-w-0 justify-items-start gap-1 rounded-xl border-input bg-served hover:bg-served px-2 py-2 text-left text-foreground sm:px-4 sm:py-3"
+            [class.border-primary-line]="filter() === 'served'"
             [class.ring-2]="filter() === 'served'"
             [attr.aria-pressed]="filter() === 'served'"
             (click)="setQueueFilter('served')"
@@ -322,15 +322,15 @@ function failureText(error: unknown): string {
           </p>
         } @else {
           <div
-            class="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3"
+            class="grid min-w-0 grid-cols-1 gap-3"
           >
             @for (order of visibleOrders(); track order.orderId) {
               <article
                 hlmCard
                 size="sm"
-                class="order-card min-w-0 gap-4 p-4"
+                class="order-card min-w-0 gap-3 rounded-xl p-4 sm:p-5"
                 [class.ring-2]="order.status === 'submitted'"
-                [class.ring-primary]="order.status === 'submitted'"
+                [class.ring-primary-line]="order.status === 'submitted'"
                 [attr.aria-label]="'ออเดอร์ ' + number(order.displayNumber)"
               >
                 <div

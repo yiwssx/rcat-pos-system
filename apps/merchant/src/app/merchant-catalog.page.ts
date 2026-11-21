@@ -812,7 +812,7 @@ function bahtInput(satang: number): string {
                                   class="flex min-h-11 min-w-11 cursor-pointer items-center gap-2"
                                 >
                                   <input
-                                    class="size-5 accent-primary"
+                                    class="size-5 accent-primary-line"
                                     type="checkbox"
                                     name="optionEditAvailable"
                                     [(ngModel)]="optionEdit.available"

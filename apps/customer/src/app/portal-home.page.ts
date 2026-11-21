@@ -131,7 +131,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
               <div class="grid gap-2 border-t border-border pt-4">
                 <a
                   routerLink="/order/track"
-                  class="w-fit rounded-lg py-2 text-sm font-semibold text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  class="inline-flex min-h-11 min-w-11 w-fit items-center rounded-lg py-2 text-sm font-semibold text-foreground underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >ติดตามออเดอร์ของฉัน</a
                 >
                 <p class="text-sm leading-6 text-muted-foreground">
@@ -231,7 +231,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
         @case ("staff") {
           <section class="grid min-w-0 gap-6" aria-label="พื้นที่ทำงานร้านค้า">
             <header
-              class="flex min-w-0 flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between"
+              class="flex min-w-0 flex-col gap-4 rounded-2xl border border-border bg-primary p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
             >
               <div class="grid min-w-0 gap-2">
                 <p class="text-sm font-medium text-muted-foreground">
@@ -461,7 +461,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
               <aside
                 hlmCard
                 size="sm"
-                class="hidden min-w-0 self-start xl:flex"
+                class="hidden min-w-0 self-start rounded-2xl bg-secondary xl:flex"
                 aria-labelledby="portal-workflow-help"
               >
                 <div hlmCardHeader>
@@ -475,7 +475,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                 <div hlmCardContent class="grid gap-4">
                   <ol class="grid gap-4 text-sm leading-6">
                     <li class="grid grid-cols-[2rem_minmax(0,1fr)] gap-2">
-                      <span class="font-semibold tabular-nums text-foreground"
+                      <span class="grid size-8 place-items-center rounded-lg bg-card font-semibold tabular-nums text-foreground"
                         >01</span
                       >
                       <div>
