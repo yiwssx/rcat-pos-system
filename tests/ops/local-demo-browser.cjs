@@ -14,6 +14,148 @@ const admin = 'https://localhost:11880';
 const tenant = '70000000-0000-4000-8000-000000000001';
 const store = '70000000-0000-4000-8000-000000000002';
 const password = readFileSync('.secrets/local-demo/admin-password', 'utf8').trim();
+
+/* Owner V8 acceptance: computed colors and measured layout in Chromium.
+ * Audit synthetic fixture screens only. No input values, tokens or customer
+ * text are emitted to logs. Unknown backgrounds fail instead of guessing.
+ */
+const visualFailures = [];
+const visualReports = [];
+const visualWidths = [320,390,768,1024,1366,1920];
+async function auditVisual(page, name, rootSelector = 'body') {
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  const report = await page.evaluate(selector => {
+    const root = document.querySelector(selector);
+    if (!root) throw new Error('Visual audit root missing');
+    const context = document.createElement('canvas').getContext('2d', {willReadFrequently:true});
+    const cache = new Map();
+    const rgb = value => {
+      if (cache.has(value)) return cache.get(value);
+      context.clearRect(0,0,1,1);
+      context.fillStyle = '#000';
+      context.fillStyle = value;
+      context.fillRect(0,0,1,1);
+      const [r,g,b,a] = context.getImageData(0,0,1,1).data;
+      const result = [r,g,b,a/255];
+      cache.set(value,result);
+      return result;
+    };
+    const blend = (fg,bg) => fg.slice(0,3).map((v,i)=>v*fg[3]+bg[i]*(1-fg[3]));
+    const luminance = rgb => rgb.slice(0,3).map(x=>x/255).map(x=>x<=0.04045?x/12.92:((x+0.055)/1.055)**2.4).reduce((sum,x,i)=>sum+x*[0.2126,0.7152,0.0722][i],0);
+    const ratio = (a,b) => {const x=luminance(a),y=luminance(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);};
+    const describe = el => el.tagName.toLowerCase() + (el.id ? '#'+el.id : '') + (el.getAttribute('data-slot') ? '[data-slot='+el.getAttribute('data-slot')+']' : '');
+    const styleCache = new WeakMap();
+    const style = el => {if(!styleCache.has(el))styleCache.set(el,getComputedStyle(el));return styleCache.get(el);};
+    const background = el => {
+      const chain=[];for(let p=el;p;p=p.parentElement)chain.unshift(p);
+      let color=[255,255,255],unknown=false,opacity=1;
+      for(const p of chain){
+        const st=style(p),layer=rgb(st.backgroundColor);
+        if(layer[3]===1)unknown=false;
+        color=blend(layer,color);
+        if(st.backgroundImage!=='none')unknown=true;
+        opacity*=Number(st.opacity);
+      }
+      return {color,unknown,opacity};
+    };
+    const visible = el => {
+      if(!el || el.closest('svg,script,style,template,[aria-hidden="true"],.sr-only'))return false;
+      const r=el.getBoundingClientRect(),st=style(el);
+      return r.width>1&&r.height>1&&st.visibility==='visible'&&st.display!=='none';
+    };
+    const tableScroll = el => {
+      const table=el.closest('table');
+      if(!table)return null;
+      for(let p=table.parentElement;p&&p!==root;p=p.parentElement){
+        if(['auto','scroll'].includes(style(p).overflowX)&&p.scrollWidth>p.clientWidth)return p;
+      }
+      return null;
+    };
+    const violations=[];
+    let minText=Infinity,minControl=Infinity,textCount=0,controlCount=0;
+    const fail=(kind,el,detail)=>violations.push({kind,element:describe(el),detail});
+    const measureText=(el,fg,kind,opacity=1)=>{
+      const bg=background(el);
+      if(bg.unknown){fail('unresolved-background',el,kind);return;}
+      // Whole-control opacity is intentionally not used for necessary text.
+      const color=rgb(fg);
+      color[3]*=opacity;
+      const value=ratio(blend(color,bg.color),bg.color);
+      minText=Math.min(minText,value);textCount++;
+      if(bg.opacity<0.999)fail('dimmed-text',el,String(bg.opacity));
+      if(value<7)fail('text-contrast',el,kind+':'+value.toFixed(2));
+      const solid=color.slice(0,3).join(',');
+      if(!['0,0,0','51,51,51','255,255,255'].includes(solid))fail('text-palette',el,kind+':'+solid);
+    };
+    const width=document.documentElement.clientWidth;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    for(let node=walker.nextNode();node;node=walker.nextNode()){
+      const el=node.parentElement;
+      if(!node.textContent.trim()||!visible(el)||el.closest('select,textarea'))continue;
+      const range=document.createRange();range.selectNodeContents(node);
+      const rects=[...range.getClientRects()].filter(r=>r.width>0.5&&r.height>0.5);
+      if(!rects.length)continue;
+      measureText(el,style(el).color,'text');
+      const scroller=tableScroll(el);
+      for(const r of rects){
+        if(!scroller&&(r.left< -1||r.right>width+1)){fail('text-outside-page',el,'horizontal');break;}
+        for(let p=el;p&&p!==document.body;p=p.parentElement){
+          if(p===scroller)break;
+          const st=style(p);
+          if(!['hidden','clip'].includes(st.overflowX))continue;
+          const box=p.getBoundingClientRect();
+          if(r.left<box.left-1||r.right>box.right+1){fail('clipped-text',el,describe(p));break;}
+        }
+      }
+    }
+    for(const el of root.querySelectorAll('input:not([type=hidden]),textarea,select,button,a[data-slot=button],[role=button],summary')){
+      if(!visible(el))continue;
+      const st=style(el),box=el.getBoundingClientRect(),scroller=tableScroll(el);
+      if(!scroller&&(box.left< -1||box.right>width+1))fail('control-outside-page',el,'horizontal');
+      if(el.clientWidth>0&&el.scrollWidth>el.clientWidth+1&&!['INPUT','TEXTAREA','SELECT'].includes(el.tagName))fail('control-overflow',el,String(el.scrollWidth-el.clientWidth));
+      if(el.matches('input:not([type=radio]):not([type=checkbox]),textarea,select')){
+        measureText(el,st.color,'field');
+        if(el.matches('input[placeholder],textarea[placeholder]')&&!el.value){
+          const pseudo=getComputedStyle(el,'::placeholder');
+          measureText(el,pseudo.color,'placeholder',Number(pseudo.opacity));
+        }
+        const outer=background(el.parentElement).color,inner=background(el).color;
+        const border=rgb(st.borderTopColor);
+        const value=Math.max(ratio(inner,outer),Number.parseFloat(st.borderTopWidth)>0?ratio(blend(border,outer),outer):0);
+        minControl=Math.min(minControl,value);controlCount++;
+        if(value<3)fail('control-boundary',el,value.toFixed(2));
+      }
+    }
+    const overflow=Math.max(0,document.documentElement.scrollWidth-width);
+    return {width,overflow,textCount,controlCount,minText:Number.isFinite(minText)?Number(minText.toFixed(2)):null,minControl:Number.isFinite(minControl)?Number(minControl.toFixed(2)):null,violations:violations.slice(0,50),violationCount:violations.length};
+  },rootSelector);
+  visualReports.push({name,...report,violations:undefined});
+  if(!report.textCount||report.overflow||report.violationCount)visualFailures.push({name,...report});
+  console.log('V8_VISUAL '+JSON.stringify({name,...report}));
+}
+async function auditWidths(page,name,rootSelector='body'){
+  const viewport=page.viewportSize();
+  for(const width of visualWidths){
+    await page.setViewportSize({width,height:width<640?844:1000});
+    await auditVisual(page,name+'-'+width,rootSelector);
+  }
+  await page.setViewportSize(viewport);
+}
+async function auditTextResize(page,name){
+  const viewport=page.viewportSize();
+  await page.setViewportSize({width:390,height:844});
+  // Text resize (not pinch zoom): rem-based text and body text scale.
+  await page.evaluate(()=>document.documentElement.style.fontSize='200%');
+  try{await auditVisual(page,name+'-text-200');}
+  finally{
+    await page.evaluate(()=>document.documentElement.style.removeProperty('font-size'));
+    await page.setViewportSize(viewport);
+  }
+}
+
 async function main() {
   const browser = await chromium.launch({ headless: true, args: ['--ignore-certificate-errors', '--host-resolver-rules=MAP localhost 127.0.0.1'] });
   try {
@@ -52,6 +194,8 @@ async function main() {
         'Login must not overflow viewport ' + viewport.width);
       await page.screenshot({ path: '/tmp/rcat-portal-login-' + viewport.name + '.png', fullPage: true });
     }
+    await auditWidths(page,'login');
+    await auditTextResize(page,'login');
     await page.setViewportSize({ width: 320, height: 780 });
     assert.equal(await page.getByRole('textbox', {name: /อีเมลบัญชี/}).count(), 0,
       'Real portal must never display a demonstration password form');
@@ -130,8 +274,8 @@ async function main() {
       const style = getComputedStyle(element);
       return { background: style.backgroundColor, image: style.backgroundImage };
     });
-    assert.equal(shell.background, 'rgb(255, 253, 250)',
-      'Desktop sidebar must use the V7 ivory surface');
+    assert.equal(shell.background, 'rgb(255, 255, 255)',
+      'Desktop sidebar must use the V8 white surface');
     assert.equal(shell.image, 'none',
       'Legacy V6 orange gradient decoration must be removed from the sidebar');
     await page.setViewportSize({ width: 320, height: 780 });
@@ -191,6 +335,8 @@ async function main() {
       getComputedStyle(document.querySelector('rcat-root main'), '::after').content);
     assert.equal(noDecoration, 'none', 'Do not apply homepage ornaments to actual Admin tasks');
     await adminPage.locator('.owner-stores').getByRole('link', { name: 'จัดการบุคลากรและคำเชิญ' }).waitFor();
+    await auditWidths(adminPage,'tenant-owner');
+    await auditTextResize(adminPage,'tenant-owner');
     const createDisclosure = adminPage.locator('details.v6-owner-disclosure').first();
     assert.equal(await createDisclosure.evaluate(el => el.open), false,
       'Owner creation form stays collapsed until the user requests it');
@@ -224,6 +370,7 @@ async function main() {
     assert.equal(await staticPage.locator('.guest-code-form').count(), 0, 'No PIN prompt for static QR');
     await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).click();
     await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).waitFor();
+    await auditWidths(tableView,'merchant-tables');
     await tableView.screenshot({ path: '/tmp/rcat-portal-tables-mobile.png', fullPage: true });
     await staticPage.getByRole('button', { name: 'ตรวจสอบอีกครั้ง' }).click();
     await staticPage.locator('.guest-product').first().waitFor();
@@ -243,8 +390,10 @@ async function main() {
       active: getComputedStyle(document.querySelector('.guest-category-chip.is-active')).backgroundColor,
       cta: getComputedStyle(document.querySelector('.guest-add')).backgroundColor,
     }));
-    assert.equal(guestPalette.active, 'rgb(24, 107, 96)', 'Guest category selection uses V7 deep teal');
-    assert.equal(guestPalette.cta, 'rgb(24, 107, 96)', 'Guest add-to-cart uses V7 deep teal');
+    assert.equal(guestPalette.active, 'rgb(146, 54, 23)', 'Guest category selection uses V8 RCAT Signature');
+    assert.equal(guestPalette.cta, 'rgb(146, 54, 23)', 'Guest add-to-cart uses V8 RCAT Signature');
+    await auditWidths(staticPage,'customer-catalog');
+    await auditTextResize(staticPage,'customer-catalog');
     // The desktop filter is one compact rail, not a full-width stacked form.
     await staticPage.setViewportSize({ width: 1365, height: 900 });
     const filterSize = await staticPage.evaluate(() => {
@@ -267,6 +416,9 @@ async function main() {
     await staticPage.waitForFunction(() => document.querySelectorAll('.guest-product').length === 3);
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-menu-phone.png', fullPage: true });
     await staticPage.locator('.guest-product', { hasText: 'ข้าวผัด' }).getByRole('button', { name: 'เพิ่มลงตะกร้า' }).click();
+    await staticPage.locator('hlm-sheet-content[data-slot="sheet-content"]').waitFor({state:'visible'});
+    await staticPage.waitForTimeout(250);
+    await auditVisual(staticPage,'customer-product-sheet','hlm-sheet-content[data-slot="sheet-content"]');
     await staticPage.getByRole('dialog', { name: 'ข้าวผัด' }).getByRole('button', { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
     await staticPage.locator('.guest-cart-shortcut').waitFor({ state: 'visible' });
     const guestLight = await staticPage.evaluate(() => {
@@ -281,9 +433,9 @@ async function main() {
         ctaText: getComputedStyle(action).color,
       };
     });
-    assert.equal(guestLight.background, 'rgb(255, 245, 233)', 'Guest must use the V7 warm cream canvas');
-    assert.equal(guestLight.cart, 'rgb(24, 107, 96)', 'V7 cart bar uses deep teal, not orange');
-    assert.equal(guestLight.label, 'rgb(255, 255, 255)', 'Cart count must use readable light text on teal');
+    assert.equal(guestLight.background, 'rgb(250, 246, 238)', 'Guest must use the V8 cream canvas');
+    assert.equal(guestLight.cart, 'rgb(146, 54, 23)', 'V8 cart bar uses signature dark orange');
+    assert.equal(guestLight.label, 'rgb(255, 255, 255)', 'Cart count must use readable white text on signature');
     assert.equal(guestLight.ctaText, 'rgb(255, 255, 255)', 'Cart action must have readable white text');
     assert.equal(await staticPage.getByRole('heading', { name: 'ตะกร้าของคุณ' }).isVisible(), false,
       'V7 mobile hides the desktop cart summary');
@@ -300,6 +452,8 @@ async function main() {
     const cartSurface = staticPage.locator('hlm-sheet-content[data-slot="sheet-content"]')
       .filter({ has: staticPage.getByText('ตะกร้าของฉัน', { exact: true }) });
     await cartSurface.waitFor({ state: 'visible' });
+    await staticPage.waitForTimeout(250);
+    await auditVisual(staticPage,'customer-cart-sheet','hlm-sheet-content[data-slot="sheet-content"]');
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-cart-phone.png', fullPage: true });
     await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).click();
     await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).waitFor();
@@ -384,6 +538,7 @@ async function main() {
     await cart.getByRole('button', { name: /ยืนยันส่งคำสั่งซื้อ/ }).click();
     await page.waitForURL('**/order/track', { timeout: 20000 });
     await page.getByText('ร้านยังไม่เปิดรับชำระเงินผ่านระบบนี้').waitFor();
+    await auditWidths(page,'customer-tracking');
     const orderLabel = (await page.locator('.guest-track-id').innerText()).match(/#[0-9]{3,}/)?.[0];
     assert.ok(orderLabel, 'Customer tracking must show readable public Order number');
     const board = await context.newPage();
@@ -395,6 +550,8 @@ async function main() {
     await card.getByText('ไม่ใส่ผัก').waitFor();
     await card.getByRole('button', { name: 'รับออเดอร์', exact: true }).click();
     await card.getByText('รับออเดอร์แล้ว', { exact: true }).waitFor();
+    await auditWidths(board,'merchant-orders');
+    await auditTextResize(board,'merchant-orders');
     await board.evaluate(() => window.scrollTo(0, 0));
     await board.screenshot({ path: '/tmp/rcat-portal-orders-mobile.png' });
     await board.setViewportSize({ width: 1365, height: 900 });
@@ -423,6 +580,7 @@ async function main() {
         await task.getByRole('textbox', { name: 'ชื่อวัตถุดิบ' }).waitFor();
         await task.locator('summary').click();
       }
+      await auditWidths(capture,'merchant-'+management.route);
       await capture.evaluate(() => window.scrollTo(0, 0));
       await capture.screenshot({ path: '/tmp/rcat-portal-' + management.file + '.png', fullPage: true });
       await capture.setViewportSize({ width: 390, height: 844 });
@@ -430,6 +588,38 @@ async function main() {
       await capture.screenshot({ path: '/tmp/rcat-portal-' + management.route + '-mobile.png' });
       await capture.close();
     }
+
+
+    // Platform Admin visual coverage: isolated GET-only fixture, not real
+    // authentication or authorization evidence. No request reaches a write API.
+    const platform = await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:390,height:844}});
+    try {
+      const values = {
+        '/api/auth/me': {platformRole:'super_admin'},
+        '/api/auth/merchant-stores': {stores:[]},
+        '/api/platform/accounts': {accounts:[
+          {userId:'visual-admin',email:'admin@demo.invalid',role:'super_admin',active:true},
+          {userId:'visual-merchant',email:'merchant-with-a-very-long-identifier-for-reflow-check@demo.invalid',role:'merchant',active:true},
+          {userId:'visual-disabled',email:'disabled@demo.invalid',role:'merchant',active:false}
+        ]},
+        '/api/platform/tenants': {tenants:[{tenantId:'visual-tenant',tenantName:'ร้านทดสอบสำหรับตรวจสอบการตัดบรรทัดภาษาไทย',storeCount:1}]}
+      };
+      await platform.route('**/api/**',route=>{
+        const request=route.request(),value=values[new URL(request.url()).pathname];
+        return request.method()==='GET'&&value?route.fulfill({json:value}):route.abort();
+      });
+      const platformPage=await platform.newPage();
+      await platformPage.goto(admin+'/platform');
+      await platformPage.getByRole('heading',{name:'จัดการผู้ใช้งาน',exact:true}).waitFor();
+      await platformPage.getByText('merchant-with-a-very-long-identifier-for-reflow-check@demo.invalid',{exact:true}).waitFor();
+      await auditWidths(platformPage,'platform-admin-visual-fixture');
+      await auditTextResize(platformPage,'platform-admin-visual-fixture');
+      await platformPage.screenshot({path:'/tmp/rcat-portal-platform-admin-mobile.png',fullPage:true});
+      await platformPage.setViewportSize({width:1366,height:900});
+      await platformPage.screenshot({path:'/tmp/rcat-portal-platform-admin-desktop.png',fullPage:true});
+      await platformPage.getByText('อนุญาตบัญชีบุคลากร',{exact:true}).click();
+      await auditVisual(platformPage,'platform-admin-expanded-editor');
+    } finally {await platform.close();}
 
     // Repeat the actual one-command launcher; no duplicate fixtures/password reset.
     execFileSync('bash', ['scripts/ops/local-demo.sh', 'up'], { stdio: 'pipe', timeout: 180000 });
@@ -476,6 +666,8 @@ async function main() {
     await board.getByRole('button',{name:'ลองเชื่อมต่ออีกครั้ง'}).click();
     await board.getByRole('link',{name:/Sign in with Google/}).waitFor();
     await context.close();
+    console.log('V8_VISUAL_REPORT '+JSON.stringify({screens:visualReports.length,failed:visualFailures.length}));
+    assert.equal(visualFailures.length,0,'V8 Contrast / Overflow verification failed: '+visualFailures.map(x=>x.name).join(', '));
     console.log('PASS: single-origin portal, role menus/route denial, Secure login/logout, multi-viewport UI evidence, deep-link reload, auth failure/retry, Guest→Order→Merchant, CSRF denial and repeat launch');
   } finally { await browser.close(); }
 }
