@@ -49,6 +49,20 @@ jobs:
       - name: Install from committed lockfile
         if: steps.impact.outputs.workspace == 'true'
         run: pnpm install --frozen-lockfile
+      - name: Emit exact catalog formatting patch (temporary diagnostic)
+        if: steps.impact.outputs.workspace == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          f=apps/merchant/src/app/merchant-catalog.page.ts
+          formatted=$(mktemp)
+          patch=$(mktemp)
+          trap 'rm -f "$formatted" "$patch"' EXIT
+          pnpm exec prettier "$f" > "$formatted"
+          diff -u --label "a/$f" --label "b/$f" "$f" "$formatted" > "$patch" || test "$?" -eq 1
+          printf 'CATALOG_FORMAT_PATCH_BASE64='
+          base64 -w0 "$patch"
+          echo
       - name: Verify the installed deepmerge prototype guard
         if: steps.impact.outputs.workspace == 'true'
         run: node scripts/ci/verify-deepmerge-security.cjs
