@@ -175,7 +175,10 @@ function failure(error: unknown): string {
                     >{{ roleLabel[store.role] }}</span
                   >
                   @if (store.role === "owner") {
-                    <a [routerLink]="['/tenants', store.tenantId, 'staff']">
+                    <a
+                      class="inline-flex min-h-11 min-w-11 items-center py-2 text-foreground underline"
+                      [routerLink]="['/tenants', store.tenantId, 'staff']"
+                    >
                       จัดการบุคลากรและคำเชิญ
                     </a>
                   } @else {

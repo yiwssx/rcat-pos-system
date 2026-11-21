@@ -90,7 +90,7 @@ function guestError(error: unknown): string {
   ],
   template: `
     <section
-      class="guest-shell v6-guest-shop mx-auto w-full bg-background max-w-screen-2xl min-w-0 space-y-4 px-4 pb-28 pt-4 sm:px-6 lg:px-8 lg:pb-8"
+      class="guest-shell v6-guest-shop mx-auto w-full bg-background max-w-screen-2xl min-w-0 space-y-4 px-4 pb-40 pt-4 sm:px-6 lg:px-8 lg:pb-8"
       aria-labelledby="guest-title"
     >
       <header
@@ -278,7 +278,7 @@ function guestError(error: unknown): string {
           class="my-3 rounded-xl border border-border bg-card p-4 text-foreground"
           open
         >
-          <summary class="cursor-pointer font-semibold">
+          <summary class="min-h-11 cursor-pointer py-3 font-semibold">
             ออเดอร์ของฉัน ({{ quickOrders().length }})
           </summary>
           <div class="mt-3 space-y-3">
@@ -593,7 +593,7 @@ function guestError(error: unknown): string {
             @if (cartQty() > 0) {
               <button
                 type="button"
-                class="guest-cart-shortcut fixed inset-x-4 bottom-4 z-30 grid min-h-14 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-3 gap-y-1 rounded-xl border-0 bg-primary p-3 text-left text-primary-foreground shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-disabled disabled:text-disabled-foreground disabled:opacity-100 lg:static lg:mt-4 lg:w-full"
+                class="guest-cart-shortcut fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 grid min-h-14 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-3 gap-y-1 rounded-xl border-0 bg-primary p-3 text-left text-primary-foreground shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-disabled disabled:text-disabled-foreground disabled:opacity-100 lg:static lg:mt-4 lg:w-full"
                 [disabled]="busy()"
                 (click)="openCart()"
               >

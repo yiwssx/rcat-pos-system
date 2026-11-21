@@ -79,7 +79,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
 
       @if (!guestMenu()) {
         <header
-          class="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b-2 border-brand bg-card px-4 py-3 sm:px-6 lg:px-8"
+          class="relative z-30 flex min-h-16 items-center justify-between gap-3 border-b-2 border-brand bg-card px-4 py-3 sm:px-6 lg:px-8"
         >
           <div class="flex min-w-0 items-center gap-3">
             @if (staffWorkspace()) {
@@ -165,7 +165,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
             aria-label="พื้นที่ทำงาน"
           >
             <div
-              class="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto"
+              class="sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto"
             >
               <rcat-portal-workspace-nav [url]="url()" />
             </div>

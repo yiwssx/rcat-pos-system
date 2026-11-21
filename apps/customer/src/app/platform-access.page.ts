@@ -345,7 +345,12 @@ function failure(error: unknown): string {
           @if (tenants().length === 0) {
             <p class="platform-hint text-sm leading-6 text-muted-foreground">
               ยังไม่มีกลุ่มร้านค้า สร้างกลุ่มร้านค้าและร้านแรกจาก
-              <a routerLink="/settings">ตั้งค่าร้านค้า</a> ก่อนมอบหมายสิทธิ์
+              <a
+                class="inline-flex min-h-11 min-w-11 items-center text-foreground underline"
+                routerLink="/settings"
+                >ตั้งค่าร้านค้า</a
+              >
+              ก่อนมอบหมายสิทธิ์
             </p>
           }
         </div>

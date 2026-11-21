@@ -85,6 +85,7 @@ async function auditVisual(page, name, rootSelector = 'body') {
     };
     const violations=[];
     let minText=Infinity,minControl=Infinity,textCount=0,controlCount=0;
+    let minTargetWidth=Infinity,minTargetHeight=Infinity,targetCount=0,minIcon=Infinity,iconCount=0;
     const fail=(kind,el,detail)=>violations.push({kind,element:describe(el),detail});
     const measureText=(el,fg,kind,opacity=1)=>{
       const bg=background(el);
@@ -119,9 +120,16 @@ async function auditVisual(page, name, rootSelector = 'body') {
         }
       }
     }
-    for(const el of root.querySelectorAll('input:not([type=hidden]),textarea,select,button,a[data-slot=button],[role=button],summary')){
+    for(const el of root.querySelectorAll('input:not([type=hidden]),textarea,select,button,a[href],[role=button],summary')){
       if(!visible(el))continue;
       const st=style(el),box=el.getBoundingClientRect(),scroller=tableScroll(el);
+      const target = el.matches('input[type=checkbox],input[type=radio]')
+        ? [...(el.labels||[])].filter(visible).sort((a,b)=>b.getBoundingClientRect().height-a.getBoundingClientRect().height)[0]||el : el;
+      const targetBox=target.getBoundingClientRect();
+      targetCount++;
+      minTargetWidth=Math.min(minTargetWidth,targetBox.width);
+      minTargetHeight=Math.min(minTargetHeight,targetBox.height);
+      if(targetBox.width<43.99||targetBox.height<43.99)fail('touch-target',el,targetBox.width.toFixed(1)+'x'+targetBox.height.toFixed(1));
       if(!scroller&&(box.left< -1||box.right>width+1))fail('control-outside-page',el,'horizontal');
       if(el.clientWidth>0&&el.scrollWidth>el.clientWidth+1&&!['INPUT','TEXTAREA','SELECT'].includes(el.tagName))fail('control-overflow',el,String(el.scrollWidth-el.clientWidth));
       if(el.matches('input:not([type=radio]):not([type=checkbox]),textarea,select')){
@@ -137,8 +145,30 @@ async function auditVisual(page, name, rootSelector = 'body') {
         if(value<3)fail('control-boundary',el,value.toFixed(2));
       }
     }
+    // Measure glyphs that communicate actions/status, including aria-hidden
+    // glyphs with an accessible label on their control. Exclude food photos,
+    // official multicolour logo art and ornamental emoji; do not count them as proof.
+    const iconVisible=el=>{
+      if(!el||el.closest('.sr-only,details:not([open]) :not(summary)')) {
+        if(!el?.closest('summary'))return false;
+      }
+      const box=el.getBoundingClientRect(),st=style(el);
+      return box.width>1&&box.height>1&&st.visibility==='visible'&&st.display!=='none';
+    };
+    for(const el of root.querySelectorAll('button span[aria-hidden=true],a span[aria-hidden=true],ng-icon,[role=status] span[aria-hidden=true]')){
+      if(!iconVisible(el)||el.closest('.guest-cart-shortcut-icon,.guest-product-placeholder'))continue;
+      const st=style(el),glyph=el.textContent.trim();
+      if(glyph&&/\\p{Extended_Pictographic}/u.test(glyph)&&!/[+↻×✕☰◎·]/u.test(glyph))continue;
+      const dot=el.classList.contains('rounded-full')&&!glyph;
+      const bg=background(dot?el.parentElement:el);
+      if(bg.unknown){fail('icon-background',el,'unresolved');continue;}
+      const fg=rgb(dot?st.backgroundColor:st.color);
+      const value=ratio(blend(fg,bg.color),bg.color);
+      minIcon=Math.min(minIcon,value);iconCount++;
+      if(value<3)fail('icon-contrast',el,value.toFixed(2));
+    }
     const overflow=Math.max(0,document.documentElement.scrollWidth-width);
-    return {width,overflow,textCount,controlCount,minText:Number.isFinite(minText)?Number(minText.toFixed(2)):null,minControl:Number.isFinite(minControl)?Number(minControl.toFixed(2)):null,violations:violations.slice(0,50),violationCount:violations.length};
+    return {width,overflow,textCount,controlCount,targetCount,iconCount,minTargetWidth:Number.isFinite(minTargetWidth)?Number(minTargetWidth.toFixed(2)):null,minTargetHeight:Number.isFinite(minTargetHeight)?Number(minTargetHeight.toFixed(2)):null,minIcon:Number.isFinite(minIcon)?Number(minIcon.toFixed(2)):null,minText:Number.isFinite(minText)?Number(minText.toFixed(2)):null,minControl:Number.isFinite(minControl)?Number(minControl.toFixed(2)):null,violations:violations.slice(0,50),violationCount:violations.length};
   },rootSelector);
   visualReports.push({name,...report,violations:undefined});
   if(!report.textCount||report.overflow||report.violationCount)visualFailures.push({name,...report});
@@ -162,6 +192,19 @@ async function auditTextResize(page,name){
     await page.evaluate(()=>document.documentElement.style.removeProperty('font-size'));
     await page.setViewportSize(viewport);
   }
+}
+
+
+async function auditReachable(page,name,locator){
+  await locator.scrollIntoViewIfNeeded();
+  await locator.evaluate(el=>el.scrollIntoView({block:'center',inline:'nearest'}));
+  const report=await locator.evaluate(el=>{
+    const r=el.getBoundingClientRect();
+    const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+    return {reachable:!!hit&&(el===hit||el.contains(hit)),inViewport:r.top>=-1&&r.bottom<=innerHeight+1};
+  });
+  console.log('V8_REACH '+JSON.stringify({name,...report}));
+  assert.ok(report.reachable&&report.inViewport,'Sticky region obscures '+name);
 }
 
 async function main() {
@@ -454,6 +497,18 @@ async function main() {
     assert.equal(guestLight.ctaText, 'rgb(255, 255, 255)', 'Cart action must have readable white text');
     assert.equal(await staticPage.getByRole('heading', { name: 'ตะกร้าของคุณ' }).isVisible(), false,
       'V7 mobile hides the desktop cart summary');
+    for(const width of [320,390]){
+      await staticPage.setViewportSize({width,height:844});
+      await auditVisual(staticPage,'customer-cart-bar-'+width);
+      await auditReachable(staticPage,'cart-last-product-'+width,staticPage.locator('.guest-add').last());
+      await auditReachable(staticPage,'cart-cta-'+width,staticPage.locator('.guest-cart-shortcut'));
+    }
+    await staticPage.evaluate(()=>document.documentElement.style.fontSize='200%');
+    try{
+      await auditVisual(staticPage,'customer-cart-bar-text-200');
+      await auditReachable(staticPage,'cart-last-product-text-200',staticPage.locator('.guest-add').last());
+      await auditReachable(staticPage,'cart-cta-text-200',staticPage.locator('.guest-cart-shortcut'));
+    }finally{await staticPage.evaluate(()=>document.documentElement.style.removeProperty('font-size'));}
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-ios-cart-bar-phone.png', fullPage: true });
     await staticPage.getByRole('button', { name: 'ดูตะกร้า' }).click();
     // CDK dialog accessibility container is zero-sized by design.
@@ -469,6 +524,7 @@ async function main() {
     await cartSurface.waitFor({ state: 'visible' });
     await staticPage.waitForTimeout(250);
     await auditVisual(staticPage,'customer-cart-sheet','hlm-sheet-content[data-slot="sheet-content"]');
+    await auditReachable(staticPage,'cart-sheet-submit',cartSurface.getByRole('button',{name:/ยืนยันส่งคำสั่งซื้อ/}));
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-cart-phone.png', fullPage: true });
     await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).click();
     await tableView.getByRole('button', { name: 'เปิดรับออเดอร์', exact: true }).waitFor();
@@ -566,6 +622,7 @@ async function main() {
     await card.getByRole('button', { name: 'รับออเดอร์', exact: true }).click();
     await card.getByText('รับออเดอร์แล้ว', { exact: true }).waitFor();
     await auditWidths(board,'merchant-orders');
+    await auditReachable(board,'merchant-order-primary',card.getByRole('button').first());
     const events = board.locator('details').filter({has:board.locator('#events-title')}).first();
     if (await events.count()) {
       if (!await events.evaluate(el=>el.open)) await events.locator('summary').click();
@@ -652,6 +709,9 @@ async function main() {
       await auditVisual(platformPage,'platform-admin-expanded-editor');
       await platformPage.locator('#platform-email').focus();
       await auditVisual(platformPage,'platform-admin-field-focus');
+      await platformPage.setViewportSize({width:320,height:844});
+      await auditVisual(platformPage,'platform-admin-expanded-mobile');
+      await auditReachable(platformPage,'platform-admin-editor-submit',platformPage.getByRole('button',{name:'เพิ่ม / ปรับสิทธิ์บัญชี'}));
     } finally {await platform.close();}
 
     // Repeat the actual one-command launcher; no duplicate fixtures/password reset.

@@ -807,7 +807,7 @@ function bahtInput(satang: number): string {
                                   inputmode="decimal"
                                   [disabled]="saving()"
                                 />
-                                <label hlmLabel class="flex items-center gap-2">
+                                <label hlmLabel class="flex min-h-11 min-w-11 cursor-pointer items-center gap-2">
                                   <input
                                     class="size-5 accent-primary"
                                     type="checkbox"
