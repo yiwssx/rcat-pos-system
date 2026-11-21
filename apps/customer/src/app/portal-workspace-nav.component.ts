@@ -34,7 +34,7 @@ import { permitsRoute } from "./portal-permissions";
     @if (compact()) {
       <nav
         aria-label="งานที่ใช้บ่อย"
-        class="grid grid-flow-col auto-cols-fr items-stretch gap-1 border-t border-border bg-card px-2 py-2"
+        class="grid grid-flow-col auto-cols-[minmax(0,1fr)] items-stretch gap-1 border-t border-border bg-card px-2 py-2"
       >
         @if (store(); as selected) {
           @for (item of quickMenu; track item.path) {
@@ -83,7 +83,7 @@ import { permitsRoute } from "./portal-permissions";
     } @else {
       <div class="grid gap-6">
         <section
-          class="grid gap-3 rounded-2xl border border-border bg-brand-soft p-4"
+          class="grid gap-3 rounded-xl border border-border bg-card p-4"
           aria-label="ร้านที่กำลังทำงาน"
         >
           <div class="flex items-center justify-between gap-2">

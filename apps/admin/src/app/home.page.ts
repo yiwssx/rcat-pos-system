@@ -100,7 +100,7 @@ function failure(error: unknown): string {
       }
       @if (error()) {
         <div
-          class="owner-error flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-card p-4 text-sm text-destructive"
+          class="owner-error flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-card p-4 text-sm text-foreground"
           role="alert"
         >
           {{ error() }}

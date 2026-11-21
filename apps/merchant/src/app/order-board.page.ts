@@ -161,7 +161,7 @@ function failureText(error: unknown): string {
 
       @if (error()) {
         <div
-          class="my-3 flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-destructive"
+          class="my-3 flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-danger-soft p-4 text-sm leading-relaxed text-foreground"
           role="alert"
         >
           <span class="min-w-0 flex-1">{{ error() }}</span>
@@ -195,14 +195,14 @@ function failureText(error: unknown): string {
         </p>
       } @else if (store()) {
         <div
-          class="my-4 grid min-w-0 grid-cols-3 gap-2 sm:gap-3"
+          class="my-4 grid min-w-0 grid-cols-1 gap-2 min-[360px]:grid-cols-3 sm:gap-3"
           aria-label="กรองออเดอร์ตามสถานะ"
         >
           <button
             hlmBtn
             type="button"
             variant="outline"
-            class="grid min-h-20 min-w-0 justify-items-start gap-1 rounded-xl px-2 py-3 text-left sm:px-4 bg-incoming text-incoming-foreground"
+            class="grid min-h-20 min-w-0 justify-items-start gap-1 rounded-xl border-t-4 border-t-incoming-line bg-card px-2 py-3 text-left text-foreground sm:px-4"
             [class.border-primary]="filter() === 'submitted'"
             [class.ring-2]="filter() === 'submitted'"
             [attr.aria-pressed]="filter() === 'submitted'"
@@ -223,7 +223,7 @@ function failureText(error: unknown): string {
             hlmBtn
             type="button"
             variant="outline"
-            class="grid min-h-20 min-w-0 justify-items-start gap-1 rounded-xl px-2 py-3 text-left sm:px-4 bg-preparing text-preparing-foreground"
+            class="grid min-h-20 min-w-0 justify-items-start gap-1 rounded-xl border-t-4 border-t-preparing-line bg-card px-2 py-3 text-left text-foreground sm:px-4"
             [class.border-primary]="filter() === 'in_progress'"
             [class.ring-2]="filter() === 'in_progress'"
             [attr.aria-pressed]="filter() === 'in_progress'"
@@ -244,7 +244,7 @@ function failureText(error: unknown): string {
             hlmBtn
             type="button"
             variant="outline"
-            class="grid min-h-20 min-w-0 justify-items-start gap-1 rounded-xl px-2 py-3 text-left sm:px-4 bg-served text-served-foreground"
+            class="grid min-h-20 min-w-0 justify-items-start gap-1 rounded-xl border-t-4 border-t-served-line bg-card px-2 py-3 text-left text-foreground sm:px-4"
             [class.border-primary]="filter() === 'served'"
             [class.ring-2]="filter() === 'served'"
             [attr.aria-pressed]="filter() === 'served'"
@@ -426,7 +426,7 @@ function failureText(error: unknown): string {
                       }
                       @if (item.note) {
                         <p
-                          class="mt-2 rounded-lg bg-brand-soft p-2 text-sm leading-relaxed text-brand-foreground"
+                          class="mt-2 rounded-lg bg-muted p-2 text-sm leading-relaxed text-brand-foreground"
                         >
                           <strong>หมายเหตุ:</strong> {{ item.note }}
                         </p>
@@ -498,7 +498,7 @@ function failureText(error: unknown): string {
                     ลูกค้ายังสั่งเพิ่มได้จนกดเริ่มเตรียม
                   </p>
                 }
-                <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                <div class="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:flex sm:flex-wrap">
                   @for (
                     action of actions(order.status);
                     track action.nextStatus

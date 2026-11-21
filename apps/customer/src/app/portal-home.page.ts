@@ -72,7 +72,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
             class="mx-auto grid w-full max-w-5xl items-center gap-8 px-4 py-10 sm:px-6 md:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] md:gap-10 md:py-16"
           >
             <section
-              class="grid min-w-0 gap-5 rounded-3xl bg-brand-soft p-5 sm:p-8"
+              class="grid min-w-0 gap-5 rounded-xl border border-border bg-card p-5 sm:p-8"
               aria-labelledby="portal-title"
             >
               <div class="flex items-center gap-3">
@@ -89,7 +89,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                 >
               </div>
               <div class="grid gap-3">
-                <span class="text-sm font-medium text-primary"
+                <span class="text-sm font-medium text-foreground"
                   >สำหรับผู้ดูแลระบบและร้านค้า</span
                 >
                 <h1
@@ -140,7 +140,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
               </div>
             </section>
             <section
-              class="grid min-w-0 gap-5 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8"
+              class="grid min-w-0 gap-5 rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8"
               aria-labelledby="portal-login-title"
             >
               <img
@@ -219,7 +219,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
               @if (googleLoginError) {
                 <p
                   role="alert"
-                  class="rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm leading-6 text-destructive"
+                  class="rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm leading-6 text-foreground"
                 >
                   {{ googleLoginError }}
                 </p>
@@ -475,7 +475,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                 <div hlmCardContent class="grid gap-4">
                   <ol class="grid gap-4 text-sm leading-6">
                     <li class="grid grid-cols-[2rem_minmax(0,1fr)] gap-2">
-                      <span class="font-semibold tabular-nums text-primary"
+                      <span class="font-semibold tabular-nums text-foreground"
                         >01</span
                       >
                       <div>
@@ -488,7 +488,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                       </div>
                     </li>
                     <li class="grid grid-cols-[2rem_minmax(0,1fr)] gap-2">
-                      <span class="font-semibold tabular-nums text-primary"
+                      <span class="font-semibold tabular-nums text-foreground"
                         >02</span
                       >
                       <div>
@@ -501,7 +501,7 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
                       </div>
                     </li>
                     <li class="grid grid-cols-[2rem_minmax(0,1fr)] gap-2">
-                      <span class="font-semibold tabular-nums text-primary"
+                      <span class="font-semibold tabular-nums text-foreground"
                         >03</span
                       >
                       <div>

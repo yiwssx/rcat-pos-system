@@ -79,7 +79,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
 
       @if (!guestMenu()) {
         <header
-          class="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card px-4 py-3 sm:px-6 lg:px-8"
+          class="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b-2 border-brand bg-card px-4 py-3 sm:px-6 lg:px-8"
         >
           <div class="flex min-w-0 items-center gap-3">
             @if (staffWorkspace()) {
@@ -155,7 +155,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
       <div
         [class]="
           staffWorkspace()
-            ? 'grid min-w-0 flex-1 lg:grid-cols-[260px_minmax(0,1fr)]'
+            ? 'grid min-w-0 flex-1 lg:grid-cols-[240px_minmax(0,1fr)]'
             : 'min-w-0 flex-1'
         "
       >
@@ -211,7 +211,7 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
           }
           @if (message()) {
             <p
-              class="mb-4 rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm text-destructive"
+              class="mb-4 rounded-xl border border-destructive/30 bg-card px-4 py-3 text-sm text-foreground"
               role="alert"
             >
               {{ message() }}
