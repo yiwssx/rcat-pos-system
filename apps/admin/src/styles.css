@@ -17,7 +17,6 @@
   font-size: 16px;
   background: #f5f7fa;
   color: #1a2942;
-  --accent: #b97527;
 }
 *,
 *::before,
@@ -26,7 +25,6 @@
 }
 body {
   margin: 0;
-  min-width: 320px;
 }
 a {
   color: inherit;
@@ -253,7 +251,6 @@ h1 {
 
 /* Standalone Admin fallback shares Spartan semantic colors and typography. */
 :root {
-  --accent: #b94d1b;
 }
 body,
 .layout {
