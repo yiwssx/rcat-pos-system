@@ -75,7 +75,9 @@ function bahtInput(satang: number): string {
           ปรับราคา ชื่อ หมวดหมู่ และสถานะการขาย
           โดยไม่เปลี่ยนราคาที่บันทึกในออเดอร์เก่า
         </p>
-        <p class="rounded-xl border border-border bg-card p-3 text-sm leading-relaxed text-foreground">
+        <p
+          class="rounded-xl border border-border bg-card p-3 text-sm leading-relaxed text-foreground"
+        >
           การเก็บสินค้าเข้าคลัง (Archive) จะนำออกจากเมนูลูกค้าถาวร
           แต่ยังคงประวัติออเดอร์และสต็อก ไม่มีการรับชำระเงินจากหน้านี้
         </p>
