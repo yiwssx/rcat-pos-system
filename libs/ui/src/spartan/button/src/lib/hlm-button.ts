@@ -13,7 +13,7 @@ export const buttonVariants = cva(
         default:
           "border-action bg-action text-action-foreground hover:bg-action-hover",
         outline:
-          "border-input bg-card hover:bg-muted hover:text-foreground dark:hover:bg-input/30 aria-expanded:bg-muted aria-expanded:text-foreground dark:bg-transparent",
+          "border-input bg-card text-foreground hover:bg-muted hover:text-foreground dark:hover:bg-input/30 aria-expanded:bg-muted aria-expanded:text-foreground dark:bg-transparent",
         secondary:
           "border-secondary-line bg-secondary text-secondary-foreground hover:bg-accent aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:

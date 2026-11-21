@@ -59,7 +59,9 @@ function bahtInput(satang: number): string {
       class="mx-auto box-border w-full max-w-7xl space-y-5 px-4 pb-16 pt-6 sm:px-6 lg:px-8"
       aria-labelledby="catalog-title"
     >
-      <header class="space-y-3 rounded-2xl bg-action p-4 text-action-foreground sm:p-6">
+      <header
+        class="space-y-3 rounded-2xl bg-action p-4 text-action-foreground sm:p-6"
+      >
         <a hlmBtn routerLink="/" variant="outline">← ร้านค้าของฉัน</a>
         <p
           class="text-xs font-semibold uppercase tracking-widest text-action-foreground"
@@ -403,12 +405,12 @@ function bahtInput(satang: number): string {
                     <img
                       [src]="imageUrl(product)"
                       [alt]="'รูปสินค้า ' + product.name"
-                      class="catalog-media-preview size-16 shrink-0 rounded-xl border border-border bg-muted object-cover sm:size-16"
+                      class="catalog-media-preview size-16 shrink-0 rounded-xl border border-border bg-muted object-cover"
                       loading="lazy"
                     />
                   } @else {
                     <span
-                      class="grid size-16 shrink-0 place-items-center rounded-xl border border-border bg-muted text-xs font-medium text-muted-foreground sm:size-16"
+                      class="grid size-16 shrink-0 place-items-center rounded-xl border border-border bg-muted text-xs font-medium text-muted-foreground"
                       aria-hidden="true"
                     >
                       ไม่มีรูป
@@ -426,11 +428,9 @@ function bahtInput(satang: number): string {
                     </p>
                     <span
                       hlmBadge
-                      [class.bg-served]="product.available && !product.archivedAt"
-                      [variant]="
+                      variant="outline"
+                      [class.bg-served]="
                         product.available && !product.archivedAt
-                          ? 'default'
-                          : 'outline'
                       "
                     >
                       {{

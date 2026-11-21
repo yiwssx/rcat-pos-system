@@ -700,7 +700,7 @@ async function main() {
         const product = capture.locator('.catalog-product').first();
         await product.waitFor({state:'visible'});
         const edit = product.getByRole('button', {name:'แก้ไข',exact:true});
-        const sale = product.getByRole('button', {name:'ปิดขาย',exact:true});
+        const sale = product.getByRole('button', {name:/^(ปิดขาย|เปิดขาย)$/});
         const more = product.locator('summary:has-text("เพิ่มเติม")');
         await edit.waitFor();
         const bounds = await Promise.all([edit,sale,more].map(x=>x.boundingBox()));
