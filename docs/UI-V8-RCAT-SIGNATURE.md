@@ -1,5 +1,7 @@
 # V8 — RCAT Signature · Clarity First (#102)
 
+> Historical visual direction superseded by [Modern Pastel SaaS Hybrid](UI-MODERN-PASTEL-SAAS.md). Preserve the contrast/reflow evidence and requirements; the orange palette is not the target.
+
 Owner rejected V7 visual acceptance and approved V8 before implementation. Canonical unified portal remains Angular/Spartan/Helm/Tailwind; no business logic, Auth/RBAC, Payment, API, DB, infrastructure, backup or release-gate changes.
 
 - Canvas #FAF6EE, surface #FFFFFF, primary #923617, primary hover #74280F, accent #FCE8DA, all light surface text #000000 / supplementary #333333, dark actions #FFFFFF. Status text black, semantic markers blue/violet/amber/green/red. Disabled text remains readable on opaque neutral backgrounds. No gradient behind necessary text, no opacity-dimmed labels.

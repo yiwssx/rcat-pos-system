@@ -1,6 +1,6 @@
 # RCAT POS — Spartan-first / iOS-inspired interaction contract
 
-> **V8 owner decision:** [RCAT Signature Clarity First](UI-V8-RCAT-SIGNATURE.md) supersedes all prior visual palettes. Existing Spartan and safety architecture stays binding.
+> **Current owner decision:** [Modern Pastel SaaS Hybrid](UI-MODERN-PASTEL-SAAS.md) supersedes all prior visual palettes. Existing Spartan and safety architecture stays binding.
 
 > **20 Nov 2026:** [V7 Warm Modern](UI-V7-WARM-MODERN.md) supersedes the 18 Nov visual palette only. All component architecture and security restrictions below remain binding.
 

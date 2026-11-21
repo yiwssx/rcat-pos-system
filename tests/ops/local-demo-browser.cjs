@@ -197,11 +197,12 @@ async function auditTextResize(page,name){
 
 async function auditReachable(page,name,locator){
   await locator.scrollIntoViewIfNeeded();
-  await locator.evaluate(el=>el.scrollIntoView({block:'center',inline:'nearest'}));
+  await locator.evaluate(el=>el.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   const report=await locator.evaluate(el=>{
     const r=el.getBoundingClientRect();
     const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
-    return {reachable:!!hit&&(el===hit||el.contains(hit)),inViewport:r.top>=-1&&r.bottom<=innerHeight+1};
+    return {reachable:!!hit&&(el===hit||el.contains(hit)),inViewport:r.top>=-1&&r.bottom<=innerHeight+1,top:Math.round(r.top),bottom:Math.round(r.bottom),viewport:innerHeight,blocker:hit?.tagName??null};
   });
   console.log('V8_REACH '+JSON.stringify({name,...report}));
   assert.ok(report.reachable&&report.inViewport,'Sticky region obscures '+name);
@@ -329,6 +330,15 @@ async function main() {
       'Desktop sidebar must use the V8 white surface');
     assert.equal(shell.image, 'none',
       'Legacy V6 orange gradient decoration must be removed from the sidebar');
+    const collapse = page.getByRole('button', {name:'ยุบแถบเมนู'});
+    await collapse.click();
+    await page.getByRole('button',{name:'ขยายแถบเมนู'}).waitFor();
+    assert.ok(await desktopNav.evaluate(el=>el.getBoundingClientRect().width)<=73,'Collapsed rail <=72px');
+    await desktopNav.getByRole('link',{name:'ออเดอร์',exact:true}).waitFor();
+    await auditVisual(page,'desktop-collapsed-rail');
+    await page.getByRole('button',{name:'ขยายแถบเมนู'}).click();
+    assert.ok(await desktopNav.evaluate(el=>el.getBoundingClientRect().width)>=239,'Expanded rail >=240px');
+    await auditVisual(page,'desktop-expanded-workspace');
     await page.setViewportSize({ width: 320, height: 780 });
     const officialLogo = page.getByRole('link', { name: 'RCAT POS หน้าแรก' }).locator('img');
     await officialLogo.waitFor();
@@ -442,8 +452,8 @@ async function main() {
       active: getComputedStyle(document.querySelector('.guest-category-chip.is-active')).backgroundColor,
       cta: getComputedStyle(document.querySelector('.guest-add')).backgroundColor,
     }));
-    assert.equal(guestPalette.active, 'rgb(146, 54, 23)', 'Guest category selection uses V8 RCAT Signature');
-    assert.equal(guestPalette.cta, 'rgb(146, 54, 23)', 'Guest add-to-cart uses V8 RCAT Signature');
+    assert.equal(guestPalette.active, 'rgb(223, 233, 253)', 'Guest category selection uses Modern Pastel SaaS');
+    assert.equal(guestPalette.cta, 'rgb(223, 233, 253)', 'Guest add-to-cart uses Modern Pastel SaaS');
     await auditWidths(staticPage,'customer-catalog');
     await staticPage.locator('.guest-add').first().hover();
     await auditVisual(staticPage,'customer-primary-hover');
@@ -478,6 +488,8 @@ async function main() {
     await staticPage.waitForTimeout(250);
     await auditVisual(staticPage,'customer-product-sheet','hlm-sheet-content[data-slot="sheet-content"]');
     await staticPage.getByRole('dialog', { name: 'ข้าวผัด' }).getByRole('button', { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
+    await staticPage.locator('hlm-sheet-content[data-slot="sheet-content"]').waitFor({state:'hidden'});
+    await staticPage.waitForFunction(()=>!document.documentElement.classList.contains('cdk-global-scrollblock'));
     await staticPage.locator('.guest-cart-shortcut').waitFor({ state: 'visible' });
     const guestLight = await staticPage.evaluate(() => {
       const host = document.querySelector('.guest-shell');
@@ -491,10 +503,10 @@ async function main() {
         ctaText: getComputedStyle(action).color,
       };
     });
-    assert.equal(guestLight.background, 'rgb(250, 246, 238)', 'Guest must use the V8 cream canvas');
-    assert.equal(guestLight.cart, 'rgb(146, 54, 23)', 'V8 cart bar uses signature dark orange');
-    assert.equal(guestLight.label, 'rgb(255, 255, 255)', 'Cart count must use readable white text on signature');
-    assert.equal(guestLight.ctaText, 'rgb(255, 255, 255)', 'Cart action must have readable white text');
+    assert.equal(guestLight.background, 'rgb(245, 247, 252)', 'Guest must use the Hybrid cloud canvas');
+    assert.equal(guestLight.cart, 'rgb(223, 233, 253)', 'Hybrid cart bar uses soft blue');
+    assert.equal(guestLight.label, 'rgb(0, 0, 0)', 'Cart count uses black text on pastel');
+    assert.equal(guestLight.ctaText, 'rgb(0, 0, 0)', 'Cart action must have readable black text');
     assert.equal(await staticPage.getByRole('heading', { name: 'ตะกร้าของคุณ' }).isVisible(), false,
       'V7 mobile hides the desktop cart summary');
     for(const width of [320,390]){

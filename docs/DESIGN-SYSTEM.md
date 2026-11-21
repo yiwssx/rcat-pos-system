@@ -1,4 +1,4 @@
-> **Current UI authority — V8:** [RCAT Signature Clarity First](UI-V8-RCAT-SIGNATURE.md) and [Spartan-first migration contract](SPARTAN-IOS-MIGRATION.md). Historical drafts below are retained for evidence only.
+> **Current UI authority — Modern Pastel SaaS Hybrid:** [A+B Hybrid](UI-MODERN-PASTEL-SAAS.md) and [Spartan-first migration contract](SPARTAN-IOS-MIGRATION.md). Historical drafts below are retained for evidence only.
 
 # RCAT POS — Historical Design System Brief (V1–V5 superseded)
 

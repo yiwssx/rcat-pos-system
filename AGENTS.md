@@ -34,11 +34,11 @@ Read the relevant SKILL.md under .agents/skills/:
 - ci-quality: affected CI, tests and secure releases.
 - pos-ux-design: QR ordering customer journeys, tablet operations, recovery and payment-status UX.
 
-## Spartan-first UI decision — Owner-approved V8 RCAT Signature Clarity First
-- **Canonical:** `docs/SPARTAN-IOS-MIGRATION.md` and `docs/UI-V8-RCAT-SIGNATURE.md`. Spartan UI 1.9 Brain + **generated official Helm**, one shared semantic theme and self-hosted Thai font are the only design component/style sources. Keep Angular + Nx and all business/security logic.
+## Spartan-first UI decision — Owner-approved Modern Pastel SaaS Hybrid
+- **Canonical:** `docs/SPARTAN-IOS-MIGRATION.md` and `docs/UI-MODERN-PASTEL-SAAS.md`. Spartan UI 1.9 Brain + **generated official Helm**, one shared semantic theme and self-hosted Thai font are the only design component/style sources. Keep Angular + Nx and all business/security logic.
 - Do not add feature CSS, component `styles`/`styleUrls`, inline `style`/`ngStyle`, random hardcoded colors, second UI systems or handmade Spartan lookalikes. Use semantic Tailwind utilities for layout and generated Helm components for controls.
 - V1–V6 page styles are migration debt: replace the screen, then **delete** obsolete selectors (not overlay new overrides). `RcatButtonDirective` is transitional Brain-only and must be removed after official Helm migration.
-- Target owner-approved V8: black text on light surfaces, white on opaque dark actions, signature #923617, balanced density, semantic status marks. Necessary text >=7:1; control boundaries and meaningful icons >=3:1. No clipped text or page overflow; verify computed styles and actual geometry in the existing browser gate. Borrow iOS interaction clarity, not its monochrome palette. No giant gradient sidebar. Keep owner visual UAT separate from passing CI.
+- Target owner-approved A+B Hybrid: cloud #F5F7FC, white surfaces, soft blue #DFE9FD with black labels and #526DAC control boundaries, lavender/mint/vanilla semantic accents. Collapsible workspace sidebar, compact adaptive content, no orange except official brand identity. Necessary text >=7:1; control boundaries and meaningful icons >=3:1. No clipped text or page overflow; verify computed styles and actual geometry in the existing browser gate. Borrow iOS interaction clarity, not its monochrome palette. No giant gradient sidebar. Keep owner visual UAT separate from passing CI.
 - The design rule is enforced for *new diff lines* by the lightweight existing Foundation CI; deleting verified-unused CSS remains allowed. Do not auto-deploy.
 
 ## Design guidelines

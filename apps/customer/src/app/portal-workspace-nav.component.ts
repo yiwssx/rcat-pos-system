@@ -7,6 +7,20 @@ import {
   output,
 } from "@angular/core";
 import { Router, RouterLink, RouterLinkActive } from "@angular/router";
+import { NgIcon, provideIcons } from "@ng-icons/core";
+import {
+  lucideLayoutDashboard,
+  lucideReceiptText,
+  lucidePackage,
+  lucideQrCode,
+  lucideBoxes,
+  lucideChartNoAxesCombined,
+  lucideUsers,
+  lucideWallet,
+  lucideClipboardCheck,
+  lucideSettings,
+  lucideEllipsis,
+} from "@ng-icons/lucide";
 import { HlmNativeSelect } from "@spartan-ng/helm/native-select";
 import { HlmBadge } from "@spartan-ng/helm/badge";
 import { HlmSeparator } from "@spartan-ng/helm/separator";
@@ -22,7 +36,21 @@ import { permitsRoute } from "./portal-permissions";
   selector: "rcat-portal-workspace-nav",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [provideIcons({
+    lucideLayoutDashboard,
+    lucideReceiptText,
+    lucidePackage,
+    lucideQrCode,
+    lucideBoxes,
+    lucideChartNoAxesCombined,
+    lucideUsers,
+    lucideWallet,
+    lucideClipboardCheck,
+    lucideSettings,
+    lucideEllipsis,
+  })],
   imports: [
+    NgIcon,
     RouterLink,
     RouterLinkActive,
     HlmNativeSelect,
@@ -49,9 +77,7 @@ import { permitsRoute } from "./portal-permissions";
                 routerLinkActive="bg-accent text-accent-foreground font-semibold"
                 class="flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-center text-xs font-medium text-muted-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
               >
-                <span aria-hidden="true" class="text-lg leading-none">{{
-                  item.icon
-                }}</span>
+                <ng-icon [name]="item.icon" class="text-lg" aria-hidden="true" />
                 <span>{{ item.label }}</span>
               </a>
             }
@@ -67,7 +93,7 @@ import { permitsRoute } from "./portal-permissions";
             routerLinkActive="bg-accent text-accent-foreground font-semibold"
             class="flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-center text-xs font-medium text-muted-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
           >
-            <span aria-hidden="true" class="text-lg leading-none">◎</span>
+            <ng-icon name="lucideUsers" class="text-lg" aria-hidden="true" />
             ผู้ใช้งาน
           </a>
         }
@@ -76,12 +102,13 @@ import { permitsRoute } from "./portal-permissions";
           class="flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border-0 bg-card px-1 text-xs font-medium text-foreground focus-visible:outline-2 focus-visible:outline-ring"
           (click)="more.emit()"
         >
-          <span aria-hidden="true" class="text-lg leading-none">···</span>
+          <ng-icon name="lucideEllipsis" class="text-lg" aria-hidden="true" />
           เพิ่มเติม
         </button>
       </nav>
     } @else {
-      <div class="grid gap-6">
+      <div class="grid min-w-0 gap-4">
+        @if (!rail()) {
         <section
           class="grid gap-3 rounded-xl border border-border bg-card p-4"
           aria-label="ร้านที่กำลังทำงาน"
@@ -123,11 +150,13 @@ import { permitsRoute } from "./portal-permissions";
             </p>
           }
         </section>
+        }
 
-        <nav aria-label="งานของร้าน" class="grid gap-5">
+        <nav aria-label="งานของร้าน" class="grid gap-3">
           <section class="grid gap-1" aria-label="ภาพรวม">
             <h3
               class="px-3 pb-1 text-xs font-semibold tracking-wide text-muted-foreground"
+              [class.sr-only]="rail()"
             >
               ภาพรวม
             </h3>
@@ -135,8 +164,13 @@ import { permitsRoute } from "./portal-permissions";
               routerLink="/"
               routerLinkActive="bg-accent text-accent-foreground font-semibold"
               [routerLinkActiveOptions]="{ exact: true }"
-              class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-              >พื้นที่ทำงาน</a
+              class="flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground transition-none no-underline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  [class.justify-center]="rail()"
+              [attr.title]="rail() ? 'พื้นที่ทำงาน' : null"
+                  >
+                    <ng-icon name="lucideLayoutDashboard" class="shrink-0 text-lg" aria-hidden="true" />
+                    <span [class.sr-only]="rail()">พื้นที่ทำงาน</span>
+                  </a
             >
           </section>
 
@@ -144,6 +178,7 @@ import { permitsRoute } from "./portal-permissions";
             <section class="grid gap-1" aria-label="งานประจำวัน">
               <h3
                 class="px-3 pb-1 text-xs font-semibold tracking-wide text-muted-foreground"
+              [class.sr-only]="rail()"
               >
                 งานประจำวัน
               </h3>
@@ -157,8 +192,13 @@ import { permitsRoute } from "./portal-permissions";
                       selected.storeId,
                     ]"
                     routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                    class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                    >{{ item.label }}</a
+                    class="flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground transition-none no-underline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  [class.justify-center]="rail()"
+                    [attr.title]="rail() ? item.label : null"
+                    >
+                      <ng-icon [name]="item.icon" class="shrink-0 text-lg" aria-hidden="true" />
+                      <span [class.sr-only]="rail()">{{ item.label }}</span>
+                    </a
                   >
                 }
               }
@@ -167,6 +207,7 @@ import { permitsRoute } from "./portal-permissions";
             <section class="grid gap-1" aria-label="จัดการร้าน">
               <h3
                 class="px-3 pb-1 text-xs font-semibold tracking-wide text-muted-foreground"
+              [class.sr-only]="rail()"
               >
                 จัดการร้าน
               </h3>
@@ -180,8 +221,13 @@ import { permitsRoute } from "./portal-permissions";
                       selected.storeId,
                     ]"
                     routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                    class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                    >{{ item.label }}</a
+                    class="flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground transition-none no-underline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  [class.justify-center]="rail()"
+                    [attr.title]="rail() ? item.label : null"
+                    >
+                      <ng-icon [name]="item.icon" class="shrink-0 text-lg" aria-hidden="true" />
+                      <span [class.sr-only]="rail()">{{ item.label }}</span>
+                    </a
                   >
                 }
               }
@@ -189,8 +235,13 @@ import { permitsRoute } from "./portal-permissions";
                 <a
                   [routerLink]="['/tenants', selected.tenantId, 'staff']"
                   routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                  class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                  >พนักงานและสิทธิ์</a
+                  class="flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground transition-none no-underline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  [class.justify-center]="rail()"
+                  [attr.title]="rail() ? 'พนักงานและสิทธิ์' : null"
+                  >
+                    <ng-icon name="lucideUsers" class="shrink-0 text-lg" aria-hidden="true" />
+                    <span [class.sr-only]="rail()">พนักงานและสิทธิ์</span>
+                  </a
                 >
               }
             </section>
@@ -199,6 +250,7 @@ import { permitsRoute } from "./portal-permissions";
               <section class="grid gap-1" aria-label="รับชำระเงิน">
                 <h3
                   class="px-3 pb-1 text-xs font-semibold tracking-wide text-muted-foreground"
+              [class.sr-only]="rail()"
                 >
                   รับชำระเงิน
                 </h3>
@@ -209,8 +261,13 @@ import { permitsRoute } from "./portal-permissions";
                     selected.storeId,
                   ]"
                   routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                  class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                  >บัญชีพร้อมเพย์ของร้าน</a
+                  class="flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground transition-none no-underline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  [class.justify-center]="rail()"
+                  [attr.title]="rail() ? 'บัญชีพร้อมเพย์ของร้าน' : null"
+                  >
+                    <ng-icon name="lucideWallet" class="shrink-0 text-lg" aria-hidden="true" />
+                    <span [class.sr-only]="rail()">บัญชีพร้อมเพย์ของร้าน</span>
+                  </a
                 >
                 <a
                   [routerLink]="[
@@ -219,8 +276,13 @@ import { permitsRoute } from "./portal-permissions";
                     selected.storeId,
                   ]"
                   routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                  class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                  >ตรวจสอบสลิป</a
+                  class="flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground transition-none no-underline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  [class.justify-center]="rail()"
+                  [attr.title]="rail() ? 'ตรวจสอบสลิป' : null"
+                  >
+                    <ng-icon name="lucideClipboardCheck" class="shrink-0 text-lg" aria-hidden="true" />
+                    <span [class.sr-only]="rail()">ตรวจสอบสลิป</span>
+                  </a
                 >
                 <a
                   [routerLink]="[
@@ -229,8 +291,13 @@ import { permitsRoute } from "./portal-permissions";
                     selected.storeId,
                   ]"
                   routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                  class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                  >รายงานรับเงินและคืนเงิน</a
+                  class="flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground transition-none no-underline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  [class.justify-center]="rail()"
+                  [attr.title]="rail() ? 'รายงานรับเงินและคืนเงิน' : null"
+                  >
+                    <ng-icon name="lucideChartNoAxesCombined" class="shrink-0 text-lg" aria-hidden="true" />
+                    <span [class.sr-only]="rail()">รายงานรับเงินและคืนเงิน</span>
+                  </a
                 >
               </section>
             }
@@ -243,14 +310,20 @@ import { permitsRoute } from "./portal-permissions";
             <section class="grid gap-1" aria-label="ผู้ดูแลระบบ">
               <h3
                 class="px-3 pb-1 text-xs font-semibold tracking-wide text-muted-foreground"
+              [class.sr-only]="rail()"
               >
                 ผู้ดูแลระบบ
               </h3>
               <a
                 routerLink="/platform"
                 routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                >จัดการผู้ใช้งาน</a
+                class="flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground transition-none no-underline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  [class.justify-center]="rail()"
+                [attr.title]="rail() ? 'จัดการผู้ใช้งาน' : null"
+                  >
+                    <ng-icon name="lucideUsers" class="shrink-0 text-lg" aria-hidden="true" />
+                    <span [class.sr-only]="rail()">จัดการผู้ใช้งาน</span>
+                  </a
               >
             </section>
           }
@@ -259,22 +332,30 @@ import { permitsRoute } from "./portal-permissions";
             <section class="grid gap-1" aria-label="ตั้งค่า">
               <h3
                 class="px-3 pb-1 text-xs font-semibold tracking-wide text-muted-foreground"
+              [class.sr-only]="rail()"
               >
                 ตั้งค่า
               </h3>
               <a
                 routerLink="/settings"
                 routerLinkActive="bg-accent text-accent-foreground font-semibold"
-                class="flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-none no-underline hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                >ตั้งค่าร้าน</a
+                class="flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground transition-none no-underline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  [class.justify-center]="rail()"
+                [attr.title]="rail() ? 'ตั้งค่าร้าน' : null"
+                  >
+                    <ng-icon name="lucideSettings" class="shrink-0 text-lg" aria-hidden="true" />
+                    <span [class.sr-only]="rail()">ตั้งค่าร้าน</span>
+                  </a
               >
             </section>
           }
         </nav>
         <hlm-separator />
+        @if (!rail()) {
         <p class="px-3 pb-2 text-xs leading-5 text-muted-foreground">
           เมนูแสดงตามสิทธิ์ที่ได้รับจากระบบ
         </p>
+        }
       </div>
     }
   `,
@@ -284,11 +365,12 @@ export class PortalWorkspaceNavComponent {
   private readonly router = inject(Router);
   readonly url = input.required<string>();
   readonly compact = input(false);
+  readonly rail = input(false);
   readonly more = output<void>();
   readonly quickMenu = [
-    { path: "orders", label: "ออเดอร์", icon: "▤" },
-    { path: "catalog", label: "สินค้า", icon: "▦" },
-    { path: "tables", label: "โต๊ะและ QR", icon: "▧" },
+    { path: "orders", label: "ออเดอร์", icon: "lucideReceiptText" },
+    { path: "catalog", label: "สินค้า", icon: "lucidePackage" },
+    { path: "tables", label: "โต๊ะและ QR", icon: "lucideQrCode" },
   ];
   readonly store = computed(() => {
     const segments = this.url().split(/[/?#]/);
@@ -298,12 +380,12 @@ export class PortalWorkspaceNavComponent {
       this.session.stores()[0]
     );
   });
-  readonly dailyMenu = [{ path: "orders", label: "ออเดอร์" }];
+  readonly dailyMenu = [{ path: "orders", label: "ออเดอร์", icon: "lucideReceiptText" }];
   readonly manageMenu = [
-    { path: "tables", label: "โต๊ะและ QR" },
-    { path: "catalog", label: "เมนูและราคา" },
-    { path: "inventory", label: "สต็อกและวัตถุดิบ" },
-    { path: "reports", label: "รายงาน" },
+    { path: "tables", label: "โต๊ะและ QR", icon: "lucideQrCode" },
+    { path: "catalog", label: "เมนูและราคา", icon: "lucidePackage" },
+    { path: "inventory", label: "สต็อกและวัตถุดิบ", icon: "lucideBoxes" },
+    { path: "reports", label: "รายงาน", icon: "lucideChartNoAxesCombined" },
   ];
 
   allowed(kind: string): boolean {

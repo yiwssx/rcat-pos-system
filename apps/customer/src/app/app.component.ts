@@ -16,7 +16,11 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { catchError, tap, throwError } from "rxjs";
 import { HlmButton } from "@spartan-ng/helm/button";
 import { NgIcon, provideIcons } from "@ng-icons/core";
-import { lucideMenu, lucidePanelLeftClose, lucidePanelLeftOpen } from "@ng-icons/lucide";
+import {
+  lucideMenu,
+  lucidePanelLeftClose,
+  lucidePanelLeftOpen,
+} from "@ng-icons/lucide";
 import {
   HlmSheet,
   HlmSheetContent,
@@ -58,7 +62,9 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
   selector: "rcat-root",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideIcons({ lucideMenu, lucidePanelLeftClose, lucidePanelLeftOpen })],
+  providers: [
+    provideIcons({ lucideMenu, lucidePanelLeftClose, lucidePanelLeftOpen }),
+  ],
   imports: [
     NgIcon,
     RouterLink,
@@ -172,7 +178,9 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
             [class.p-4]="!sidebarCollapsed()"
             aria-label="พื้นที่ทำงาน"
           >
-            <div class="sticky top-4 grid max-h-[calc(100dvh-2rem)] gap-3 overflow-y-auto">
+            <div
+              class="sticky top-4 grid max-h-[calc(100dvh-2rem)] gap-3 overflow-y-auto"
+            >
               <button
                 hlmBtn
                 variant="ghost"
@@ -183,7 +191,10 @@ export const portalSessionErrors: HttpInterceptorFn = (request, next) => {
                 aria-controls="portal-desktop-navigation"
                 (click)="sidebarCollapsed.set(!sidebarCollapsed())"
               >
-                <ng-icon [name]="sidebarCollapsed() ? 'lucidePanelLeftOpen' : 'lucidePanelLeftClose'" aria-hidden="true" />
+                <ng-icon
+                  [name]="sidebarCollapsed() ? 'lucidePanelLeftOpen' : 'lucidePanelLeftClose'"
+                  aria-hidden="true"
+                />
               </button>
               <rcat-portal-workspace-nav
                 id="portal-desktop-navigation"
