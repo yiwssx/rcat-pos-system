@@ -26,16 +26,39 @@ function satangFromInput(text: string): number | null {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, HlmButton, HlmInput, HlmLabel],
   template: `
-    <section class="review-shell mx-auto grid w-full min-w-0 max-w-5xl gap-4 p-4 sm:p-6" aria-labelledby="review-title">
-      <a hlmBtn variant="link" class="w-fit px-0" [routerLink]="['/orders', tenantId, storeId]">← กลับกระดานออเดอร์</a>
-      <span class="eyebrow text-xs font-semibold tracking-wide text-foreground">ตรวจสอบการชำระเงิน</span>
-      <h1 class="m-0 text-2xl font-semibold leading-tight sm:text-3xl" id="review-title">ตรวจสลิป PromptPay</h1>
-      <p class="review-warning rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground">
+    <section
+      class="review-shell mx-auto grid w-full min-w-0 max-w-5xl gap-4 p-4 sm:p-6"
+      aria-labelledby="review-title"
+    >
+      <a
+        hlmBtn
+        variant="link"
+        class="w-fit px-0"
+        [routerLink]="['/orders', tenantId, storeId]"
+        >← กลับกระดานออเดอร์</a
+      >
+      <span class="eyebrow text-xs font-semibold tracking-wide text-foreground"
+        >ตรวจสอบการชำระเงิน</span
+      >
+      <h1
+        class="m-0 text-2xl font-semibold leading-tight sm:text-3xl"
+        id="review-title"
+      >
+        ตรวจสลิป PromptPay
+      </h1>
+      <p
+        class="review-warning rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground"
+      >
         ตรวจสอบยอดเงินเข้าจริงในบัญชีธนาคารของร้านทุกครั้งก่อนกดยืนยัน
         รูปสลิปอย่างเดียวไม่ใช่หลักฐานว่าได้รับเงินแล้ว
       </p>
       @if (error()) {
-        <p class="review-error rounded-xl border border-destructive bg-danger-soft p-3 text-foreground" role="alert">{{ error() }}</p>
+        <p
+          class="review-error rounded-xl border border-destructive bg-danger-soft p-3 text-foreground"
+          role="alert"
+        >
+          {{ error() }}
+        </p>
       }
       @if (notice()) {
         <p role="status">{{ notice() }}</p>
@@ -44,16 +67,25 @@ function satangFromInput(text: string): number | null {
         {{ loading() ? "กำลังโหลด..." : "รีเฟรชคิวตรวจสลิป" }}
       </button>
       @if (allowed()) {
-        <p class="review-muted text-sm text-muted-foreground">สลิปรอตรวจ {{ items().length }} รายการล่าสุด</p>
+        <p class="review-muted text-sm text-muted-foreground">
+          สลิปรอตรวจ {{ items().length }} รายการล่าสุด
+        </p>
         @if (!loading() && !items().length) {
           <p>ขณะนี้ไม่มีสลิปที่รอการตรวจสอบ</p>
         }
-        <div class="review-layout grid min-w-0 gap-4 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]">
+        <div
+          class="review-layout grid min-w-0 gap-4 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]"
+        >
           <div class="review-list grid content-start gap-2">
             @for (item of items(); track item.slipId) {
-              <button hlmBtn
+              <button
+                hlmBtn
                 type="button"
-                [variant]="selected()?.slipId === item.slipId ? 'selected' : 'outline'" class="grid justify-items-start text-left" [class.is-selected]="selected()?.slipId === item.slipId"
+                [variant]="
+                  selected()?.slipId === item.slipId ? 'selected' : 'outline'
+                "
+                class="grid justify-items-start text-left"
+                [class.is-selected]="selected()?.slipId === item.slipId"
                 (click)="choose(item)"
               >
                 <strong>Order {{ number(item.displayNumber) }}</strong>
@@ -63,23 +95,33 @@ function satangFromInput(text: string): number | null {
             }
           </div>
           @if (selected(); as slip) {
-            <section class="review-detail grid min-w-0 gap-3 rounded-xl border border-border bg-card p-4" aria-labelledby="slip-heading">
+            <section
+              class="review-detail grid min-w-0 gap-3 rounded-xl border border-border bg-card p-4"
+              aria-labelledby="slip-heading"
+            >
               <h2 class="text-lg font-semibold" id="slip-heading">
                 ตรวจหลักฐานของ Order {{ number(slip.displayNumber) }}
               </h2>
               <p>
                 <strong>ยอดที่ต้องรับ: {{ money(slip.amountSatang) }} ฿</strong>
               </p>
-              <img class="max-h-110 w-full max-w-85 rounded-lg bg-muted object-contain" [src]="imageUrl()"
+              <img
+                class="max-h-110 w-full max-w-85 rounded-lg bg-muted object-contain"
+                [src]="imageUrl()"
                 alt="สลิปที่ลูกค้าส่งเพื่อให้ร้านตรวจสอบยอดเงินจริง"
                 width="340"
               />
-              <p class="review-warning rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground">
+              <p
+                class="review-warning rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground"
+              >
                 เปรียบเทียบผู้รับเงิน จำนวนเงิน เวลา และรหัสธุรกรรม
                 กับรายการเงินเข้าจริงในบัญชีร้าน ไม่ยืนยันจากรูปภาพอย่างเดียว
               </p>
-              <label hlmLabel for="bank-ref">รหัสอ้างอิงธุรกรรมจากธนาคาร *</label>
-              <input hlmInput
+              <label hlmLabel for="bank-ref"
+                >รหัสอ้างอิงธุรกรรมจากธนาคาร *</label
+              >
+              <input
+                hlmInput
                 id="bank-ref"
                 type="text"
                 autocomplete="off"
@@ -91,7 +133,8 @@ function satangFromInput(text: string): number | null {
               <label hlmLabel for="actual-amount"
                 >จำนวนเงินที่เข้าบัญชีจริง (บาท) *</label
               >
-              <input hlmInput
+              <input
+                hlmInput
                 id="actual-amount"
                 inputmode="decimal"
                 type="text"
@@ -101,14 +144,17 @@ function satangFromInput(text: string): number | null {
                 placeholder="เช่น 120.00"
               />
               <label class="review-check flex items-start gap-3">
-                <input class="size-5 shrink-0 accent-action" type="checkbox"
+                <input
+                  class="size-5 shrink-0 accent-action"
+                  type="checkbox"
                   [checked]="bankChecked()"
                   (change)="bankChecked.set($any($event.target).checked)"
                 />
                 ฉันตรวจสอบยอดเงินเข้าจริงจากบัญชีธนาคารร้านแล้ว
               </label>
               <div class="review-actions flex flex-wrap gap-3">
-                <button hlmBtn
+                <button
+                  hlmBtn
                   type="button"
                   class="review-confirm"
                   [disabled]="!canConfirm() || busy()"
@@ -116,9 +162,11 @@ function satangFromInput(text: string): number | null {
                 >
                   ยืนยันว่ารับเงินจริงแล้ว
                 </button>
-                <button hlmBtn
+                <button
+                  hlmBtn
                   type="button"
-                  variant="destructive" class="review-reject"
+                  variant="destructive"
+                  class="review-reject"
                   [disabled]="busy()"
                   (click)="decide('reject')"
                 >
@@ -131,7 +179,6 @@ function satangFromInput(text: string): number | null {
       }
     </section>
   `,
-
 })
 export class PaymentReviewPage implements OnInit {
   private readonly route = inject(ActivatedRoute);

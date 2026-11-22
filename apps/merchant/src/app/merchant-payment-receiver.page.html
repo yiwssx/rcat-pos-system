@@ -1,12 +1,31 @@
-<main class="receiver-shell mx-auto grid w-full min-w-0 max-w-3xl gap-4 p-4 sm:p-6" aria-labelledby="receiver-title">
-  <a routerLink="/" class="receiver-back w-fit font-semibold text-action underline-offset-4 hover:underline">← กลับหน้าร้าน</a>
-  <p class="receiver-kicker text-xs font-semibold tracking-wide text-foreground">การรับชำระเงินของร้าน</p>
-  <h1 class="m-0 text-2xl font-semibold leading-tight sm:text-3xl" id="receiver-title">ตั้งค่าบัญชีรับเงิน</h1>
+<main
+  class="receiver-shell mx-auto grid w-full min-w-0 max-w-3xl gap-4 p-4 sm:p-6"
+  aria-labelledby="receiver-title"
+>
+  <a
+    routerLink="/"
+    class="receiver-back w-fit font-semibold text-action underline-offset-4 hover:underline"
+    >← กลับหน้าร้าน</a
+  >
+  <p
+    class="receiver-kicker text-xs font-semibold tracking-wide text-foreground"
+  >
+    การรับชำระเงินของร้าน
+  </p>
+  <h1
+    class="m-0 text-2xl font-semibold leading-tight sm:text-3xl"
+    id="receiver-title"
+  >
+    ตั้งค่าบัญชีรับเงิน
+  </h1>
   <p class="receiver-description text-sm leading-relaxed text-muted-foreground">
     บัญชี PromptPay นี้ใช้รับเงินตรงเข้าบัญชีของร้าน ไม่ใช่บัญชีของระบบ RCAT POS
   </p>
 
-  <aside class="receiver-warning grid gap-2 rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground" role="note">
+  <aside
+    class="receiver-warning grid gap-2 rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground"
+    role="note"
+  >
     <strong>การบันทึกไม่ใช่การเปิดชำระเงิน</strong>
     เมื่อบันทึกบัญชีแล้ว ผู้ดูแลระบบต้องตรวจสอบความเป็นเจ้าของ
     และอนุมัติการรับชำระเงินให้ร้านก่อน ลูกค้าจึงจะเห็น QR พร้อมเพย์
@@ -15,25 +34,45 @@
   @if (loading()) {
   <p role="status">กำลังตรวจสอบสิทธิ์และข้อมูลบัญชี...</p>
   } @else if (!authorized()) {
-  <p class="receiver-error rounded-xl border border-destructive bg-danger-soft p-3 text-foreground" role="alert">
+  <p
+    class="receiver-error rounded-xl border border-destructive bg-danger-soft p-3 text-foreground"
+    role="alert"
+  >
     {{ error() || "บัญชีนี้ไม่มีสิทธิ์ตั้งค่าการรับชำระเงิน" }}
   </p>
   } @else { @if (error()) {
-  <p class="receiver-error rounded-xl border border-destructive bg-danger-soft p-3 text-foreground" role="alert">{{ error() }}</p>
+  <p
+    class="receiver-error rounded-xl border border-destructive bg-danger-soft p-3 text-foreground"
+    role="alert"
+  >
+    {{ error() }}
+  </p>
   } @if (notice()) {
-  <p class="receiver-success rounded-xl border border-served-line bg-served p-3 text-served-foreground" role="status">{{ notice() }}</p>
+  <p
+    class="receiver-success rounded-xl border border-served-line bg-served p-3 text-served-foreground"
+    role="status"
+  >
+    {{ notice() }}
+  </p>
   } @if (current(); as settings) {
-  <section class="receiver-card grid gap-3 rounded-xl border border-border bg-card p-4" aria-labelledby="status-title">
+  <section
+    class="receiver-card grid gap-3 rounded-xl border border-border bg-card p-4"
+    aria-labelledby="status-title"
+  >
     <h2 class="text-lg font-semibold" id="status-title">สถานะบัญชีรับเงิน</h2>
     <dl class="receiver-facts grid gap-2">
-      <div class="flex flex-wrap justify-between gap-2 border-b border-border py-2">
+      <div
+        class="flex flex-wrap justify-between gap-2 border-b border-border py-2"
+      >
         <dt class="text-sm text-muted-foreground">ข้อมูลบัญชี</dt>
         <dd class="m-0 font-semibold tabular-nums">
           {{ settings.configured ? settings.maskedReceiver || "กำหนดแล้ว" :
           "ยังไม่ได้กำหนด" }}
         </dd>
       </div>
-      <div class="flex flex-wrap justify-between gap-2 border-b border-border py-2">
+      <div
+        class="flex flex-wrap justify-between gap-2 border-b border-border py-2"
+      >
         <dt class="text-sm text-muted-foreground">ประเภท</dt>
         <dd class="m-0 font-semibold tabular-nums">
           {{ settings.receiverKind === "mobile" ? "เบอร์โทรศัพท์ PromptPay" :
@@ -41,27 +80,38 @@
           เลขประจำตัวผู้เสียภาษี" : "ยังไม่ได้กำหนด" }}
         </dd>
       </div>
-      <div class="flex flex-wrap justify-between gap-2 border-b border-border py-2">
+      <div
+        class="flex flex-wrap justify-between gap-2 border-b border-border py-2"
+      >
         <dt class="text-sm text-muted-foreground">การเปิดรับชำระ</dt>
-        <dd class="m-0 font-semibold tabular-nums" [class.receiver-disabled]="!settings.enabled">
+        <dd
+          class="m-0 font-semibold tabular-nums"
+          [class.receiver-disabled]="!settings.enabled"
+        >
           {{ settings.enabled ? "พร้อมรับชำระเงิน" : "ยังไม่เปิดรับชำระเงิน" }}
         </dd>
       </div>
     </dl>
   </section>
 
-  <section class="receiver-card grid gap-3 rounded-xl border border-border bg-card p-4" aria-labelledby="edit-title">
+  <section
+    class="receiver-card grid gap-3 rounded-xl border border-border bg-card p-4"
+    aria-labelledby="edit-title"
+  >
     <h2 class="text-lg font-semibold" id="edit-title">
       {{ settings.configured ? "เปลี่ยนบัญชี PromptPay" : "เพิ่มบัญชี PromptPay"
       }}
     </h2>
-    <p class="receiver-description text-sm leading-relaxed text-muted-foreground">
+    <p
+      class="receiver-description text-sm leading-relaxed text-muted-foreground"
+    >
       ระบบไม่แสดงเลขเต็มของบัญชีที่บันทึกไว้ หากต้องการเปลี่ยน
       ให้กรอกข้อมูลใหม่ทั้งหมด
     </p>
     <div class="receiver-form grid min-w-0 gap-3">
       <label hlmLabel for="receiver-kind">ประเภทบัญชี PromptPay</label>
-      <select class="min-h-11 max-w-full rounded-xl border border-input bg-card px-3 py-2 text-foreground"
+      <select
+        class="min-h-11 max-w-full rounded-xl border border-input bg-card px-3 py-2 text-foreground"
         id="receiver-kind"
         [value]="receiverKind()"
         [disabled]="busy()"
@@ -74,7 +124,8 @@
       </select>
 
       <label hlmLabel for="receiver-id">ข้อมูล PromptPay ใหม่</label>
-      <input hlmInput
+      <input
+        hlmInput
         id="receiver-id"
         type="password"
         inputmode="numeric"
@@ -86,18 +137,28 @@
         placeholder="กรอกเฉพาะตัวเลข"
         aria-describedby="receiver-hint"
       />
-      <p id="receiver-hint" class="receiver-hint text-sm leading-relaxed text-muted-foreground">
+      <p
+        id="receiver-hint"
+        class="receiver-hint text-sm leading-relaxed text-muted-foreground"
+      >
         {{ receiverKind() === "mobile" ? "ใช้เบอร์โทรศัพท์ที่ผูก PromptPay
         ของร้านไว้แล้ว" : "ใช้เลข 13 หลักที่ผูก PromptPay ของร้านไว้แล้ว" }}
         ไม่มีการรับรหัสผ่านธนาคารหรือ OTP ในหน้านี้
       </p>
 
-      <button hlmBtn type="button" [disabled]="busy() || !valid()" (click)="save()">
+      <button
+        hlmBtn
+        type="button"
+        [disabled]="busy() || !valid()"
+        (click)="save()"
+      >
         {{ busy() ? "กำลังบันทึก..." : "บันทึกบัญชีรับเงิน" }}
       </button>
-      <button hlmBtn
+      <button
+        hlmBtn
         type="button"
-        variant="outline" class="receiver-secondary"
+        variant="outline"
+        class="receiver-secondary"
         [disabled]="busy() || loading()"
         (click)="reload()"
       >
