@@ -1,29 +1,11 @@
 
-/* Compatibility aliases only: semantic colors are owned by spartan-theme.css. */
+/* Canonical portal: shared semantic UX tokens; legacy screens migrate per slice. */
 :root {
-  --pos-canvas: var(--background);
-  --pos-surface: var(--card);
-  --pos-surface-warm: var(--muted);
-  --pos-ink: var(--foreground);
-  --pos-muted: var(--muted-foreground);
-  --pos-border: var(--border);
-  --pos-orange: var(--action);
-  --pos-orange-bright: var(--action);
-  --pos-gold: var(--preparing);
   /* V6 official decorative asset contract: use only on overview/welcome. */
   --pos-decoration-ribbon: url("/v6-ribbon-top.svg");
   --pos-decoration-wave: url("/v6-bottom-waves.svg");
   --pos-decoration-cta: url("/v6-cta-flourish.svg");
   --pos-decoration-store: url("/v6-storefront.svg");
-  --pos-mint: var(--served);
-  --pos-teal: var(--served-line);
-  --pos-orange-gradient: linear-gradient(110deg, var(--action), var(--action-hover));
-  --pos-orange-hover: var(--action-hover);
-  --pos-orange-soft: var(--primary);
-  --pos-focus: var(--ring);
-  --pos-danger: var(--destructive);
-  --pos-success: var(--served-line);
-  --pos-warning: var(--preparing-line);
   --pos-radius: 0.875rem;
   --pos-radius-lg: 1.4rem;
   --pos-shadow: 0 22px 64px rgb(21 38 43 / 8%);
@@ -40,11 +22,6 @@
   --pos-content-compact: 1040px;
   --pos-touch-target: 44px;
   --pos-body-leading: 1.6;
-  --pos-deep: var(--action);
-  --pos-deep-strong: var(--action-hover);
-  --pos-cream: var(--background);
-  --pos-field: var(--card);
-  --pos-line: var(--border);
   --pos-elevation: 0 14px 38px rgb(24 37 42 / 6%);
   --pos-shadow-subtle: 0 5px 22px rgb(21 38 43 / 5%);
 }

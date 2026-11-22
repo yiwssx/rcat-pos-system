@@ -7,6 +7,9 @@ import {
   signal,
 } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmInput } from "@spartan-ng/helm/input";
+import { HlmLabel } from "@spartan-ng/helm/label";
 import {
   MerchantOrderApi,
   PromptPayReceiverSettings,
@@ -17,9 +20,8 @@ type ReceiverKind = "mobile" | "national_id";
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, HlmButton, HlmInput, HlmLabel],
   templateUrl: "./merchant-payment-receiver.page.html",
-  styleUrls: ["./merchant-payment-receiver.css"],
 })
 export class MerchantPaymentReceiverPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
