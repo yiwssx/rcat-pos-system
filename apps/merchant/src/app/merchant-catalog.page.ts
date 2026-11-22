@@ -407,7 +407,7 @@ function bahtInput(satang: number): string {
                     <img
                       [src]="imageUrl(product)"
                       [alt]="'รูปสินค้า ' + product.name"
-                      class="catalog-media-preview size-16 shrink-0 rounded-xl border border-border bg-muted object-cover"
+                      class="catalog-media-preview size-16 shrink-0 rounded-xl border border-border bg-muted object-contain p-1"
                       loading="lazy"
                     />
                   } @else {

@@ -174,6 +174,49 @@ async function auditVisual(page, name, rootSelector = 'body') {
   if(!report.textCount||report.overflow||report.violationCount)visualFailures.push({name,...report});
   console.log('V8_VISUAL '+JSON.stringify({name,...report}));
 }
+// Use the existing ephemeral catalog response and three synthetic image shapes.
+ // This changes presentation fixtures only; the real server still owns prices,
+ // products, guest sessions and checkout. Never send real merchant images to CI.
+async function auditProductPhotos(page, name, selector) {
+  const images = page.locator(selector);
+  const count = await images.count();
+  assert.ok(count > 0, name + ': must render actual image elements');
+  for (let i = 0; i < count; i++) {
+    const image = images.nth(i);
+    await image.scrollIntoViewIfNeeded();
+    await image.evaluate(async el => { await el.decode(); });
+  }
+  const report = await images.evaluateAll(elements => elements.map(el => {
+    const frame = el.parentElement;
+    const image = el.getBoundingClientRect();
+    const box = frame.getBoundingClientRect();
+    const css = getComputedStyle(el);
+    const frameCss = getComputedStyle(frame);
+    const paddingX = parseFloat(css.paddingLeft) + parseFloat(css.paddingRight);
+    const paddingY = parseFloat(css.paddingTop) + parseFloat(css.paddingBottom);
+    const contentWidth = image.width - paddingX;
+    const contentHeight = image.height - paddingY;
+    const scale = Math.min(contentWidth / el.naturalWidth, contentHeight / el.naturalHeight);
+    return {
+      width: box.width, height: box.height,
+      naturalWidth: el.naturalWidth, naturalHeight: el.naturalHeight,
+      fit: css.objectFit, position: css.objectPosition,
+      overflow: frameCss.overflowX,
+      inside: image.left >= box.left - 1 && image.top >= box.top - 1 &&
+        image.right <= box.right + 1 && image.bottom <= box.bottom + 1,
+      fullImageFits: scale > 0 &&
+        el.naturalWidth * scale <= contentWidth + 1 &&
+        el.naturalHeight * scale <= contentHeight + 1,
+    };
+  }));
+  assert.ok(report.every(r => r.naturalWidth > 0 && r.naturalHeight > 0 &&
+    r.fit === 'contain' && r.position === '50% 50%' &&
+    r.overflow === 'hidden' && r.inside && r.fullImageFits &&
+    r.width >= 44 && r.height >= 44),
+    name + ': uncropped, bounded, responsive product photos ' + JSON.stringify(report));
+  console.log('RESPONSIVE_PHOTOS ' + JSON.stringify({name, count, report}));
+}
+
 async function auditWidths(page,name,rootSelector='body'){
   const viewport=page.viewportSize();
   for(const width of visualWidths){
@@ -455,8 +498,32 @@ async function main() {
     await tableView.getByRole('button', { name: 'ปิดรับออเดอร์', exact: true }).waitFor();
     await auditWidths(tableView,'merchant-tables');
     await tableView.screenshot({ path: '/tmp/rcat-portal-tables-mobile.png', fullPage: true });
+    const photoShapes = new Map();
+    const shapes = [[240,480],[480,240],[320,320]];
+    const catalogRoute = async route => {
+      const response = await route.fetch();
+      if (!response.ok()) return route.fulfill({response});
+      const body = await response.json();
+      if (Array.isArray(body.products)) {
+        for (const product of body.products) {
+          if (!photoShapes.has(product.id))
+            photoShapes.set(product.id, shapes[photoShapes.size % shapes.length]);
+          product.hasImage = true;
+        }
+      }
+      await route.fulfill({response,json:body});
+    };
+    await staticPage.route('**/api/guest/ordering-visit/page', catalogRoute);
+    await staticPage.route('**/api/guest/catalog-media/**', async route => {
+      const id = new URL(route.request().url()).pathname.split('/').pop();
+      const dimensions = photoShapes.get(id);
+      if (!dimensions) return route.continue();
+      const [w,h] = dimensions;
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"><rect width="'+w+'" height="'+h+'" fill="#f1d6af"/><rect x="3" y="3" width="'+(w-6)+'" height="'+(h-6)+'" fill="none" stroke="#234399" stroke-width="6"/><ellipse cx="'+w/2+'" cy="'+h/2+'" rx="'+w*0.32+'" ry="'+h*0.32+'" fill="#8b542c"/></svg>';
+      await route.fulfill({contentType:'image/svg+xml',body:svg});
+    });
     await staticPage.getByRole('button', { name: 'ตรวจสอบอีกครั้ง' }).click();
-    await staticPage.locator('.guest-product').first().waitFor();
+    await staticPage.locator('.guest-product-photo').first().waitFor();
     const guestFontLoaded = await staticPage.evaluate(async () => {
       await document.fonts.load('400 16px "RCAT Plex Thai"');
       return document.fonts.check('400 16px "RCAT Plex Thai"');
@@ -476,6 +543,21 @@ async function main() {
     assert.equal(guestPalette.active, 'rgb(223, 233, 253)', 'Guest selected category retains soft blue');
     assert.equal(guestPalette.cta, 'rgb(35, 67, 153)', 'Guest add-to-cart uses Expressive primary action');
     await auditWidths(staticPage,'customer-catalog');
+    assert.equal(photoShapes.size, 3, 'CI catalog must include all three image shapes');
+    for (const width of [320,390,480,600,768,900,1024,1366,1920]) {
+      await staticPage.setViewportSize({width,height:width<768?720:900});
+      await auditProductPhotos(staticPage,'catalog-'+width,'.guest-product-photo');
+      // Include actual resized desktop windows, not only named device sizes.
+      if ([480,600,900].includes(width)) await auditVisual(staticPage,'customer-window-'+width);
+    }
+    await staticPage.setViewportSize({width:390,height:844});
+    await staticPage.evaluate(() => document.documentElement.style.fontSize='200%');
+    try {
+      await auditProductPhotos(staticPage,'catalog-text-200','.guest-product-photo');
+    } finally {
+      await staticPage.evaluate(() => document.documentElement.style.removeProperty('font-size'));
+    }
+    await staticPage.evaluate(() => window.scrollTo(0,0));
     await staticPage.locator('.guest-add').first().hover();
     await auditVisual(staticPage,'customer-primary-hover');
     await staticPage.locator('#guest-menu-search').focus();
@@ -508,6 +590,11 @@ async function main() {
     await staticPage.locator('hlm-sheet-content[data-slot="sheet-content"]').waitFor({state:'visible'});
     await staticPage.waitForTimeout(250);
     await auditVisual(staticPage,'customer-product-sheet','hlm-sheet-content[data-slot="sheet-content"]');
+    await auditProductPhotos(staticPage,'product-detail-390','.guest-detail-media img');
+    await staticPage.setViewportSize({width:480,height:540});
+    await auditProductPhotos(staticPage,'product-detail-narrow-window','.guest-detail-media img');
+    await staticPage.setViewportSize({width:390,height:844});
+    await staticPage.unroute('**/api/guest/ordering-visit/page', catalogRoute);
     await staticPage.getByRole('dialog', { name: 'ข้าวผัด' }).getByRole('button', { name: /เพิ่มลงตะกร้า · ประมาณ/ }).click();
     await staticPage.locator('hlm-sheet-content[data-slot="sheet-content"]').waitFor({state:'hidden'});
     await staticPage.waitForFunction(()=>!document.documentElement.classList.contains('cdk-global-scrollblock'));

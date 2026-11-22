@@ -447,7 +447,7 @@ function guestError(error: unknown): string {
               </div>
             } @else {
               <div
-                class="guest-products v6-guest-products grid min-w-0 grid-cols-1 gap-3 min-[360px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+                class="guest-products v6-guest-products grid min-w-0 grid-cols-[repeat(auto-fill,minmax(min(100%,10rem),1fr))] gap-3"
                 aria-label="รายการอาหาร"
               >
                 @for (product of products(); track product.id) {
@@ -457,14 +457,14 @@ function guestError(error: unknown): string {
                   >
                     <button
                       type="button"
-                      class="guest-product-media block aspect-[4/3] w-full overflow-hidden rounded-lg border-0 bg-muted p-0 focus-visible:outline-2 focus-visible:outline-ring"
+                      class="guest-product-media relative grid aspect-[4/3] min-h-11 w-full min-w-0 max-h-44 shrink-0 place-items-center overflow-hidden rounded-lg border-0 bg-muted p-0 focus-visible:outline-2 focus-visible:outline-ring"
                       [attr.aria-label]="'ดูรายละเอียด ' + product.name"
                       [disabled]="busy()"
                       (click)="openProduct(product)"
                     >
                       @if (product.hasImage) {
                         <img
-                          class="guest-product-photo size-full object-cover"
+                          class="guest-product-photo absolute inset-0 block size-full object-contain object-center p-1.5"
                           loading="lazy"
                           [src]="
                             productImageUrl(
@@ -477,7 +477,7 @@ function guestError(error: unknown): string {
                         />
                       } @else {
                         <span
-                          class="guest-product-placeholder grid size-full place-items-center text-3xl"
+                          class="guest-product-placeholder absolute inset-0 grid size-full place-items-center text-3xl"
                           aria-hidden="true"
                           >🍽️</span
                         >
@@ -634,7 +634,7 @@ function guestError(error: unknown): string {
                 hlmSheetHeader
                 class="guest-sheet-heading flex shrink-0 flex-row items-start justify-between gap-3 border-b border-border bg-card px-4 py-3 text-left"
               >
-                <div>
+                <div class="min-w-0 break-words">
                   <span
                     class="guest-menu-kicker block text-xs font-semibold tracking-wide text-brand-foreground"
                     >รายละเอียดอาหาร</span
@@ -659,11 +659,11 @@ function guestError(error: unknown): string {
                 class="guest-sheet-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4"
               >
                 <div
-                  class="guest-detail-media grid aspect-video max-h-56 place-items-center overflow-hidden rounded-xl bg-muted text-4xl"
+                  class="guest-detail-media relative grid h-[clamp(7rem,30dvh,14rem)] w-full min-w-0 place-items-center overflow-hidden rounded-xl bg-muted text-4xl"
                 >
                   @if (product.hasImage && session.visit(); as visit) {
                     <img
-                      class="size-full object-cover"
+                      class="absolute inset-0 block size-full object-contain object-center p-2"
                       loading="lazy"
                       [src]="
                         productImageUrl(
