@@ -293,10 +293,14 @@ DECLARE
   t uuid:='00000000-0000-4000-8000-000000000001';
   s uuid:='20000000-0000-4000-8000-000000000001';
 BEGIN
-  IF rcat_private.purge_expired_payment_slip_images(t,s,1)<>1
-    OR rcat_private.purge_expired_payment_slip_images(t,s,1)<>1
-    OR rcat_private.purge_expired_payment_slip_images(t,s,100)<>0 THEN
-    RAISE EXCEPTION 'Bounded purge/retry mismatch';
+  IF rcat_private.purge_expired_payment_slip_images(t,s,1)<>1 THEN
+    RAISE EXCEPTION 'First bounded purge mismatch';
+  END IF;
+  IF rcat_private.purge_expired_payment_slip_images(t,s,1)<>1 THEN
+    RAISE EXCEPTION 'Second bounded purge mismatch';
+  END IF;
+  IF rcat_private.purge_expired_payment_slip_images(t,s,100)<>0 THEN
+    RAISE EXCEPTION 'Purge retry not idempotent';
   END IF;
   IF (SELECT count(*) FROM rcat.payment_slip_evidence
       WHERE order_id IN (current_setting('test.g5.slip.order1')::uuid,
