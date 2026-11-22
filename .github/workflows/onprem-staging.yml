@@ -55,8 +55,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: onprem-staging-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # A new push may supersede CI, but never interrupt a signed release midway.
+  group: onprem-staging-${{ github.event_name == 'workflow_dispatch' && 'signed-release' || 'ci' }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 jobs:
   build-and-inspect:
