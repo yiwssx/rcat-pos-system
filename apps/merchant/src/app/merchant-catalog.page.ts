@@ -59,21 +59,25 @@ function bahtInput(satang: number): string {
       class="mx-auto box-border w-full max-w-7xl space-y-5 px-4 pb-16 pt-6 sm:px-6 lg:px-8"
       aria-labelledby="catalog-title"
     >
-      <header class="space-y-3">
-        <a hlmBtn routerLink="/" variant="link" size="lg">← ร้านค้าของฉัน</a>
+      <header
+        class="space-y-3 rounded-2xl bg-action p-4 text-action-foreground sm:p-6"
+      >
+        <a hlmBtn routerLink="/" variant="outline">← ร้านค้าของฉัน</a>
         <p
-          class="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+          class="text-xs font-semibold uppercase tracking-widest text-action-foreground"
         >
           MERCHANT / MENU MANAGEMENT
         </p>
         <h1 id="catalog-title" class="text-3xl font-semibold">
           จัดการเมนูและสินค้า
         </h1>
-        <p class="text-base leading-relaxed text-muted-foreground">
+        <p class="text-base leading-relaxed text-action-foreground">
           ปรับราคา ชื่อ หมวดหมู่ และสถานะการขาย
           โดยไม่เปลี่ยนราคาที่บันทึกในออเดอร์เก่า
         </p>
-        <p class="rounded-xl border bg-card p-4 text-sm leading-relaxed">
+        <p
+          class="rounded-xl border border-border bg-card p-3 text-sm leading-relaxed text-foreground"
+        >
           การเก็บสินค้าเข้าคลัง (Archive) จะนำออกจากเมนูลูกค้าถาวร
           แต่ยังคงประวัติออเดอร์และสต็อก ไม่มีการรับชำระเงินจากหน้านี้
         </p>
@@ -333,7 +337,9 @@ function bahtInput(satang: number): string {
               </button>
             </div>
           </div>
-          <div class="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
+          <div
+            class="grid min-w-0 items-end gap-3 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto]"
+          >
             <div class="grid min-w-0 gap-2">
               <label hlmLabel for="catalog-search">ค้นหาชื่อสินค้า</label>
               <input
@@ -364,13 +370,10 @@ function bahtInput(satang: number): string {
                 }
               </hlm-native-select>
             </div>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
             <button
               hlmBtn
               type="button"
-              variant="outline"
-              class="min-h-11"
+              class="min-h-11 w-full md:w-auto"
               (click)="applyFilters()"
               [disabled]="pageLoading() || saving()"
             >
@@ -392,20 +395,24 @@ function bahtInput(satang: number): string {
             <article
               hlmCard
               size="sm"
-              class="catalog-product min-w-0 gap-3 p-4"
+              class="catalog-product min-w-0 gap-2 rounded-xl p-3"
             >
-              <div class="flex min-w-0 flex-col gap-4 lg:flex-row">
-                <div class="flex min-w-0 flex-1 items-start gap-3">
+              <div
+                class="catalog-product-row grid min-w-0 items-center gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_auto]"
+              >
+                <div
+                  class="flex min-w-0 items-center gap-3 sm:col-span-2 xl:col-span-1"
+                >
                   @if (product.hasImage) {
                     <img
                       [src]="imageUrl(product)"
                       [alt]="'รูปสินค้า ' + product.name"
-                      class="catalog-media-preview size-16 shrink-0 rounded-xl border border-border bg-muted object-cover sm:size-20"
+                      class="catalog-media-preview size-16 shrink-0 rounded-xl border border-border bg-muted object-cover"
                       loading="lazy"
                     />
                   } @else {
                     <span
-                      class="grid size-16 shrink-0 place-items-center rounded-xl border border-border bg-muted text-xs font-medium text-muted-foreground sm:size-20"
+                      class="grid size-16 shrink-0 place-items-center rounded-xl border border-border bg-muted text-xs font-medium text-muted-foreground"
                       aria-hidden="true"
                     >
                       ไม่มีรูป
@@ -415,16 +422,17 @@ function bahtInput(satang: number): string {
                     <h3 class="break-words font-semibold">
                       {{ product.name }}
                     </h3>
-                    <p class="mt-1 text-sm text-muted-foreground tabular-nums">
-                      {{ categoryName(product.categoryId) }} ·
+                    <p class="mt-1 text-sm text-muted-foreground">
+                      {{ categoryName(product.categoryId) }}
+                    </p>
+                    <p class="font-semibold tabular-nums text-foreground">
                       {{ money(product.priceSatang) }} บาท
                     </p>
                     <span
                       hlmBadge
-                      [variant]="
+                      variant="outline"
+                      [class.bg-served]="
                         product.available && !product.archivedAt
-                          ? 'secondary'
-                          : 'outline'
                       "
                     >
                       {{
@@ -438,12 +446,36 @@ function bahtInput(satang: number): string {
                   </div>
                 </div>
                 @if (!product.archivedAt) {
-                  <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                  <div class="flex min-w-0 flex-wrap items-center gap-2">
                     <button
                       hlmBtn
                       type="button"
                       variant="outline"
-                      class="min-h-11"
+                      [attr.aria-expanded]="imageProductId() === product.id"
+                      [attr.aria-controls]="'image-panel-' + product.id"
+                      [disabled]="saving()"
+                      (click)="toggleImageEditor(product)"
+                    >
+                      รูปสินค้า
+                    </button>
+                    <button
+                      hlmBtn
+                      type="button"
+                      variant="outline"
+                      [attr.aria-expanded]="modifierProductId() === product.id"
+                      [attr.aria-controls]="'modifier-panel-' + product.id"
+                      [disabled]="saving()"
+                      (click)="toggleModifierEditor(product)"
+                    >
+                      ตัวเลือกสินค้า
+                    </button>
+                  </div>
+                  <div
+                    class="catalog-product-actions flex min-w-0 flex-wrap items-center gap-2 xl:justify-end"
+                  >
+                    <button
+                      hlmBtn
+                      type="button"
                       [disabled]="saving()"
                       (click)="beginEdit(product)"
                     >
@@ -453,32 +485,34 @@ function bahtInput(satang: number): string {
                       hlmBtn
                       type="button"
                       variant="outline"
-                      class="min-h-11"
                       [disabled]="saving()"
                       (click)="toggleAvailability(product)"
                     >
                       {{ product.available ? "ปิดขาย" : "เปิดขาย" }}
                     </button>
-                    <button
-                      hlmBtn
-                      type="button"
-                      variant="destructive"
-                      class="min-h-11"
-                      [disabled]="saving()"
-                      (click)="archive(product)"
-                    >
-                      เก็บถาวร
-                    </button>
+                    <details class="min-w-0">
+                      <summary
+                        class="min-h-11 min-w-11 w-fit cursor-pointer rounded-lg border border-input bg-card px-3 py-2.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-ring"
+                      >
+                        เพิ่มเติม
+                      </summary>
+                      <div class="mt-2">
+                        <button
+                          hlmBtn
+                          type="button"
+                          variant="destructive"
+                          [disabled]="saving()"
+                          (click)="archive(product)"
+                        >
+                          เก็บถาวร
+                        </button>
+                      </div>
+                    </details>
                   </div>
                 }
               </div>
-              @if (!product.archivedAt) {
-                <details class="min-w-0 border-t border-border pt-3">
-                  <summary
-                    class="min-h-11 w-fit cursor-pointer rounded-lg border border-border bg-card px-4 py-2.5 font-semibold text-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                  >
-                    จัดการรูปสินค้า
-                  </summary>
+              @if (!product.archivedAt && imageProductId() === product.id) {
+                <div [attr.id]="'image-panel-' + product.id">
                   <div
                     class="mt-3 grid min-w-0 gap-3 rounded-xl border border-border bg-muted/30 p-4"
                     aria-label="รูปภาพสินค้า"
@@ -521,26 +555,13 @@ function bahtInput(satang: number): string {
                       JPG / PNG / WebP · แปลงเป็น WebP ก่อนส่ง · สูงสุด 192 KB
                     </p>
                   </div>
-                </details>
+                </div>
               }
               @if (!product.archivedAt) {
-                <button
-                  type="button"
-                  hlmBtn
-                  variant="outline"
-                  class="min-h-11 w-fit"
-                  [disabled]="saving()"
-                  (click)="toggleModifierEditor(product)"
-                >
-                  {{
-                    modifierProductId() === product.id
-                      ? "ซ่อนตัวเลือกสินค้า"
-                      : "จัดการตัวเลือกสินค้า"
-                  }}
-                </button>
                 @if (modifierProductId() === product.id) {
                   <section
                     class="catalog-modifier-panel grid gap-4 rounded-2xl border border-border bg-card p-4 md:p-6"
+                    [attr.id]="'modifier-panel-' + product.id"
                   >
                     <h4 class="text-lg font-semibold text-foreground">
                       ตัวเลือกเพิ่มเติมของ {{ product.name }}
@@ -1045,6 +1066,7 @@ export class MerchantCatalogPage implements OnInit {
   readonly error = signal("");
   readonly success = signal("");
   readonly editId = signal<string | null>(null);
+  readonly imageProductId = signal<string | null>(null);
   readonly page = signal(1);
   readonly pageSize = CATALOG_PAGE_SIZE;
   readonly categoryEditId = signal<string | null>(null);
@@ -1442,6 +1464,10 @@ export class MerchantCatalogPage implements OnInit {
         ),
       "บันทึกหมวดหมู่แล้ว",
     );
+  }
+
+  toggleImageEditor(product: CatalogProduct): void {
+    this.imageProductId.update((id) => (id === product.id ? null : product.id));
   }
 
   toggleModifierEditor(product: CatalogProduct): void {

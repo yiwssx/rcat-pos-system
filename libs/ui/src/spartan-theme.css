@@ -1,6 +1,9 @@
-/* Owner-approved Modern Pastel SaaS Hybrid: opaque light surfaces, dark text. */
+/* Modern Expressive SaaS: strong actions, soft semantic surfaces, opaque contrast. */
 :root {
-  --background: #f5f7fc;
+  --background: #f1f5fb;
+  --action: #234399;
+  --action-hover: #193477;
+  --action-foreground: #ffffff;
   --foreground: #000000;
   --card: #ffffff;
   --card-foreground: #000000;
@@ -25,9 +28,9 @@
   --incoming-foreground: #000000;
   --accepted: #e8dffc;
   --accepted-foreground: #000000;
-  --preparing: #fbebcf;
+  --preparing: #ffe0a3;
   --preparing-foreground: #000000;
-  --served: #e2f2e9;
+  --served: #bdebd8;
   --served-foreground: #000000;
   --primary-line: #526dac;
   --secondary-line: #7562a4;
@@ -46,6 +49,9 @@
 }
 @theme inline {
   --color-background: var(--background);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-foreground: var(--action-foreground);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);

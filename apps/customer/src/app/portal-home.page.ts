@@ -231,19 +231,19 @@ import { HlmCard, HlmCardContent, HlmCardHeader } from "@spartan-ng/helm/card";
         @case ("staff") {
           <section class="grid min-w-0 gap-6" aria-label="พื้นที่ทำงานร้านค้า">
             <header
-              class="flex min-w-0 flex-col gap-4 rounded-2xl border border-border bg-primary p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
+              class="flex min-w-0 flex-col gap-4 rounded-2xl bg-action text-action-foreground p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
             >
               <div class="grid min-w-0 gap-2">
-                <p class="text-sm font-medium text-muted-foreground">
+                <p class="text-sm font-medium text-action-foreground">
                   พื้นที่จัดการร้านค้า
                 </p>
                 <h1
                   id="portal-title"
-                  class="text-2xl font-semibold leading-9 tracking-tight text-foreground"
+                  class="text-2xl font-semibold leading-9 tracking-tight text-action-foreground"
                 >
                   เริ่มงานที่ร้าน
                 </h1>
-                <p class="text-sm leading-6 text-muted-foreground">
+                <p class="text-sm leading-6 text-action-foreground">
                   จัดการออเดอร์ เมนู และโต๊ะตามสิทธิ์ที่ระบบกำหนด
                 </p>
                 @if (
