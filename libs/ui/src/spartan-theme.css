@@ -46,6 +46,30 @@
   --served-line: #387557;
   --danger-soft: #fce4e6;
   --radius: 0.75rem;
+  /* Legacy color names are compatibility aliases, never a second palette. */
+  --pos-canvas: var(--background);
+  --pos-surface: var(--card);
+  --pos-surface-warm: var(--muted);
+  --pos-ink: var(--foreground);
+  --pos-muted: var(--muted-foreground);
+  --pos-border: var(--border);
+  --pos-orange: var(--action);
+  --pos-orange-bright: var(--action);
+  --pos-gold: var(--preparing);
+  --pos-mint: var(--served);
+  --pos-teal: var(--served-line);
+  --pos-orange-gradient: linear-gradient(110deg, var(--action), var(--action-hover));
+  --pos-orange-hover: var(--action-hover);
+  --pos-orange-soft: var(--primary);
+  --pos-focus: var(--ring);
+  --pos-danger: var(--destructive);
+  --pos-success: var(--served-line);
+  --pos-warning: var(--preparing-line);
+  --pos-deep: var(--action);
+  --pos-deep-strong: var(--action-hover);
+  --pos-cream: var(--background);
+  --pos-field: var(--card);
+  --pos-line: var(--border);
 }
 @theme inline {
   --color-background: var(--background);

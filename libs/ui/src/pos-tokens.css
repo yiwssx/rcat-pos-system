@@ -1,29 +1,11 @@
 
 /* Canonical portal: shared semantic UX tokens; legacy screens migrate per slice. */
 :root {
-  --pos-canvas: #fffaf3;
-  --pos-surface: #ffffff;
-  --pos-surface-warm: #fff3df;
-  --pos-ink: #1f2933;
-  --pos-muted: #536577;
-  --pos-border: #f0e4d5;
-  --pos-orange: #c94108;
-  --pos-orange-bright: #ff7900;
-  --pos-gold: #ffc23b;
   /* V6 official decorative asset contract: use only on overview/welcome. */
   --pos-decoration-ribbon: url("/v6-ribbon-top.svg");
   --pos-decoration-wave: url("/v6-bottom-waves.svg");
   --pos-decoration-cta: url("/v6-cta-flourish.svg");
   --pos-decoration-store: url("/v6-storefront.svg");
-  --pos-mint: #e4faf3;
-  --pos-teal: #087c72;
-  --pos-orange-gradient: linear-gradient(110deg, #c94108 0%, #e65b09 58%, #ff8200 100%);
-  --pos-orange-hover: #a73206;
-  --pos-orange-soft: #fff1d8;
-  --pos-focus: #087c72;
-  --pos-danger: #a33135;
-  --pos-success: #087c72;
-  --pos-warning: #a65705;
   --pos-radius: 0.875rem;
   --pos-radius-lg: 1.4rem;
   --pos-shadow: 0 22px 64px rgb(21 38 43 / 8%);
@@ -40,11 +22,6 @@
   --pos-content-compact: 1040px;
   --pos-touch-target: 44px;
   --pos-body-leading: 1.6;
-  --pos-deep: #21383d;
-  --pos-deep-strong: #172a30;
-  --pos-cream: #fffaf0;
-  --pos-field: #fffdfa;
-  --pos-line: #eee6dc;
   --pos-elevation: 0 14px 38px rgb(24 37 42 / 6%);
   --pos-shadow-subtle: 0 5px 22px rgb(21 38 43 / 5%);
 }

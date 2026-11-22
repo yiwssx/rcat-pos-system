@@ -7,6 +7,9 @@ import {
   signal,
 } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmInput } from "@spartan-ng/helm/input";
+import { HlmLabel } from "@spartan-ng/helm/label";
 import { MerchantOrderApi, PaymentSlipReview } from "./merchant-order.api";
 import { formatOrderNumber, formatSatang } from "./order-board.domain";
 
@@ -21,35 +24,67 @@ function satangFromInput(text: string): number | null {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, HlmButton, HlmInput, HlmLabel],
   template: `
-    <section class="review-shell" aria-labelledby="review-title">
-      <a [routerLink]="['/orders', tenantId, storeId]">← กลับกระดานออเดอร์</a>
-      <span class="eyebrow">ตรวจสอบการชำระเงิน</span>
-      <h1 id="review-title">ตรวจสลิป PromptPay</h1>
-      <p class="review-warning">
+    <section
+      class="review-shell mx-auto grid w-full min-w-0 max-w-5xl gap-4 p-4 sm:p-6"
+      aria-labelledby="review-title"
+    >
+      <a
+        hlmBtn
+        variant="link"
+        class="w-fit px-0"
+        [routerLink]="['/orders', tenantId, storeId]"
+        >← กลับกระดานออเดอร์</a
+      >
+      <span class="eyebrow text-xs font-semibold tracking-wide text-foreground"
+        >ตรวจสอบการชำระเงิน</span
+      >
+      <h1
+        class="m-0 text-2xl font-semibold leading-tight sm:text-3xl"
+        id="review-title"
+      >
+        ตรวจสลิป PromptPay
+      </h1>
+      <p
+        class="review-warning rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground"
+      >
         ตรวจสอบยอดเงินเข้าจริงในบัญชีธนาคารของร้านทุกครั้งก่อนกดยืนยัน
         รูปสลิปอย่างเดียวไม่ใช่หลักฐานว่าได้รับเงินแล้ว
       </p>
       @if (error()) {
-        <p class="review-error" role="alert">{{ error() }}</p>
+        <p
+          class="review-error rounded-xl border border-destructive bg-danger-soft p-3 text-foreground"
+          role="alert"
+        >
+          {{ error() }}
+        </p>
       }
       @if (notice()) {
         <p role="status">{{ notice() }}</p>
       }
-      <button type="button" (click)="refresh()" [disabled]="loading()">
+      <button hlmBtn type="button" (click)="refresh()" [disabled]="loading()">
         {{ loading() ? "กำลังโหลด..." : "รีเฟรชคิวตรวจสลิป" }}
       </button>
       @if (allowed()) {
-        <p class="review-muted">สลิปรอตรวจ {{ items().length }} รายการล่าสุด</p>
+        <p class="review-muted text-sm text-muted-foreground">
+          สลิปรอตรวจ {{ items().length }} รายการล่าสุด
+        </p>
         @if (!loading() && !items().length) {
           <p>ขณะนี้ไม่มีสลิปที่รอการตรวจสอบ</p>
         }
-        <div class="review-layout">
-          <div class="review-list">
+        <div
+          class="review-layout grid min-w-0 gap-4 md:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]"
+        >
+          <div class="review-list grid content-start gap-2">
             @for (item of items(); track item.slipId) {
               <button
+                hlmBtn
                 type="button"
+                [variant]="
+                  selected()?.slipId === item.slipId ? 'selected' : 'outline'
+                "
+                class="grid justify-items-start text-left"
                 [class.is-selected]="selected()?.slipId === item.slipId"
                 (click)="choose(item)"
               >
@@ -60,24 +95,33 @@ function satangFromInput(text: string): number | null {
             }
           </div>
           @if (selected(); as slip) {
-            <section class="review-detail" aria-labelledby="slip-heading">
-              <h2 id="slip-heading">
+            <section
+              class="review-detail grid min-w-0 gap-3 rounded-xl border border-border bg-card p-4"
+              aria-labelledby="slip-heading"
+            >
+              <h2 class="text-lg font-semibold" id="slip-heading">
                 ตรวจหลักฐานของ Order {{ number(slip.displayNumber) }}
               </h2>
               <p>
                 <strong>ยอดที่ต้องรับ: {{ money(slip.amountSatang) }} ฿</strong>
               </p>
               <img
+                class="max-h-110 w-full max-w-85 rounded-lg bg-muted object-contain"
                 [src]="imageUrl()"
                 alt="สลิปที่ลูกค้าส่งเพื่อให้ร้านตรวจสอบยอดเงินจริง"
                 width="340"
               />
-              <p class="review-warning">
+              <p
+                class="review-warning rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground"
+              >
                 เปรียบเทียบผู้รับเงิน จำนวนเงิน เวลา และรหัสธุรกรรม
                 กับรายการเงินเข้าจริงในบัญชีร้าน ไม่ยืนยันจากรูปภาพอย่างเดียว
               </p>
-              <label for="bank-ref">รหัสอ้างอิงธุรกรรมจากธนาคาร *</label>
+              <label hlmLabel for="bank-ref"
+                >รหัสอ้างอิงธุรกรรมจากธนาคาร *</label
+              >
               <input
+                hlmInput
                 id="bank-ref"
                 type="text"
                 autocomplete="off"
@@ -86,10 +130,11 @@ function satangFromInput(text: string): number | null {
                 (input)="bankReference.set($any($event.target).value)"
                 placeholder="รหัสธุรกรรมจากรายการเงินเข้า"
               />
-              <label for="actual-amount"
+              <label hlmLabel for="actual-amount"
                 >จำนวนเงินที่เข้าบัญชีจริง (บาท) *</label
               >
               <input
+                hlmInput
                 id="actual-amount"
                 inputmode="decimal"
                 type="text"
@@ -98,16 +143,18 @@ function satangFromInput(text: string): number | null {
                 (input)="actualAmount.set($any($event.target).value)"
                 placeholder="เช่น 120.00"
               />
-              <label class="review-check">
+              <label class="review-check flex items-start gap-3">
                 <input
+                  class="size-5 shrink-0 accent-action"
                   type="checkbox"
                   [checked]="bankChecked()"
                   (change)="bankChecked.set($any($event.target).checked)"
                 />
                 ฉันตรวจสอบยอดเงินเข้าจริงจากบัญชีธนาคารร้านแล้ว
               </label>
-              <div class="review-actions">
+              <div class="review-actions flex flex-wrap gap-3">
                 <button
+                  hlmBtn
                   type="button"
                   class="review-confirm"
                   [disabled]="!canConfirm() || busy()"
@@ -116,7 +163,9 @@ function satangFromInput(text: string): number | null {
                   ยืนยันว่ารับเงินจริงแล้ว
                 </button>
                 <button
+                  hlmBtn
                   type="button"
+                  variant="destructive"
                   class="review-reject"
                   [disabled]="busy()"
                   (click)="decide('reject')"
@@ -130,130 +179,6 @@ function satangFromInput(text: string): number | null {
       }
     </section>
   `,
-  styles: [
-    `
-      .review-shell {
-        max-width: 1050px;
-        margin: auto;
-        padding: 1.2rem;
-      }
-      .review-shell h1 {
-        margin: 0.4rem 0 0.8rem;
-      }
-      .eyebrow {
-        display: block;
-        margin-top: 0.9rem;
-        font-size: 0.75rem;
-        letter-spacing: 0.08em;
-        color: #8a440d;
-      }
-      .review-warning {
-        padding: 0.85rem;
-        border-radius: 0.8rem;
-        background: #fff4e4;
-        color: #643c1b;
-      }
-      .review-error {
-        color: #ae2727;
-        font-weight: 650;
-      }
-      .review-muted {
-        color: #5c6673;
-        font-size: 0.9rem;
-      }
-      .review-layout {
-        display: grid;
-        grid-template-columns: minmax(190px, 300px) minmax(0, 1fr);
-        gap: 1rem;
-        margin-top: 1rem;
-      }
-      .review-list {
-        display: grid;
-        align-content: start;
-        gap: 0.5rem;
-      }
-      .review-list button {
-        text-align: left;
-        border: 1px solid #e5d9ca;
-        background: #fff;
-        border-radius: 0.75rem;
-        padding: 0.85rem;
-        display: grid;
-        gap: 0.3rem;
-      }
-      .review-list button.is-selected {
-        border: 2px solid #c94e08;
-      }
-      .review-detail {
-        min-width: 0;
-        display: grid;
-        gap: 0.55rem;
-        background: white;
-        border: 1px solid #e7dccf;
-        border-radius: 1rem;
-        padding: 1.1rem;
-      }
-      .review-detail h2 {
-        font-size: 1.05rem;
-        margin: 0;
-      }
-      .review-detail img {
-        width: min(100%, 340px);
-        max-height: 440px;
-        object-fit: contain;
-        background: #f5f5f5;
-        border-radius: 0.5rem;
-      }
-      .review-detail input[type="text"] {
-        width: 100%;
-        min-height: 44px;
-        padding: 0.65rem;
-        border: 1px solid #bdbdbd;
-        border-radius: 0.5rem;
-      }
-      .review-check {
-        display: flex;
-        align-items: start;
-        gap: 0.5rem;
-        padding: 0.6rem 0;
-      }
-      .review-check input {
-        width: 20px;
-        height: 20px;
-      }
-      .review-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.6rem;
-      }
-      .review-actions button,
-      .review-shell > button {
-        min-height: 44px;
-        padding: 0.6rem 0.9rem;
-        border-radius: 0.6rem;
-        cursor: pointer;
-      }
-      .review-confirm {
-        background: #b9470e;
-        color: #fff;
-        border: none;
-      }
-      .review-reject {
-        background: #fff;
-        border: 1px solid #9d4b4b;
-        color: #7a2020;
-      }
-      button:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-      }
-      @media (max-width: 680px) {
-        .review-layout {
-          grid-template-columns: 1fr;
-        }
-      }
-    `,
-  ],
 })
 export class PaymentReviewPage implements OnInit {
   private readonly route = inject(ActivatedRoute);

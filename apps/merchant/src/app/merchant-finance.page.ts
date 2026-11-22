@@ -7,6 +7,9 @@ import {
   signal,
 } from "@angular/core";
 import { ActivatedRoute, RouterLink } from "@angular/router";
+import { HlmButton } from "@spartan-ng/helm/button";
+import { HlmInput } from "@spartan-ng/helm/input";
+import { HlmLabel } from "@spartan-ng/helm/label";
 import {
   FinanceException,
   FinanceRefund,
@@ -41,43 +44,84 @@ function satang(text: string): number | null {
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
-  styleUrls: ["./payment-finance.css"],
+  imports: [RouterLink, HlmButton, HlmInput, HlmLabel],
   template: `
-    <main class="finance-shell">
-      <a [routerLink]="['/orders', tenantId, storeId]">← กลับกระดานออเดอร์</a>
-      <span class="finance-kicker">รายงานการชำระเงิน</span>
-      <h1>กระทบยอดและคืนเงิน</h1>
-      <p class="finance-warning">
+    <main
+      class="finance-shell mx-auto grid w-full min-w-0 max-w-6xl gap-4 p-4 sm:p-6"
+    >
+      <a
+        hlmBtn
+        variant="link"
+        class="w-fit px-0"
+        [routerLink]="['/orders', tenantId, storeId]"
+        >← กลับกระดานออเดอร์</a
+      >
+      <span
+        class="finance-kicker text-xs font-semibold tracking-wide text-foreground"
+        >รายงานการชำระเงิน</span
+      >
+      <h1 class="m-0 text-2xl font-semibold leading-tight sm:text-3xl">
+        กระทบยอดและคืนเงิน
+      </h1>
+      <p
+        class="finance-warning rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground"
+      >
         ยอดรับเงินและคืนเงินในหน้านี้เป็นรายการที่พนักงานบันทึกหลังตรวจธนาคาร
         การบันทึกคืนเงินไม่ได้โอนเงินให้อัตโนมัติ
       </p>
-      <div class="finance-top">
-        <label for="finance-days">ช่วงรายงาน</label>
-        <select id="finance-days" [value]="days()" (change)="setDays($event)">
+      <div class="finance-top flex flex-wrap items-center gap-3">
+        <label hlmLabel for="finance-days">ช่วงรายงาน</label>
+        <select
+          class="min-h-11 max-w-full rounded-xl border border-input bg-card px-3 py-2 text-foreground"
+          id="finance-days"
+          [value]="days()"
+          (change)="setDays($event)"
+        >
           <option value="7">7 วัน</option>
           <option value="30">30 วัน</option>
           <option value="90">90 วัน</option>
         </select>
-        <button type="button" (click)="load()" [disabled]="loading()">
+        <button hlmBtn type="button" (click)="load()" [disabled]="loading()">
           {{ loading() ? "กำลังโหลด..." : "รีเฟรชรายงาน" }}
         </button>
       </div>
       @if (error()) {
-        <p class="finance-error" role="alert">{{ error() }}</p>
+        <p
+          class="finance-error rounded-xl border border-destructive bg-danger-soft p-3 text-foreground"
+          role="alert"
+        >
+          {{ error() }}
+        </p>
       }
       @if (notice()) {
-        <p role="status" class="finance-notice">{{ notice() }}</p>
+        <p
+          role="status"
+          class="finance-notice rounded-xl border border-served-line bg-served p-3 text-served-foreground"
+        >
+          {{ notice() }}
+        </p>
       }
       @if (report(); as data) {
-        <div class="finance-stats">
-          <article>
-            <small>ยอดออเดอร์ในช่วง (ไม่ใช่เงินรับ)</small>
+        <div
+          class="finance-stats grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
+        >
+          <article
+            class="grid min-w-0 gap-2 rounded-xl border border-border bg-card p-4"
+          >
+            <small class="text-sm text-muted-foreground"
+              >ยอดออเดอร์ในช่วง (ไม่ใช่เงินรับ)</small
+            >
             <strong>{{ summaryMoney(data.summary.orderTotalSatang) }} ฿</strong>
-            <small>{{ data.summary.orderCount }} ออเดอร์</small>
+            <small class="text-sm text-muted-foreground"
+              >{{ data.summary.orderCount }} ออเดอร์</small
+            >
           </article>
-          <article>
-            <small>ยังไม่มีการยืนยันรับเงิน</small>
+          <article
+            class="grid min-w-0 gap-2 rounded-xl border border-border bg-card p-4"
+          >
+            <small class="text-sm text-muted-foreground"
+              >ยังไม่มีการยืนยันรับเงิน</small
+            >
             <strong
               >{{ summaryMoney(data.summary.outstandingSatang) }} ฿</strong
             >
@@ -88,25 +132,37 @@ function satang(text: string): number | null {
               ออเดอร์ไม่ถูกยกเลิก</small
             >
           </article>
-          <article>
-            <small>ยอดรับที่ร้านยืนยันในช่วง</small>
+          <article
+            class="grid min-w-0 gap-2 rounded-xl border border-border bg-card p-4"
+          >
+            <small class="text-sm text-muted-foreground"
+              >ยอดรับที่ร้านยืนยันในช่วง</small
+            >
             <strong
               >{{ summaryMoney(data.summary.manualReceiptSatang) }} ฿</strong
             >
-            <small>พนักงานตรวจสอบและบันทึก</small>
+            <small class="text-sm text-muted-foreground"
+              >พนักงานตรวจสอบและบันทึก</small
+            >
           </article>
-          <article>
-            <small>คืนเงินที่ร้านบันทึกในช่วง</small>
+          <article
+            class="grid min-w-0 gap-2 rounded-xl border border-border bg-card p-4"
+          >
+            <small class="text-sm text-muted-foreground"
+              >คืนเงินที่ร้านบันทึกในช่วง</small
+            >
             <strong
               >{{
                 summaryMoney(data.summary.manualRefundRecordedSatang)
               }}
               ฿</strong
             >
-            <small>สุทธิจากรายการที่พนักงานบันทึก {{ manualNet() }} ฿</small>
+            <small class="text-sm text-muted-foreground"
+              >สุทธิจากรายการที่พนักงานบันทึก {{ manualNet() }} ฿</small
+            >
           </article>
         </div>
-        <p class="finance-subtle">
+        <p class="finance-subtle text-sm leading-relaxed text-muted-foreground">
           สลิปรอตรวจ {{ data.summary.submittedSlipCount }} รายการ ·
           คำขอคืนเงินค้าง
           {{ summaryMoney(data.summary.manualRefundPendingSatang) }} ฿ ·
@@ -114,21 +170,26 @@ function satang(text: string): number | null {
           ออเดอร์ยกเลิกหลังยืนยันเงิน
           {{ data.summary.cancelledConfirmedCount }} รายการ
         </p>
-        <p class="finance-subtle">
+        <p class="finance-subtle text-sm leading-relaxed text-muted-foreground">
           ยอดออเดอร์นับตามวันที่สั่ง
           ส่วนยอดรับและคืนเงินนับตามวันที่พนักงานตรวจบันทึก
           จึงไม่ควรนำสองคอลัมน์มาหักลบกันแทนการตรวจรายการธนาคาร
         </p>
 
-        <details open>
-          <summary>
+        <details
+          class="min-w-0 rounded-xl border border-border bg-card p-4"
+          open
+        >
+          <summary class="min-h-11 cursor-pointer py-2 font-semibold">
             ออเดอร์ยังไม่ยืนยันรับเงิน ({{
               data.summary.outstandingOrderCount
             }})
           </summary>
-          <div class="finance-list">
+          <div class="finance-list grid gap-3 py-3">
             @for (order of data.outstandingOrders; track order.orderId) {
-              <div class="finance-item">
+              <div
+                class="finance-item grid min-w-0 gap-2 rounded-xl border border-border bg-muted p-3"
+              >
                 <strong>Order {{ number(order.displayNumber) }}</strong>
                 <span>{{ money(order.amountSatang) }} ฿</span>
                 <small
@@ -145,17 +206,19 @@ function satang(text: string): number | null {
           >
         </details>
 
-        <details>
-          <summary>
+        <details class="min-w-0 rounded-xl border border-border bg-card p-4">
+          <summary class="min-h-11 cursor-pointer py-2 font-semibold">
             คำขอคืนเงินและบันทึกการโอนคืน ({{ data.refunds.length }})
           </summary>
           <p>
             คืนเงินจริงผ่านแอปธนาคารของร้านแยกต่างหาก
             ระบบนี้บันทึกหลักฐานการตรวจเท่านั้น
           </p>
-          <div class="finance-list">
+          <div class="finance-list grid gap-3 py-3">
             @for (refund of data.refunds; track refund.refundId) {
-              <div class="finance-item">
+              <div
+                class="finance-item grid min-w-0 gap-2 rounded-xl border border-border bg-muted p-3"
+              >
                 <strong>Order {{ number(refund.displayNumber) }}</strong>
                 <span
                   >{{ money(refund.amountSatang) }} ฿ ·
@@ -165,12 +228,14 @@ function satang(text: string): number | null {
                   >{{ refund.reason }} · {{ when(refund.requestedAt) }}</small
                 >
                 @if (refund.state === "pending") {
-                  <div class="finance-actions">
-                    <button type="button" (click)="selectRefund(refund)">
+                  <div class="finance-actions flex flex-wrap gap-2">
+                    <button hlmBtn type="button" (click)="selectRefund(refund)">
                       บันทึกผลโอนคืน
                     </button>
                     <button
+                      hlmBtn
                       type="button"
+                      variant="outline"
                       class="finance-quiet"
                       [disabled]="busy()"
                       (click)="voidRefund(refund)"
@@ -185,29 +250,40 @@ function satang(text: string): number | null {
             }
           </div>
           @if (selectedRefund(); as refund) {
-            <section class="finance-action-form">
-              <h3>บันทึกการโอนคืน Order {{ number(refund.displayNumber) }}</h3>
+            <section
+              class="finance-action-form grid max-w-2xl gap-3 border-t border-border py-4"
+            >
+              <h3 class="text-base font-semibold">
+                บันทึกการโอนคืน Order {{ number(refund.displayNumber) }}
+              </h3>
               <p>
                 ตรวจในบัญชีธนาคารก่อนทำเครื่องหมาย · ยอดคืน
                 {{ money(refund.amountSatang) }} ฿
               </p>
-              <label for="refund-bank-ref">รหัสธุรกรรมเงินออกจากธนาคาร</label>
+              <label hlmLabel for="refund-bank-ref"
+                >รหัสธุรกรรมเงินออกจากธนาคาร</label
+              >
               <input
+                hlmInput
                 id="refund-bank-ref"
                 [value]="bankRef()"
                 autocomplete="off"
                 maxlength="64"
                 (input)="bankRef.set($any($event.target).value)"
               />
-              <label for="refund-actual">จำนวนเงินโอนคืนจริง (บาท)</label>
+              <label hlmLabel for="refund-actual"
+                >จำนวนเงินโอนคืนจริง (บาท)</label
+              >
               <input
+                hlmInput
                 id="refund-actual"
                 inputmode="decimal"
                 [value]="actualRefund()"
                 (input)="actualRefund.set($any($event.target).value)"
               />
-              <label class="finance-check">
+              <label class="finance-check flex items-start gap-3">
                 <input
+                  class="size-5 shrink-0 accent-action"
                   type="checkbox"
                   [checked]="bankChecked()"
                   (change)="bankChecked.set($any($event.target).checked)"
@@ -215,6 +291,7 @@ function satang(text: string): number | null {
                 ฉันตรวจสอบรายการเงินออกจากบัญชีร้านด้วยตัวเองแล้ว
               </label>
               <button
+                hlmBtn
                 type="button"
                 [disabled]="!canRecordRefund() || busy()"
                 (click)="recordRefund()"
@@ -223,12 +300,15 @@ function satang(text: string): number | null {
               </button>
             </section>
           }
-          <section class="finance-action-form">
-            <h3>สร้างคำขอคืนเงิน</h3>
-            <label for="refund-order"
+          <section
+            class="finance-action-form grid max-w-2xl gap-3 border-t border-border py-4"
+          >
+            <h3 class="text-base font-semibold">สร้างคำขอคืนเงิน</h3>
+            <label hlmLabel for="refund-order"
               >เลือก Order ที่ร้านเคยยืนยันรับเงิน</label
             >
             <select
+              class="min-h-11 max-w-full rounded-xl border border-input bg-card px-3 py-2 text-foreground"
               id="refund-order"
               [value]="refundOrderId()"
               (change)="selectConfirmed($event)"
@@ -241,30 +321,34 @@ function satang(text: string): number | null {
                 </option>
               }
             </select>
-            <label for="refund-order-manual">
+            <label hlmLabel for="refund-order-manual">
               หรือระบุรหัสออเดอร์จากระบบ (กรณีไม่อยู่ในรายการ)
             </label>
             <input
+              hlmInput
               id="refund-order-manual"
               [value]="refundOrderId()"
               (input)="refundOrderId.set($any($event.target).value)"
               placeholder="รหัสออเดอร์จากระบบ"
             />
-            <label for="refund-amount">ยอดขอคืน (บาท)</label>
+            <label hlmLabel for="refund-amount">ยอดขอคืน (บาท)</label>
             <input
+              hlmInput
               id="refund-amount"
               inputmode="decimal"
               [value]="refundAmount()"
               (input)="refundAmount.set($any($event.target).value)"
             />
-            <label for="refund-reason">เหตุผลการคืนเงิน</label>
+            <label hlmLabel for="refund-reason">เหตุผลการคืนเงิน</label>
             <input
+              hlmInput
               id="refund-reason"
               maxlength="240"
               [value]="refundReason()"
               (input)="refundReason.set($any($event.target).value)"
             />
             <button
+              hlmBtn
               type="button"
               [disabled]="!canRequestRefund() || busy()"
               (click)="requestRefund()"
@@ -274,8 +358,8 @@ function satang(text: string): number | null {
           </section>
         </details>
 
-        <details>
-          <summary>
+        <details class="min-w-0 rounded-xl border border-border bg-card p-4">
+          <summary class="min-h-11 cursor-pointer py-2 font-semibold">
             รายการผิดปกติและกระทบยอด ({{ data.summary.openExceptionCount }}
             เปิดอยู่)
           </summary>
@@ -283,9 +367,11 @@ function satang(text: string): number | null {
             ใช้สำหรับเงินโอนขาด/เกิน ซ้ำ โอนล่าช้า และยอดไม่พบ Order
             รายการนี้ไม่เปลี่ยนสถานะชำระหรือคืนเงินของ Order
           </p>
-          <div class="finance-list">
+          <div class="finance-list grid gap-3 py-3">
             @for (item of data.exceptions; track item.exceptionId) {
-              <div class="finance-item">
+              <div
+                class="finance-item grid min-w-0 gap-2 rounded-xl border border-border bg-muted p-3"
+              >
                 <strong>{{ exceptionName(item.kind) }}</strong>
                 <span
                   >{{ item.state === "open" ? "รอดำเนินการ" : "แก้ไขแล้ว" }}
@@ -293,9 +379,12 @@ function satang(text: string): number | null {
                     · {{ money(item.amountSatang) }} ฿
                   }
                 </span>
-                <small>{{ item.note }}</small>
+                <small class="text-sm text-muted-foreground">{{
+                  item.note
+                }}</small>
                 @if (item.state === "open") {
                   <button
+                    hlmBtn
                     type="button"
                     [disabled]="busy()"
                     (click)="selectedException.set(item); resolution.set('')"
@@ -309,16 +398,22 @@ function satang(text: string): number | null {
             }
           </div>
           @if (selectedException(); as item) {
-            <section class="finance-action-form">
-              <h3>ปิดรายการผิดปกติ: {{ exceptionName(item.kind) }}</h3>
-              <label for="exception-resolution">วิธีจัดการจริง</label>
+            <section
+              class="finance-action-form grid max-w-2xl gap-3 border-t border-border py-4"
+            >
+              <h3 class="text-base font-semibold">
+                ปิดรายการผิดปกติ: {{ exceptionName(item.kind) }}
+              </h3>
+              <label hlmLabel for="exception-resolution">วิธีจัดการจริง</label>
               <input
+                hlmInput
                 id="exception-resolution"
                 maxlength="240"
                 [value]="resolution()"
                 (input)="resolution.set($any($event.target).value)"
               />
               <button
+                hlmBtn
                 type="button"
                 [disabled]="busy() || resolution().trim().length < 4"
                 (click)="resolveException()"
@@ -327,10 +422,13 @@ function satang(text: string): number | null {
               </button>
             </section>
           }
-          <section class="finance-action-form">
-            <h3>เพิ่มรายการผิดปกติ</h3>
-            <label for="exception-kind">ประเภท</label>
+          <section
+            class="finance-action-form grid max-w-2xl gap-3 border-t border-border py-4"
+          >
+            <h3 class="text-base font-semibold">เพิ่มรายการผิดปกติ</h3>
+            <label hlmLabel for="exception-kind">ประเภท</label>
             <select
+              class="min-h-11 max-w-full rounded-xl border border-input bg-card px-3 py-2 text-foreground"
               id="exception-kind"
               [value]="exceptionKind()"
               (change)="exceptionKind.set($any($event.target).value)"
@@ -339,32 +437,38 @@ function satang(text: string): number | null {
                 <option [value]="entry[0]">{{ entry[1] }}</option>
               }
             </select>
-            <label for="exception-order">รหัสออเดอร์จากระบบ (ไม่บังคับ)</label>
+            <label hlmLabel for="exception-order"
+              >รหัสออเดอร์จากระบบ (ไม่บังคับ)</label
+            >
             <input
+              hlmInput
               id="exception-order"
               [value]="exceptionOrder()"
               (input)="exceptionOrder.set($any($event.target).value)"
               placeholder="ไม่ระบุหากเป็นยอดโอนที่ไม่พบออเดอร์"
             />
-            <label for="exception-amount"
+            <label hlmLabel for="exception-amount"
               >จำนวนเงินที่เกี่ยวข้อง (บาท ไม่บังคับ)</label
             >
             <input
+              hlmInput
               id="exception-amount"
               inputmode="decimal"
               [value]="exceptionAmount()"
               (input)="exceptionAmount.set($any($event.target).value)"
             />
-            <label for="exception-note"
+            <label hlmLabel for="exception-note"
               >รายละเอียด (ไม่ใส่เลขบัญชีหรือข้อมูลอ่อนไหว)</label
             >
             <input
+              hlmInput
               id="exception-note"
               maxlength="240"
               [value]="exceptionNote()"
               (input)="exceptionNote.set($any($event.target).value)"
             />
             <button
+              hlmBtn
               type="button"
               [disabled]="busy() || !canOpenException()"
               (click)="openException()"
@@ -373,7 +477,7 @@ function satang(text: string): number | null {
             </button>
           </section>
         </details>
-        <p class="finance-footer">
+        <p class="finance-footer text-sm leading-relaxed text-muted-foreground">
           รวบรวมเฉพาะ 50 รายการต่อหมวดในหน้าจอ;
           ยอดรวมรายงานคำนวณจากทั้งฐานข้อมูล ห้ามใช้การสรุปนี้แทน Bank Statement
           หรือออกหลักฐานการชำระเงินอัตโนมัติ
