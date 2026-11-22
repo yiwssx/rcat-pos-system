@@ -280,6 +280,7 @@ export interface PaymentSlipReview {
   revision: number;
   submittedAt: string;
   state: "submitted";
+  imageAvailable?: boolean;
 }
 
 export interface PromptPayReceiverSettings {
