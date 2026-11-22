@@ -7,16 +7,11 @@
 @import "../../../libs/ui/src/pos-thai-type.css";
 :root {
   color-scheme: light;
-  font-family:
-    "Noto Sans Thai",
-    Tahoma,
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: var(--pos-font);
   font-synthesis: none;
   font-size: 16px;
-  background: #f5f7fa;
-  color: #1a2942;
+  background: var(--background);
+  color: var(--foreground);
 }
 *,
 *::before,
@@ -48,7 +43,7 @@ a {
 }
 .brand {
   font-size: 1.15rem;
-  font-weight: 850;
+  font-weight: 700;
   letter-spacing: -0.03em;
   text-decoration: none;
   display: inline-flex;
@@ -58,15 +53,15 @@ a {
 .brand-mark {
   display: inline-grid;
   place-items: center;
-  background: #14233b;
-  color: white;
+  background: var(--action);
+  color: var(--action-foreground);
   width: 2.3rem;
   height: 2.3rem;
   border-radius: 0.6rem;
   margin-right: 0.4rem;
 }
 .brand-light {
-  color: var(--accent);
+  color: var(--action);
 }
 .topbar nav {
   display: flex;
@@ -75,11 +70,11 @@ a {
 .topbar nav a {
   font-size: 0.9rem;
   text-decoration: none;
-  color: #42526b;
+  color: var(--muted-foreground);
 }
 .topbar a:hover,
 .topbar a:focus-visible {
-  color: var(--accent);
+  color: var(--action);
   text-decoration: underline;
 }
 main {
@@ -98,10 +93,10 @@ main {
   padding-bottom: 5rem;
 }
 .eyebrow {
-  color: var(--accent);
+  color: var(--action);
   letter-spacing: 0.13em;
   font-size: 0.77rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 h1 {
   font-size: clamp(2.4rem, 5vw, 4.5rem);
@@ -111,15 +106,15 @@ h1 {
   margin: 1rem 0 1.15rem;
 }
 .lede {
-  color: #55647d;
+  color: var(--muted-foreground);
   font-size: clamp(1rem, 1.7vw, 1.22rem);
   max-width: 46rem;
   line-height: 1.75;
 }
 .notice {
   margin: 2rem 0;
-  background: #fff;
-  border: 1px solid #e0e6ed;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 0.9rem;
   padding: 1rem;
   max-width: 44rem;
@@ -134,7 +129,7 @@ h1 {
   width: 0.6rem;
   height: 0.6rem;
   border-radius: 50%;
-  background: #e8a73f;
+  background: var(--preparing-line);
   flex: none;
 }
 .primary-link {
@@ -142,9 +137,9 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 0.7rem;
-  background: #14233b;
+  background: var(--action);
   border-radius: 0.7rem;
-  color: #fff;
+  color: var(--action-foreground);
   padding: 0.85rem 1.15rem;
   font-weight: 700;
   text-decoration: none;
@@ -152,7 +147,7 @@ h1 {
 }
 .primary-link:hover,
 .primary-link:focus-visible {
-  background: var(--accent);
+  background: var(--action-hover);
 }
 .section {
   padding-bottom: 5rem;
@@ -168,13 +163,13 @@ h1 {
 }
 .tile {
   border-radius: 1rem;
-  background: #fff;
-  border: 1px solid #e6eaf0;
+  background: var(--card);
+  border: 1px solid var(--border);
   padding: 1.6rem;
 }
 .tile-id {
-  color: var(--accent);
-  font-weight: 800;
+  color: var(--action);
+  font-weight: 700;
   font-size: 0.8rem;
 }
 .tile h3 {
@@ -182,7 +177,7 @@ h1 {
   font-size: 1.2rem;
 }
 .tile p {
-  color: #6b788e;
+  color: var(--muted-foreground);
   line-height: 1.65;
 }
 .status-view {
@@ -191,7 +186,7 @@ h1 {
 }
 .status-card {
   background: white;
-  border: 1px solid #e5e9f0;
+  border: 1px solid var(--border);
   padding: 1.3rem;
   border-radius: 0.8rem;
   display: flex;
@@ -204,25 +199,25 @@ h1 {
   font-size: 1.1rem;
 }
 .status-card p {
-  color: #627088;
+  color: var(--muted-foreground);
   margin: 0.3rem 0 0;
 }
 .phase {
-  background: #e7f5ed;
-  color: #22694a;
+  background: var(--served);
+  color: var(--served-foreground);
   border-radius: 999px;
   padding: 0.45rem 0.7rem;
   font-size: 0.75rem;
   white-space: nowrap;
 }
 .phase.muted {
-  background: #f0f2f5;
-  color: #66748a;
+  background: var(--muted);
+  color: var(--muted-foreground);
 }
 .footer {
   padding: 1.25rem 1.5rem;
-  border-top: 1px solid #e3e8ef;
-  color: #6b788e;
+  border-top: 1px solid var(--border);
+  color: var(--muted-foreground);
   text-align: center;
   font-size: 0.8rem;
 }
@@ -250,8 +245,6 @@ h1 {
 }
 
 /* Standalone Admin fallback shares Spartan semantic colors and typography. */
-:root {
-}
 body,
 .layout {
   background: var(--background);
@@ -262,17 +255,17 @@ body,
   width: 38px;
   height: 38px;
   padding: 0;
-  border: 1px solid #f0d3b7;
+  border: 1px solid var(--border);
   border-radius: 10px;
   background: transparent;
   object-fit: contain;
 }
 .brand-light,
 .eyebrow {
-  color: var(--primary);
+  color: var(--action);
 }
 .primary-link {
-  background: var(--primary);
+  background: var(--action);
   border-radius: 12px;
 }
 .tile,

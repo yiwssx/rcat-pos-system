@@ -145,20 +145,20 @@ function satangFromInput(text: string): number | null {
         margin-top: 0.9rem;
         font-size: 0.75rem;
         letter-spacing: 0.08em;
-        color: #8a440d;
+        color: var(--action);
       }
       .review-warning {
         padding: 0.85rem;
         border-radius: 0.8rem;
-        background: #fff4e4;
-        color: #643c1b;
+        background: var(--preparing);
+        color: var(--preparing-foreground);
       }
       .review-error {
-        color: #ae2727;
+        color: var(--destructive);
         font-weight: 650;
       }
       .review-muted {
-        color: #5c6673;
+        color: var(--muted-foreground);
         font-size: 0.9rem;
       }
       .review-layout {
@@ -174,22 +174,22 @@ function satangFromInput(text: string): number | null {
       }
       .review-list button {
         text-align: left;
-        border: 1px solid #e5d9ca;
-        background: #fff;
+        border: 1px solid var(--border);
+        background: var(--card);
         border-radius: 0.75rem;
         padding: 0.85rem;
         display: grid;
         gap: 0.3rem;
       }
       .review-list button.is-selected {
-        border: 2px solid #c94e08;
+        border: 2px solid var(--primary-line);
       }
       .review-detail {
         min-width: 0;
         display: grid;
         gap: 0.55rem;
-        background: white;
-        border: 1px solid #e7dccf;
+        background: var(--card);
+        border: 1px solid var(--border);
         border-radius: 1rem;
         padding: 1.1rem;
       }
@@ -201,14 +201,14 @@ function satangFromInput(text: string): number | null {
         width: min(100%, 340px);
         max-height: 440px;
         object-fit: contain;
-        background: #f5f5f5;
+        background: var(--muted);
         border-radius: 0.5rem;
       }
       .review-detail input[type="text"] {
         width: 100%;
         min-height: 44px;
         padding: 0.65rem;
-        border: 1px solid #bdbdbd;
+        border: 1px solid var(--input);
         border-radius: 0.5rem;
       }
       .review-check {
@@ -234,17 +234,19 @@ function satangFromInput(text: string): number | null {
         cursor: pointer;
       }
       .review-confirm {
-        background: #b9470e;
-        color: #fff;
+        background: var(--action);
+        color: var(--action-foreground);
         border: none;
       }
       .review-reject {
-        background: #fff;
-        border: 1px solid #9d4b4b;
-        color: #7a2020;
+        background: var(--card);
+        border: 1px solid var(--destructive);
+        color: var(--destructive);
       }
       button:disabled {
-        opacity: 0.55;
+        background: var(--disabled);
+        color: var(--disabled-foreground);
+        border-color: var(--input);
         cursor: not-allowed;
       }
       @media (max-width: 680px) {
