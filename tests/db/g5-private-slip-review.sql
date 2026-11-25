@@ -222,7 +222,7 @@ BEGIN
  END IF;
 END $$;
 -- Retention is a separate explicit store policy; no migration-time purge.
-DO $
+DO $$
 DECLARE
   t uuid:='00000000-0000-4000-8000-000000000001';
   s uuid:='20000000-0000-4000-8000-000000000001';
@@ -233,7 +233,7 @@ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN denied:=true;
   END;
   IF NOT denied THEN RAISE EXCEPTION 'Unapproved retention allowed'; END IF;
-END $;
+END $$;
 UPDATE rcat.store_promptpay_receivers SET slip_image_retention_days=90
   WHERE tenant_id='00000000-0000-4000-8000-000000000001'
     AND store_id='20000000-0000-4000-8000-000000000001';
@@ -257,7 +257,7 @@ SELECT set_config('test.g5.fresh.rejected',id::text,true)
   WHERE order_id=current_setting('test.g5.slip.order1')::uuid
     AND state='rejected';
 SET LOCAL ROLE rcat_auth;
-DO $
+DO $$
 DECLARE
   t uuid:='00000000-0000-4000-8000-000000000001';
   s uuid:='20000000-0000-4000-8000-000000000001';
@@ -286,9 +286,9 @@ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN denied:=true;
   END;
   IF NOT denied THEN RAISE EXCEPTION 'Runtime role can purge images'; END IF;
-END $;
+END $$;
 RESET ROLE;
-DO $
+DO $$
 DECLARE
   t uuid:='00000000-0000-4000-8000-000000000001';
   s uuid:='20000000-0000-4000-8000-000000000001';
@@ -329,6 +329,6 @@ BEGIN
       AND action='payment.slip.images_expired')<>2 THEN
     RAISE EXCEPTION 'Retention audit missing';
   END IF;
-END $;
+END $$;
 ROLLBACK;
 \echo 'PASS: private G5 slip intake, tenant RBAC, replay, CAS, bank check and kitchen independence'
