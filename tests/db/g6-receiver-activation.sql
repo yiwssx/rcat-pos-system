@@ -69,14 +69,14 @@ BEGIN
   PERFORM rcat_private.set_merchant_promptpay_activation(auth,t,s,true,1,true);
  EXCEPTION WHEN insufficient_privilege THEN blocked:=true; END;
  IF NOT blocked THEN RAISE EXCEPTION 'Web activation ignored missing retention policy'; END IF;
-END $;
+END $$;
 RESET ROLE;
 -- Retention approval is simulated ONLY by the CI migration owner.
 UPDATE rcat.store_promptpay_receivers SET slip_image_retention_days=90
  WHERE tenant_id='00000000-0000-4000-8000-000000000001'
  AND store_id='20000000-0000-4000-8000-000000000001';
 SET LOCAL ROLE rcat_auth;
-DO $
+DO $$
 DECLARE
  t uuid:='00000000-0000-4000-8000-000000000001';
  s uuid:='20000000-0000-4000-8000-000000000001';
