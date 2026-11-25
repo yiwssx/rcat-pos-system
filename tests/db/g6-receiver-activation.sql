@@ -5,6 +5,9 @@ INSERT INTO rcat_private.auth_sessions(user_id,token_digest,csrf_digest,expires_
 VALUES (
   '10000000-0000-4000-8000-000000000001',
   decode(repeat('b7',32),'hex'),decode(repeat('b8',32),'hex'),now()+interval '1 hour'
+), (
+  '10000000-0000-4000-8000-000000000002',
+  decode(repeat('a2',32),'hex'),decode(repeat('a3',32),'hex'),now()+interval '1 hour'
 );
 SET LOCAL ROLE rcat_auth;
 DO $$
