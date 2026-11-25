@@ -65,6 +65,24 @@ export class MerchantOrderApi {
     );
   }
 
+  setReceiverActivation(
+    tenantId: string,
+    storeId: string,
+    enabled: boolean,
+    expectedRevision: number,
+  ): Promise<PromptPayReceiverSettings> {
+    return firstValueFrom(
+      this.http.patch<PromptPayReceiverSettings>(
+        scopePath(tenantId, storeId) + "/payments/receiver/activation",
+        { enabled, expectedRevision },
+        {
+          headers: { "X-CSRF-Token": this.csrfToken() },
+          withCredentials: true,
+        },
+      ),
+    );
+  }
+
   stores(): Promise<{ stores: MerchantStore[] }> {
     return firstValueFrom(
       this.http.get<{ stores: MerchantStore[] }>("/api/auth/merchant-stores", {
@@ -289,6 +307,8 @@ export interface PromptPayReceiverSettings {
   maskedReceiver?: string;
   revision: number;
   changed?: boolean;
+  activationApproved?: boolean;
+  activationAvailable?: boolean;
 }
 
 export interface OperationalBill {

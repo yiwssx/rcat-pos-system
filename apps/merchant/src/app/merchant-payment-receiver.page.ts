@@ -102,6 +102,36 @@ export class MerchantPaymentReceiverPage implements OnInit {
     }
   }
 
+  async setActivation(enabled: boolean): Promise<void> {
+    const settings = this.current();
+    if (!this.authorized() || !settings?.configured || this.busy() ||
+      settings.enabled === enabled) return;
+    if (enabled && (!settings.activationApproved || !settings.activationAvailable))
+      return;
+    this.busy.set(true);
+    this.error.set("");
+    this.notice.set("");
+    try {
+      const changed = await this.api.setReceiverActivation(
+        this.tenantId, this.storeId, enabled, settings.revision,
+      );
+      this.current.set(changed);
+      this.notice.set(enabled
+        ? "เปิดรับชำระเงินแล้ว ลูกค้าสามารถเห็น QR PromptPay ของคำสั่งซื้อได้"
+        : "พักการรับชำระเงินแล้ว คำสั่งซื้อและหลักฐานเดิมยังคงอยู่");
+    } catch (error) {
+      const code = error && typeof error === "object" && "status" in error
+        ? (error as { status: unknown }).status : null;
+      this.error.set(code === 409
+        ? "สถานะบัญชีเปลี่ยนแล้ว กรุณาโหลดข้อมูลล่าสุด"
+        : code === 403 || code === 404
+          ? "ไม่สามารถเปิดรับชำระได้ กรุณาติดต่อผู้ดูแลเพื่อตรวจสอบสิทธิ์และความพร้อม"
+          : "เปลี่ยนสถานะไม่สำเร็จ กรุณาลองใหม่");
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
   async save(): Promise<void> {
     const current = this.current();
     if (!this.authorized() || !current || this.busy() || !this.valid()) return;
@@ -121,8 +151,7 @@ export class MerchantPaymentReceiverPage implements OnInit {
       this.current.set(saved);
       this.receiverId.set("");
       this.notice.set(
-        "บันทึกบัญชีรับเงินแล้ว แต่ยังไม่เปิดรับชำระเงิน " +
-          "ผู้ดูแลต้องตรวจสอบบัญชีและอนุมัติแยกต่างหาก",
+        "บันทึกบัญชีรับเงินแล้ว ระบบจะเปิดปุ่มรับชำระเมื่อผ่านการตรวจสอบบัญชีและความพร้อม",
       );
     } catch (error) {
       const code =

@@ -137,6 +137,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/order-display-numbers.sql
       - name: Verify dormant G5-M1 merchant PromptPay receiver scope, CAS and RLS
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/g5-merchant-receiver.sql
+      - name: Verify G6 approved receiver activation, pause, revocation and tenant permissions
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/g6-receiver-activation.sql
       - name: Verify guest Order scoped dual-gated Payment Request and kitchen independence
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/g5-guest-payment-request.sql
       - name: Verify private G5 slip review and bank-check transitions
