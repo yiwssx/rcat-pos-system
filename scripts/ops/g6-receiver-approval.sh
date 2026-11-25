@@ -11,17 +11,18 @@ usage() {
   echo "Usage: $0 approve|revoke TENANT_UUID STORE_UUID REVISION --apply" >&2
   exit 2
 }
+(( $# == 5 )) || usage
 action="$1"; tenant="$2"; store="$3"; revision="$4"
 uuid='^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$'
 [[ ( "$action" == approve || "$action" == revoke ) &&
   "$#" == 5 && "$5" == --apply &&
   "$tenant" =~ $uuid && "$store" =~ $uuid &&
   "$revision" =~ ^[1-9][0-9]{0,8}$ ]] || usage
-approval="$RCAT_POS_PAYMENT_APPROVAL_REF"
+approval="${RCAT_POS_PAYMENT_APPROVAL_REF:-}"
 [[ "$approval" =~ ^[A-Za-z0-9_./:#-]{8,120}$ ]] ||
   fail "Private non-sensitive approval or incident reference required"
 if [[ "$action" == approve ]]; then
-  [[ "$RCAT_POS_PAYMENT_G6_GO_NOGO" == approved ]] ||
+  [[ "${RCAT_POS_PAYMENT_G6_GO_NOGO:-}" == approved ]] ||
     fail "Signed G6 owner go/no-go required before approval"
 fi
 [[ -f "$env_file" && ! -L "$env_file" ]] || fail "Protected portal env missing"
