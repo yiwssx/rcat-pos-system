@@ -48,7 +48,7 @@ export class MerchantPaymentReceiverPage implements OnInit {
     const settings = this.current();
     if (!settings?.configured) return false;
     if (settings.enabled) return true;
-    if (!settings.activationApproved) return false;
+    if (!settings.activationApproved || !settings.retentionReady) return false;
     return settings.activationAvailable === true;
   });
   readonly approvalLabel = computed(() => {
@@ -67,8 +67,8 @@ export class MerchantPaymentReceiverPage implements OnInit {
     if (!settings.activationApproved) {
       return "บันทึกบัญชีแล้ว รอการตรวจสอบ ไม่ต้องกรอกบัญชีซ้ำ";
     }
-    if (!settings.activationAvailable) {
-      return "บัญชีผ่านการตรวจสอบแล้ว รอเปิดระบบรับชำระเงิน";
+    if (!settings.activationAvailable || !settings.retentionReady) {
+      return "บัญชีผ่านการตรวจสอบแล้ว รอยืนยันความพร้อมการรับชำระเงิน";
     }
     return "พร้อมเปิดรับชำระเงิน";
   });

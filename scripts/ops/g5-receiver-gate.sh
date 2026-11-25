@@ -81,6 +81,9 @@ BEGIN
   IF a='status' THEN RETURN; END IF;
   IF r.revision<>e THEN RAISE EXCEPTION 'Receiver revision changed'; END IF;
   desired := a='enable';
+  IF desired AND r.slip_image_retention_days IS DISTINCT FROM 90 THEN
+    RAISE EXCEPTION 'Approved slip image retention is not configured';
+  END IF;
   IF r.enabled=desired THEN
     RAISE EXCEPTION 'Receiver already in requested state';
   END IF;
@@ -99,6 +102,7 @@ BEGIN
 END $g5$;
 SELECT jsonb_build_object(
   'configured',true,'enabled',enabled,'revision',revision,
+  'slipImageRetentionDays',slip_image_retention_days,
   'receiverKind',recipient_kind,
   'maskedReceiver','****'||right(recipient_identifier,4))
 FROM rcat.store_promptpay_receivers

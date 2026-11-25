@@ -221,5 +221,114 @@ BEGIN
    RAISE EXCEPTION 'Duplicate or missing payment confirmation';
  END IF;
 END $$;
+-- Retention is a separate explicit store policy; no migration-time purge.
+DO $
+DECLARE
+  t uuid:='00000000-0000-4000-8000-000000000001';
+  s uuid:='20000000-0000-4000-8000-000000000001';
+  denied boolean:=false;
+BEGIN
+  BEGIN
+    PERFORM rcat_private.purge_expired_payment_slip_images(t,s,100);
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+  END;
+  IF NOT denied THEN RAISE EXCEPTION 'Unapproved retention allowed'; END IF;
+END $;
+UPDATE rcat.store_promptpay_receivers SET slip_image_retention_days=90
+  WHERE tenant_id='00000000-0000-4000-8000-000000000001'
+    AND store_id='20000000-0000-4000-8000-000000000001';
+UPDATE rcat.payment_slip_evidence SET submitted_at=now()-interval '91 days'
+  WHERE order_id IN (current_setting('test.g5.slip.order1')::uuid,
+                     current_setting('test.g5.slip.order2')::uuid)
+    AND state IN ('manual_confirmed','submitted');
+CREATE TEMP TABLE slip_retention_before ON COMMIT DROP AS
+  SELECT id,tenant_id,store_id,request_id,order_id,sha256,state,revision,
+    submitted_at,reviewed_at,reviewed_by,bank_reference_digest,
+    confirmed_amount_satang
+  FROM rcat.payment_slip_evidence
+  WHERE order_id IN (current_setting('test.g5.slip.order1')::uuid,
+                     current_setting('test.g5.slip.order2')::uuid);
+SELECT set_config('test.g5.expired.pending',id::text,true)
+  FROM rcat.payment_slip_evidence
+  WHERE order_id=current_setting('test.g5.slip.order2')::uuid
+    AND state='submitted';
+SELECT set_config('test.g5.fresh.rejected',id::text,true)
+  FROM rcat.payment_slip_evidence
+  WHERE order_id=current_setting('test.g5.slip.order1')::uuid
+    AND state='rejected';
+SET LOCAL ROLE rcat_auth;
+DO $
+DECLARE
+  t uuid:='00000000-0000-4000-8000-000000000001';
+  s uuid:='20000000-0000-4000-8000-000000000001';
+  owner bytea:=decode(repeat('d1',32),'hex');
+  expired uuid:=current_setting('test.g5.expired.pending')::uuid;
+  fresh uuid:=current_setting('test.g5.fresh.rejected')::uuid;
+  q jsonb;
+  denied boolean:=false;
+BEGIN
+  IF EXISTS (SELECT 1 FROM rcat_private.merchant_payment_slip_png(
+    owner,t,s,expired)) THEN
+    RAISE EXCEPTION 'Expired image still accessible before purge';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM rcat_private.merchant_payment_slip_png(
+    owner,t,s,fresh)) THEN
+    RAISE EXCEPTION 'Unexpired image unavailable';
+  END IF;
+  q:=rcat_private.merchant_payment_review_queue(owner,t,s,25);
+  IF NOT EXISTS (SELECT 1 FROM jsonb_array_elements(q->'items') item
+    WHERE item->>'slipId'=expired::text AND item->>'imageAvailable'='false'
+      AND item->>'state'='submitted') THEN
+    RAISE EXCEPTION 'Expired pending review disappeared or exposed image';
+  END IF;
+  BEGIN
+    PERFORM rcat_private.purge_expired_payment_slip_images(t,s,1);
+  EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+  END;
+  IF NOT denied THEN RAISE EXCEPTION 'Runtime role can purge images'; END IF;
+END $;
+RESET ROLE;
+DO $
+DECLARE
+  t uuid:='00000000-0000-4000-8000-000000000001';
+  s uuid:='20000000-0000-4000-8000-000000000001';
+BEGIN
+  IF rcat_private.purge_expired_payment_slip_images(t,s,1)<>1 THEN
+    RAISE EXCEPTION 'First bounded purge mismatch';
+  END IF;
+  IF rcat_private.purge_expired_payment_slip_images(t,s,1)<>1 THEN
+    RAISE EXCEPTION 'Second bounded purge mismatch';
+  END IF;
+  IF rcat_private.purge_expired_payment_slip_images(t,s,100)<>0 THEN
+    RAISE EXCEPTION 'Purge retry not idempotent';
+  END IF;
+  IF (SELECT count(*) FROM rcat.payment_slip_evidence
+      WHERE order_id IN (current_setting('test.g5.slip.order1')::uuid,
+                         current_setting('test.g5.slip.order2')::uuid)
+        AND png IS NULL AND image_purged_at IS NOT NULL)<>2
+    OR NOT EXISTS (SELECT 1 FROM rcat.payment_slip_evidence
+      WHERE id=current_setting('test.g5.fresh.rejected')::uuid
+        AND png IS NOT NULL AND image_purged_at IS NULL) THEN
+    RAISE EXCEPTION 'Purge removed wrong payload or missed expired payload';
+  END IF;
+  IF EXISTS (SELECT * FROM slip_retention_before EXCEPT
+    SELECT id,tenant_id,store_id,request_id,order_id,sha256,state,revision,
+      submitted_at,reviewed_at,reviewed_by,bank_reference_digest,
+      confirmed_amount_satang
+    FROM rcat.payment_slip_evidence) THEN
+    RAISE EXCEPTION 'Financial evidence or replay identity changed';
+  END IF;
+  IF (SELECT payment_state FROM rcat.orders
+    WHERE id=current_setting('test.g5.slip.order1')::uuid)<>'manual_confirmed'
+    OR (SELECT payment_state FROM rcat.orders
+    WHERE id=current_setting('test.g5.slip.order2')::uuid)<>'slip_submitted' THEN
+    RAISE EXCEPTION 'Retention changed payment status';
+  END IF;
+  IF (SELECT count(*) FROM rcat.audit_events
+    WHERE tenant_id=t AND subject_id=s
+      AND action='payment.slip.images_expired')<>2 THEN
+    RAISE EXCEPTION 'Retention audit missing';
+  END IF;
+END $;
 ROLLBACK;
 \echo 'PASS: private G5 slip intake, tenant RBAC, replay, CAS, bank check and kitchen independence'
