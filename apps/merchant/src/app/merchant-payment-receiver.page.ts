@@ -44,6 +44,36 @@ export class MerchantPaymentReceiverPage implements OnInit {
       : /^[0-9]{13}$/.test(id);
   });
 
+  readonly canToggle = computed(() => {
+    const settings = this.current();
+    if (!settings?.configured) return false;
+    if (settings.enabled) return true;
+    return Boolean(
+      settings.activationApproved && settings.activationAvailable,
+    );
+  });
+  readonly approvalLabel = computed(() => {
+    const settings = this.current();
+    if (!settings?.configured) return "ยังไม่ได้กำหนด";
+    return settings.activationApproved ? "ตรวจสอบแล้ว" : "รอการตรวจสอบ";
+  });
+  readonly toggleLabel = computed(() => {
+    if (this.busy()) return "กำลังดำเนินการ...";
+    return this.current()?.enabled ? "พักรับชำระเงิน" : "เปิดรับชำระเงิน";
+  });
+  readonly activationHint = computed(() => {
+    const settings = this.current();
+    if (!settings?.configured) return "เพิ่มบัญชี PromptPay ก่อนเปิดรับชำระเงิน";
+    if (settings.enabled) return "บัญชีนี้กำลังรับชำระเงิน";
+    if (!settings.activationApproved) {
+      return "บันทึกบัญชีแล้ว รอการตรวจสอบ ไม่ต้องกรอกบัญชีซ้ำ";
+    }
+    if (!settings.activationAvailable) {
+      return "บัญชีผ่านการตรวจสอบแล้ว รอเปิดระบบรับชำระเงิน";
+    }
+    return "พร้อมเปิดรับชำระเงิน";
+  });
+
   ngOnInit(): void {
     void this.reload();
   }
@@ -101,7 +131,6 @@ export class MerchantPaymentReceiverPage implements OnInit {
       this.loading.set(false);
     }
   }
-
 
   async setActivation(enabled: boolean): Promise<void> {
     const settings = this.current();

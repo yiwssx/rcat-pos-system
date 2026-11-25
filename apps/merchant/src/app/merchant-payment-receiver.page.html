@@ -90,31 +90,24 @@
           {{ settings.enabled ? "พร้อมรับชำระเงิน" : "ยังไม่เปิดรับชำระเงิน" }}
         </dd>
       </div>
-      <div class="flex flex-wrap justify-between gap-2 py-2">
+      <div
+        class="flex flex-wrap justify-between gap-2 border-b border-border py-2"
+      >
         <dt class="text-sm text-muted-foreground">การตรวจสอบบัญชี</dt>
-        <dd class="m-0 font-semibold">
-          {{ settings.activationApproved ? "ตรวจสอบแล้ว" :
-          settings.configured ? "รอการตรวจสอบ" : "ยังไม่ได้กำหนด" }}
-        </dd>
+        <dd class="m-0 font-semibold">{{ approvalLabel() }}</dd>
       </div>
     </dl>
     <button
       hlmBtn
       type="button"
-      class="min-h-11"
-      [disabled]="busy() || !settings.configured || (!settings.enabled && (!settings.activationApproved || !settings.activationAvailable))"
+      [disabled]="busy() || !canToggle()"
       (click)="setActivation(!settings.enabled)"
     >
-      {{ busy() ? "กำลังดำเนินการ..." : settings.enabled ? "พักรับชำระเงิน" :
-      "เปิดรับชำระเงิน" }}
+      {{ toggleLabel() }}
     </button>
-    @if (settings.configured && !settings.enabled) {
-    <p class="text-sm leading-relaxed text-muted-foreground" role="status">
-      {{ settings.activationApproved && settings.activationAvailable ?
-      "บัญชีพร้อมเปิดรับชำระเงิน" :
-      "บัญชีบันทึกไว้แล้ว ยังต้องรอการตรวจสอบหรือเปิดระบบ ไม่ต้องกรอกข้อมูลซ้ำ" }}
+    <p class="text-sm text-muted-foreground" role="status">
+      {{ activationHint() }}
     </p>
-    }
   </section>
 
   <section
