@@ -48,9 +48,8 @@ export class MerchantPaymentReceiverPage implements OnInit {
     const settings = this.current();
     if (!settings?.configured) return false;
     if (settings.enabled) return true;
-    return Boolean(
-      settings.activationApproved && settings.activationAvailable,
-    );
+    if (!settings.activationApproved) return false;
+    return settings.activationAvailable === true;
   });
   readonly approvalLabel = computed(() => {
     const settings = this.current();
@@ -63,7 +62,7 @@ export class MerchantPaymentReceiverPage implements OnInit {
   });
   readonly activationHint = computed(() => {
     const settings = this.current();
-    if (!settings?.configured) return "เพิ่มบัญชี PromptPay ก่อนเปิดรับชำระเงิน";
+    if (!settings?.configured) return "เพิ่มบัญชี PromptPay ก่อนเปิดรับเงิน";
     if (settings.enabled) return "บัญชีนี้กำลังรับชำระเงิน";
     if (!settings.activationApproved) {
       return "บันทึกบัญชีแล้ว รอการตรวจสอบ ไม่ต้องกรอกบัญชีซ้ำ";
