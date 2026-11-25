@@ -93,42 +93,38 @@
       <div class="flex flex-wrap justify-between gap-2 py-2">
         <dt class="text-sm text-muted-foreground">การตรวจสอบบัญชี</dt>
         <dd class="m-0 font-semibold">
-          {{ settings.activationApproved ? "ผ่านการตรวจสอบแล้ว" :
-          settings.configured ? "รอการตรวจสอบ" : "ยังไม่มีบัญชี" }}
+          {{ settings.activationApproved ? "ตรวจสอบแล้ว" :
+          settings.configured ? "รอการตรวจสอบ" : "ยังไม่ได้กำหนด" }}
         </dd>
       </div>
     </dl>
-    @if (settings.enabled) {
-      <button hlmBtn type="button" variant="outline" class="min-h-11"
-        [disabled]="busy()" (click)="setActivation(false)">
-        {{ busy() ? "กำลังดำเนินการ..." : "พักรับชำระเงิน" }}
-      </button>
-    } @else if (settings.configured && settings.activationApproved && settings.activationAvailable) {
-      <button hlmBtn type="button" class="min-h-11"
-        [disabled]="busy()" (click)="setActivation(true)">
-        {{ busy() ? "กำลังเปิดใช้งาน..." : "เปิดรับชำระเงิน" }}
-      </button>
-    } @else if (settings.configured) {
-      <p class="text-sm leading-6 text-muted-foreground" role="status">
-        บัญชีถูกบันทึกแล้ว แต่ยังเปิดรับชำระเงินไม่ได้
-        กรุณารอการยืนยันบัญชีและความพร้อมของระบบ ไม่ต้องกรอกบัญชีซ้ำ
-      </p>
-    } @else {
-      <p class="text-sm leading-6 text-muted-foreground">
-        เพิ่มบัญชี PromptPay ของร้านก่อนเปิดรับชำระเงิน
-      </p>
+    <button
+      hlmBtn
+      type="button"
+      class="min-h-11"
+      [disabled]="busy() || !settings.configured || (!settings.enabled && (!settings.activationApproved || !settings.activationAvailable))"
+      (click)="setActivation(!settings.enabled)"
+    >
+      {{ busy() ? "กำลังดำเนินการ..." : settings.enabled ? "พักรับชำระเงิน" :
+      "เปิดรับชำระเงิน" }}
+    </button>
+    @if (settings.configured && !settings.enabled) {
+    <p class="text-sm leading-relaxed text-muted-foreground" role="status">
+      {{ settings.activationApproved && settings.activationAvailable ?
+      "บัญชีพร้อมเปิดรับชำระเงิน" :
+      "บัญชีบันทึกไว้แล้ว ยังต้องรอการตรวจสอบหรือเปิดระบบ ไม่ต้องกรอกข้อมูลซ้ำ" }}
+    </p>
     }
   </section>
 
-  <details
-    class="receiver-card rounded-xl border border-border bg-card p-4"
-    [attr.open]="!settings.configured ? '' : null"
+  <section
+    class="receiver-card grid gap-3 rounded-xl border border-border bg-card p-4"
+    aria-labelledby="edit-title"
   >
-    <summary class="min-h-11 cursor-pointer py-2 text-lg font-semibold focus-visible:outline-2 focus-visible:outline-ring" id="edit-title">
+    <h2 class="text-lg font-semibold" id="edit-title">
       {{ settings.configured ? "เปลี่ยนบัญชี PromptPay" : "เพิ่มบัญชี PromptPay"
       }}
-    </summary>
-    <div class="mt-3 grid gap-3">
+    </h2>
     <p
       class="receiver-description text-sm leading-relaxed text-muted-foreground"
     >
@@ -192,7 +188,6 @@
         โหลดข้อมูลล่าสุด
       </button>
     </div>
-    </div>
-  </details>
+  </section>
   } }
 </main>
