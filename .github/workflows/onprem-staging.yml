@@ -302,6 +302,14 @@ jobs:
         uses: actions/attest@v4
         with:
           subject-path: ${{ runner.temp }}/rcat-pos-publication/manifest.json
+      - name: Normalize publication bundle filename
+        if: github.actor != 'yiwssx'
+        shell: bash
+        env:
+          HDA_BUNDLE: ${{ steps.publication.outputs.bundle-path }}
+        run: |
+          set -euo pipefail
+          cp -- "$HDA_BUNDLE" "$RUNNER_TEMP/rcat-pos-publication/manifest.sigstore.json"
       - name: Retain manifest and signature bundle for independent intake
         if: github.actor != 'yiwssx'
         uses: actions/upload-artifact@v7
@@ -309,6 +317,6 @@ jobs:
           name: rcat-pos-publication-${{ github.run_id }}
           path: |
             ${{ runner.temp }}/rcat-pos-publication/manifest.json
-            ${{ steps.publication.outputs.bundle-path }}
+            ${{ runner.temp }}/rcat-pos-publication/manifest.sigstore.json
           if-no-files-found: error
           retention-days: 7
