@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Header, Param, Patch, Put, Req } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  Param,
+  Patch,
+  Put,
+  Req,
+} from "@nestjs/common";
 import { ApiRequest, requireAllowedOrigin } from "../auth/request-security";
 import { MerchantPaymentReceiverService } from "./merchant-payment-receiver.service";
 
@@ -32,6 +41,7 @@ export class MerchantPaymentReceiverController {
     requireAllowedOrigin(req);
     return this.receiver.configure(req, tenantId, storeId, body);
   }
+
   @Patch("activation")
   @Header("Cache-Control", "no-store")
   activation(
