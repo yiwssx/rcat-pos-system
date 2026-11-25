@@ -105,12 +105,19 @@ function satangFromInput(text: string): number | null {
               <p>
                 <strong>ยอดที่ต้องรับ: {{ money(slip.amountSatang) }} ฿</strong>
               </p>
-              <img
-                class="max-h-110 w-full max-w-85 rounded-lg bg-muted object-contain"
-                [src]="imageUrl()"
-                alt="สลิปที่ลูกค้าส่งเพื่อให้ร้านตรวจสอบยอดเงินจริง"
-                width="340"
-              />
+              @if (slip.imageAvailable !== false) {
+                <img
+                  class="max-h-110 w-full max-w-85 rounded-lg bg-muted object-contain"
+                  [src]="imageUrl()"
+                  alt="สลิปที่ลูกค้าส่งเพื่อให้ร้านตรวจสอบยอดเงินจริง"
+                  width="340"
+                />
+              } @else {
+                <p role="status">
+                  ภาพสลิปหมดอายุการจัดเก็บแล้ว ประวัติรายการยังคงอยู่
+                  ตรวจสอบเงินเข้าจริงจากบัญชีร้านก่อนตัดสินใจ
+                </p>
+              }
               <p
                 class="review-warning rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground"
               >

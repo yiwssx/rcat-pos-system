@@ -298,6 +298,7 @@ export interface PaymentSlipReview {
   revision: number;
   submittedAt: string;
   state: "submitted";
+  imageAvailable?: boolean;
 }
 
 export interface PromptPayReceiverSettings {
@@ -309,6 +310,7 @@ export interface PromptPayReceiverSettings {
   changed?: boolean;
   activationApproved?: boolean;
   activationAvailable?: boolean;
+  retentionReady?: boolean;
 }
 
 export interface OperationalBill {

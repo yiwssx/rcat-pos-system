@@ -81,6 +81,33 @@ before opening customer-facing payments. Keep #81 OPEN until evidence exists.
 - **No automatic retention purge or destructive restoration/purge script is authorized.** Before any real customer evidence: the owner must choose retention period and deletion trigger, backups/offsite retention/erasure scope, access-review and incident procedure under #81. A technically successful database backup may still be unacceptable if sensitive evidence is retained longer than approved.
 - Freeze a non-money QA environment for CI and controlled browser checks. Test data must remain synthetic; no real bank receipts or live transfers in GitHub Actions or public artifacts.
 
+## Controlled Pilot: 90-day slip image lifecycle
+
+The owner-selected pilot policy is fixed at 90 elapsed days (2,160 hours)
+from server submission, scoped to an explicitly admitted store. Migration
+050 adds a nullable operator-owned receiver policy; no receiver, policy or
+payment flag is enabled by the migration. Once the policy is set, authenticated
+image access expires at the deadline even before maintenance runs. A bounded
+DBA-only operation removes PNG bytes only; it preserves slip IDs, hashes,
+review/bank evidence, audit, attempt counts and payment/order states, including
+pending reviews. Expired pending reviews remain visible with a clear notice;
+staff must still check the actual bank transaction.
+
+Both the operator and Merchant web activation gates require an approved
+90-day store retention policy before enabling payments. The browser sees only
+readiness status and cannot set retention or self-approve a receiver. Do not configure it or run a purge solely on the basis
+of the migration/CI. The authorized operator must agree an exact store,
+deletion/access/incident/backup disposal policy and G6 approval. The DBA
+operation is `rcat_private.purge_expired_payment_slip_images(tenant_uuid,store_uuid,limit)`
+with a fixed server cutoff and 1–100 rows per transaction. No general-purpose
+delete, runtime execute grant or automatic scheduler is installed. Schedule
+and monitor a bounded approved maintenance operation before real intake.
+Logical removal is not physical erasure of historical PostgreSQL pages, WAL,
+snapshots or backups; define and prove those separate disposal and isolated
+restore boundaries, including reapplying expired-image controls before restored
+data becomes accessible. No automated bank verification, Finance Write,
+Production or offsite configuration follows from this change.
+
 ## G4/G6 release acceptance (must remain OPEN until proven)
 
 - [ ] Owner-approved retention/erasure and private backup/offsite policy, with demonstrated safe restore and disposal boundaries.
