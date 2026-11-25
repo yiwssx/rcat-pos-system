@@ -26,9 +26,8 @@
     class="receiver-warning grid gap-2 rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground"
     role="note"
   >
-    <strong>การบันทึกไม่ใช่การเปิดชำระเงิน</strong>
-    เมื่อบันทึกบัญชีแล้ว ผู้ดูแลระบบต้องตรวจสอบความเป็นเจ้าของ
-    และอนุมัติการรับชำระเงินให้ร้านก่อน ลูกค้าจึงจะเห็น QR พร้อมเพย์
+    ตั้งค่าบัญชี PromptPay ครั้งเดียว แล้วเปิดหรือพักรับชำระได้จากหน้านี้
+    หลังผ่านการตรวจสอบบัญชีและความพร้อมของระบบ
   </aside>
 
   @if (loading()) {
@@ -91,7 +90,24 @@
           {{ settings.enabled ? "พร้อมรับชำระเงิน" : "ยังไม่เปิดรับชำระเงิน" }}
         </dd>
       </div>
+      <div
+        class="flex flex-wrap justify-between gap-2 border-b border-border py-2"
+      >
+        <dt class="text-sm text-muted-foreground">การตรวจสอบบัญชี</dt>
+        <dd class="m-0 font-semibold">{{ approvalLabel() }}</dd>
+      </div>
     </dl>
+    <button
+      hlmBtn
+      type="button"
+      [disabled]="busy() || !canToggle()"
+      (click)="setActivation(!settings.enabled)"
+    >
+      {{ toggleLabel() }}
+    </button>
+    <p class="text-sm text-muted-foreground" role="status">
+      {{ activationHint() }}
+    </p>
   </section>
 
   <section
