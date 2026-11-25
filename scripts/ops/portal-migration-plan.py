@@ -88,8 +88,12 @@ def protected_nonpayment(path: Path) -> None:
         if key in found:
             raise Blocked("duplicate sensitive release flag")
         found[key] = raw.strip().strip("'\"")
-    if any(found.get(key) != "false" for key in FLAGS):
-        raise Blocked("all payment/development flags must explicitly remain false")
+    # Portal Compose hard-codes development auth to false. The protected
+    # operator template omits this optional key; a provided unsafe value
+    # must still fail. All three payment flags must be explicitly false.
+    if (any(found.get(key) != "false" for key in FLAGS[:3]) or
+            found.get("ENABLE_DEVELOPMENT_AUTH", "false") != "false"):
+        raise Blocked("payment flags must be false; development auth cannot be enabled")
 
 
 def main(argv: list[str]) -> int:
