@@ -1,7 +1,7 @@
 import {
   BadRequestException,
-  ForbiddenException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -166,5 +166,4 @@ export class MerchantPaymentReceiverService {
       safeError(error);
     }
   }
-
 }
