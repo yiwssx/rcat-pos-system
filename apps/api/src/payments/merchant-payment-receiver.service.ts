@@ -63,10 +63,12 @@ function form(raw: unknown): {
 }
 
 function releaseReady(): boolean {
-  return process.env["NODE_ENV"] === "production" &&
+  return (
+    process.env["NODE_ENV"] === "production" &&
     process.env["ENABLE_DEVELOPMENT_AUTH"] === "false" &&
     process.env["RCAT_POS_PAYMENT_QR_RELEASE_APPROVED"] === "true" &&
-    process.env["RCAT_POS_PAYMENT_SLIP_RELEASE_APPROVED"] === "true";
+    process.env["RCAT_POS_PAYMENT_SLIP_RELEASE_APPROVED"] === "true"
+  );
 }
 
 @Injectable()
@@ -126,6 +128,7 @@ export class MerchantPaymentReceiverService {
       safeError(error);
     }
   }
+
   async activation(
     req: ApiRequest,
     tenantId: string,
@@ -141,11 +144,14 @@ export class MerchantPaymentReceiverService {
       throw new BadRequestException("Invalid activation request");
     }
     const data = raw as Record<string, unknown>;
-    if (Object.keys(data).sort().join(",") !== "enabled,expectedRevision" ||
-        typeof data["enabled"] !== "boolean" ||
-        typeof data["expectedRevision"] !== "number" ||
-        !Number.isSafeInteger(data["expectedRevision"]) ||
-        data["expectedRevision"] < 1 || data["expectedRevision"] > 2147483646) {
+    if (
+      Object.keys(data).sort().join(",") !== "enabled,expectedRevision" ||
+      typeof data["enabled"] !== "boolean" ||
+      typeof data["expectedRevision"] !== "number" ||
+      !Number.isSafeInteger(data["expectedRevision"]) ||
+      data["expectedRevision"] < 1 ||
+      data["expectedRevision"] > 2147483646
+    ) {
       throw new BadRequestException("Invalid activation request");
     }
     // Never allow the browser to assert G6 approval or financial readiness.
@@ -157,8 +163,14 @@ export class MerchantPaymentReceiverService {
       const result = await this.database.auth((client) =>
         client.query<{ data: Record<string, unknown> }>(
           "SELECT rcat_private.set_merchant_promptpay_activation($1,$2,$3,$4,$5,$6) AS data",
-          [digestOpaqueSecret(session.token), tenantId, storeId,
-            data["enabled"], data["expectedRevision"], ready],
+          [
+            digestOpaqueSecret(session.token),
+            tenantId,
+            storeId,
+            data["enabled"],
+            data["expectedRevision"],
+            ready,
+          ],
         ),
       );
       return { ...result.rows[0]?.data, activationAvailable: ready };
