@@ -225,3 +225,46 @@ test("opt-in maintenance container has DBA secret, runtime API does not", () => 
   const dockerfile = readFileSync(root + "/Dockerfile.staging", "utf8");
   assert.match(dockerfile, /g4-retention-maintenance\.mjs/);
 });
+
+
+test("portal 049-052 read-only migration ledger plan rejects drift and preserves payment locks", () => {
+  const planner = root + "/scripts/ops/portal-migration-plan.py";
+  const help = execute("python3", [planner, "--help"]);
+  assert.equal(help.status, 0, help.stderr);
+  assert.match(help.stdout, /Read-only Stage ledger report/);
+  const missing = execute("python3", [planner]);
+  assert.notEqual(missing.status, 0);
+  assert.match(missing.stderr, /exact reviewed source SHA required/);
+
+  // Unit-test only the pure validator: no Docker, real accounts, or database.
+  const fixture = [
+    "import runpy, sys",
+    "m = runpy.run_path(sys.argv[1])",
+    "inventory = m['inventory']",
+    "assess = m['assess']",
+    "Blocked = m['Blocked']",
+    "from pathlib import Path",
+    "files = inventory(Path(sys.argv[2]))",
+    "good = list(files.items())[:49]",
+    "assert assess(files, good)['pending'] == list(files)[49:]",
+    "assert assess(files, list(files.items()))['status'] == 'ALREADY_APPLIED'",
+    "def denied(rows):",
+    "    try: assess(files, rows)",
+    "    except Blocked: return",
+    "    raise AssertionError('unsafe ledger accepted')",
+    "denied(good[:48])",
+    "denied(good + [(list(files)[50], files[list(files)[50]])])",
+    "denied(good[:-1] + [(good[-1][0], '0' * 64)])",
+    "denied(good + [('999_unreviewed.sql', '1' * 64)])",
+    "print('PASS: pure ledger fail-closed tests')",
+  ].join("\n");
+  const result = execute("python3", ["-c", fixture, planner, root]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /PASS: pure ledger/);
+  const source = readFileSync(planner, "utf8");
+  assert.match(source, /BEGIN READ ONLY/);
+  assert.match(source, /"exec", "-T", "postgres"/);
+  assert.match(source, /"schemaMutation": "NONE"/);
+  assert.match(source, /"paymentApproval": False/);
+  assert.doesNotMatch(source, /compose\s+(?:up|run|build)|(?:DROP|TRUNCATE|DELETE)\s+(?:TABLE|FROM)/);
+});
