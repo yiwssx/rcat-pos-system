@@ -57,3 +57,10 @@ RCAT POS is a hardware-free, multi-merchant ordering/POS SaaS inspired by ThaiQR
 
 ## Requirements tracking
 Master tracker #13. Product/ordering #1–#6, #8–#10; deferred payment #7; pilot #11. See docs/ROADMAP.md and docs/DECISIONS.md.
+
+### Guest payment continuity (Order-scoped recovery)
+
+- The Customer "ออเดอร์ของฉัน" view retains up to 50 separately authorized Orders in the current tab for up to 12 hours per capability, including the legacy active capability. Selecting an Order checks its server state; cached labels are not payment receipts. A table QR remains a menu-entry credential, not a table-wide history credential.
+- If a tab/capability is lost, the shop owner or manager can locate an existing unpaid Order on the Order board and explicitly review its amount and outstanding payment before choosing "ออกลิงก์ชำระย้อนหลัง". For pre-activation Orders, verify that cash, transfer, and external payment have not already been received. A customer who already transferred should submit the original slip, not transfer again.
+- The privately handed one-claim link expires in 30 minutes. Claiming it binds a separate Order-only bearer for up to 12 hours; the raw claim is not a query parameter. Reissue or revoke invalidates the recovery bearer without invalidating original tracking. No Order is recreated, no payment is marked confirmed by recovery, and the existing receiver/release/snapshot/slip-review checks remain authoritative.
+- This feature requires migration 054 and compatible API and Customer portal artifacts together; migration and live rollout still require the protected release gates.

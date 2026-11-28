@@ -224,6 +224,57 @@ export class MerchantOrderApi {
     );
   }
 
+  issuePaymentRecovery(
+    tenantId: string,
+    storeId: string,
+    orderId: string,
+    expectedState: "not_requested" | "awaiting_payment",
+    expectedAmountSatang: number,
+  ): Promise<{
+    orderId: string;
+    displayNumber: string;
+    claimToken: string;
+    claimExpiresAt: string;
+  }> {
+    return firstValueFrom(
+      this.http.post<{
+        orderId: string;
+        displayNumber: string;
+        claimToken: string;
+        claimExpiresAt: string;
+      }>(
+        scopePath(tenantId, storeId) +
+          "/orders/" +
+          encodeURIComponent(orderId) +
+          "/payment-recovery",
+        { expectedState, expectedAmountSatang, reviewed: true },
+        {
+          headers: { "X-CSRF-Token": this.csrfToken() },
+          withCredentials: true,
+        },
+      ),
+    );
+  }
+
+  revokePaymentRecovery(
+    tenantId: string,
+    storeId: string,
+    orderId: string,
+  ): Promise<unknown> {
+    return firstValueFrom(
+      this.http.delete(
+        scopePath(tenantId, storeId) +
+          "/orders/" +
+          encodeURIComponent(orderId) +
+          "/payment-recovery",
+        {
+          headers: { "X-CSRF-Token": this.csrfToken() },
+          withCredentials: true,
+        },
+      ),
+    );
+  }
+
   paymentReviewQueue(
     tenantId: string,
     storeId: string,

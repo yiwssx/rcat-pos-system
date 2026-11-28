@@ -76,6 +76,8 @@ DECLARE
  png2 bytea:=decode('89504e470d0a1a0a','hex')||decode(repeat('22',128),'hex');
  png3 bytea:=decode('89504e470d0a1a0a','hex')||decode(repeat('33',128),'hex');
  a jsonb;b jsonb;slip1 uuid;slip2 uuid;slip3 uuid; denied boolean;
+ claim bytea:=decode(repeat('a5',32),'hex');
+ recovered bytea:=decode(repeat('a6',32),'hex');
 BEGIN
  PERFORM rcat_private.guest_order_payment_request(o1,token1,true);
  PERFORM rcat_private.guest_order_payment_request(o2,token2,true);
@@ -94,8 +96,25 @@ BEGIN
  END;
  IF NOT denied THEN RAISE EXCEPTION 'Release-off slip upload was allowed'; END IF;
 
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.merchant_issue_order_payment_recovery(
+     cashier,tenant,store,o1,'awaiting_payment',18900,true,claim,true);
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Cashier issued recovery'; END IF;
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.merchant_issue_order_payment_recovery(
+     other,tenant,store,o1,'awaiting_payment',18900,true,claim,true);
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Foreign tenant issued recovery'; END IF;
+ PERFORM rcat_private.merchant_issue_order_payment_recovery(
+   owner,tenant,store,o1,'awaiting_payment',18900,true,claim,true);
+ PERFORM rcat_private.guest_redeem_order_payment_recovery(o1,claim,recovered);
  a:=rcat_private.guest_submit_payment_slip(
-   o1,token1,png1,sha256(png1),true);
+   o1,recovered,png1,sha256(png1),true);
  slip1:=(a->>'slipId')::uuid;
  IF a->>'state'<>'submitted' OR a->>'replayed'<>'false' THEN
    RAISE EXCEPTION 'Slip not submitted';

@@ -12,6 +12,7 @@ import { ActivatedRoute, RouterLink } from "@angular/router";
 import { HlmBadge } from "@spartan-ng/helm/badge";
 import { HlmButton } from "@spartan-ng/helm/button";
 import { HlmCard } from "@spartan-ng/helm/card";
+import { HlmInput } from "@spartan-ng/helm/input";
 import { HlmLabel } from "@spartan-ng/helm/label";
 import { HlmNativeSelect } from "@spartan-ng/helm/native-select";
 import { HttpErrorResponse } from "@angular/common/http";
@@ -81,6 +82,7 @@ function failureText(error: unknown): string {
     HlmButton,
     HlmCard,
     HlmLabel,
+    HlmInput,
     HlmNativeSelect,
   ],
   template: `
@@ -560,6 +562,67 @@ function failureText(error: unknown): string {
                     >ตรวจสลิปออเดอร์นี้</a
                   >
                 }
+                @if (mayReviewPayment() && order.amountSatang > 0) {
+                  <details
+                    class="space-y-2 rounded-xl border border-border p-3"
+                  >
+                    <summary class="cursor-pointer text-sm font-semibold">
+                      ชำระย้อนหลัง / กู้คืนออเดอร์
+                    </summary>
+                    <p class="text-sm text-muted-foreground">
+                      ตรวจสอบยอดเงินและประวัติการรับเงินก่อนออกลิงก์เฉพาะออเดอร์
+                      ไม่ใช่การยืนยันรับเงิน
+                    </p>
+                    @if (mayIssueRecovery(order)) {
+                      <button
+                        hlmBtn
+                        variant="outline"
+                        type="button"
+                        class="min-h-11"
+                        [disabled]="!!recoveryBusy() || !connected()"
+                        (click)="issueRecovery(order)"
+                      >
+                        ออกลิงก์ชำระย้อนหลัง
+                      </button>
+                    }
+                    <button
+                      hlmBtn
+                      variant="outline"
+                      type="button"
+                      class="min-h-11"
+                      [disabled]="!!recoveryBusy() || !connected()"
+                      (click)="revokeRecovery(order)"
+                    >
+                      เพิกถอนลิงก์กู้คืน
+                    </button>
+                    @if (recoveryResult()?.orderId === order.orderId) {
+                      <p class="text-sm">
+                        ส่งให้ลูกค้าที่เป็นเจ้าของออเดอร์นี้เท่านั้น ·
+                        ใช้ครั้งเดียวภายใน 30 นาที
+                      </p>
+                      <input
+                        hlmInput
+                        readonly
+                        aria-label="ลิงก์ชำระย้อนหลัง"
+                        class="w-full"
+                        [value]="recoveryResult()!.link"
+                      />
+                      <button
+                        hlmBtn
+                        type="button"
+                        class="min-h-11"
+                        (click)="copyRecovery(order.orderId)"
+                      >
+                        คัดลอกลิงก์
+                      </button>
+                    }
+                    @if (recoveryNotice()?.orderId === order.orderId) {
+                      <p role="status" class="text-sm">
+                        {{ recoveryNotice()!.message }}
+                      </p>
+                    }
+                  </details>
+                }
                 @if (order.tableId && order.visitId && mayCloseBill()) {
                   <button
                     hlmBtn
@@ -839,6 +902,131 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     const role = this.store()?.role;
     return role === "owner" || role === "manager";
   });
+  readonly recoveryBusy = signal<string | null>(null);
+  readonly recoveryResult = signal<{ orderId: string; link: string } | null>(
+    null,
+  );
+  readonly recoveryNotice = signal<{ orderId: string; message: string } | null>(
+    null,
+  );
+
+  mayIssueRecovery(order: MerchantOrder): boolean {
+    return (
+      this.mayReviewPayment() &&
+      order.status !== "cancelled" &&
+      order.amountSatang > 0 &&
+      (order.paymentState === "not_requested" ||
+        order.paymentState === "awaiting_payment")
+    );
+  }
+
+  async issueRecovery(order: MerchantOrder): Promise<void> {
+    const store = this.store();
+    const state = order.paymentState;
+    if (
+      !store ||
+      !this.win ||
+      !this.mayIssueRecovery(order) ||
+      this.recoveryBusy() ||
+      !this.connected() ||
+      (state !== "not_requested" && state !== "awaiting_payment")
+    )
+      return;
+    const warning =
+      state === "not_requested"
+        ? "ยืนยันว่าตรวจสอบแล้ว ออเดอร์นี้ยังไม่ได้รับเงินสด เงินโอน หรือจากช่องทางอื่น? การออกลิงก์ไม่ใช่การยืนยันรับเงิน"
+        : "ยืนยันว่ากำลังออกลิงก์ให้เจ้าของออเดอร์? หากโอนแล้วให้ส่งสลิปเดิม ห้ามโอนซ้ำ";
+    if (!this.win.confirm(warning + " ลิงก์กู้คืนเก่าจะใช้ไม่ได้")) return;
+    this.recoveryResult.set(null);
+    this.recoveryNotice.set(null);
+    this.recoveryBusy.set(order.orderId);
+    try {
+      const result = await this.api.issuePaymentRecovery(
+        store.tenantId,
+        store.storeId,
+        order.orderId,
+        state,
+        order.amountSatang,
+      );
+      if (this.disposed || this.store() !== store || !this.mayReviewPayment())
+        return;
+      if (
+        result.orderId !== order.orderId ||
+        !/^[A-Za-z0-9_-]{43}$/.test(result.claimToken)
+      )
+        throw new Error("ไม่สามารถแสดงลิงก์ได้");
+      const url = new URL("/order/recover", this.win.location.origin);
+      url.hash = result.orderId + "." + result.claimToken;
+      this.recoveryResult.set({ orderId: order.orderId, link: url.toString() });
+    } catch (error) {
+      if (!this.disposed && this.store() === store)
+        this.recoveryNotice.set({
+          orderId: order.orderId,
+          message:
+            error instanceof HttpErrorResponse && error.status === 409
+              ? "สถานะออเดอร์หรือช่องทางชำระเงินเปลี่ยนไป ตรวจสอบบัญชีรับเงินและออเดอร์อีกครั้ง"
+              : failureText(error),
+        });
+    } finally {
+      if (!this.disposed) this.recoveryBusy.set(null);
+    }
+  }
+
+  async revokeRecovery(order: MerchantOrder): Promise<void> {
+    const store = this.store();
+    if (
+      !store ||
+      !this.mayReviewPayment() ||
+      this.recoveryBusy() ||
+      !this.connected() ||
+      !this.win?.confirm(
+        "เพิกถอนลิงก์กู้คืนและสิทธิ์ที่เปิดด้วยลิงก์นี้? รหัสติดตามเดิมของลูกค้ายังใช้งานได้",
+      )
+    )
+      return;
+    this.recoveryBusy.set(order.orderId);
+    this.recoveryNotice.set(null);
+    try {
+      await this.api.revokePaymentRecovery(
+        store.tenantId,
+        store.storeId,
+        order.orderId,
+      );
+      if (this.disposed || this.store() !== store) return;
+      if (this.recoveryResult()?.orderId === order.orderId)
+        this.recoveryResult.set(null);
+      this.recoveryNotice.set({
+        orderId: order.orderId,
+        message: "เพิกถอนลิงก์กู้คืนแล้ว",
+      });
+    } catch (error) {
+      if (!this.disposed && this.store() === store)
+        this.recoveryNotice.set({
+          orderId: order.orderId,
+          message: failureText(error),
+        });
+    } finally {
+      if (!this.disposed) this.recoveryBusy.set(null);
+    }
+  }
+
+  async copyRecovery(orderId: string): Promise<void> {
+    const result = this.recoveryResult();
+    if (!result || result.orderId !== orderId || !this.mayReviewPayment())
+      return;
+    try {
+      if (!this.win?.navigator.clipboard)
+        throw new Error("Clipboard unavailable");
+      await this.win.navigator.clipboard.writeText(result.link);
+      this.recoveryNotice.set({ orderId, message: "คัดลอกลิงก์แล้ว" });
+    } catch {
+      this.recoveryNotice.set({
+        orderId,
+        message: "กรุณาเลือกข้อความลิงก์แล้วคัดลอกด้วยตนเอง",
+      });
+    }
+  }
+
   readonly channels = [
     { id: "all", label: "ทุกช่องทาง" },
     { id: "table", label: "โต๊ะ" },
@@ -965,6 +1153,7 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.disposed = true;
+    this.recoveryResult.set(null);
     if (this.interval) clearInterval(this.interval);
     if (this.streamRefresh) clearTimeout(this.streamRefresh);
     this.closeStream();
@@ -1071,6 +1260,8 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     this.bill.set(null);
     this.billOrderId.set(null);
     this.store.set(null);
+    this.recoveryResult.set(null);
+    this.recoveryNotice.set(null);
     this.error.set("สิทธิ์ร้านหรือเซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่");
   }
 

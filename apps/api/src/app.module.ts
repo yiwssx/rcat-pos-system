@@ -45,6 +45,8 @@ import { MerchantPaymentReceiverController } from "./payments/merchant-payment-r
 import { MerchantPaymentReceiverService } from "./payments/merchant-payment-receiver.service";
 import { GuestPaymentRequestController } from "./payments/guest-payment-request.controller";
 import { GuestPaymentRequestService } from "./payments/guest-payment-request.service";
+import { PaymentRecoveryController } from "./payments/payment-recovery.controller";
+import { PaymentRecoveryService } from "./payments/payment-recovery.service";
 import { PaymentSlipController } from "./payments/payment-slip.controller";
 import { PaymentSlipService } from "./payments/payment-slip.service";
 import { PlatformPaymentApprovalController } from "./payments/platform-payment-approval.controller";
@@ -78,6 +80,7 @@ import { PaymentFinanceService } from "./payments/payment-finance.service";
     MerchantPaymentReceiverController,
     GuestPaymentRequestController,
     PaymentSlipController,
+    PaymentRecoveryController,
     PaymentFinanceController,
     PlatformPaymentApprovalController,
   ],
@@ -107,6 +110,7 @@ import { PaymentFinanceService } from "./payments/payment-finance.service";
     MerchantPaymentReceiverService,
     GuestPaymentRequestService,
     PaymentSlipService,
+    PaymentRecoveryService,
     PaymentFinanceService,
     PlatformPaymentApprovalService,
   ],
