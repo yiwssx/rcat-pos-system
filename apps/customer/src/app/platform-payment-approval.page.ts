@@ -44,14 +44,15 @@ interface Overview {
 }
 
 const API = "/api/platform/payments";
-const REF = /^[A-Za-z0-9_./:#-]{8,120}$/;
+// Audit references are opaque identifiers, not operator-entered bank evidence.
+const auditRef = () => "G6-web-" + globalThis.crypto.randomUUID();
 const ACTION_LABEL: Record<ReviewAction, string> = {
   approve: "อนุมัติบัญชี",
   reject: "ไม่อนุมัติ",
   revoke: "เพิกถอนและระงับ",
 };
 const STATUS_LABEL: Record<ReviewStatus, string> = {
-  pending: "รอตรวจสอบ",
+  pending: "รออนุมัติ",
   approved: "อนุมัติแล้ว",
   rejected: "ไม่อนุมัติ",
   revoked: "ถูกระงับ",
@@ -111,109 +112,72 @@ const STATUS_LABEL: Record<ReviewStatus, string> = {
       </div>
       @if (data(); as view) {
         <section
-          class="grid gap-3 rounded-xl border border-border bg-card p-4"
+          class="rounded-xl border border-border bg-card p-4"
           aria-label="นโยบายการอนุมัติ"
         >
-          <h2 class="font-semibold">สถานะการอนุมัติ</h2>
-          <p class="text-sm">
-            {{
-              view.releaseReady
-                ? "ระบบอนุญาตฟังก์ชัน QR และสลิปแล้ว"
-                : "ระบบยังไม่อนุญาตการรับเงินจริง"
-            }}
-          </p>
-          <p class="text-sm">
-            {{
-              view.policyApproved
-                ? "นโยบายอนุมัติบัญชีใหม่: เปิด"
-                : "นโยบายอนุมัติบัญชีใหม่: ปิด"
-            }}
-          </p>
-          @if (view.isSuper) {
-            <p class="text-sm text-muted-foreground">
-              อนุญาตเมื่อยืนยันแผนรับเงินจริงแบบจำกัดวง การปกป้องข้อมูล
-              การสำรองและกู้คืน และนโยบายสลิป 90 วันแล้ว
-              การพักนโยบายจะหยุดการอนุมัติใหม่เท่านั้น
-              ไม่ยกเลิกรายการรับเงินเดิม
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <p class="font-medium" role="status">
+              {{
+                !view.releaseReady
+                  ? "ระบบยังไม่ได้เปิด QR และสลิป"
+                  : view.policyApproved
+                    ? "เปิดอนุมัติบัญชีใหม่แล้ว"
+                    : "พักการอนุมัติบัญชีใหม่"
+              }}
             </p>
-            <form
-              class="grid gap-2"
-              (submit)="changePolicy($event, !view.policyApproved, policyRef)"
-            >
-              <label for="payment-policy-ref" class="text-sm font-medium"
-                >รหัสอ้างอิงการอนุมัติหรือระงับนโยบาย
-                (ไม่ใส่ข้อมูลส่วนบุคคล)</label
-              >
-              <input
-                hlmInput
-                id="payment-policy-ref"
-                #policyRef
-                maxlength="120"
-                required
-                autocomplete="off"
-                placeholder="เช่น G6-policy-001"
-                [disabled]="busy() || loading()"
-              />
+            @if (view.isSuper) {
               <button
                 hlmBtn
-                type="submit"
-                class="w-fit"
+                variant="outline"
+                type="button"
                 [disabled]="
                   busy() ||
                   loading() ||
                   (!view.policyApproved && !view.releaseReady)
                 "
+                (click)="policyConfirm.set(!policyConfirm())"
               >
                 {{
-                  view.policyApproved
-                    ? "พักการอนุมัติใหม่"
-                    : "ยืนยันนโยบายและอนุญาตการอนุมัติ"
+                  view.policyApproved ? "พักการอนุมัติใหม่" : "เปิดการอนุมัติ"
                 }}
               </button>
-            </form>
-          }
-        </section>
-        @if (view.isSuper) {
-          <section
-            class="grid gap-3 rounded-xl border border-border bg-card p-4"
-            aria-label="สิทธิ์ผู้อนุมัติ"
-          >
-            <h2 class="font-semibold">มอบหมายสิทธิ์อนุมัติบัญชี</h2>
-            <p class="text-sm text-muted-foreground">
-              เฉพาะ Admin ที่ได้รับมอบหมาย การระงับหรือเปลี่ยนบัญชี Admin
-              จะยกเลิกสิทธิ์นี้
-            </p>
-            @for (admin of view.admins; track admin.userId) {
-              <div
-                class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3"
-              >
-                <div class="min-w-0 break-all text-sm">
-                  {{ admin.email }}
-                  <p class="text-muted-foreground">
-                    {{
-                      admin.allowed
-                        ? "มีสิทธิ์อนุมัติ"
-                        : "ยังไม่มีสิทธิ์อนุมัติ"
-                    }}
-                  </p>
-                </div>
+            }
+          </div>
+          @if (view.isSuper && policyConfirm()) {
+            <div class="mt-3 grid gap-2 rounded-xl bg-muted p-3">
+              <p class="text-sm">
+                {{
+                  view.policyApproved
+                    ? "หยุดอนุมัติบัญชีใหม่ ไม่ปิดบัญชีที่เคยอนุมัติ"
+                    : "ยืนยันแผนรับเงินจริงแบบจำกัดวง การคุ้มครองข้อมูล การสำรองและกู้คืน และนโยบายสลิป 90 วัน"
+                }}
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  hlmBtn
+                  type="button"
+                  [disabled]="
+                    busy() ||
+                    loading() ||
+                    (!view.policyApproved && !view.releaseReady)
+                  "
+                  (click)="changePolicy(!view.policyApproved)"
+                >
+                  ยืนยัน
+                </button>
                 <button
                   hlmBtn
                   variant="outline"
                   type="button"
-                  [disabled]="busy() || loading()"
-                  (click)="grant(admin)"
+                  [disabled]="busy()"
+                  (click)="policyConfirm.set(false)"
                 >
-                  {{ admin.allowed ? "ถอนสิทธิ์" : "มอบหมายสิทธิ์" }}
+                  ยกเลิก
                 </button>
               </div>
-            } @empty {
-              <p class="text-sm text-muted-foreground">
-                ยังไม่มีบัญชี Admin ที่ใช้งานอยู่
-              </p>
-            }
-          </section>
-        }
+            </div>
+          }
+        </section>
         @if (!view.canReview) {
           <p class="rounded-xl border border-border bg-card p-4 text-sm">
             กรุณาขอสิทธิ์อนุมัติบัญชีรับเงินจาก Super Admin
@@ -243,7 +207,7 @@ const STATUS_LABEL: Record<ReviewStatus, string> = {
                       ? "เบอร์โทรศัพท์"
                       : "เลขประจำตัวประชาชน/ผู้เสียภาษี"
                   }}
-                  {{ item.maskedReceiver }} · รุ่น {{ item.revision }}
+                  {{ item.maskedReceiver }}
                 </p>
                 <p class="text-sm text-muted-foreground">
                   {{
@@ -251,18 +215,29 @@ const STATUS_LABEL: Record<ReviewStatus, string> = {
                       ? "ร้านเปิดรับเงินอยู่"
                       : "ร้านยังไม่เปิดรับเงิน"
                   }}
-                  ·
-                  {{
-                    item.retentionReady
-                      ? "กำหนดเก็บสลิป 90 วัน"
-                      : "ยังไม่กำหนดนโยบายสลิป"
-                  }}
                 </p>
                 @if (item.reviewedBy && item.reviewedAt) {
                   <p class="break-words text-sm text-muted-foreground">
                     ผู้ตรวจสอบ: {{ item.reviewedBy }} ·
                     {{ date(item.reviewedAt) }}
                   </p>
+                }
+                @if (reviewFeedback(); as feedback) {
+                  @if (
+                    feedback.storeId === item.storeId &&
+                    review()?.item?.storeId !== item.storeId
+                  ) {
+                    <p
+                      class="rounded-lg p-3 text-sm"
+                      [class.bg-danger-soft]="feedback.error"
+                      [class.bg-served]="!feedback.error"
+                      [class.text-foreground]="feedback.error"
+                      [class.text-served-foreground]="!feedback.error"
+                      [attr.role]="feedback.error ? 'alert' : 'status'"
+                    >
+                      {{ feedback.message }}
+                    </p>
+                  }
                 }
                 <div class="flex flex-wrap gap-2">
                   @if (!item.enabled && item.reviewStatus !== "approved") {
@@ -304,17 +279,16 @@ const STATUS_LABEL: Record<ReviewStatus, string> = {
                   @if (selected.item.storeId === item.storeId) {
                     <form
                       class="grid gap-3 rounded-xl border border-border bg-muted p-3"
-                      (submit)="submitReview($event, selected, ref, verified)"
+                      (submit)="submitReview($event, selected, verified)"
                     >
                       <h4 class="font-semibold">
                         {{ actions[selected.action] }} — {{ item.storeName }}
                       </h4>
                       @if (selected.action === "approve") {
                         <p class="text-sm">
-                          ตรวจสอบเจ้าของบัญชีจากหลักฐานธนาคารจริงโดยอิสระ
-                          แล้วกรอกหมายเลข PromptPay
-                          ที่ตรวจสอบแล้วเพื่อเทียบกับบัญชีของร้าน
-                          ห้ามใช้เพียงสลิปหรือเลขท้ายเป็นหลักฐาน
+                          ตรวจสอบเจ้าของบัญชีจากหลักฐานธนาคาร
+                          แล้วกรอกหมายเลขเต็มให้ตรงกัน
+                          ผู้อนุมัติต้องเป็นคนละบัญชีกับผู้ตั้งค่ารับเงิน
                         </p>
                       } @else {
                         <p class="text-sm">
@@ -322,20 +296,6 @@ const STATUS_LABEL: Record<ReviewStatus, string> = {
                           โดยไม่ลบประวัติการชำระเงิน
                         </p>
                       }
-                      <label
-                        for="payment-review-ref"
-                        class="text-sm font-medium"
-                        >รหัสอ้างอิงการตรวจสอบ (ไม่ใส่ข้อมูลส่วนบุคคล)</label
-                      >
-                      <input
-                        hlmInput
-                        id="payment-review-ref"
-                        #ref
-                        required
-                        maxlength="120"
-                        autocomplete="off"
-                        [disabled]="busy()"
-                      />
                       <div
                         [hidden]="selected.action !== 'approve'"
                         class="space-y-2"
@@ -357,6 +317,18 @@ const STATUS_LABEL: Record<ReviewStatus, string> = {
                           [disabled]="busy() || selected.action !== 'approve'"
                         />
                       </div>
+                      @if (reviewFeedback(); as feedback) {
+                        @if (
+                          feedback.storeId === item.storeId && feedback.error
+                        ) {
+                          <p
+                            class="rounded-lg bg-danger-soft p-3 text-sm text-foreground"
+                            role="alert"
+                          >
+                            {{ feedback.message }}
+                          </p>
+                        }
+                      }
                       <div class="flex flex-wrap gap-2">
                         <button
                           hlmBtn
@@ -368,14 +340,18 @@ const STATUS_LABEL: Record<ReviewStatus, string> = {
                               (!view.policyApproved || !view.releaseReady))
                           "
                         >
-                          ยืนยัน{{ actions[selected.action] }}
+                          {{
+                            busy()
+                              ? "กำลังบันทึก…"
+                              : "ยืนยัน" + actions[selected.action]
+                          }}
                         </button>
                         <button
                           hlmBtn
                           variant="outline"
                           type="button"
                           [disabled]="busy()"
-                          (click)="review.set(null)"
+                          (click)="cancelReview()"
                         >
                           ยกเลิก
                         </button>
@@ -417,6 +393,53 @@ const STATUS_LABEL: Record<ReviewStatus, string> = {
             </div>
           </section>
         }
+        @if (view.isSuper) {
+          <details
+            class="rounded-xl border border-border bg-card p-4"
+            aria-label="สิทธิ์ผู้อนุมัติ"
+          >
+            <summary
+              class="min-h-11 cursor-pointer py-2 font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              มอบหมายสิทธิ์อนุมัติบัญชี
+            </summary>
+            <div class="mt-3 grid gap-3">
+              <p class="text-sm text-muted-foreground">
+                เฉพาะ Admin ที่ได้รับมอบหมาย การระงับหรือเปลี่ยนบัญชี Admin
+                จะยกเลิกสิทธิ์นี้
+              </p>
+              @for (admin of view.admins; track admin.userId) {
+                <div
+                  class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3"
+                >
+                  <div class="min-w-0 break-all text-sm">
+                    {{ admin.email }}
+                    <p class="text-muted-foreground">
+                      {{
+                        admin.allowed
+                          ? "มีสิทธิ์อนุมัติ"
+                          : "ยังไม่มีสิทธิ์อนุมัติ"
+                      }}
+                    </p>
+                  </div>
+                  <button
+                    hlmBtn
+                    variant="outline"
+                    type="button"
+                    [disabled]="busy() || loading()"
+                    (click)="grant(admin)"
+                  >
+                    {{ admin.allowed ? "ถอนสิทธิ์" : "มอบหมายสิทธิ์" }}
+                  </button>
+                </div>
+              } @empty {
+                <p class="text-sm text-muted-foreground">
+                  ยังไม่มีบัญชี Admin ที่ใช้งานอยู่
+                </p>
+              }
+            </div>
+          </details>
+        }
       }
     </section>
   `,
@@ -431,6 +454,12 @@ export class PlatformPaymentApprovalPage implements OnInit {
   readonly busy = signal(false);
   readonly error = signal("");
   readonly notice = signal("");
+  readonly policyConfirm = signal(false);
+  readonly reviewFeedback = signal<{
+    storeId: string;
+    error: boolean;
+    message: string;
+  } | null>(null);
   readonly review = signal<{ item: Receiver; action: ReviewAction } | null>(
     null,
   );
@@ -482,12 +511,16 @@ export class PlatformPaymentApprovalPage implements OnInit {
     this.error.set("ดำเนินการไม่สำเร็จ กรุณาโหลดข้อมูลใหม่ก่อนลองอีกครั้ง");
   }
 
-  async load(after: string | null = null): Promise<void> {
+  async load(after: string | null = null, keepData = false): Promise<void> {
     if (this.loading()) return;
     this.loading.set(true);
     this.error.set("");
     this.review.set(null);
-    this.data.set(null);
+    this.policyConfirm.set(false);
+    if (!keepData) {
+      this.reviewFeedback.set(null);
+      this.data.set(null);
+    }
     this.cursor.set(after);
     try {
       this.data.set(
@@ -499,6 +532,7 @@ export class PlatformPaymentApprovalPage implements OnInit {
         ),
       );
     } catch (error) {
+      this.data.set(null);
       this.fail(error);
     } finally {
       this.loading.set(false);
@@ -513,6 +547,7 @@ export class PlatformPaymentApprovalPage implements OnInit {
   begin(item: Receiver, action: ReviewAction): void {
     this.error.set("");
     this.notice.set("");
+    this.reviewFeedback.set(null);
     this.review.set({ item, action });
   }
 
@@ -529,10 +564,10 @@ export class PlatformPaymentApprovalPage implements OnInit {
           withCredentials: true,
         }),
       );
-      await this.load(this.cursor());
+      await this.load(this.cursor(), true);
       if (this.data()) this.notice.set("บันทึกการดำเนินการแล้ว");
     } catch (error) {
-      await this.load(this.cursor());
+      await this.load(this.cursor(), true);
       this.fail(error);
     } finally {
       this.busy.set(false);
@@ -545,50 +580,117 @@ export class PlatformPaymentApprovalPage implements OnInit {
     });
   }
 
-  changePolicy(event: Event, approved: boolean, input: HTMLInputElement): void {
+  changePolicy(approved: boolean): void {
+    this.policyConfirm.set(false);
+    void this.mutate("/policy", { approved, approvalRef: auditRef() });
+  }
+
+  cancelReview(): void {
+    this.reviewFeedback.set(null);
+    this.review.set(null);
+  }
+
+  async submitReview(
+    event: Event,
+    selected: { item: Receiver; action: ReviewAction },
+    verified: HTMLInputElement,
+  ): Promise<void> {
     event.preventDefault();
-    const approvalRef = input.value.trim();
-    if (!REF.test(approvalRef)) {
-      this.error.set(
-        "กรอกรหัสอ้างอิง 8–120 ตัวอักษรภาษาอังกฤษ ตัวเลข หรือ - _ / . : #",
+    if (this.busy() || this.loading()) return;
+
+    const { item, action } = selected;
+    const feedback = (message: string, error = true) =>
+      this.reviewFeedback.set({ storeId: item.storeId, error, message });
+    const verifiedReceiverId =
+      action === "approve" ? verified.value.trim() : null;
+
+    if (
+      verifiedReceiverId !== null &&
+      !(
+        item.receiverKind === "mobile" ? /^0[689][0-9]{8}$/ : /^[0-9]{13}$/
+      ).test(verifiedReceiverId)
+    ) {
+      feedback(
+        item.receiverKind === "mobile"
+          ? "กรอกเบอร์โทรศัพท์ 10 หลักให้ถูกต้อง"
+          : "กรอกเลขประจำตัว 13 หลักให้ถูกต้อง",
       );
       return;
     }
-    input.value = "";
-    void this.mutate("/policy", { approved, approvalRef });
-  }
 
-  submitReview(
-    event: Event,
-    selected: { item: Receiver; action: ReviewAction },
-    ref: HTMLInputElement,
-    verified: HTMLInputElement,
-  ): void {
-    event.preventDefault();
-    const approvalRef = ref.value.trim();
-    const verifiedReceiverId =
-      selected.action === "approve" ? verified.value.trim() : null;
     verified.value = "";
-    if (
-      !REF.test(approvalRef) ||
-      (verifiedReceiverId !== null &&
-        !/^(?:0[689][0-9]{8}|[0-9]{13})$/.test(verifiedReceiverId))
-    ) {
-      this.error.set("ตรวจสอบรหัสอ้างอิงและหมายเลข PromptPay ที่ยืนยันแล้ว");
-      return;
-    }
-    ref.value = "";
+    this.busy.set(true);
+    this.error.set("");
+    this.notice.set("");
+    this.reviewFeedback.set(null);
     const path =
       "/receivers/" +
-      encodeURIComponent(selected.item.tenantId) +
+      encodeURIComponent(item.tenantId) +
       "/" +
-      encodeURIComponent(selected.item.storeId) +
+      encodeURIComponent(item.storeId) +
       "/review";
-    void this.mutate(path, {
-      action: selected.action,
-      approvalRef,
-      expectedRevision: selected.item.revision,
-      verifiedReceiverId,
-    });
+
+    try {
+      await firstValueFrom(
+        this.http.post(
+          API + path,
+          {
+            action,
+            approvalRef: auditRef(),
+            expectedRevision: item.revision,
+            verifiedReceiverId,
+          },
+          {
+            headers: this.headers(),
+            withCredentials: true,
+          },
+        ),
+      );
+      // Only the refreshed server state establishes approval, not the POST alone.
+      await this.load(this.cursor(), true);
+      const fresh = this.data()?.items.find(
+        (row) => row.storeId === item.storeId,
+      );
+      const expected =
+        action === "approve"
+          ? "approved"
+          : action === "reject"
+            ? "rejected"
+            : "revoked";
+      if (fresh?.reviewStatus === expected) {
+        feedback(
+          action === "approve"
+            ? "อนุมัติบัญชีรับเงินสำเร็จ"
+            : "บันทึกการระงับบัญชีแล้ว",
+          false,
+        );
+      } else {
+        feedback("ยังยืนยันผลไม่ได้ กรุณารีเฟรชรายการล่าสุด");
+      }
+    } catch (error) {
+      if (
+        error instanceof HttpErrorResponse &&
+        [400, 403].includes(error.status)
+      ) {
+        // Keep the form and local feedback visible; never retain the full ID.
+        feedback(
+          error.status === 403 && action === "approve"
+            ? "อนุมัติไม่สำเร็จ: ผู้ตั้งค่าบัญชีห้ามอนุมัติเอง ตรวจสอบผู้อนุมัติ หมายเลข PromptPay และสถานะการอนุมัติ"
+            : "ดำเนินการไม่สำเร็จ กรุณาตรวจสอบข้อมูลและสิทธิ์",
+        );
+      } else {
+        await this.load(this.cursor(), true);
+        if (error instanceof HttpErrorResponse && error.status === 401)
+          this.fail(error);
+        else
+          feedback(
+            error instanceof HttpErrorResponse && error.status === 409
+              ? "บัญชีเปลี่ยนแปลงแล้ว กรุณาตรวจสอบข้อมูลล่าสุด"
+              : "ยังยืนยันผลไม่ได้ กรุณารีเฟรชก่อนลองอีกครั้ง",
+          );
+      }
+    } finally {
+      this.busy.set(false);
+    }
   }
 }
