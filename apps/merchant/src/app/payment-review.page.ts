@@ -48,6 +48,40 @@ function satangFromInput(text: string): number | null {
       >
         ตรวจสลิป PromptPay
       </h1>
+      <nav
+        class="flex min-w-0 flex-wrap gap-2"
+        aria-label="ดูออเดอร์ตามการชำระเงิน"
+      >
+        <a
+          hlmBtn
+          variant="outline"
+          class="min-h-11 max-w-full whitespace-normal"
+          [routerLink]="['/orders', tenantId, storeId]"
+          [queryParams]="{ payment: 'awaiting_payment' }"
+          >รอชำระ / ส่งสลิปใหม่</a
+        >
+        <a
+          hlmBtn
+          variant="outline"
+          class="min-h-11 max-w-full whitespace-normal"
+          [routerLink]="['/orders', tenantId, storeId]"
+          [queryParams]="{ payment: 'slip_submitted' }"
+          >ออเดอร์ที่รอตรวจ</a
+        >
+        <a
+          hlmBtn
+          variant="outline"
+          class="min-h-11 max-w-full whitespace-normal"
+          [routerLink]="['/orders', tenantId, storeId]"
+          [queryParams]="{ payment: 'manual_confirmed' }"
+          >ยืนยันรับเงินแล้ว</a
+        >
+      </nav>
+      <p class="text-sm text-muted-foreground">
+        หน้านี้เป็นคิวสลิปที่รอตรวจเท่านั้น เมื่อยืนยันแล้ว
+        ออเดอร์ยังอยู่บนกระดานออเดอร์ ในกลุ่มยืนยันรับเงินแล้ว
+        ไม่เปลี่ยนสถานะงานครัว
+      </p>
       <p
         class="review-warning rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground"
       >
@@ -63,7 +97,19 @@ function satangFromInput(text: string): number | null {
         </p>
       }
       @if (notice()) {
-        <p role="status">{{ notice() }}</p>
+        <div class="grid gap-2 rounded-xl border border-border bg-card p-3">
+          <p role="status">{{ notice() }}</p>
+          @if (decidedOrder(); as order) {
+            <a
+              hlmBtn
+              variant="outline"
+              class="min-h-11 w-fit max-w-full whitespace-normal"
+              [routerLink]="['/orders', tenantId, storeId]"
+              [queryParams]="{ order: order.orderId }"
+              >เปิดออเดอร์ {{ number(order.displayNumber) }}</a
+            >
+          }
+        </div>
       }
       <button
         hlmBtn
@@ -75,8 +121,27 @@ function satangFromInput(text: string): number | null {
       </button>
       @if (allowed()) {
         <p class="review-muted text-sm text-muted-foreground">
-          สลิปรอตรวจ {{ items().length }} รายการล่าสุด
+          สลิปรอตรวจ {{ items().length }} รายการล่าสุด (ครั้งละไม่เกิน 25
+          รายการ)
         </p>
+        @if (requestedOrderNotFound()) {
+          <p
+            role="status"
+            class="rounded-xl border border-border bg-muted/40 p-3 text-sm"
+          >
+            ไม่พบสลิปของออเดอร์ที่เลือกในคิวล่าสุด อาจตรวจแล้ว ยังไม่ส่งสลิป
+            หรือมีคิวเก่ากว่า 25 รายการ
+            กรุณาตรวจรายการล่าสุดหรือดูสถานะบนกระดานออเดอร์
+          </p>
+          <a
+            hlmBtn
+            variant="outline"
+            class="min-h-11 w-fit"
+            [routerLink]="['/orders', tenantId, storeId]"
+            [queryParams]="{ order: requestedOrderId }"
+            >กลับไปดูออเดอร์ที่เลือก</a
+          >
+        }
         @if (!loading() && !items().length) {
           <p>ขณะนี้ไม่มีสลิปที่รอการตรวจสอบ</p>
         }
@@ -236,6 +301,13 @@ export class PaymentReviewPage implements OnInit, OnDestroy {
   readonly selected = signal<PaymentSlipReview | null>(null);
   readonly error = signal("");
   readonly notice = signal("");
+  readonly decidedOrder = signal<Pick<
+    PaymentSlipReview,
+    "orderId" | "displayNumber"
+  > | null>(null);
+  readonly requestedOrderId = this.route.snapshot.queryParamMap.get("order");
+  private initialOrderPending = !!this.requestedOrderId;
+  readonly requestedOrderNotFound = signal(false);
   readonly allowed = signal(false);
   readonly loading = signal(false);
   readonly busy = signal(false);
@@ -302,8 +374,17 @@ export class PaymentReviewPage implements OnInit, OnDestroy {
       );
       this.items.set(queue.items);
       const picked = this.selected();
+      const requested = this.initialOrderPending
+        ? queue.items.find((s) => s.orderId === this.requestedOrderId)
+        : undefined;
+      if (this.initialOrderPending) {
+        this.requestedOrderNotFound.set(!requested);
+        if (requested) this.initialOrderPending = false;
+      }
       this.replaceSelection(
-        queue.items.find((s) => s.slipId === picked?.slipId) ?? null,
+        queue.items.find((s) => s.slipId === picked?.slipId) ??
+          requested ??
+          null,
       );
     } catch {
       this.allowed.set(false);
@@ -341,8 +422,11 @@ export class PaymentReviewPage implements OnInit, OnDestroy {
 
   choose(item: PaymentSlipReview): void {
     if (this.loading() || this.busy()) return;
+    this.initialOrderPending = false;
+    this.requestedOrderNotFound.set(false);
     this.replaceSelection(item);
     this.notice.set("");
+    this.decidedOrder.set(null);
   }
 
   editReference(value: string): void {
@@ -431,6 +515,12 @@ export class PaymentReviewPage implements OnInit, OnDestroy {
         item.slipId,
         payload,
       );
+      this.initialOrderPending = false;
+      this.requestedOrderNotFound.set(false);
+      this.decidedOrder.set({
+        orderId: item.orderId,
+        displayNumber: item.displayNumber,
+      });
       this.notice.set(
         action === "confirm"
           ? "บันทึกการยืนยันรับเงินจริงโดยผู้ตรวจสอบแล้ว (ไม่ใช่ยืนยันจากธนาคารอัตโนมัติ)"

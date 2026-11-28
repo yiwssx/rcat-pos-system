@@ -30,6 +30,10 @@ import {
   OrderHistory,
   OrderStatus,
   PAYMENT_STATUS_LABEL,
+  PAYMENT_FILTERS,
+  PaymentFilter,
+  matchesPaymentFilter,
+  parsePaymentFilter,
   orderActions,
   ROLE_LABEL,
   STATUS_LABEL,
@@ -265,9 +269,60 @@ function failureText(error: unknown): string {
           </button>
         </div>
 
+        <section
+          class="grid min-w-0 gap-3 rounded-xl border border-border bg-card p-3 sm:p-4"
+          aria-labelledby="payment-filter-title"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 id="payment-filter-title" class="text-lg font-semibold">
+              สถานะการชำระเงิน
+            </h2>
+            @if (mayReviewPayment()) {
+              <a
+                hlmBtn
+                variant="outline"
+                class="min-h-11"
+                [routerLink]="[
+                  '/payments',
+                  store()!.tenantId,
+                  store()!.storeId,
+                ]"
+                >เปิดคิวตรวจสลิป</a
+              >
+            }
+          </div>
+          <div
+            class="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-2"
+            role="group"
+            aria-label="กรองออเดอร์ตามการชำระเงิน"
+          >
+            @for (entry of paymentFilters; track entry.id) {
+              <button
+                hlmBtn
+                type="button"
+                class="grid min-h-16 min-w-0 justify-items-start gap-1 whitespace-normal text-left"
+                [variant]="
+                  paymentFilter() === entry.id ? 'selected' : 'outline'
+                "
+                [attr.aria-pressed]="paymentFilter() === entry.id"
+                (click)="setPaymentFilter(entry.id)"
+              >
+                <span class="whitespace-normal text-sm">{{ entry.label }}</span>
+                <strong class="text-xl font-semibold tabular-nums">{{
+                  paymentCounts()[entry.id]
+                }}</strong>
+              </button>
+            }
+          </div>
+          <p class="text-sm text-muted-foreground">
+            เลือกสถานะชำระเงินเพื่อดูออเดอร์ทุกสถานะงานครัว
+            รวมถึงเสิร์ฟแล้วหรือยกเลิก · นับจากออเดอร์ที่โหลดเท่านั้น
+          </p>
+        </section>
+
         <div class="my-4 flex flex-wrap items-center gap-3">
           <h2 class="mr-auto text-lg font-semibold">รายการออเดอร์</h2>
-          <label hlmLabel for="order-filter">กรองสถานะ</label>
+          <label hlmLabel for="order-filter">กรองสถานะงานครัว</label>
           <hlm-native-select
             class="block w-full sm:w-64"
             selectId="order-filter"
@@ -288,8 +343,11 @@ function failureText(error: unknown): string {
           class="my-3 text-sm leading-relaxed text-muted-foreground"
           role="status"
         >
-          กำลังแสดง {{ orders().length }} ออเดอร์ที่โหลด ·
-          สรุปด้านบนคำนวณจากรายการที่โหลดเท่านั้น
+          แสดง {{ visibleOrders().length }} จาก
+          {{ orders().length }} ออเดอร์ที่โหลด
+          @if (hasMoreOrders()) {
+            · ยังมีรายการเก่า กดโหลดเพิ่มด้านล่าง
+          }
         </p>
         <div
           class="flex flex-wrap items-center gap-2"
@@ -303,12 +361,21 @@ function failureText(error: unknown): string {
               class="min-h-11"
               [variant]="orderChannel() === channel.id ? 'default' : 'outline'"
               [attr.aria-pressed]="orderChannel() === channel.id"
-              (click)="orderChannel.set(channel.id)"
+              (click)="setOrderChannel(channel.id)"
             >
               {{ channel.label }}
             </button>
           }
         </div>
+        @if (focusedOrderId() && lastSynced() && !focusedOrderFound()) {
+          <p
+            role="status"
+            class="rounded-xl border border-border bg-muted/40 p-3 text-sm"
+          >
+            ไม่พบออเดอร์ที่เปิดจากหน้าตรวจสลิปในร้านนี้
+            กรุณารีเฟรชหรือตรวจสอบสิทธิ์
+          </p>
+        }
         @if (visibleOrders().length === 0) {
           <p
             class="my-4 rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm leading-relaxed text-muted-foreground"
@@ -331,6 +398,11 @@ function failureText(error: unknown): string {
                 [class.ring-primary-line]="order.status === 'submitted'"
                 [attr.aria-label]="'ออเดอร์ ' + number(order.displayNumber)"
               >
+                @if (focusedOrderId() === order.orderId) {
+                  <p class="font-semibold text-sm text-foreground">
+                    ออเดอร์ที่เปิดจากหน้าตรวจสลิป
+                  </p>
+                }
                 <div
                   class="flex min-w-0 flex-wrap items-start justify-between gap-3"
                 >
@@ -437,15 +509,57 @@ function failureText(error: unknown): string {
                 <div
                   class="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3"
                 >
-                  <span class="text-sm text-muted-foreground">
-                    ยอดออเดอร์ ·
-                    {{ paymentStatusLabel[order.paymentState] }}
-                  </span>
-                  <strong
-                    class="whitespace-nowrap text-lg font-semibold tabular-nums"
-                    >{{ money(order.amountSatang) }} ฿</strong
-                  >
+                  <div class="grid min-w-0 gap-1">
+                    <span class="text-sm text-muted-foreground"
+                      >สถานะการชำระเงิน</span
+                    >
+                    <span
+                      hlmBadge
+                      variant="outline"
+                      class="w-fit max-w-full whitespace-normal"
+                      [class.bg-preparing]="
+                        order.paymentState === 'slip_submitted' ||
+                        order.paymentState === 'awaiting_payment'
+                      "
+                      [class.text-preparing-foreground]="
+                        order.paymentState === 'slip_submitted' ||
+                        order.paymentState === 'awaiting_payment'
+                      "
+                      [class.bg-served]="
+                        order.paymentState === 'manual_confirmed'
+                      "
+                      [class.text-served-foreground]="
+                        order.paymentState === 'manual_confirmed'
+                      "
+                      >{{ paymentStatusLabel[order.paymentState] }}</span
+                    >
+                  </div>
+                  <div class="grid justify-items-end gap-1">
+                    <span class="text-sm text-muted-foreground"
+                      >ยอดออเดอร์</span
+                    >
+                    <strong
+                      class="whitespace-nowrap text-lg font-semibold tabular-nums"
+                    >
+                      {{ money(order.amountSatang) }} ฿
+                    </strong>
+                  </div>
                 </div>
+                @if (
+                  order.paymentState === "slip_submitted" && mayReviewPayment()
+                ) {
+                  <a
+                    hlmBtn
+                    class="min-h-11 w-fit max-w-full whitespace-normal"
+                    [routerLink]="[
+                      '/payments',
+                      store()!.tenantId,
+                      store()!.storeId,
+                    ]"
+                    [queryParams]="{ order: order.orderId }"
+                    >ตรวจสลิปออเดอร์นี้</a
+                  >
+                }
                 @if (order.tableId && order.visitId && mayCloseBill()) {
                   <button
                     hlmBtn
@@ -680,6 +794,7 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
   private inFlight = false;
   private tenantId = "";
   private storeId = "";
+  private linkedOrderId: string | null = null;
 
   readonly store = signal<MerchantStore | null>(null);
   readonly orders = signal<MerchantOrder[]>([]);
@@ -703,6 +818,27 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
     "connecting" | "streaming" | "polling" | "paused" | "blocked"
   >("polling");
   readonly filter = signal("active");
+  readonly paymentFilter = signal<PaymentFilter>("all");
+  readonly paymentFilters = PAYMENT_FILTERS;
+  readonly focusedOrderId = signal<string | null>(null);
+  readonly focusedOrderFound = computed(() =>
+    this.orders().some((order) => order.orderId === this.focusedOrderId()),
+  );
+  readonly paymentCounts = computed(() => {
+    const counts: Record<PaymentFilter, number> = {
+      all: this.orders().length,
+      not_requested: 0,
+      awaiting_payment: 0,
+      slip_submitted: 0,
+      manual_confirmed: 0,
+    };
+    for (const order of this.orders()) counts[order.paymentState] += 1;
+    return counts;
+  });
+  readonly mayReviewPayment = computed(() => {
+    const role = this.store()?.role;
+    return role === "owner" || role === "manager";
+  });
   readonly channels = [
     { id: "all", label: "ทุกช่องทาง" },
     { id: "table", label: "โต๊ะ" },
@@ -718,7 +854,22 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
   });
 
   setQueueFilter(value: string): void {
+    this.focusedOrderId.set(null);
     this.filter.set(value);
+  }
+
+  setOrderChannel(value: string): void {
+    this.focusedOrderId.set(null);
+    this.orderChannel.set(value);
+  }
+
+  setPaymentFilter(value: PaymentFilter): void {
+    this.focusedOrderId.set(null);
+    this.paymentFilter.set(value);
+    // Selecting a payment bucket must not silently exclude served Orders or
+    // another ordering channel. Kitchen/channel filters remain available.
+    this.filter.set("all");
+    this.orderChannel.set("all");
   }
   readonly history = signal<OrderHistory | null>(null);
   readonly selectedHistoryId = signal<string | null>(null);
@@ -730,7 +881,8 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
 
   readonly visibleOrders = computed(() => {
     const filter = this.filter();
-    return this.orders()
+    const matching = this.orders()
+      .filter((order) => matchesPaymentFilter(order, this.paymentFilter()))
       .filter((order) =>
         this.orderChannel() === "table"
           ? !!order.tableId
@@ -747,6 +899,15 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
               ? order.status !== "served" && order.status !== "cancelled"
               : order.status === filter,
       );
+    const focused = matching.find(
+      (order) => order.orderId === this.focusedOrderId(),
+    );
+    return focused
+      ? [
+          focused,
+          ...matching.filter((order) => order.orderId !== focused.orderId),
+        ]
+      : matching;
   });
   readonly pendingCount = computed(
     () => this.orders().filter((o) => o.status === "submitted").length,
@@ -764,6 +925,21 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.tenantId = this.route.snapshot.paramMap.get("tenantId") ?? "";
     this.storeId = this.route.snapshot.paramMap.get("storeId") ?? "";
+    const payment = parsePaymentFilter(
+      this.route.snapshot.queryParamMap.get("payment"),
+    );
+    const orderId = this.route.snapshot.queryParamMap.get("order");
+    if (payment !== "all") this.setPaymentFilter(payment);
+    if (
+      orderId &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        orderId,
+      )
+    ) {
+      this.setPaymentFilter("all");
+      this.linkedOrderId = orderId.toLowerCase();
+      this.focusedOrderId.set(this.linkedOrderId);
+    }
     this.connected.set(this.win?.navigator.onLine ?? true);
     this.win?.addEventListener("online", this.resume);
     this.win?.addEventListener("offline", this.goOffline);
@@ -975,6 +1151,22 @@ export class MerchantOrderBoardPage implements OnInit, OnDestroy {
         this.tenantId,
         this.storeId,
         missing,
+      );
+      orders = appendOrderPage(orders, resolved.orders);
+    }
+    // The receipt may have been submitted long after creation. Resolve the
+    // linked Order beyond the loaded pages, even after changing filters.
+    // Keep this separate from event coverage/acknowledgement and its 50-ID cap.
+    const linked = this.linkedOrderId;
+    if (
+      !this.disposed &&
+      linked &&
+      !orders.some((order) => order.orderId === linked)
+    ) {
+      const resolved = await this.api.lookupOrders(
+        this.tenantId,
+        this.storeId,
+        [linked],
       );
       orders = appendOrderPage(orders, resolved.orders);
     }

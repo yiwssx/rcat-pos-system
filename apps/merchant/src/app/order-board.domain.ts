@@ -10,6 +10,28 @@ export const PAYMENT_STATUS_LABEL: Readonly<Record<PaymentState, string>> = {
   manual_confirmed: "ร้านยืนยันรับเงินแล้ว (ตรวจด้วยตนเอง)",
 };
 
+export type PaymentFilter = "all" | PaymentState;
+export const PAYMENT_FILTERS = [
+  { id: "all", label: "ทั้งหมด" },
+  { id: "awaiting_payment", label: "รอชำระ / ส่งสลิปใหม่" },
+  { id: "slip_submitted", label: "ส่งสลิปแล้ว · รอตรวจ" },
+  { id: "manual_confirmed", label: "ยืนยันรับเงินแล้ว" },
+  { id: "not_requested", label: "ยังไม่เปิดคำขอชำระ" },
+] as const satisfies readonly { id: PaymentFilter; label: string }[];
+
+export function parsePaymentFilter(value: string | null): PaymentFilter {
+  return PAYMENT_FILTERS.find((filter) => filter.id === value)?.id ?? "all";
+}
+
+// Payment and fulfilment are separate: served or cancelled Orders can still
+// have unresolved payments. Never infer receipt from fulfilment.
+export function matchesPaymentFilter(
+  order: Pick<MerchantOrder, "paymentState">,
+  filter: PaymentFilter,
+): boolean {
+  return filter === "all" || order.paymentState === filter;
+}
+
 export interface MerchantStore {
   tenantId: string;
   storeId: string;
