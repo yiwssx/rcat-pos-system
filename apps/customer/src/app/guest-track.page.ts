@@ -20,6 +20,7 @@ import {
   ORDER_STATUS_LABEL,
 } from "./guest-order.domain";
 import { GuestOrderApi, GuestOrderSession } from "./guest-order.api";
+import { paymentSlipError } from "./guest-order.errors";
 
 const TRACK_INTERVAL_MS = 15_000;
 
@@ -503,11 +504,10 @@ export class GuestTrackPage implements OnInit, OnDestroy {
       this.paymentForOrder = null;
       await this.refresh();
     } catch (error) {
-      this.slipError.set(
-        error instanceof Error && !("status" in error)
-          ? error.message
-          : "ส่งสลิปไม่สำเร็จ อาจมีสลิปรอตรวจอยู่แล้ว กรุณาลองใหม่",
-      );
+      this.slipError.set(paymentSlipError(error));
+      // A lost response or a prior submitted slip may already be recorded.
+      // Reconcile the server state without retrying or clearing tracking.
+      void this.refresh();
     } finally {
       input.value = "";
       this.slipLoading.set(false);

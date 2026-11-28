@@ -1,7 +1,13 @@
 import "@angular/compiler";
 import { describe, expect, it } from "vitest";
+import { crc32, deflateSync } from "node:zlib";
 import { HttpErrorResponse } from "@angular/common/http";
-import { guestError, isBillClosureRequired } from "./guest-order.errors";
+import {
+  guestError,
+  isBillClosureRequired,
+  paymentSlipError,
+} from "./guest-order.errors";
+import { canonicalizeCanvasPng } from "./prepare-payment-slip-png";
 import { routes } from "./app.routes";
 import {
   addToCart,
@@ -464,5 +470,88 @@ describe("Guest conflict recovery", () => {
         conflict("Store QR settings changed or session already exists"),
       ),
     ).not.toContain("ตะกร้า");
+  });
+});
+
+describe("customer payment slip canvas compatibility", () => {
+  function chunk(type: string, data: Buffer): Buffer {
+    const result = Buffer.alloc(data.length + 12);
+    result.writeUInt32BE(data.length);
+    result.write(type, 4, "ascii");
+    data.copy(result, 8);
+    result.writeUInt32BE(crc32(result.subarray(4, -4)), result.length - 4);
+    return result;
+  }
+
+  function fixture() {
+    const header = Buffer.alloc(13);
+    header.writeUInt32BE(64, 0);
+    header.writeUInt32BE(64, 4);
+    header[8] = 8;
+    header[9] = 2;
+    const raster = Buffer.alloc(64 * (1 + 64 * 3));
+    for (let row = 0; row < 64; row++) {
+      for (let i = 0; i < 64 * 3; i++) {
+        raster[row * 193 + 1 + i] = (row * i) % 256;
+      }
+    }
+    const encoded = deflateSync(raster);
+    const signature = Buffer.from("89504e470d0a1a0a", "hex");
+    const ihdr = chunk("IHDR", header);
+    const iend = chunk("IEND", Buffer.alloc(0));
+    const canonical = Buffer.concat([
+      signature,
+      ihdr,
+      chunk("IDAT", encoded),
+      iend,
+    ]);
+    const split = Array.from(encoded, (value) =>
+      chunk("IDAT", Buffer.from([value])),
+    );
+    const withMetadata = Buffer.concat([
+      signature,
+      ihdr,
+      chunk("iCCP", Buffer.from("browser profile\0\0test")),
+      chunk("tEXt", Buffer.from("Comment\0private")),
+      ...split,
+      iend,
+    ]);
+    return { canonical, withMetadata };
+  }
+
+  it("strips canvas metadata and merges IDAT chunks without changing raster bytes", async () => {
+    const { canonical, withMetadata } = fixture();
+    const result = await canonicalizeCanvasPng(
+      new Blob([new Uint8Array(withMetadata)], { type: "image/png" }),
+    );
+    expect(result?.type).toBe("image/png");
+    expect(Buffer.from(await result!.arrayBuffer())).toEqual(canonical);
+  });
+
+  it("enforces the final byte limit and rejects truncated canvas PNGs", async () => {
+    const { canonical } = fixture();
+    expect(
+      await canonicalizeCanvasPng(
+        new Blob([new Uint8Array(canonical)]),
+        canonical.length - 1,
+      ),
+    ).toBeNull();
+    await expect(
+      canonicalizeCanvasPng(
+        new Blob([new Uint8Array(canonical.subarray(0, -1))]),
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("explains rejected PNGs without implying the payment failed or clearing tracking", () => {
+    expect(paymentSlipError(new HttpErrorResponse({ status: 400 }))).toContain(
+      "(400)",
+    );
+    expect(paymentSlipError(new HttpErrorResponse({ status: 413 }))).toContain(
+      "(413)",
+    );
+    expect(paymentSlipError(new HttpErrorResponse({ status: 0 }))).toContain(
+      "ตรวจสอบสถานะออเดอร์",
+    );
   });
 });
