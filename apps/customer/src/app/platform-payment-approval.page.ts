@@ -398,7 +398,9 @@ const STATUS_LABEL: Record<ReviewStatus, string> = {
             class="rounded-xl border border-border bg-card p-4"
             aria-label="สิทธิ์ผู้อนุมัติ"
           >
-            <summary class="cursor-pointer font-semibold">
+            <summary
+              class="min-h-11 cursor-pointer py-2 font-semibold focus-visible:outline-2 focus-visible:outline-ring"
+            >
               มอบหมายสิทธิ์อนุมัติบัญชี
             </summary>
             <div class="mt-3 grid gap-3">
