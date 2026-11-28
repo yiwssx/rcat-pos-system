@@ -37,3 +37,28 @@ export function guestError(error: unknown): string {
   }
   return error instanceof Error ? error.message : "ไม่สามารถดำเนินการได้";
 }
+
+// Avoid echoing raw server errors or assuming a network failure means the
+// payment evidence was not stored. The Order capability is never cleared.
+export function paymentSlipError(error: unknown): string {
+  if (error instanceof HttpErrorResponse) {
+    switch (error.status) {
+      case 0:
+        return "เชื่อมต่อไม่ได้ กรุณาตรวจสอบสถานะออเดอร์ก่อนลองส่งสลิปอีกครั้ง";
+      case 400:
+        return "รูปสลิปไม่ผ่านการตรวจสอบ (400) กรุณาเลือกภาพ PNG หรือ JPG ที่อ่านชัดเจน";
+      case 403:
+      case 404:
+        return "ไม่สามารถส่งสลิปสำหรับออเดอร์นี้ได้ กรุณาตรวจสอบสถานะกับร้าน";
+      case 409:
+        return "ข้อมูลสลิปมีการเปลี่ยนแปลงหรือมีสลิปรอตรวจอยู่ กรุณาตรวจสอบสถานะกับร้าน";
+      case 413:
+        return "รูปสลิปมีขนาดใหญ่เกินกำหนด (413) กรุณาเลือกภาพขนาดเล็กลงที่อ่านชัดเจน";
+      case 429:
+        return "มีการเรียกใช้งานจำนวนมาก กรุณารอสักครู่ก่อนลองใหม่";
+      default:
+        return "ส่งสลิปไม่สำเร็จ กรุณาตรวจสอบสถานะออเดอร์กับร้านก่อนลองใหม่";
+    }
+  }
+  return error instanceof Error ? error.message : "ไม่สามารถอ่านรูปสลิปได้";
+}

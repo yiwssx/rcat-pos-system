@@ -1,7 +1,8 @@
 import { DOCUMENT } from "@angular/common";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { inject, Injectable, signal } from "@angular/core";
 import { firstValueFrom } from "rxjs";
+import { preparePaymentSlipPng } from "./prepare-payment-slip-png";
 import {
   CartLine,
   GuestCatalogCursor,
@@ -261,61 +262,36 @@ export class GuestOrderApi {
     token: string,
     source: File,
   ): Promise<{ slipId: string; state: string; replayed: boolean }> {
-    if (
-      source.size > 8 * 1024 * 1024 ||
-      !["image/png", "image/jpeg", "image/webp"].includes(source.type)
-    ) {
-      throw new Error("รองรับเฉพาะรูป PNG, JPG หรือ WebP ไม่เกิน 8 MB");
-    }
-    const bitmap = await createImageBitmap(source);
-    let png: Blob | null = null;
-    try {
-      if (
-        bitmap.width < 1 ||
-        bitmap.height < 1 ||
-        bitmap.width > 4096 ||
-        bitmap.height > 4096
-      ) {
-        throw new Error("รูปสลิปมีขนาดไม่เหมาะสม");
-      }
-      for (const maxSide of [1200, 960, 720, 560]) {
-        const scale = Math.min(
-          1,
-          maxSide / Math.max(bitmap.width, bitmap.height),
-        );
-        const canvas = this.document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-        const context = canvas.getContext("2d");
-        if (!context) throw new Error("ไม่สามารถอ่านรูปสลิปได้");
-        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-        const result = await new Promise<Blob | null>((resolve) =>
-          canvas.toBlob(resolve, "image/png"),
-        );
-        // Canvas conversion drops embedded source EXIF, text and ICC metadata.
-        if (result && result.size >= 80 && result.size <= 524288) {
-          png = result;
-          break;
-        }
-      }
-    } finally {
-      bitmap.close();
-    }
-    if (!png) {
-      throw new Error("ไม่สามารถลดขนาดรูปสลิปได้ โปรดใช้ภาพที่อ่านชัดเจน");
-    }
-    return firstValueFrom(
-      this.http.put<{ slipId: string; state: string; replayed: boolean }>(
-        "/api/guest/orders/" + encodeURIComponent(orderId) + "/payment-slip",
-        png,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "image/png",
+    const send = (png: Blob) =>
+      firstValueFrom(
+        this.http.put<{ slipId: string; state: string; replayed: boolean }>(
+          "/api/guest/orders/" + encodeURIComponent(orderId) + "/payment-slip",
+          png,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "image/png",
+            },
           },
-        },
-      ),
-    );
+        ),
+      );
+    const png = await preparePaymentSlipPng(source, this.document);
+    try {
+      return await send(png);
+    } catch (error) {
+      // If an upstream proxy explicitly rejects the size, retry once below
+      // its former 256 KiB cap. Never retry an ambiguous network failure.
+      if (
+        error instanceof HttpErrorResponse &&
+        error.status === 413 &&
+        png.size > 256 * 1024
+      ) {
+        return send(
+          await preparePaymentSlipPng(source, this.document, 256 * 1024),
+        );
+      }
+      throw error;
+    }
   }
 
   history(orderId: string, token: string): Promise<GuestOrderHistory> {
