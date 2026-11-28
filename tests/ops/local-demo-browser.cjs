@@ -871,6 +871,8 @@ async function main() {
       assert.equal(await verified.getAttribute('type'),'password');
       await auditWidths(platformPage,'platform-payment-review-expanded');
       await platformPage.getByRole('button',{name:'ยกเลิก',exact:true}).click();
+      // Angular schedules signal-driven template removal; wait for actual DOM detachment.
+      await verified.waitFor({state:'detached'});
       assert.equal(await verified.count(),0);
       values['/api/platform/payments'].canReview=false;
       values['/api/platform/payments'].isSuper=false;
