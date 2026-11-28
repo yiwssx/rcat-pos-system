@@ -39,7 +39,7 @@ export async function canonicalizeCanvasPng(
   let endChunk: Uint8Array | null = null;
   let dataLength = 0;
   let afterImageData = false;
-  for (let offset = 8; offset < input.length; ) {
+  for (let offset = 8; offset < input.length;) {
     if (input.length - offset < 12) invalid();
     const length = view.getUint32(offset);
     const end = offset + length + 12;
