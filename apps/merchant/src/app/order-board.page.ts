@@ -566,7 +566,9 @@ function failureText(error: unknown): string {
                   <details
                     class="space-y-2 rounded-xl border border-border p-3"
                   >
-                    <summary class="cursor-pointer text-sm font-semibold">
+                    <summary
+                      class="min-h-11 cursor-pointer rounded-lg py-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    >
                       ชำระย้อนหลัง / กู้คืนออเดอร์
                     </summary>
                     <p class="text-sm text-muted-foreground">
