@@ -144,3 +144,20 @@ test("docker compose parser validates synthetic staging configuration (no daemon
     rmSync(x.dir, { recursive: true, force: true });
   }
 });
+
+test("the exact slip upload route admits the API's 512 KiB PNG cap without widening other requests", () => {
+  for (const path of ["infra/onprem/nginx-static-api.conf", "infra/local/nginx.conf"]) {
+    const nginx = readFileSync(join(root, path), "utf8");
+    const route = "location ~ ^/api/guest/orders/[0-9A-Fa-f-]+/payment-slip$ {";
+    const location = nginx.split(route);
+    assert.equal(location.length, 2, path + ": exact slip location required");
+    assert.match(location[0], /^    client_max_body_size 256k;$/m);
+    const slip = location[1].split("\n    }")[0];
+    assert.match(slip, /^        client_max_body_size 512k;$/m);
+    assert.match(slip, /proxy_pass \$rcat_api;/);
+    assert.ok(location[1].includes("location /api/ {"), path + ": retain general API location");
+    assert.equal((nginx.match(/client_max_body_size 512k;/g) ?? []).length, 1);
+  }
+  const api = readFileSync(join(root, "apps/api/src/main.ts"), "utf8");
+  assert.match(api, /type: "image\/png", limit: "512kb"/);
+});
