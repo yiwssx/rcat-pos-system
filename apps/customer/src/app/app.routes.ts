@@ -21,6 +21,12 @@ export const routes: Routes = [
       import("./guest-track.page").then((m) => m.GuestTrackPage),
   },
   {
+    path: "order/recover",
+    pathMatch: "full",
+    loadComponent: () =>
+      import("./guest-recovery.page").then((m) => m.GuestRecoveryPage),
+  },
+  {
     path: "status",
     loadComponent: () => import("./status.page").then((m) => m.StatusPage),
   },

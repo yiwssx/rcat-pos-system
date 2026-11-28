@@ -227,7 +227,7 @@ test("opt-in maintenance container has DBA secret, runtime API does not", () => 
 });
 
 
-test("portal 049-053 read-only migration ledger plan rejects drift and preserves payment locks", () => {
+test("portal 049-054 read-only migration ledger plan rejects drift and preserves payment locks", () => {
   const planner = root + "/scripts/ops/portal-migration-plan.py";
   const help = execute("python3", [planner, "--help"]);
   assert.equal(help.status, 0, help.stderr);

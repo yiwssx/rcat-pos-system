@@ -22,6 +22,8 @@ import {
 import { GuestOrderApi, GuestOrderSession } from "./guest-order.api";
 import { paymentSlipError } from "./guest-order.errors";
 
+import { GUEST_PAYMENT_LABEL, GuestTracking } from "./guest-tracking.domain";
+
 const TRACK_INTERVAL_MS = 15_000;
 
 @Component({
@@ -47,12 +49,12 @@ const TRACK_INTERVAL_MS = 15_000;
         class="m-0 max-w-none text-2xl font-semibold leading-tight sm:text-3xl"
         id="tracking-title"
       >
-        ติดตามคำสั่งซื้อ
+        ออเดอร์ของฉัน
       </h1>
       <p
         class="guest-context break-words text-sm leading-6 text-muted-foreground"
       >
-        ติดตามความคืบหน้าของอาหารและตรวจสอบการชำระเงินได้ที่นี่
+        เลือกออเดอร์เดิมเพื่อดูสถานะ ชำระเงิน หรือส่งสลิป โดยไม่ต้องสั่งใหม่
       </p>
       @if (!online()) {
         <p
@@ -69,15 +71,49 @@ const TRACK_INTERVAL_MS = 15_000;
           class="guest-status rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground"
           role="status"
         >
-          ไม่พบคำสั่งซื้อที่ติดตามได้ในแท็บนี้ โปรดเปิดหน้าเมนูจาก QR
-          และส่งคำสั่งซื้อก่อน
+          ไม่พบออเดอร์ที่ติดตามได้ในแท็บนี้ หากยังมีออเดอร์ค้างชำระ
+          ให้ขอลิงก์ชำระย้อนหลังจากร้าน ไม่ต้องสั่งใหม่
         </div>
       } @else {
+        <div class="space-y-2" aria-label="รายการออเดอร์ของฉัน">
+          @for (entry of session.trackedOrders(); track entry.orderId) {
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              class="flex h-auto min-h-11 w-full flex-wrap justify-between gap-2 whitespace-normal text-left"
+              [attr.aria-pressed]="
+                session.tracking()?.orderId === entry.orderId
+              "
+              [class.border-primary]="
+                session.tracking()?.orderId === entry.orderId
+              "
+              [disabled]="loading() || paymentLoading() || slipLoading()"
+              (click)="selectOrder(entry.orderId)"
+            >
+              <span>ออเดอร์ {{ number(entry.displayNumber) }}</span>
+              @if (entry.summary; as summary) {
+                <span class="text-xs"
+                  >{{ money(summary.amountSatang) }} ฿ ·
+                  {{ paymentLabel[summary.paymentState] }} ·
+                  ข้อมูลล่าสุดที่ดู</span
+                >
+              } @else {
+                <span class="text-xs">ตรวจสถานะ</span>
+              }
+            </button>
+          }
+        </div>
         <div
           class="guest-track-card min-w-0 space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-6"
         >
           <p class="guest-track-id m-0 text-lg font-semibold tabular-nums">
-            หมายเลขออเดอร์ {{ number(status()?.displayNumber) }}
+            หมายเลขออเดอร์
+            {{
+              number(
+                status()?.displayNumber ?? session.tracking()?.displayNumber
+              )
+            }}
           </p>
           @if (status()) {
             <span
@@ -112,7 +148,7 @@ const TRACK_INTERVAL_MS = 15_000;
             <p class="guest-track-time text-sm text-muted-foreground">
               อัปเดตล่าสุด {{ formatDate(status()!.updatedAt) }}
             </p>
-          } @else {
+          } @else if (loading()) {
             <p role="status">กำลังโหลดสถานะออเดอร์...</p>
           }
           @if (error()) {
@@ -195,7 +231,8 @@ const TRACK_INTERVAL_MS = 15_000;
                 class="guest-payment-alert space-y-2 rounded-xl bg-muted p-3 text-sm leading-6 text-foreground"
                 role="note"
               >
-                หลังโอนเงิน โปรดแนบสลิปและรอร้านตรวจสอบยอดเงินเข้าจริง
+                หากโอนแล้ว อย่าโอนซ้ำ
+                ให้แนบสลิปเดิมและรอร้านตรวจสอบยอดเงินเข้าจริง
                 การแนบสลิปไม่ใช่การยืนยันว่าร้านได้รับเงินแล้ว
               </p>
               <label for="payment-slip-file">แนบสลิปการโอน</label>
@@ -285,7 +322,9 @@ const TRACK_INTERVAL_MS = 15_000;
               variant="default"
               class="min-h-11"
               type="button"
-              [disabled]="loading() || !online()"
+              [disabled]="
+                loading() || paymentLoading() || slipLoading() || !online()
+              "
               (click)="refresh()"
             >
               {{ loading() ? "กำลังโหลด..." : "ตรวจสถานะล่าสุด" }}
@@ -295,14 +334,16 @@ const TRACK_INTERVAL_MS = 15_000;
               variant="outline"
               type="button"
               class="guest-subtle min-h-11"
+              [disabled]="loading() || paymentLoading() || slipLoading()"
               (click)="clear()"
             >
               ล้างข้อมูลติดตามจากแท็บนี้
             </button>
           </div>
           <p class="guest-privacy text-sm leading-6 text-muted-foreground">
-            เก็บรหัสติดตามไว้ในแท็บนี้ชั่วคราวเท่านั้น ไม่ส่งผ่าน URL
-            เมื่อปิดแท็บหรือหมดระยะเวลาจะไม่สามารถกู้คืนรหัสนี้ได้
+            เก็บออเดอร์ล่าสุดไม่เกิน 50 รายการในแท็บนี้ แต่ละรหัสอยู่ได้ไม่เกิน
+            12 ชั่วโมง หากปิดแท็บหรือหมดอายุ
+            ให้ขอลิงก์ชำระย้อนหลังเฉพาะออเดอร์จากร้าน
           </p>
         </div>
       }
@@ -336,6 +377,52 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   private interval?: ReturnType<typeof setInterval>;
   private destroyed = false;
   private paymentForOrder: string | null = null;
+  private displayedOrderId: string | null = null;
+  private displayedToken: string | null = null;
+  readonly paymentLabel = GUEST_PAYMENT_LABEL;
+
+  private isCurrent(tracked: GuestTracking): boolean {
+    const active = this.session.tracking();
+    return (
+      !this.destroyed &&
+      active?.orderId === tracked.orderId &&
+      active.trackingToken === tracked.trackingToken &&
+      this.displayedOrderId === tracked.orderId &&
+      this.displayedToken === tracked.trackingToken
+    );
+  }
+
+  private canPay(tracked: GuestTracking): boolean {
+    const latest = this.status();
+    return (
+      this.isCurrent(tracked) &&
+      latest?.orderId === tracked.orderId &&
+      latest.status !== "cancelled" &&
+      (latest.paymentState === "not_requested" ||
+        latest.paymentState === "awaiting_payment")
+    );
+  }
+
+  private resetView(): void {
+    this.payment.set(null);
+    this.paymentChecked.set(false);
+    this.paymentForOrder = null;
+    this.paymentError.set("");
+    this.slipError.set("");
+    this.slipMessage.set("");
+    this.status.set(null);
+    this.history.set(null);
+    this.error.set("");
+    this.displayedOrderId = null;
+    this.displayedToken = null;
+  }
+
+  selectOrder(orderId: string): void {
+    if (this.loading() || this.paymentLoading() || this.slipLoading()) return;
+    if (!this.session.selectTracking(orderId)) return;
+    this.resetView();
+    void this.refresh();
+  }
   readonly payment = signal<GuestPayable | null>(null);
   readonly paymentChecked = signal(false);
   readonly paymentLoading = signal(false);
@@ -400,8 +487,20 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   }
 
   async refresh(): Promise<void> {
+    if (this.loading() || this.destroyed || this.paymentLoading()) return;
     const tracked = this.session.recoverTracking();
-    if (!tracked || this.loading() || this.destroyed) return;
+    if (!tracked) {
+      this.resetView();
+      return;
+    }
+    if (
+      this.displayedOrderId !== tracked.orderId ||
+      this.displayedToken !== tracked.trackingToken
+    ) {
+      this.resetView();
+      this.displayedOrderId = tracked.orderId;
+      this.displayedToken = tracked.trackingToken;
+    }
     if (!this.online()) return;
     this.loading.set(true);
     this.error.set("");
@@ -410,7 +509,9 @@ export class GuestTrackPage implements OnInit, OnDestroy {
         tracked.orderId,
         tracked.trackingToken,
       );
-      if (this.destroyed) return;
+      if (!this.isCurrent(tracked) || latest.orderId !== tracked.orderId)
+        return;
+      this.session.updateTrackingSummary(latest, tracked.trackingToken);
       const previousPaymentState = this.status()?.paymentState;
       this.status.set(latest);
       if (previousPaymentState !== latest.paymentState) {
@@ -430,13 +531,24 @@ export class GuestTrackPage implements OnInit, OnDestroy {
         tracked.orderId,
         tracked.trackingToken,
       );
-      if (!this.destroyed) this.history.set(timeline);
+      if (this.isCurrent(tracked) && timeline.orderId === tracked.orderId)
+        this.history.set(timeline);
     } catch (error) {
-      if (this.destroyed) return;
+      if (!this.isCurrent(tracked)) return;
+      if (
+        error instanceof HttpErrorResponse &&
+        [401, 403, 404].includes(error.status)
+      ) {
+        this.payment.set(null);
+        this.status.set(null);
+        this.history.set(null);
+        this.paymentForOrder = null;
+        this.paymentChecked.set(false);
+      }
       this.error.set(
         error instanceof HttpErrorResponse
           ? error.status === 404
-            ? "ออเดอร์นี้ไม่พร้อมให้ติดตามหรือรหัสหมดอายุ"
+            ? "ออเดอร์นี้ไม่พร้อมให้ติดตามหรือรหัสหมดอายุ กรุณาขอลิงก์จากร้าน"
             : error.status === 0
               ? "เครือข่ายไม่พร้อม กรุณาลองอีกครั้ง"
               : "โหลดสถานะไม่สำเร็จ โปรดลองใหม่"
@@ -454,7 +566,7 @@ export class GuestTrackPage implements OnInit, OnDestroy {
       !this.online() ||
       this.destroyed ||
       this.paymentLoading() ||
-      this.status()?.status === "cancelled" ||
+      !this.canPay(tracked) ||
       (!force && this.paymentForOrder === tracked.orderId)
     ) {
       return;
@@ -469,15 +581,16 @@ export class GuestTrackPage implements OnInit, OnDestroy {
         tracked.trackingToken,
       );
       if (
-        this.destroyed ||
-        this.session.tracking()?.orderId !== tracked.orderId
+        !this.canPay(tracked) ||
+        (result.available && result.orderId !== tracked.orderId)
       ) {
         return;
       }
       this.payment.set(result.available ? result : null);
       this.paymentChecked.set(true);
     } catch {
-      if (this.destroyed) return;
+      if (!this.isCurrent(tracked)) return;
+      this.payment.set(null);
       this.paymentError.set("ยังตรวจสอบช่องทางชำระเงินไม่ได้ โปรดลองอีกครั้ง");
       this.paymentChecked.set(true);
     } finally {
@@ -489,7 +602,18 @@ export class GuestTrackPage implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     const source = input.files?.[0];
     const tracked = this.session.recoverTracking();
-    if (!source || !tracked || this.slipLoading() || !this.online()) return;
+    if (
+      !source ||
+      !tracked ||
+      !this.canPay(tracked) ||
+      this.payment()?.orderId !== tracked.orderId ||
+      this.slipLoading() ||
+      this.paymentLoading() ||
+      !this.online()
+    ) {
+      input.value = "";
+      return;
+    }
     this.slipLoading.set(true);
     this.slipError.set("");
     this.slipMessage.set("");
@@ -499,11 +623,13 @@ export class GuestTrackPage implements OnInit, OnDestroy {
         tracked.trackingToken,
         source,
       );
+      if (!this.isCurrent(tracked)) return;
       this.slipMessage.set("ส่งหลักฐานแล้ว · รอร้านตรวจสอบยอดเงินเข้า");
       this.payment.set(null);
       this.paymentForOrder = null;
       await this.refresh();
     } catch (error) {
+      if (!this.isCurrent(tracked)) return;
       this.slipError.set(paymentSlipError(error));
       // A lost response or a prior submitted slip may already be recorded.
       // Reconcile the server state without retrying or clearing tracking.
@@ -515,9 +641,15 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   }
 
   savePaymentQr(): void {
-    const tracked = this.session.tracking();
+    const tracked = this.session.recoverTracking();
     const payment = this.payment();
-    if (!tracked || !payment) return;
+    if (
+      !tracked ||
+      !payment ||
+      !this.canPay(tracked) ||
+      payment.orderId !== tracked.orderId
+    )
+      return;
     const anchor = this.document.createElement("a");
     anchor.href = payment.qrImageDataUrl;
     anchor.download = `rcat-pos-order-${this.status()?.displayNumber ?? "order"}-qr.png`;
@@ -525,15 +657,14 @@ export class GuestTrackPage implements OnInit, OnDestroy {
   }
 
   clear(): void {
-    this.payment.set(null);
-    this.paymentChecked.set(false);
-    this.paymentForOrder = null;
-    this.paymentError.set("");
-    this.slipError.set("");
-    this.slipMessage.set("");
+    if (this.loading() || this.paymentLoading() || this.slipLoading()) return;
+    if (
+      !this.window?.confirm(
+        "ล้างรายการออเดอร์ทั้งหมดในแท็บนี้หรือไม่? หากยังค้างชำระจะต้องขอลิงก์จากร้าน",
+      )
+    )
+      return;
     this.session.clearTracking();
-    this.status.set(null);
-    this.history.set(null);
-    this.error.set("");
+    this.resetView();
   }
 }

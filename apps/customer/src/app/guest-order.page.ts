@@ -1169,7 +1169,12 @@ export class GuestOrderPage implements OnInit, OnDestroy {
     try {
       const selected = await this.api.quickTracking(token, orderId);
       if (this.session.visitToken() !== token) return;
-      this.session.saveTracking(selected.orderId, selected.trackingToken);
+      this.session.saveTracking(
+        selected.orderId,
+        selected.trackingToken,
+        this.quickOrders().find((o) => o.orderId === selected.orderId)
+          ?.displayNumber,
+      );
       await this.router.navigate(["/order/track"], {
         queryParams: {
           tenant: counter.tenantId,
@@ -1640,7 +1645,11 @@ export class GuestOrderPage implements OnInit, OnDestroy {
           key,
           target,
         );
-        this.session.saveTracking(result.orderId, result.trackingToken);
+        this.session.saveTracking(
+          result.orderId,
+          result.trackingToken,
+          result.displayNumber,
+        );
         this.quickTarget.set(null);
         this.closeCart();
         this.notice.set(
@@ -1660,7 +1669,11 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       const confirmed = await this.api.checkout(token, lines, context, key);
       // Server result is the only authoritative amount. Do not use cart
       // estimate as receipt, and do not show any "paid" success state.
-      this.session.saveTracking(confirmed.orderId, confirmed.trackingToken);
+      this.session.saveTracking(
+        confirmed.orderId,
+        confirmed.trackingToken,
+        confirmed.displayNumber,
+      );
       await this.router.navigateByUrl("/order/track");
     } catch (error) {
       if (error instanceof HttpErrorResponse && error.status === 404) {

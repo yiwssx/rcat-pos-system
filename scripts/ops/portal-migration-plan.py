@@ -25,6 +25,7 @@ TARGETS = (
     "051_g6_approved_receiver_activation.sql",
     "052_g6_receiver_retention_activation_gate.sql",
     "053_g6_platform_payment_approval.sql",
+    "054_guest_order_payment_recovery.sql",
 )
 
 
@@ -35,21 +36,21 @@ class Blocked(Exception):
 def inventory(root: Path) -> dict[str, str]:
     paths = sorted((root / "db/migrations").glob("*.sql"))
     names = [p.name for p in paths]
-    if (len(names) != 53 or any(not VERSION.fullmatch(n) for n in names)
-            or [int(n[:3]) for n in names] != list(range(1, 54))
+    if (len(names) != 54 or any(not VERSION.fullmatch(n) for n in names)
+            or [int(n[:3]) for n in names] != list(range(1, 55))
             or names[48] != "049_quick_order_tracking.sql"
             or tuple(names[49:]) != TARGETS):
-        raise Blocked("source migration inventory differs from reviewed 049-053 release")
+        raise Blocked("source migration inventory differs from reviewed 049-054 release")
     return {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
 
 
 def assess(manifest: dict[str, str], applied: list[tuple[str, str]]) -> dict:
     """Pure function for safe synthetic tests. A ledger is not a recovery proof."""
     names = list(manifest)
-    if (len(names) != 53 or names[48] != "049_quick_order_tracking.sql"
+    if (len(names) != 54 or names[48] != "049_quick_order_tracking.sql"
             or tuple(names[49:]) != TARGETS):
         raise Blocked("unexpected source migration inventory")
-    if not 49 <= len(applied) <= 53:
+    if not 49 <= len(applied) <= 54:
         raise Blocked("missing baseline 049 or unexpected ledger count")
     for i, (version, checksum) in enumerate(applied):
         if version != names[i] or checksum != manifest[version]:

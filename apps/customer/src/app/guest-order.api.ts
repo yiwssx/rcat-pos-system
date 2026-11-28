@@ -2,6 +2,14 @@ import { DOCUMENT } from "@angular/common";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { inject, Injectable, signal } from "@angular/core";
 import { firstValueFrom } from "rxjs";
+import {
+  GuestTracking,
+  TRACKING_ID,
+  TRACKING_TOKEN,
+  TRACKING_MAX_ORDERS,
+  restoreTrackingList,
+  validTracking,
+} from "./guest-tracking.domain";
 import { preparePaymentSlipPng } from "./prepare-payment-slip-png";
 import {
   CartLine,
@@ -59,15 +67,8 @@ function counterCatalog(page: QuickCatalog): GuestCatalogPage {
   };
 }
 
-interface GuestTracking {
-  orderId: string;
-  trackingToken: string;
-  createdAt: number;
-}
 const TRACKING_STORAGE_KEY = "rcat-pos:guest-order-tracking:v1";
-const TRACKING_MAX_AGE_MS = 12 * 60 * 60 * 1000;
-const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const TOKEN = /^[A-Za-z0-9_-]{43}$/;
+const TRACKING_LIST_KEY = "rcat-pos:guest-order-tracking-list:v2";
 
 @Injectable({ providedIn: "root" })
 export class GuestOrderApi {
@@ -294,6 +295,29 @@ export class GuestOrderApi {
     }
   }
 
+  redeemPaymentRecovery(
+    orderId: string,
+    claimToken: string,
+    accessToken: string,
+  ): Promise<{
+    orderId: string;
+    displayNumber: string;
+    expiresAt: string;
+  }> {
+    return firstValueFrom(
+      this.http.post<{
+        orderId: string;
+        displayNumber: string;
+        expiresAt: string;
+      }>(
+        "/api/guest/orders/" +
+          encodeURIComponent(orderId) +
+          "/payment-recovery/redeem",
+        { claimToken, accessToken },
+      ),
+    );
+  }
+
   history(orderId: string, token: string): Promise<GuestOrderHistory> {
     return firstValueFrom(
       this.http.get<GuestOrderHistory>(
@@ -312,6 +336,8 @@ export class GuestOrderSession {
   readonly visitToken = signal<string | null>(null);
   readonly cart = signal<CartLine[]>([]);
   readonly tracking = signal<GuestTracking | null>(null);
+  readonly trackedOrders = signal<GuestTracking[]>([]);
+  private trackingInitialized = false;
   private pending: { key: string; payload: string } | null = null;
 
   setPage(token: string, page: GuestCatalogPage): void {
@@ -402,69 +428,143 @@ export class GuestOrderSession {
     return key;
   }
 
-  saveTracking(orderId: string, token: string): void {
-    if (!ID.test(orderId) || !TOKEN.test(token)) {
-      throw new Error("ไม่สามารถบันทึกรหัสติดตามออเดอร์");
-    }
-    const tracking: GuestTracking = {
-      orderId,
-      trackingToken: token,
-      createdAt: Date.now(),
-    };
-    this.tracking.set(tracking);
-    // Tab-scoped only (not localStorage or URL). A new tab cannot silently
-    // read someone else's order. Tokens remain inaccessible to server logs.
-    try {
-      this.window?.sessionStorage.setItem(
-        TRACKING_STORAGE_KEY,
-        JSON.stringify(tracking),
-      );
-    } catch {
-      // In-memory tracking still works when storage is disabled.
-    }
+  saveTracking(orderId: string, token: string, displayNumber?: string): void {
+    this.rememberTracking(orderId, token, displayNumber);
     this.pending = null;
     this.cart.set([]);
   }
 
-  recoverTracking(): GuestTracking | null {
-    const current = this.tracking();
-    if (current && Date.now() - current.createdAt < TRACKING_MAX_AGE_MS)
-      return current;
-    if (current) this.clearTracking();
+  rememberTracking(
+    orderId: string,
+    token: string,
+    displayNumber?: string,
+    expiresAt?: number,
+  ): void {
+    if (!TRACKING_ID.test(orderId) || !TRACKING_TOKEN.test(token)) {
+      throw new Error("ไม่สามารถบันทึกรหัสติดตามออเดอร์");
+    }
+    this.recoverTracking();
+    const previous = this.trackedOrders().find(
+      (o) => o.orderId === orderId.toLowerCase(),
+    );
+    if (
+      previous &&
+      previous.expiresAt === undefined &&
+      expiresAt !== undefined
+    ) {
+      this.selectTracking(previous.orderId);
+      return;
+    }
+    const entry: GuestTracking = {
+      orderId: orderId.toLowerCase(),
+      trackingToken: token,
+      createdAt: Date.now(),
+      ...(displayNumber ? { displayNumber } : {}),
+      ...(expiresAt !== undefined ? { expiresAt } : {}),
+      ...(previous?.summary ? { summary: previous.summary } : {}),
+    };
+    if (!validTracking(entry, Date.now())) throw new Error("รหัสติดตามหมดอายุ");
+    this.trackedOrders.set(
+      [
+        entry,
+        ...this.trackedOrders().filter((o) => o.orderId !== entry.orderId),
+      ].slice(0, TRACKING_MAX_ORDERS),
+    );
+    this.tracking.set(entry);
+    this.persistTracking();
+  }
+
+  private persistTracking(): void {
+    // Keep the independent capabilities in this tab only, never localStorage,
+    // public URLs, or a list derived from the shared table QR.
     try {
-      const raw = this.window?.sessionStorage.getItem(TRACKING_STORAGE_KEY);
-      if (!raw) return null;
-      const parsed: unknown = JSON.parse(raw);
-      if (!parsed || typeof parsed !== "object")
-        throw new Error("Invalid tracking");
-      const item = parsed as Record<string, unknown>;
-      if (
-        typeof item["orderId"] !== "string" ||
-        typeof item["trackingToken"] !== "string" ||
-        !ID.test(item["orderId"]) ||
-        !TOKEN.test(item["trackingToken"]) ||
-        typeof item["createdAt"] !== "number" ||
-        !Number.isFinite(item["createdAt"]) ||
-        Date.now() - item["createdAt"] > TRACKING_MAX_AGE_MS ||
-        item["createdAt"] > Date.now()
-      ) {
-        throw new Error("Invalid tracking");
-      }
-      const recovered = item as unknown as GuestTracking;
-      this.tracking.set(recovered);
-      return recovered;
+      const storage = this.window?.sessionStorage;
+      storage?.setItem(TRACKING_LIST_KEY, JSON.stringify(this.trackedOrders()));
+      const active = this.tracking();
+      if (active)
+        storage?.setItem(TRACKING_STORAGE_KEY, JSON.stringify(active));
+      else storage?.removeItem(TRACKING_STORAGE_KEY);
     } catch {
-      this.clearTracking();
-      return null;
+      // In-memory tracking still works when storage is disabled.
     }
   }
 
+  recoverTracking(): GuestTracking | null {
+    if (!this.trackingInitialized) {
+      this.trackingInitialized = true;
+      try {
+        const storage = this.window?.sessionStorage;
+        const restored = restoreTrackingList(
+          storage?.getItem(TRACKING_LIST_KEY) ?? null,
+          storage?.getItem(TRACKING_STORAGE_KEY) ?? null,
+          Date.now(),
+        );
+        this.trackedOrders.set(restored.orders);
+        this.tracking.set(restored.active);
+        this.persistTracking();
+      } catch {
+        /* Disabled browser storage; keep in-memory state. */
+      }
+    }
+    const now = Date.now();
+    const prev = this.trackedOrders();
+    const valid = prev.filter((o) => !!validTracking(o, now));
+    const active =
+      valid.find((o) => o.orderId === this.tracking()?.orderId) ??
+      valid[0] ??
+      null;
+    if (valid.length !== prev.length || active !== this.tracking()) {
+      this.trackedOrders.set(valid);
+      this.tracking.set(active);
+      this.persistTracking();
+    }
+    return active;
+  }
+
+  selectTracking(orderId: string): boolean {
+    this.recoverTracking();
+    const selected = this.trackedOrders().find((o) => o.orderId === orderId);
+    if (!selected) return false;
+    this.tracking.set(selected);
+    this.persistTracking();
+    return true;
+  }
+
+  updateTrackingSummary(status: GuestOrderStatus, token: string): void {
+    const found = this.trackedOrders().find(
+      (o) => o.orderId === status.orderId && o.trackingToken === token,
+    );
+    if (!found) return;
+    const next: GuestTracking = {
+      ...found,
+      displayNumber: status.displayNumber,
+      summary: {
+        amountSatang: status.amountSatang,
+        status: status.status,
+        paymentState: status.paymentState,
+        checkedAt: Date.now(),
+      },
+    };
+    this.trackedOrders.update((orders) =>
+      orders.map((o) => (o === found ? next : o)),
+    );
+    if (
+      this.tracking()?.orderId === next.orderId &&
+      this.tracking()?.trackingToken === token
+    )
+      this.tracking.set(next);
+    this.persistTracking();
+  }
+
   clearTracking(): void {
+    this.trackingInitialized = true;
     this.tracking.set(null);
+    this.trackedOrders.set([]);
     try {
       this.window?.sessionStorage.removeItem(TRACKING_STORAGE_KEY);
+      this.window?.sessionStorage.removeItem(TRACKING_LIST_KEY);
     } catch {
-      // No persistent store may be available.
+      /* No persistent store may be available. */
     }
   }
 }

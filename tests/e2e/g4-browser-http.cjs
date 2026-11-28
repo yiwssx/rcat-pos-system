@@ -1448,10 +1448,20 @@ async function serviceModeUi(fixture) {
     // Explicit counter tracking uses the existing non-money payment page.
     const quickCard = guest.locator("details div.rounded-lg", { hasText: "#" + next.displayNumber.padStart(3, "0") });
     await quickCard.getByRole("button", { name: "ติดตาม / ชำระเงิน" }).click();
-    await guest.getByRole("heading", { name: "ติดตามคำสั่งซื้อ" }).waitFor();
+    await guest.getByRole("heading", { name: "ออเดอร์ของฉัน" }).waitFor();
     await guest.getByText("ร้านยังไม่เปิดรับชำระเงินผ่านระบบนี้").waitFor();
     assert.equal(await guest.locator(".guest-payment-qr").count(), 0);
     assert.equal(new URL(guest.url()).hash, "");
+    // A second independently tracked Order is retained; switching must not
+    // change the displayed amount or request identity to the previous Order.
+    const prior = "#" + first.displayNumber.padStart(3, "0");
+    // Quick Orders may be explicitly tracked from their own list.
+    await guest.getByRole("link", { name: /กลับไปหน้าเมนู/ }).click();
+    await guest.locator("details div.rounded-lg", { hasText: prior })
+      .getByRole("button", { name: "ติดตาม / ชำระเงิน" }).click();
+    await guest.getByText("หมายเลขออเดอร์ " + prior, { exact: true }).waitFor();
+    await guest.getByRole("button", { name: new RegExp("ออเดอร์ #" + next.displayNumber.padStart(3, "0")) }).click();
+    await guest.getByText("หมายเลขออเดอร์ #" + next.displayNumber.padStart(3, "0"), { exact: true }).waitFor();
     await guest.getByRole("link", { name: /กลับไปหน้าเมนู/ }).click();
     await guest.getByText("ออเดอร์ของฉัน (2)", { exact: true }).waitFor();
     // Hybrid still permits the same permanent Table QR and operational Bill.
@@ -1475,7 +1485,7 @@ async function serviceModeUi(fixture) {
     await tableCart.getByRole("button", { name: /ยืนยันส่งคำสั่งซื้อ/ }).click();
     const tableResult = await tableResponse;
     assert.equal(tableResult.status(), 201, "Table checkout HTTP response");
-    await other.getByRole("heading", { name: "ติดตามคำสั่งซื้อ" }).waitFor();
+    await other.getByRole("heading", { name: "ออเดอร์ของฉัน" }).waitFor();
     const tableCapability = await other.evaluate(() =>
       JSON.parse(sessionStorage.getItem("rcat-pos:guest-order-tracking:v1") || "{}"));
     assert.match(tableCapability.trackingToken, /^[A-Za-z0-9_-]{43}$/);

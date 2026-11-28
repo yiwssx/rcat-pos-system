@@ -93,7 +93,93 @@ DECLARE
  token1 bytea:=decode(repeat('e4',32),'hex');
  token2 bytea:=decode(repeat('e5',32),'hex');
  response jsonb; replay jsonb; req_id uuid; denied boolean;
+ claim1 bytea:=decode(repeat('a1',32),'hex');
+ access1 bytea:=decode(repeat('a2',32),'hex');
+ claim2 bytea:=decode(repeat('a3',32),'hex');
+ access2 bytea:=decode(repeat('a4',32),'hex');
 BEGIN
+ -- Existing Orders from before payment activation can receive an independent
+ -- capability, but issuing/redeeming does not itself create a payment request.
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.merchant_issue_order_payment_recovery(
+     owner,tenant,store,order1,'not_requested',29810,true,claim1,false);
+ EXCEPTION WHEN SQLSTATE 'P0009' THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Release-off recovery issued'; END IF;
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.merchant_issue_order_payment_recovery(
+     owner,tenant,store,order1,'not_requested',29811,true,claim1,true);
+ EXCEPTION WHEN SQLSTATE 'P0009' THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Stale amount admitted'; END IF;
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.merchant_issue_order_payment_recovery(
+     owner,tenant,store,order1,'not_requested',29810,false,claim1,true);
+ EXCEPTION WHEN invalid_parameter_value THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Review was not required'; END IF;
+ PERFORM rcat_private.merchant_issue_order_payment_recovery(
+   owner,tenant,store,order1,'not_requested',29810,true,claim1,true);
+ response:=rcat_private.guest_redeem_order_payment_recovery(order1,claim1,access1);
+ replay:=rcat_private.guest_redeem_order_payment_recovery(order1,claim1,access1);
+ IF response IS DISTINCT FROM replay THEN RAISE EXCEPTION 'Same-browser retry failed'; END IF;
+ response:=rcat_private.guest_order_status(order1,access1);
+ IF response->>'paymentState'<>'not_requested' THEN
+   RAISE EXCEPTION 'Recovery changed payment state'; END IF;
+ IF (rcat_private.guest_order_history(order1,access1)->>'orderId')::uuid<>order1 THEN
+   RAISE EXCEPTION 'Wrong recovery timeline'; END IF;
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.guest_redeem_order_payment_recovery(order1,claim1,access2);
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Second browser redeemed used claim'; END IF;
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.guest_order_status(order2,access1);
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Recovered capability read other Order'; END IF;
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.guest_redeem_order_payment_recovery(order2,claim1,access2);
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Claim opened wrong Order'; END IF;
+ PERFORM rcat_private.merchant_issue_order_payment_recovery(
+   owner,tenant,store,order1,'not_requested',29810,true,claim2,true);
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.guest_order_status(order1,access1);
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Reissue preserved old recovery'; END IF;
+ PERFORM rcat_private.guest_order_status(order1,token1);
+ PERFORM rcat_private.guest_redeem_order_payment_recovery(order1,claim2,access2);
+ response:=rcat_private.guest_order_payment_request(order1,access2,true);
+ req_id:=(response->>'requestId')::uuid;
+ IF req_id IS NULL OR (response->>'amountSatang')::bigint<>29810 THEN
+   RAISE EXCEPTION 'Recovered order cannot pay old amount'; END IF;
+ replay:=rcat_private.guest_order_payment_request(order1,token1,true);
+ IF replay->>'requestId'<>req_id::text THEN RAISE EXCEPTION 'Recovery duplicated payment request'; END IF;
+ PERFORM rcat_private.merchant_revoke_order_payment_recovery(owner,tenant,store,order1);
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.guest_order_payment_request(order1,access2,true);
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Revoked bearer still payable'; END IF;
+ PERFORM rcat_private.guest_order_status(order1,token1);
+ denied:=false;
+ BEGIN
+   PERFORM count(*) FROM rcat_private.order_payment_recovery;
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true;
+ END;
+ IF NOT denied THEN RAISE EXCEPTION 'Runtime read recovery table'; END IF;
+
  response:=rcat_private.guest_order_payment_request(order1,token1,true);
  IF (response->>'available')::boolean IS DISTINCT FROM true OR
     (response->>'amountSatang')::bigint<>29810 OR
@@ -266,6 +352,39 @@ BEGIN
 END $$;
 RESET ROLE;
 
+-- Expiration is enforced by the database, not by a browser timer.
+RESET ROLE;
+DO $$
+DECLARE
+ o1 uuid:=current_setting('test.g5.order1')::uuid;
+ t uuid:=current_setting('test.g5.tenant')::uuid;
+ s uuid:=current_setting('test.g5.store')::uuid;
+ moment timestamptz:=clock_timestamp()-interval '13 hours';
+BEGIN
+ INSERT INTO rcat_private.order_payment_recovery(
+   order_id,tenant_id,store_id,amount_satang,claim_digest,issued_at,claim_expires_at,
+   access_digest,redeemed_at,access_expires_at)
+ VALUES(o1,t,s,29810,decode(repeat('a7',32),'hex'),moment,
+   moment+interval '30 minutes',decode(repeat('a8',32),'hex'),moment,
+   moment+interval '12 hours');
+END $$;
+SET LOCAL ROLE rcat_auth;
+DO $$
+DECLARE o1 uuid:=current_setting('test.g5.order1')::uuid; denied boolean:=false;
+BEGIN
+ BEGIN
+   PERFORM rcat_private.guest_order_status(o1,decode(repeat('a8',32),'hex'));
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true; END;
+ IF NOT denied THEN RAISE EXCEPTION 'Expired recovered bearer accepted'; END IF;
+ denied:=false;
+ BEGIN
+   PERFORM rcat_private.guest_redeem_order_payment_recovery(o1,
+     decode(repeat('a7',32),'hex'),decode(repeat('a8',32),'hex'));
+ EXCEPTION WHEN insufficient_privilege THEN denied:=true; END;
+ IF NOT denied THEN RAISE EXCEPTION 'Expired claim accepted'; END IF;
+ PERFORM rcat_private.guest_order_status(o1,decode(repeat('e4',32),'hex'));
+END $$;
+RESET ROLE;
 ROLLBACK;
 \echo 'PASS: Quick Order ownership and existing gated Payment snapshot freeze'
 \echo 'PASS: dual-gate PromptPay request, Order token, satang, idempotency and independent kitchen'
