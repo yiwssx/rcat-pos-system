@@ -139,6 +139,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/g5-merchant-receiver.sql
       - name: Verify G6 approved receiver activation, pause, revocation and tenant permissions
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/g6-receiver-activation.sql
+      - name: Verify platform Admin payment approval and delegated access
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/db/g6-platform-payment-approval.sql
       - name: Verify guest Order scoped dual-gated Payment Request and kitchen independence
         run: psql -X -v ON_ERROR_STOP=1 -f tests/db/g5-guest-payment-request.sql
       - name: Verify private G5 slip review and bank-check transitions

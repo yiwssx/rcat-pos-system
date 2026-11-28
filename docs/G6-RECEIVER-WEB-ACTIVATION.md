@@ -8,8 +8,8 @@ Refs #81 (G4/G6 owner release), #7 (manual PromptPay M1).
 3. Owner/Manager may pause and resume the *same approved recipient* in the web UI. No CLI is needed for routine toggles; status reload prevents stale changes.
 4. Changing the receiver, a DBA emergency stop, or an operator revoke invalidates web reactivation and requires new independent approval. Payments and historical financial evidence are not deleted.
 
-## Non-negotiable initial approval (not a self-certification)
-Saving an ID, checking a browser box, clicking Enable, or green CI is **not** bank ownership verification or G6 go/no-go. The on-prem authorized operator must independently verify actual recipient ownership, approved receipt/slip retention/backup and actual G4/G6 #81 gates, set the API QR and slip flags through a separately authorized release, and then approve the **exact disabled store receiver revision** using protected G6 access:
+## Legacy operator fallback (migration 051–052; not a self-certification)
+Saving an ID, checking a browser box, clicking Enable, or green CI is **not** bank ownership verification or G6 go/no-go. For the legacy CLI path, the on-prem authorized operator must independently verify actual recipient ownership, approved receipt/slip retention/backup and actual G4/G6 #81 gates, set the API QR and slip flags through a separately authorized release, and then approve the **exact disabled store receiver revision** using protected G6 access:
 
 ```bash
 sudo env RCAT_POS_PAYMENT_G6_GO_NOGO=approved \
@@ -37,3 +37,42 @@ The new script only marks approval or revokes it. It does not enable Payment, ve
 - Migration `051_g6_approved_receiver_activation.sql` is additive and preserves old disabled state. `approved_revision` is NULL by default. An already operator-enabled legacy receiver remains enabled, but will not gain browser reactivation privilege by migration.
 - Existing operator G5 scripts retain their privileges. A G5 operator disable increments the revision and invalidates any prior G6 approval.
 - If code deploys with flags off, the web button remains unavailable; no funds are exposed.
+
+## 2026-11-28 — Admin web approval (migration 053, supersedes per-store CLI review)
+
+The canonical single-entry portal adds **อนุมัติบัญชีรับเงิน** at
+`/platform/payments`. The Super Admin can delegate this specific permission
+to active platform Admin accounts, and revoke it; regrant/suspension resets
+the delegation. A Merchant cannot review its own request. Merchant setup and
+routine pause/resume stay unchanged.
+
+- After independently approved G4/G6 operational, recipient, privacy, backup
+  and retention prerequisites, the operator authorizes the existing QR/slip
+  release switches **once**, not per store. They stay off for non-money Staging
+  and emergency global stop. Finance approval remains separate.
+- Super Admin confirms the approved 90-day slip policy and restricted
+  real-money pilot with a non-sensitive decision reference in the web portal.
+  The policy starts off. Pausing it stops new web approvals, not existing
+  obligations or all active receivers.
+- The permitted Admin views a masked, paginated list; independently verifies
+  bank recipient ownership, then supplies the **exact verified PromptPay ID**
+  and non-sensitive review reference. The API compares it with the locked
+  receiver revision; it never returns the complete stored ID to the browser.
+  The actor who configured the receiver cannot also approve it.
+- Approval sets the exact approved revision and per-store 90-day policy but
+  leaves receiving disabled. Merchant explicitly enables the approved account.
+  Rejection/revocation uses a revision compare-and-set, disables receiving,
+  and invalidates the approval; recipient replacement invalidates it as before.
+- Grant/policy and receiver decisions have actor and timestamp audit records.
+  Raw IDs, bank evidence, secrets and customer data do not enter those records.
+  A reference is not a bank verification result. Do not enter private data
+  into references.
+- The existing DBA emergency stop/revoke remains available. Do not relax
+  deployment flags or mount DBA credentials in the API. No timer, image purge,
+  backup pruning, actual receiving or payment confirmation is triggered by
+  this migration or by the code release. 90-day access/retention policy still
+  needs independent owner approval before any real payment pilot.
+
+The existing database workflow runs `tests/db/g6-platform-payment-approval.sql`
+with synthetic identities and IDs; real-money approval remains a separate
+operator/owner decision under #81. Do not redo the unchanged ordering UAT.

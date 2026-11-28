@@ -115,6 +115,15 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "platform/payments",
+    canActivate: [portalAccess],
+    data: { permission: "platform" },
+    loadComponent: () =>
+      import("./platform-payment-approval.page").then(
+        (m) => m.PlatformPaymentApprovalPage,
+      ),
+  },
+  {
     path: "platform",
     canActivate: [portalAccess],
     data: { permission: "platform" },
