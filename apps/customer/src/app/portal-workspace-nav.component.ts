@@ -96,6 +96,7 @@ import { permitsRoute } from "./portal-permissions";
         ) {
           <a
             routerLink="/platform"
+            [routerLinkActiveOptions]="{ exact: true }"
             routerLinkActive="bg-accent text-accent-foreground font-semibold"
             class="flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-center text-xs font-medium text-muted-foreground no-underline focus-visible:outline-2 focus-visible:outline-ring"
           >
@@ -345,6 +346,7 @@ import { permitsRoute } from "./portal-permissions";
               </h3>
               <a
                 routerLink="/platform"
+                [routerLinkActiveOptions]="{ exact: true }"
                 routerLinkActive="bg-accent text-accent-foreground font-semibold"
                 class="flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground transition-none no-underline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 [class.justify-center]="rail()"
@@ -356,6 +358,20 @@ import { permitsRoute } from "./portal-permissions";
                   aria-hidden="true"
                 />
                 <span [class.sr-only]="rail()">จัดการผู้ใช้งาน</span>
+              </a>
+              <a
+                routerLink="/platform/payments"
+                routerLinkActive="bg-accent text-accent-foreground font-semibold"
+                class="flex min-h-11 min-w-11 items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground no-underline hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+                [class.justify-center]="rail()"
+                [attr.title]="rail() ? 'อนุมัติบัญชีรับเงิน' : null"
+              >
+                <ng-icon
+                  name="lucideWallet"
+                  class="shrink-0 text-lg"
+                  aria-hidden="true"
+                />
+                <span [class.sr-only]="rail()">อนุมัติบัญชีรับเงิน</span>
               </a>
             </section>
           }

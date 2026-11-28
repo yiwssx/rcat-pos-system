@@ -828,7 +828,12 @@ async function main() {
           {userId:'visual-merchant',email:'merchant-with-a-very-long-identifier-for-reflow-check@demo.invalid',role:'merchant',active:true},
           {userId:'visual-disabled',email:'disabled@demo.invalid',role:'merchant',active:false}
         ]},
-        '/api/platform/tenants': {tenants:[{tenantId:'visual-tenant',tenantName:'ร้านทดสอบสำหรับตรวจสอบการตัดบรรทัดภาษาไทย',storeCount:1}]}
+        '/api/platform/tenants': {tenants:[{tenantId:'visual-tenant',tenantName:'ร้านทดสอบสำหรับตรวจสอบการตัดบรรทัดภาษาไทย',storeCount:1}]},
+        '/api/platform/payments': {
+          canReview:true,isSuper:true,policyApproved:false,releaseReady:false,
+          admins:[{userId:'visual-admin-delegate',email:'reviewer@demo.invalid',allowed:false}],
+          items:[{tenantId:'visual-tenant',storeId:'visual-store',tenantName:'หน่วยงานทดสอบ',storeName:'ร้านอาหารสำหรับตรวจสอบการตัดบรรทัดภาษาไทย',receiverKind:'mobile',maskedReceiver:'****5678',revision:1,enabled:false,retentionReady:false,reviewStatus:'pending',reviewedBy:null,reviewedAt:null}]
+        }
       };
       await platform.route('**/api/**',route=>{
         const request=route.request(),value=values[new URL(request.url()).pathname];
@@ -850,6 +855,33 @@ async function main() {
       await platformPage.setViewportSize({width:320,height:844});
       await auditVisual(platformPage,'platform-admin-expanded-mobile');
       await auditReachable(platformPage,'platform-admin-editor-submit',platformPage.getByRole('button',{name:'เพิ่ม / ปรับสิทธิ์บัญชี'}));
+      // New payment approval page: masked synthetic queue, no writes or real money.
+      await platformPage.goto(admin+'/platform/payments');
+      await platformPage.getByRole('heading',{name:'อนุมัติบัญชีรับเงิน',exact:true}).waitFor();
+      await platformPage.getByText('****5678',{exact:false}).waitFor();
+      assert.equal(await platformPage.getByRole('button',{name:'อนุมัติ',exact:true}).isDisabled(),true);
+      await auditWidths(platformPage,'platform-payment-approval-locked');
+      values['/api/platform/payments'].releaseReady=true;
+      values['/api/platform/payments'].policyApproved=true;
+      await platformPage.getByRole('button',{name:'รีเฟรชรายการ',exact:true}).click();
+      await platformPage.getByRole('button',{name:'อนุมัติ',exact:true}).click();
+      const verified=platformPage.locator('#payment-verified-id');
+      await verified.waitFor();
+      assert.equal(await verified.inputValue(),'');
+      assert.equal(await verified.getAttribute('type'),'password');
+      await auditWidths(platformPage,'platform-payment-review-expanded');
+      await platformPage.getByRole('button',{name:'ยกเลิก',exact:true}).click();
+      // Angular schedules signal-driven template removal; wait for actual DOM detachment.
+      await verified.waitFor({state:'detached'});
+      assert.equal(await verified.count(),0);
+      values['/api/platform/payments'].canReview=false;
+      values['/api/platform/payments'].isSuper=false;
+      values['/api/platform/payments'].admins=[];
+      values['/api/platform/payments'].items=[];
+      await platformPage.getByRole('button',{name:'รีเฟรชรายการ',exact:true}).click();
+      await platformPage.getByText('กรุณาขอสิทธิ์อนุมัติบัญชีรับเงินจาก Super Admin').waitFor();
+      assert.equal(await platformPage.getByRole('button',{name:'อนุมัติ',exact:true}).count(),0);
+
     } finally {await platform.close();}
 
     // Repeat the actual one-command launcher; no duplicate fixtures/password reset.

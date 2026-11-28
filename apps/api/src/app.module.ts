@@ -47,6 +47,8 @@ import { GuestPaymentRequestController } from "./payments/guest-payment-request.
 import { GuestPaymentRequestService } from "./payments/guest-payment-request.service";
 import { PaymentSlipController } from "./payments/payment-slip.controller";
 import { PaymentSlipService } from "./payments/payment-slip.service";
+import { PlatformPaymentApprovalController } from "./payments/platform-payment-approval.controller";
+import { PlatformPaymentApprovalService } from "./payments/platform-payment-approval.service";
 import { PaymentFinanceController } from "./payments/payment-finance.controller";
 import { PaymentFinanceService } from "./payments/payment-finance.service";
 
@@ -77,6 +79,7 @@ import { PaymentFinanceService } from "./payments/payment-finance.service";
     GuestPaymentRequestController,
     PaymentSlipController,
     PaymentFinanceController,
+    PlatformPaymentApprovalController,
   ],
   providers: [
     DatabaseAccess,
@@ -105,6 +108,7 @@ import { PaymentFinanceService } from "./payments/payment-finance.service";
     GuestPaymentRequestService,
     PaymentSlipService,
     PaymentFinanceService,
+    PlatformPaymentApprovalService,
   ],
 })
 export class AppModule {}

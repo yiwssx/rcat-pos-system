@@ -66,6 +66,9 @@ function failure(error: unknown): string {
             แล้วกำหนดว่าใครเป็นผู้ดูแลระบบหรือผู้ดูแลร้าน
           </p>
         </div>
+        <a hlmBtn variant="outline" routerLink="/platform/payments">
+          อนุมัติบัญชีรับเงิน
+        </a>
         <a
           routerLink="/"
           class="platform-back inline-flex min-h-11 items-center rounded-xl border border-border bg-card px-3 text-sm font-semibold text-foreground no-underline"
