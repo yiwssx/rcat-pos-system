@@ -905,6 +905,82 @@ async function guestCatalogHttp(fixture) {
   }));
 }
 
+// Synthetic receipt view only. Keep existing payment flags OFF and intercept
+// the queue/image/decision within this isolated authenticated browser context.
+async function browserSlipReferenceSuggestion() {
+  const QRCode = require("qrcode");
+  const tlv = (tag, value) => tag + String(value.length).padStart(2, "0") + value;
+  const prefix = tlv("00", tlv("00", "000001") + tlv("01", "004") +
+    tlv("02", "E2E-SYNTHETIC-REF-01")) + "5102TH9104";
+  let crc = 0xffff;
+  for (const c of prefix) {
+    crc ^= c.charCodeAt(0) << 8;
+    for (let i = 0; i < 8; i++) {
+      crc = ((crc & 0x8000 ? (crc << 1) ^ 0x1021 : crc << 1) & 0xffff);
+    }
+  }
+  const qr = await QRCode.toBuffer(prefix + crc.toString(16).toUpperCase().padStart(4, "0"),
+    { width: 350, margin: 4 });
+  const wrongQr = await QRCode.toBuffer("https://example.invalid/not-a-slip", { width: 350 });
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    ignoreHTTPSErrors: true,
+    serviceWorkers: "block",
+  });
+  const page = await context.newPage();
+  const makeSlip = (number, amountSatang) => ({
+    slipId: randomUUID(), orderId: randomUUID(), displayNumber: String(number),
+    amountSatang, currency: "THB", revision: 1,
+    submittedAt: "2026-01-01T00:00:00.000Z", state: "submitted", imageAvailable: true,
+  });
+  const first = makeSlip(101, 2500);
+  const second = makeSlip(102, 3900);
+  let queue = [first, second];
+  const decisions = [];
+  const base = merchant + orderScope + "/payments/slips";
+  try {
+    await merchantLoginRequest(context);
+    await context.route(base, (route) => route.fulfill({ json: { items: queue } }));
+    await context.route(base + "/" + first.slipId + "/image", (route) =>
+      route.fulfill({ contentType: "image/png", body: qr }));
+    await context.route(base + "/" + second.slipId + "/image", (route) =>
+      route.fulfill({ contentType: "image/png", body: wrongQr }));
+    await context.route(base + "/*/decision", async (route) => {
+      decisions.push(route.request().postDataJSON());
+      queue = [second];
+      await route.fulfill({ json: { slipId: first.slipId, paymentState: "manual_confirmed" } });
+    });
+    await page.goto(merchant + "/payments/" + tenant + "/" + store);
+    const firstButton = page.getByRole("button", { name: /Order #101/ });
+    const secondButton = page.getByRole("button", { name: /Order #102/ });
+    const confirm = page.getByRole("button", { name: "ตรวจเงินเข้าแล้ว · ยืนยันรับเงิน" });
+    await firstButton.click();
+    await page.waitForFunction(() => document.querySelector("#bank-ref")?.value === "E2E-SYNTHETIC-REF-01");
+    assert.equal(await page.locator("#actual-amount").inputValue(), "25.00");
+    assert.equal(decisions.length, 0, "Decoding QR must not confirm payment");
+    await secondButton.click();
+    await page.getByText("ไม่พบ QR สลิปที่อ่านได้", { exact: false }).waitFor();
+    assert.equal(await page.locator("#bank-ref").inputValue(), "");
+    assert.equal(await page.locator("#actual-amount").inputValue(), "39.00");
+    assert.ok(await confirm.isDisabled(), "Unknown QR cannot confirm without a bank reference");
+    await firstButton.click();
+    await page.waitForFunction(() => document.querySelector("#bank-ref")?.value === "E2E-SYNTHETIC-REF-01");
+    await page.locator("#actual-amount").fill("24.99");
+    assert.ok(await confirm.isDisabled(), "Mismatched actual amount must not confirm");
+    await page.locator("#actual-amount").fill("25.00");
+    assert.equal(decisions.length, 0);
+    await confirm.click();
+    await page.getByText("บันทึกการยืนยันรับเงินจริงโดยผู้ตรวจสอบแล้ว", { exact: false }).waitFor();
+    assert.deepEqual(decisions, [{
+      action: "confirm", expectedRevision: 1, bankReference: "E2E-SYNTHETIC-REF-01",
+      actualAmountSatang: 2500, bankChecked: true,
+    }]);
+    console.log(JSON.stringify({ scenario: "Synthetic slip Mini-QR suggestion and explicit merchant decision", result: "PASS" }));
+  } finally {
+    await context.close();
+  }
+}
+
 async function browserPwaOfflineRecovery() {
   // A separate authenticated Chromium context exercises the real SW, not
   // only the node:vm mock. Cached navigation must never show stale Orders.
@@ -1375,6 +1451,7 @@ async function main() {
 
   const fixture = await apiSetup();
   await browserFlow(fixture);
+  await browserSlipReferenceSuggestion();
   await browserPwaOfflineRecovery();
   await guestCatalogHttp(fixture);
   await httpLoad(fixture);
