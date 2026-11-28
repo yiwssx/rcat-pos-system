@@ -685,9 +685,23 @@ async function main() {
     await staticPage.getByRole('heading', { name: 'รอบการสั่งเดิมสิ้นสุดแล้ว' }).waitFor();
     assert.equal(reconnectOpens, 0, 'Reload must not silently redeem a new grant');
     await staticPage.screenshot({ path: '/tmp/rcat-portal-guest-qr-reconnect-phone.png', fullPage: true });
+    await staticPage.route('**/api/guest/ordering-table/open', route => {
+      reconnectOpens += 1;
+      return route.fulfill({ status: 409, contentType: 'application/json',
+        body: '{"message":"BILL_CLOSURE_REQUIRED"}' });
+    }, { times: 1 });
     await staticPage.getByRole('button', { name: 'ยืนยันเริ่มรอบการสั่งใหม่' }).click();
+    await staticPage.getByRole('heading', { name: 'โต๊ะยังมีบิลรอบก่อน' }).waitFor();
+    assert.equal(await staticPage.getByText(/คำสั่งซื้อถูกเปลี่ยนระหว่างส่ง/).count(), 0,
+      'Blocked QR must not report a changed cart');
+    assert.equal(await staticPage.locator('.guest-product').count(), 0);
+    assert.equal(await staticPage.locator('.guest-cart-shortcut').count(), 0);
+    await staticPage.reload();
+    await staticPage.getByRole('heading', { name: 'โต๊ะยังมีบิลรอบก่อน' }).waitFor();
+    assert.equal(reconnectOpens, 1, 'Reload must not redeem a new grant while Bill closure is required');
+    await staticPage.getByRole('button', { name: 'ตรวจสอบอีกครั้ง' }).click();
     await staticPage.locator('.guest-product').first().waitFor();
-    assert.equal(reconnectOpens, 1, 'Exactly one explicit new-entry action');
+    assert.equal(reconnectOpens, 2, 'Exactly one explicit retry after Bill closure');
     assert.equal(await staticPage.locator('.guest-cart-shortcut').count(), 0,
       'Manual recovery must begin with an empty cart');
     await staticPage.setViewportSize({ width: 320, height: 780 });
