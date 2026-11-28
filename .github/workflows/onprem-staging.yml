@@ -178,7 +178,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish exact-SHA api image
         id: api
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile.staging
@@ -197,7 +197,7 @@ jobs:
           push-to-registry: true
       - name: Publish exact-SHA customer image
         id: customer
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile.staging
@@ -216,7 +216,7 @@ jobs:
           push-to-registry: true
       - name: Publish exact-SHA merchant image
         id: merchant
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile.staging
@@ -235,7 +235,7 @@ jobs:
           push-to-registry: true
       - name: Publish exact-SHA admin image
         id: admin
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile.staging
