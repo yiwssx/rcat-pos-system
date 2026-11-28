@@ -1,7 +1,16 @@
 name: On-prem staging container packaging
 
 on:
-  workflow_dispatch:  # Owner-triggered signed Staging candidate; no automatic publishing
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact main SHA (autonomous pilot only)
+        required: false
+        type: string
+      request_digest:
+        description: Canonical request digest (autonomous pilot only)
+        required: false
+        type: string
   pull_request:
     paths:
       - 'Dockerfile.staging'
@@ -139,7 +148,12 @@ jobs:
 
   signed-release:
     name: Manually sign four Staging OCI image digests (never deploy)
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.actor == 'yiwssx'
+    # Default-disabled until a separate owner activation sets both repository variables.
+    if: >-
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' &&
+      ((github.actor == 'yiwssx' && inputs.expected_sha == '' && inputs.request_digest == '') ||
+       (vars.RCAT_POS_HDA08_ENABLED == 'true' && vars.RCAT_POS_HDA08_PUBLISHER_ID != '' &&
+        github.actor_id == vars.RCAT_POS_HDA08_PUBLISHER_ID && github.actor != 'yiwssx'))
     runs-on: ubuntu-24.04
     timeout-minutes: 50
     permissions:
@@ -170,6 +184,19 @@ jobs:
           test -f .dockerignore
           grep -Fxq '.secrets' .dockerignore
           grep -Fxq '.env' .dockerignore
+      - name: Reject unbound or repeated autonomous dispatch
+        if: github.actor != 'yiwssx'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HDA_ENABLED: ${{ vars.RCAT_POS_HDA08_ENABLED }}
+          HDA_PUBLISHER_ID: ${{ vars.RCAT_POS_HDA08_PUBLISHER_ID }}
+          HDA_EXPECTED_SHA: ${{ inputs.expected_sha }}
+          HDA_REQUEST_DIGEST: ${{ inputs.request_digest }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/onprem-staging.yml/runs?head_sha=${GITHUB_SHA}&branch=main&event=workflow_dispatch&per_page=100" |
+            python3 scripts/ops/hda08-publisher-guard.py guard
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -252,3 +279,44 @@ jobs:
           subject-name: ghcr.io/${{ github.repository }}-admin
           subject-digest: ${{ steps.admin.outputs.digest }}
           push-to-registry: true
+
+      - name: Bind request to actual four published OCI digests
+        if: github.actor != 'yiwssx'
+        shell: bash
+        env:
+          HDA_ENABLED: ${{ vars.RCAT_POS_HDA08_ENABLED }}
+          HDA_PUBLISHER_ID: ${{ vars.RCAT_POS_HDA08_PUBLISHER_ID }}
+          HDA_EXPECTED_SHA: ${{ inputs.expected_sha }}
+          HDA_REQUEST_DIGEST: ${{ inputs.request_digest }}
+          HDA_DIGEST_API: ${{ steps.api.outputs.digest }}
+          HDA_DIGEST_CUSTOMER: ${{ steps.customer.outputs.digest }}
+          HDA_DIGEST_MERCHANT: ${{ steps.merchant.outputs.digest }}
+          HDA_DIGEST_ADMIN: ${{ steps.admin.outputs.digest }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/rcat-pos-publication"
+          python3 scripts/ops/hda08-publisher-guard.py manifest > "$RUNNER_TEMP/rcat-pos-publication/manifest.json"
+      - name: Attest request-bound publication manifest
+        if: github.actor != 'yiwssx'
+        id: publication
+        uses: actions/attest@v4
+        with:
+          subject-path: ${{ runner.temp }}/rcat-pos-publication/manifest.json
+      - name: Normalize publication bundle filename
+        if: github.actor != 'yiwssx'
+        shell: bash
+        env:
+          HDA_BUNDLE: ${{ steps.publication.outputs.bundle-path }}
+        run: |
+          set -euo pipefail
+          cp -- "$HDA_BUNDLE" "$RUNNER_TEMP/rcat-pos-publication/manifest.sigstore.json"
+      - name: Retain manifest and signature bundle for independent intake
+        if: github.actor != 'yiwssx'
+        uses: actions/upload-artifact@v7
+        with:
+          name: rcat-pos-publication-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/rcat-pos-publication/manifest.json
+            ${{ runner.temp }}/rcat-pos-publication/manifest.sigstore.json
+          if-no-files-found: error
+          retention-days: 7
