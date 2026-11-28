@@ -31,6 +31,9 @@ import {
   MerchantOrder,
   OrderEvent,
   orderActions,
+  matchesPaymentFilter,
+  parsePaymentFilter,
+  PAYMENT_FILTERS,
 } from "./order-board.domain";
 
 describe("merchant operations routes", () => {
@@ -107,6 +110,45 @@ describe("merchant fulfilment permissions", () => {
     expect(formatSatang(20800)).toMatch(/208[.,]00/);
     expect(formatSatang(-1)).toBe("—");
     expect(formatSatang(Number.NaN)).toBe("—");
+  });
+});
+
+describe("independent merchant payment filters", () => {
+  it("keeps each server payment state in its own bucket", () => {
+    const states = PAYMENT_FILTERS.filter((filter) => filter.id !== "all");
+    for (const state of states) {
+      const order = { paymentState: parsePaymentFilter(state.id) };
+      if (order.paymentState === "all")
+        throw new Error("Expected payment state");
+      expect(
+        matchesPaymentFilter({ paymentState: order.paymentState }, "all"),
+      ).toBe(true);
+      for (const other of states) {
+        expect(
+          matchesPaymentFilter({ paymentState: order.paymentState }, other.id),
+        ).toBe(state.id === other.id);
+      }
+    }
+  });
+
+  it("does not hide a served or cancelled Order in an outstanding payment bucket", () => {
+    const served = {
+      status: "served",
+      paymentState: "slip_submitted",
+    } as const;
+    const cancelled = {
+      status: "cancelled",
+      paymentState: "awaiting_payment",
+    } as const;
+    expect(matchesPaymentFilter(served, "slip_submitted")).toBe(true);
+    expect(matchesPaymentFilter(cancelled, "awaiting_payment")).toBe(true);
+    expect(matchesPaymentFilter(served, "manual_confirmed")).toBe(false);
+  });
+
+  it("accepts only known payment filter query values", () => {
+    expect(parsePaymentFilter("manual_confirmed")).toBe("manual_confirmed");
+    expect(parsePaymentFilter("paid")).toBe("all");
+    expect(parsePaymentFilter(null)).toBe("all");
   });
 });
 

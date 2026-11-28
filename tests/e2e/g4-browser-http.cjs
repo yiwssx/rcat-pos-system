@@ -937,9 +937,42 @@ async function browserSlipReferenceSuggestion() {
   const second = makeSlip(102, 3900);
   let queue = [first, second];
   const decisions = [];
+  const makeOrder = (item, status, paymentState) => ({
+    orderId: item.orderId, displayNumber: item.displayNumber, tableId: null,
+    visitId: null, amountSatang: item.amountSatang, currency: "THB",
+    status, paymentState, createdAt: item.submittedAt, updatedAt: item.submittedAt,
+    items: [],
+  });
+  // The first slip's Order is older than the newest inbox page. Its exact
+  // scoped lookup and its kitchen status must survive the confirmation.
+  const older = makeOrder(first, "served", "slip_submitted");
+  const current = [
+    makeOrder(second, "served", "slip_submitted"),
+    makeOrder(makeSlip(103, 5000), "served", "awaiting_payment"),
+    makeOrder(makeSlip(104, 1500), "submitted", "not_requested"),
+    makeOrder(makeSlip(105, 6000), "cancelled", "manual_confirmed"),
+  ];
+  const lookups = [];
+  const board = merchant + "/orders/" + tenant + "/" + store;
   const base = merchant + orderScope + "/payments/slips";
+  const scopedRoute = (suffix) => (url) =>
+    url.origin === merchant && url.pathname === orderScope + suffix;
   try {
     await merchantLoginRequest(context);
+    await context.route(scopedRoute("/orders"), (route) => {
+      const cursor = new URL(route.request().url()).searchParams.get("cursor");
+      return route.fulfill({ json: cursor
+        ? { orders: [older], hasMore: false, nextCursor: null }
+        : { orders: current, hasMore: true, nextCursor: "synthetic-older" } });
+    });
+    await context.route(scopedRoute("/orders/lookup"), (route) => {
+      const ids = new URL(route.request().url()).searchParams.get("ids").split(",");
+      lookups.push(...ids);
+      return route.fulfill({ json: { orders: [older, ...current].filter((o) => ids.includes(o.orderId)) } });
+    });
+    await context.route(scopedRoute("/notifications"), (route) =>
+      route.fulfill({ json: { events: [], nextCursor: "0", acknowledgedCursor: "0", hasMore: false } }));
+    await context.route(scopedRoute("/notifications/stream"), (route) => route.abort());
     await context.route(base, (route) => route.fulfill({ json: { items: queue } }));
     await context.route(base + "/" + first.slipId + "/image", (route) =>
       route.fulfill({ contentType: "image/png", body: qr }));
@@ -948,9 +981,17 @@ async function browserSlipReferenceSuggestion() {
     await context.route(base + "/*/decision", async (route) => {
       decisions.push(route.request().postDataJSON());
       queue = [second];
+      older.paymentState = "manual_confirmed";
       await route.fulfill({ json: { slipId: first.slipId, paymentState: "manual_confirmed" } });
     });
-    await page.goto(merchant + "/payments/" + tenant + "/" + store);
+    await page.goto(board + "?payment=slip_submitted");
+    const orderCard = (number) => page.getByRole("article", { name: "ออเดอร์ #" + number });
+    await orderCard(102).waitFor();
+    assert.ok(await orderCard(102).getByText("เสิร์ฟแล้ว", { exact: true }).isVisible());
+    assert.equal(await orderCard(103).count(), 0);
+    await orderCard(102).getByRole("link", { name: "ตรวจสลิปออเดอร์นี้" }).click();
+    await page.getByText("ไม่พบ QR สลิปที่อ่านได้", { exact: false }).waitFor();
+    assert.equal(await page.locator("#actual-amount").inputValue(), "39.00");
     const firstButton = page.getByRole("button", { name: /Order #101/ });
     const secondButton = page.getByRole("button", { name: /Order #102/ });
     const confirm = page.getByRole("button", { name: "ตรวจเงินเข้าแล้ว · ยืนยันรับเงิน" });
@@ -975,7 +1016,44 @@ async function browserSlipReferenceSuggestion() {
       action: "confirm", expectedRevision: 1, bankReference: "E2E-SYNTHETIC-REF-01",
       actualAmountSatang: 2500, bankChecked: true,
     }]);
+    await page.getByRole("link", { name: "เปิดออเดอร์ #101" }).click();
+    await orderCard(101).waitFor();
+    assert.ok(lookups.includes(first.orderId), "Older linked Order must be resolved by scoped lookup");
+    assert.equal(await page.locator(".order-card").first().getAttribute("aria-label"), "ออเดอร์ #101");
+    assert.ok(await orderCard(101).getByText("เสิร์ฟแล้ว", { exact: true }).isVisible());
+    assert.ok(await orderCard(101).getByText("ร้านยืนยันรับเงินแล้ว (ตรวจด้วยตนเอง)", { exact: true }).isVisible());
+    await page.getByRole("button", { name: /ยืนยันรับเงินแล้ว/ }).click();
+    const refreshLookup = page.waitForResponse((response) =>
+      scopedRoute("/orders/lookup")(new URL(response.url())) &&
+      new URL(response.url()).searchParams.get("ids") === first.orderId);
+    await page.getByRole("button", { name: "รีเฟรชออเดอร์" }).click();
+    await refreshLookup;
+    await orderCard(101).waitFor();
+    await page.getByRole("button", { name: /โหลดออเดอร์เก่าเพิ่มอีก/ }).click();
+    await orderCard(101).waitFor();
+    await orderCard(105).waitFor();
+    assert.equal(await orderCard(102).count(), 0);
+    assert.equal(await orderCard(103).count(), 0);
+    await page.getByRole("button", { name: /กำลังดำเนินงาน/ }).click();
+    await orderCard(101).waitFor({ state: "hidden" });
+    await page.getByRole("button", { name: /ส่งสลิปแล้ว · รอตรวจ/ }).click();
+    await orderCard(102).waitFor();
+    assert.equal(await orderCard(101).count(), 0);
+    await page.getByRole("button", { name: /รอชำระ \/ ส่งสลิปใหม่/ }).click();
+    await orderCard(103).waitFor();
+    assert.equal(await orderCard(102).count(), 0);
+    await page.getByRole("button", { name: /ยังไม่เปิดคำขอชำระ/ }).click();
+    await orderCard(104).waitFor();
+    assert.equal(await orderCard(103).count(), 0);
+    for (const width of [320, 390, 768, 1280]) {
+      await page.setViewportSize({ width, height: 844 });
+      const overflow = await page.getByRole("region", { name: "สถานะการชำระเงิน" })
+        .evaluate((el) => el.scrollWidth > el.clientWidth + 1);
+      assert.equal(overflow, false, "Payment filter overflows at " + width + "px");
+    }
+    assert.equal(decisions.length, 1, "All navigation and filters remain read-only");
     console.log(JSON.stringify({ scenario: "Synthetic slip Mini-QR suggestion and explicit merchant decision", result: "PASS" }));
+    console.log(JSON.stringify({ scenario: "Payment filters across kitchen states, older Order lookup and slip-review navigation", result: "PASS" }));
   } finally {
     await context.close();
   }
