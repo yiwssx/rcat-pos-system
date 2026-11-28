@@ -76,3 +76,16 @@ routine pause/resume stay unchanged.
 The existing database workflow runs `tests/db/g6-platform-payment-approval.sql`
 with synthetic identities and IDs; real-money approval remains a separate
 operator/owner decision under #81. Do not redo the unchanged ordering UAT.
+
+### Simplified approval interface
+
+The web screen generates opaque, unique audit references automatically (no
+manual reference field). Open/pause policy uses an explicit confirmation;
+delegation is accessible below the primary receiver queue. For a receiver
+approval the reviewer enters only the independently bank-verified complete
+PromptPay identifier once. The runtime API and migration 053 retain their
+existing exact identifier, independent reviewer, grant, policy and revision
+checks. Reject/revoke needs only confirmation. Failure is shown beside the
+affected store/form, without storing or redisplaying full receiver identifiers.
+Success is displayed only after refreshing the server-authoritative review
+state. No schema, release flag, bank verification or payment logic changes.

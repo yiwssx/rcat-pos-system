@@ -816,8 +816,8 @@ async function main() {
     }
 
 
-    // Platform Admin visual coverage: isolated GET-only fixture, not real
-    // authentication or authorization evidence. No request reaches a write API.
+    // Platform Admin visual/interaction coverage: isolated synthetic fixture, not real
+    // authentication or authorization evidence. All mutation responses are mocked.
     const platform = await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:390,height:844}});
     try {
       const values = {
@@ -835,9 +835,26 @@ async function main() {
           items:[{tenantId:'visual-tenant',storeId:'visual-store',tenantName:'หน่วยงานทดสอบ',storeName:'ร้านอาหารสำหรับตรวจสอบการตัดบรรทัดภาษาไทย',receiverKind:'mobile',maskedReceiver:'****5678',revision:1,enabled:false,retentionReady:false,reviewStatus:'pending',reviewedBy:null,reviewedAt:null}]
         }
       };
+      const writes=[];
+      let allowReview=false;
+      await platform.addCookies([{name:'__Host-rcat_csrf',value:'a'.repeat(43),url:admin+'/',secure:true,sameSite:'Strict'}]);
       await platform.route('**/api/**',route=>{
-        const request=route.request(),value=values[new URL(request.url()).pathname];
-        return request.method()==='GET'&&value?route.fulfill({json:value}):route.abort();
+        const request=route.request(),path=new URL(request.url()).pathname,value=values[path];
+        if(request.method()==='GET'&&value)return route.fulfill({json:value});
+        if(request.method()==='POST'&&path==='/api/platform/payments/receivers/visual-tenant/visual-store/review'){
+          const body=request.postDataJSON();
+          writes.push(body);
+          if(!allowReview)return route.fulfill({status:403,json:{message:'Independent payment approval required'}});
+          Object.assign(values['/api/platform/payments'].items[0],{reviewStatus:'approved',retentionReady:true,reviewedAt:'2026-11-28T00:00:00Z',reviewedBy:'reviewer@demo.invalid'});
+          return route.fulfill({json:{changed:true}});
+        }
+        if(request.method()==='POST'&&path==='/api/platform/payments/policy'){
+          const body=request.postDataJSON();
+          writes.push(body);
+          values['/api/platform/payments'].policyApproved=body.approved;
+          return route.fulfill({json:{changed:true}});
+        }
+        return route.abort();
       });
       const platformPage=await platform.newPage();
       await platformPage.goto(admin+'/platform');
@@ -855,15 +872,22 @@ async function main() {
       await platformPage.setViewportSize({width:320,height:844});
       await auditVisual(platformPage,'platform-admin-expanded-mobile');
       await auditReachable(platformPage,'platform-admin-editor-submit',platformPage.getByRole('button',{name:'เพิ่ม / ปรับสิทธิ์บัญชี'}));
-      // New payment approval page: masked synthetic queue, no writes or real money.
+      // Simplified approval page: masked synthetic queue and intercepted writes only.
       await platformPage.goto(admin+'/platform/payments');
       await platformPage.getByRole('heading',{name:'อนุมัติบัญชีรับเงิน',exact:true}).waitFor();
       await platformPage.getByText('****5678',{exact:false}).waitFor();
       assert.equal(await platformPage.getByRole('button',{name:'อนุมัติ',exact:true}).isDisabled(),true);
       await auditWidths(platformPage,'platform-payment-approval-locked');
       values['/api/platform/payments'].releaseReady=true;
-      values['/api/platform/payments'].policyApproved=true;
       await platformPage.getByRole('button',{name:'รีเฟรชรายการ',exact:true}).click();
+      await platformPage.getByRole('button',{name:'เปิดการอนุมัติ',exact:true}).click();
+      const policyPanel=platformPage.locator('section[aria-label="นโยบายการอนุมัติ"]');
+      assert.equal(await policyPanel.locator('input').count(),0,'Policy references are generated automatically');
+      await policyPanel.getByRole('button',{name:'ยืนยัน',exact:true}).click();
+      await platformPage.getByText('เปิดอนุมัติบัญชีใหม่แล้ว',{exact:true}).waitFor();
+      assert.equal(writes.length,1);
+      assert.equal(writes[0].approved,true);
+      assert.match(writes[0].approvalRef,/^G6-web-[0-9a-f-]{36}$/);
       await platformPage.getByRole('button',{name:'อนุมัติ',exact:true}).click();
       const verified=platformPage.locator('#payment-verified-id');
       await verified.waitFor();
@@ -873,6 +897,31 @@ async function main() {
       await platformPage.getByRole('button',{name:'ยกเลิก',exact:true}).click();
       // Angular schedules signal-driven template removal; wait for actual DOM detachment.
       await verified.waitFor({state:'detached'});
+      assert.equal(await verified.count(),0);
+      await platformPage.getByRole('button',{name:'อนุมัติ',exact:true}).click();
+      await verified.waitFor();
+      const reviewForm=platformPage.locator('form:has(#payment-verified-id)');
+      assert.equal(await reviewForm.locator('input').count(),1,'Only independently verified PromptPay is entered');
+      await verified.fill('123');
+      await reviewForm.getByRole('button',{name:'ยืนยันอนุมัติบัญชี',exact:true}).click();
+      await reviewForm.getByRole('alert').filter({hasText:'กรอกเบอร์โทรศัพท์ 10 หลักให้ถูกต้อง'}).waitFor();
+      assert.equal(writes.length,1);
+      // Fake number reserved for synthetic API fixture; not a bank request.
+      await verified.fill('0800005678');
+      await reviewForm.getByRole('button',{name:'ยืนยันอนุมัติบัญชี',exact:true}).click();
+      await reviewForm.getByRole('alert').filter({hasText:/ผู้ตั้งค่าบัญชีห้ามอนุมัติเอง/}).waitFor();
+      assert.equal(await verified.inputValue(),'');
+      assert.equal(writes.length,2);
+      assert.equal(writes[1].verifiedReceiverId,'0800005678');
+      assert.equal(writes[1].expectedRevision,1);
+      assert.match(writes[1].approvalRef,/^G6-web-[0-9a-f-]{36}$/);
+      assert.notEqual(writes[1].approvalRef,writes[0].approvalRef);
+      allowReview=true;
+      await verified.fill('0800005678');
+      await reviewForm.getByRole('button',{name:'ยืนยันอนุมัติบัญชี',exact:true}).click();
+      await platformPage.getByText('อนุมัติบัญชีรับเงินสำเร็จ',{exact:true}).waitFor();
+      await platformPage.getByText('อนุมัติแล้ว',{exact:true}).waitFor();
+      assert.equal(writes.length,3);
       assert.equal(await verified.count(),0);
       values['/api/platform/payments'].canReview=false;
       values['/api/platform/payments'].isSuper=false;
