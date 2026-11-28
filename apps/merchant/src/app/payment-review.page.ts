@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
+  OnDestroy,
   computed,
   inject,
   signal,
@@ -12,6 +13,7 @@ import { HlmInput } from "@spartan-ng/helm/input";
 import { HlmLabel } from "@spartan-ng/helm/label";
 import { MerchantOrderApi, PaymentSlipReview } from "./merchant-order.api";
 import { formatOrderNumber, formatSatang } from "./order-board.domain";
+import { decodeSlipReference } from "./slip-reference";
 
 function satangFromInput(text: string): number | null {
   const match = /^([0-9]{1,7})(?:\.([0-9]{1,2}))?$/.exec(text.trim());
@@ -63,7 +65,12 @@ function satangFromInput(text: string): number | null {
       @if (notice()) {
         <p role="status">{{ notice() }}</p>
       }
-      <button hlmBtn type="button" (click)="refresh()" [disabled]="loading()">
+      <button
+        hlmBtn
+        type="button"
+        (click)="refresh()"
+        [disabled]="loading() || busy()"
+      >
         {{ loading() ? "กำลังโหลด..." : "รีเฟรชคิวตรวจสลิป" }}
       </button>
       @if (allowed()) {
@@ -86,6 +93,7 @@ function satangFromInput(text: string): number | null {
                 "
                 class="grid justify-items-start text-left"
                 [class.is-selected]="selected()?.slipId === item.slipId"
+                [disabled]="loading() || busy()"
                 (click)="choose(item)"
               >
                 <strong>Order {{ number(item.displayNumber) }}</strong>
@@ -106,12 +114,16 @@ function satangFromInput(text: string): number | null {
                 <strong>ยอดที่ต้องรับ: {{ money(slip.amountSatang) }} ฿</strong>
               </p>
               @if (slip.imageAvailable !== false) {
-                <img
-                  class="max-h-110 w-full max-w-85 rounded-lg bg-muted object-contain"
-                  [src]="imageUrl()"
-                  alt="สลิปที่ลูกค้าส่งเพื่อให้ร้านตรวจสอบยอดเงินจริง"
-                  width="340"
-                />
+                @for (imageSlip of [slip]; track selectionVersion()) {
+                  <img
+                    class="max-h-110 w-full max-w-85 rounded-lg bg-muted object-contain"
+                    [src]="imageUrl()"
+                    alt="สลิปที่ลูกค้าส่งเพื่อให้ร้านตรวจสอบยอดเงินจริง"
+                    width="340"
+                    (load)="readReference($event, imageSlip)"
+                    (error)="imageUnavailable(imageSlip)"
+                  />
+                }
               } @else {
                 <p role="status">
                   ภาพสลิปหมดอายุการจัดเก็บแล้ว ประวัติรายการยังคงอยู่
@@ -122,7 +134,8 @@ function satangFromInput(text: string): number | null {
                 class="review-warning rounded-xl border border-preparing-line bg-preparing p-4 text-preparing-foreground"
               >
                 เปรียบเทียบผู้รับเงิน จำนวนเงิน เวลา และรหัสธุรกรรม
-                กับรายการเงินเข้าจริงในบัญชีร้าน ไม่ยืนยันจากรูปภาพอย่างเดียว
+                กับรายการเงินเข้าจริงในบัญชีร้าน กดยืนยันเฉพาะเมื่อข้อมูลตรงกัน
+                ทั้งหมด ไม่ยืนยันจากรูปภาพหรือ QR อย่างเดียว
               </p>
               <label hlmLabel for="bank-ref"
                 >รหัสอ้างอิงธุรกรรมจากธนาคาร *</label
@@ -134,11 +147,36 @@ function satangFromInput(text: string): number | null {
                 autocomplete="off"
                 maxlength="64"
                 [value]="bankReference()"
-                (input)="bankReference.set($any($event.target).value)"
+                (input)="editReference($any($event.target).value)"
+                [disabled]="busy() || loading()"
+                aria-describedby="reference-status"
                 placeholder="รหัสธุรกรรมจากรายการเงินเข้า"
               />
+              <p
+                id="reference-status"
+                role="status"
+                class="text-sm text-muted-foreground"
+              >
+                @switch (scanState()) {
+                  @case ("reading") {
+                    กำลังอ่าน QR บนสลิป…
+                  }
+                  @case ("found") {
+                    อ่านรหัสจาก QR บนสลิปแล้ว · ยังไม่ได้ตรวจสอบกับธนาคาร
+                  }
+                  @case ("unreadable") {
+                    ไม่พบ QR สลิปที่อ่านได้ กรุณากรอกรหัสจากรายการเงินเข้าจริง
+                  }
+                  @case ("unavailable") {
+                    ไม่สามารถอ่านภาพสลิปได้ กรุณากรอกรหัสจากรายการเงินเข้าจริง
+                  }
+                  @case ("manual") {
+                    ใช้รหัสที่กรอกจากรายการเงินเข้าจริง
+                  }
+                }
+              </p>
               <label hlmLabel for="actual-amount"
-                >จำนวนเงินที่เข้าบัญชีจริง (บาท) *</label
+                >ยอดเงินเข้าที่ร้านจะยืนยัน (บาท) *</label
               >
               <input
                 hlmInput
@@ -148,17 +186,19 @@ function satangFromInput(text: string): number | null {
                 autocomplete="off"
                 [value]="actualAmount()"
                 (input)="actualAmount.set($any($event.target).value)"
+                [disabled]="busy() || loading()"
+                aria-describedby="amount-hint"
                 placeholder="เช่น 120.00"
               />
-              <label class="review-check flex items-start gap-3">
-                <input
-                  class="size-5 shrink-0 accent-action"
-                  type="checkbox"
-                  [checked]="bankChecked()"
-                  (change)="bankChecked.set($any($event.target).checked)"
-                />
-                ฉันตรวจสอบยอดเงินเข้าจริงจากบัญชีธนาคารร้านแล้ว
-              </label>
+              <p id="amount-hint" class="text-sm text-muted-foreground">
+                ระบบเติมยอดตาม Order ให้ก่อน ไม่ใช่ยอดเงินที่ตรวจสอบจากธนาคาร
+                หากไม่ตรงกับเงินเข้าจริง ให้แก้ไขและอย่ายืนยัน
+              </p>
+              @if (!amountMatches()) {
+                <p class="text-sm text-destructive" role="status">
+                  ยอดเงินไม่ตรงกับ Order ยังไม่สามารถยืนยันรับเงินได้
+                </p>
+              }
               <div class="review-actions flex flex-wrap gap-3">
                 <button
                   hlmBtn
@@ -167,14 +207,14 @@ function satangFromInput(text: string): number | null {
                   [disabled]="!canConfirm() || busy()"
                   (click)="decide('confirm')"
                 >
-                  ยืนยันว่ารับเงินจริงแล้ว
+                  ตรวจเงินเข้าแล้ว · ยืนยันรับเงิน
                 </button>
                 <button
                   hlmBtn
                   type="button"
                   variant="destructive"
                   class="review-reject"
-                  [disabled]="busy()"
+                  [disabled]="busy() || loading()"
                   (click)="decide('reject')"
                 >
                   ปฏิเสธสลิป
@@ -187,7 +227,7 @@ function satangFromInput(text: string): number | null {
     </section>
   `,
 })
-export class PaymentReviewPage implements OnInit {
+export class PaymentReviewPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(MerchantOrderApi);
   readonly tenantId = this.route.snapshot.paramMap.get("tenantId") ?? "";
@@ -199,7 +239,10 @@ export class PaymentReviewPage implements OnInit {
   readonly allowed = signal(false);
   readonly loading = signal(false);
   readonly busy = signal(false);
-  readonly bankChecked = signal(false);
+  readonly selectionVersion = signal(0);
+  readonly scanState = signal<
+    "reading" | "found" | "unreadable" | "unavailable" | "manual"
+  >("unavailable");
   readonly bankReference = signal("");
   readonly actualAmount = signal("");
   readonly money = formatSatang;
@@ -210,18 +253,27 @@ export class PaymentReviewPage implements OnInit {
       ? this.api.paymentSlipImage(this.tenantId, this.storeId, item.slipId)
       : "";
   });
-  readonly canConfirm = computed(() => {
-    const item = this.selected();
-    return (
-      !!item &&
-      this.bankChecked() &&
+  readonly amountMatches = computed(
+    () =>
+      (this.selected()?.amountSatang ?? 0) > 0 &&
+      satangFromInput(this.actualAmount()) === this.selected()?.amountSatang,
+  );
+  readonly canConfirm = computed(
+    () =>
+      this.allowed() &&
+      !this.loading() &&
+      !this.busy() &&
+      !!this.selected() &&
       /^[A-Za-z0-9._-]{6,64}$/.test(this.bankReference()) &&
-      satangFromInput(this.actualAmount()) === item.amountSatang
-    );
-  });
+      this.amountMatches(),
+  );
 
   ngOnInit(): void {
     void this.refresh();
+  }
+
+  ngOnDestroy(): void {
+    this.selectionVersion.update((value) => value + 1);
   }
 
   time(value: string): string {
@@ -250,10 +302,13 @@ export class PaymentReviewPage implements OnInit {
       );
       this.items.set(queue.items);
       const picked = this.selected();
-      this.selected.set(
+      this.replaceSelection(
         queue.items.find((s) => s.slipId === picked?.slipId) ?? null,
       );
     } catch {
+      this.allowed.set(false);
+      this.items.set([]);
+      this.replaceSelection(null);
       this.error.set(
         "ไม่สามารถเปิดคิวตรวจสลิปได้ กรุณาตรวจสอบสิทธิ์และลองใหม่",
       );
@@ -262,17 +317,97 @@ export class PaymentReviewPage implements OnInit {
     }
   }
 
-  choose(item: PaymentSlipReview): void {
+  private replaceSelection(item: PaymentSlipReview | null): void {
+    const previous = this.selected();
+    if (
+      previous &&
+      item &&
+      previous.slipId === item.slipId &&
+      previous.revision === item.revision &&
+      previous.amountSatang === item.amountSatang &&
+      previous.imageAvailable === item.imageAvailable
+    ) {
+      this.selected.set(item);
+      return;
+    }
+    this.selectionVersion.update((value) => value + 1);
     this.selected.set(item);
-    this.bankChecked.set(false);
     this.bankReference.set("");
-    this.actualAmount.set("");
+    this.actualAmount.set(item ? (item.amountSatang / 100).toFixed(2) : "");
+    this.scanState.set(
+      item && item.imageAvailable !== false ? "reading" : "unavailable",
+    );
+  }
+
+  choose(item: PaymentSlipReview): void {
+    if (this.loading() || this.busy()) return;
+    this.replaceSelection(item);
     this.notice.set("");
+  }
+
+  editReference(value: string): void {
+    this.bankReference.set(value);
+    this.scanState.set("manual");
+  }
+
+  imageUnavailable(item: PaymentSlipReview): void {
+    if (
+      this.selected()?.slipId === item.slipId &&
+      this.selected()?.revision === item.revision &&
+      this.scanState() === "reading"
+    ) {
+      this.scanState.set("unavailable");
+    }
+  }
+
+  async readReference(event: Event, item: PaymentSlipReview): Promise<void> {
+    if (
+      this.selected()?.slipId !== item.slipId ||
+      this.selected()?.revision !== item.revision ||
+      this.scanState() !== "reading"
+    ) {
+      return;
+    }
+    const version = this.selectionVersion();
+    const stillCurrent = () =>
+      this.selectionVersion() === version && this.scanState() === "reading";
+    try {
+      const image = event.target as HTMLImageElement;
+      const width = image.naturalWidth;
+      const height = image.naturalHeight;
+      if (width < 1 || height < 1 || width > 2048 || height > 2048) {
+        throw new Error("Invalid slip image");
+      }
+      const canvas = image.ownerDocument.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Canvas unavailable");
+      context.drawImage(image, 0, 0);
+      const pixels = context.getImageData(0, 0, width, height);
+      const result = await decodeSlipReference(pixels.data, width, height);
+      // An old image load or a manual edit must never fill another Order.
+      if (!stillCurrent()) return;
+      if (result) {
+        this.bankReference.set(result.transactionReference);
+        this.scanState.set("found");
+      } else {
+        this.scanState.set("unreadable");
+      }
+    } catch {
+      if (stillCurrent()) this.scanState.set("unreadable");
+    }
   }
 
   async decide(action: "confirm" | "reject"): Promise<void> {
     const item = this.selected();
-    if (!item || this.busy() || (action === "confirm" && !this.canConfirm())) {
+    if (
+      !item ||
+      !this.allowed() ||
+      this.loading() ||
+      this.busy() ||
+      (action === "confirm" && !this.canConfirm())
+    ) {
       return;
     }
     this.busy.set(true);
@@ -285,6 +420,8 @@ export class PaymentReviewPage implements OnInit {
               expectedRevision: item.revision,
               bankReference: this.bankReference(),
               actualAmountSatang: satangFromInput(this.actualAmount())!,
+              // Only the explicit "ตรวจเงินเข้าแล้ว" button reaches here.
+              // This is merchant attestation, NOT decoder/bank verification.
               bankChecked: true,
             }
           : { action, expectedRevision: item.revision };
@@ -299,8 +436,7 @@ export class PaymentReviewPage implements OnInit {
           ? "บันทึกการยืนยันรับเงินจริงโดยผู้ตรวจสอบแล้ว (ไม่ใช่ยืนยันจากธนาคารอัตโนมัติ)"
           : "ปฏิเสธสลิปแล้ว ลูกค้าสามารถส่งหลักฐานใหม่ได้",
       );
-      this.selected.set(null);
-      this.bankChecked.set(false);
+      this.replaceSelection(null);
       await this.refresh();
     } catch {
       this.error.set(

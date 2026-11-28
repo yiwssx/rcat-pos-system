@@ -1,4 +1,10 @@
 import { describe, expect, it } from "vitest";
+import * as QRCode from "qrcode";
+import {
+  decodeSlipReference,
+  parseSlipReference,
+  slipCrc,
+} from "./slip-reference";
 import { routes } from "./app.routes";
 import { canonicalizeCanvasWebp } from "./prepare-product-webp";
 import {
@@ -371,5 +377,76 @@ describe("G2 Chromium WebP metadata canonicalization", () => {
         }),
       ),
     ).rejects.toThrow();
+  });
+});
+
+describe("merchant slip Mini-QR reference suggestion (not bank verification)", () => {
+  const tlv = (tag: string, value: string) =>
+    tag + String(value.length).padStart(2, "0") + value;
+  const withCrc = (value: string) => value + slipCrc(value);
+  const envelope =
+    tlv("00", "000001") + tlv("01", "004") + tlv("02", "MOCK2026-A123");
+  const payload = withCrc(tlv("00", envelope) + "5102TH9104");
+
+  it("reads only the reference and sender bank, not the payment amount or paid state", () => {
+    expect(slipCrc("123456789")).toBe("29B1");
+    expect(parseSlipReference(payload)).toEqual({
+      sendingBank: "004",
+      transactionReference: "MOCK2026-A123",
+    });
+    expect(parseSlipReference(payload.slice(0, -1))).toBeNull();
+    const wrongChecksum = payload.slice(-1) === "0" ? "1" : "0";
+    expect(parseSlipReference(payload.slice(0, -1) + wrongChecksum)).toBeNull();
+  });
+
+  it("rejects unrelated payment QR, URL, duplicate and malformed fields even with a valid CRC", () => {
+    expect(parseSlipReference("https://example.invalid/receipt")).toBeNull();
+    expect(parseSlipReference(withCrc("0002010102115102TH9104"))).toBeNull();
+    expect(
+      parseSlipReference(withCrc(tlv("00", envelope) + "5102XX9104")),
+    ).toBeNull();
+    expect(
+      parseSlipReference(
+        withCrc(tlv("00", envelope + tlv("02", "DUPLICATE1")) + "5102TH9104"),
+      ),
+    ).toBeNull();
+    expect(
+      parseSlipReference(
+        withCrc(tlv("00", envelope.replace("000001", "000002")) + "5102TH9104"),
+      ),
+    ).toBeNull();
+  });
+
+  it("decodes real synthetic QR pixels locally and fails closed for non-slip QR", async () => {
+    const image = (text: string) => {
+      const qr = QRCode.create(text, { errorCorrectionLevel: "M" }).modules;
+      const scale = 4;
+      const width = (qr.size + 8) * scale;
+      const rgba = new Uint8ClampedArray(width * width * 4).fill(255);
+      for (let row = 0; row < qr.size; row++) {
+        for (let col = 0; col < qr.size; col++) {
+          if (!qr.get(row, col)) continue;
+          for (let y = 0; y < scale; y++) {
+            for (let x = 0; x < scale; x++) {
+              const offset =
+                (((row + 4) * scale + y) * width + (col + 4) * scale + x) * 4;
+              rgba.fill(0, offset, offset + 3);
+            }
+          }
+        }
+      }
+      return { rgba, width };
+    };
+    const valid = image(payload);
+    expect(
+      await decodeSlipReference(valid.rgba, valid.width, valid.width),
+    ).toEqual({ sendingBank: "004", transactionReference: "MOCK2026-A123" });
+    const wrong = image("https://example.invalid/receipt");
+    expect(
+      await decodeSlipReference(wrong.rgba, wrong.width, wrong.width),
+    ).toBeNull();
+    expect(
+      await decodeSlipReference(new Uint8ClampedArray(4), 2049, 1),
+    ).toBeNull();
   });
 });
