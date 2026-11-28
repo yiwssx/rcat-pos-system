@@ -251,6 +251,58 @@ async function auditReachable(page,name,locator){
   assert.ok(report.reachable&&report.inViewport,'Sticky region obscures '+name);
 }
 
+// Transport-only probes: no tracking bearer, valid slip, real order access
+// or enabled payment flags. The slip service's 404 proves Nginx forwarded
+// the complete request through the raw PNG parser.
+async function assertSlipTransport(base) {
+  const slipUrl = base + '/api/guest/orders/00000000-0000-4000-8000-000000000000/payment-slip';
+  const put = (url, size) => fetch(url, {
+    method: 'PUT',
+    headers: { Origin: customer, 'Content-Type': 'image/png' },
+    body: Buffer.alloc(size),
+    signal: AbortSignal.timeout(15000),
+  });
+  for (const size of [256 * 1024 + 1, 512 * 1024]) {
+    const response = await put(slipUrl, size);
+    assert.equal(response.status, 404, 'Slip transport must admit ' + size + ' bytes without granting access');
+    assert.equal((await response.json()).message, 'Payment evidence unavailable');
+  }
+  const over = await put(slipUrl, 512 * 1024 + 1);
+  assert.equal(over.status, 413, 'Oversized slip must be rejected');
+  await over.arrayBuffer();
+  const unrelated = await put(base + '/api/health', 256 * 1024 + 1);
+  assert.equal(unrelated.status, 413, 'Unrelated API body limit must remain 256 KiB');
+  await unrelated.arrayBuffer();
+}
+
+async function assertStagingSlipTransport() {
+  const docker = (...args) => execFileSync('docker', ['--host=unix:///var/run/docker.sock', ...args], {
+    encoding: 'utf8', timeout: 30000,
+  }).trim();
+  // Only a disposable proxy on the CI Compose network, with a random
+  // loopback port. No real Staging host, flags, or data are involved.
+  const id = docker('run', '-d', '--network', 'rcat-pos-local_app_private',
+    '-p', '127.0.0.1::8080', 'rcat-pos-customer:staging-ci');
+  try {
+    const address = docker('port', id, '8080/tcp');
+    assert.match(address, /^127\.0\.0\.1:\d+$/);
+    const base = 'http://' + address;
+    let ready = false;
+    for (let i = 0; i < 30 && !ready; i++) {
+      try {
+        const response = await fetch(base + '/api/health', { signal: AbortSignal.timeout(1000) });
+        ready = response.ok;
+        await response.arrayBuffer();
+      } catch {}
+      if (!ready) await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    assert.ok(ready, 'Disposable Staging Nginx image must reach the isolated API');
+    await assertSlipTransport(base);
+  } finally {
+    docker('rm', '-f', id);
+  }
+}
+
 async function main() {
   const browser = await chromium.launch({ headless: true, args: ['--ignore-certificate-errors', '--host-resolver-rules=MAP localhost 127.0.0.1'] });
   try {
@@ -480,6 +532,11 @@ async function main() {
       const ready = await fetch(origin + '/api/ready');
       assert.equal(ready.status, 200);
     }
+    // Verify both the Local TLS override and the actual Staging image's
+    // baked-in HTTP Nginx config against the same isolated API.
+    await assertSlipTransport(customer);
+    await assertStagingSlipTransport();
+
     const denied = await context.request.post(merchant + `/api/tenants/${tenant}/stores/${store}/tables/70000000-0000-4000-8000-000000000005/issue-code`, {
       headers: { Origin: merchant }, data: {},
     });
