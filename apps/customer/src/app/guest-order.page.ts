@@ -49,29 +49,7 @@ import {
 } from "@spartan-ng/helm/sheet";
 import { GuestModifierChoicesComponent } from "./guest-modifier-choices.component";
 
-function guestError(error: unknown): string {
-  if (error instanceof HttpErrorResponse) {
-    if (error.status === 0)
-      return "เชื่อมต่อไม่ได้ โปรดตรวจสอบอินเทอร์เน็ตแล้วลองใหม่";
-    if (error.status === 404)
-      return "ไม่พบข้อมูลที่ร้องขอ กรุณาตรวจสอบข้อมูลแล้วลองอีกครั้ง";
-    if (error.status === 409) {
-      if (
-        (error.error as { message?: string } | null)?.message ===
-        "ORDERING_CLOSED"
-      )
-        return "ขออภัย ร้านยังไม่เปิดให้สั่งอาหาร กรุณาลองใหม่ภายหลัง";
-      return "คำสั่งซื้อถูกเปลี่ยนระหว่างส่ง โปรดตรวจสอบตะกร้าก่อนลองอีกครั้ง";
-    }
-    if (error.status === 429)
-      return "มีการเรียกใช้งานจำนวนมาก กรุณารอสักครู่ก่อนลองใหม่";
-    if (error.status === 400)
-      return "สินค้า/ตัวเลือกไม่ตรงกับเมนูล่าสุด กรุณาตรวจสอบรายการ";
-    if (error.status >= 500)
-      return "เซิร์ฟเวอร์ไม่พร้อม โปรดลองใหม่โดยไม่เปลี่ยนตะกร้า";
-  }
-  return error instanceof Error ? error.message : "ไม่สามารถดำเนินการได้";
-}
+import { guestError, isBillClosureRequired } from "./guest-order.errors";
 
 @Component({
   standalone: true,
@@ -212,6 +190,9 @@ function guestError(error: unknown): string {
               @case ("reconnect") {
                 รอบการสั่งเดิมสิ้นสุดแล้ว
               }
+              @case ("bill-closure") {
+                โต๊ะยังมีบิลรอบก่อน
+              }
               @case ("unavailable") {
                 ไม่สามารถเปิด QR สั่งอาหารนี้ได้
               }
@@ -227,6 +208,9 @@ function guestError(error: unknown): string {
             @if (issue === "reconnect") {
               กรุณาตรวจสอบ QR กับร้าน แล้วกดเริ่มรอบใหม่ด้วยตนเอง
               รายการเดิมจะไม่ถูกส่งอัตโนมัติ
+            } @else if (issue === "bill-closure") {
+              กรุณาแจ้งพนักงานให้ตรวจสอบและปิดบิลรอบก่อน
+              จากนั้นกดตรวจสอบอีกครั้งเพื่อสั่งอาหารผ่าน QR เดิม
             } @else if (issue === "unavailable") {
               กรุณาตรวจสอบรูปแบบบริการของร้านหรือขอ QR ที่ถูกต้อง
             } @else {
@@ -244,7 +228,11 @@ function guestError(error: unknown): string {
                 (click)="reload()"
                 [disabled]="loading() || !online()"
               >
-                ยืนยันเริ่มรอบการสั่งใหม่
+                {{
+                  issue === "bill-closure"
+                    ? "ตรวจสอบอีกครั้ง"
+                    : "ยืนยันเริ่มรอบการสั่งใหม่"
+                }}
               </button>
             }
             <a
@@ -965,7 +953,7 @@ export class GuestOrderPage implements OnInit, OnDestroy {
   readonly busy = signal(false);
   readonly error = signal("");
   readonly qrIssue = signal<
-    "reconnect" | "unavailable" | "invalid" | "missing" | null
+    "reconnect" | "bill-closure" | "unavailable" | "invalid" | "missing" | null
   >(null);
   readonly notice = signal("");
   readonly recoveryNotice = signal("");
@@ -1081,6 +1069,8 @@ export class GuestOrderPage implements OnInit, OnDestroy {
         if (stored && /^[A-Za-z0-9_-]{43}$/.test(stored)) {
           this.scanToken = stored;
           void this.load(stored);
+        } else if (stored === "bill-closure" && tableId) {
+          this.qrIssue.set("bill-closure");
         } else if (stored === null) {
           this.rememberEntry("");
           void this.openPrintedEntry();
@@ -1316,7 +1306,10 @@ export class GuestOrderPage implements OnInit, OnDestroy {
       await this.load(token);
     } catch (error) {
       if (version === this.requestVersion) {
-        if (error instanceof HttpErrorResponse && error.status === 404) {
+        if (table && isBillClosureRequired(error)) {
+          this.rememberEntry("bill-closure");
+          this.qrIssue.set("bill-closure");
+        } else if (error instanceof HttpErrorResponse && error.status === 404) {
           this.qrIssue.set("unavailable");
         } else {
           this.error.set(guestError(error));

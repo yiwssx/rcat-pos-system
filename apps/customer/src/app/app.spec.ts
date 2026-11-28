@@ -1,5 +1,7 @@
 import "@angular/compiler";
 import { describe, expect, it } from "vitest";
+import { HttpErrorResponse } from "@angular/common/http";
+import { guestError, isBillClosureRequired } from "./guest-order.errors";
 import { routes } from "./app.routes";
 import {
   addToCart,
@@ -426,5 +428,41 @@ describe("customer route security and QR ordering", () => {
     expect(() => changeCartQuantity([], 0, 1)).toThrow();
     expect(formatSatang(-1)).toBe("—");
     expect(formatSatang(Number.NaN)).toBe("—");
+  });
+});
+
+describe("Guest conflict recovery", () => {
+  const conflict = (message: string) =>
+    new HttpErrorResponse({ status: 409, error: { message } });
+
+  it("identifies a previous table Bill instead of a changed cart", () => {
+    const error = conflict("BILL_CLOSURE_REQUIRED");
+    expect(isBillClosureRequired(error)).toBe(true);
+    expect(guestError(error)).toContain("โต๊ะยังมีบิลรอบก่อน");
+    expect(guestError(error)).not.toContain("ตะกร้า");
+    expect(
+      isBillClosureRequired(
+        new HttpErrorResponse({
+          status: 500,
+          error: { message: "BILL_CLOSURE_REQUIRED" },
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it("keeps real idempotency conflicts and merchant closure distinct", () => {
+    for (const message of [
+      "Idempotency key already used for another cart",
+      "Idempotency key reused with another cart",
+    ]) {
+      expect(isBillClosureRequired(conflict(message))).toBe(false);
+      expect(guestError(conflict(message))).toContain("ตรวจสอบตะกร้า");
+    }
+    expect(guestError(conflict("ORDERING_CLOSED"))).toContain("ร้านยังไม่เปิด");
+    expect(
+      guestError(
+        conflict("Store QR settings changed or session already exists"),
+      ),
+    ).not.toContain("ตะกร้า");
   });
 });
